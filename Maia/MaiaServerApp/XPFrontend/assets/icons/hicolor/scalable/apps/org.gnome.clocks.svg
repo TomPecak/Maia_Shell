@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="svg11300" width="128" height="128" style="enable-background:new" version="1.0" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <title id="title4162">Adwaita Icon Template</title>
+ <defs id="defs3">
+  <linearGradient id="linearGradient1001" x1="1660.9" x2="1663" y1="806.3" y2="812.88" gradientTransform="matrix(1.8294 -.81599 .81599 1.8294 -3646 100.03)" gradientUnits="userSpaceOnUse">
+   <stop id="stop946" style="stop-color:#9a9996" offset="0"/>
+   <stop id="stop948" style="stop-color:#77767b" offset="1"/>
+  </linearGradient>
+ </defs>
+ <metadata id="metadata4">
+  <rdf:RDF>
+   <cc:Work rdf:about="">
+    <dc:format>image/svg+xml</dc:format>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>GNOME Design Team</dc:title>
+     </cc:Agent>
+    </dc:creator>
+    <dc:source/>
+    <cc:license rdf:resource="http://creativecommons.org/licenses/by-sa/4.0/"/>
+    <dc:title>Adwaita Icon Template</dc:title>
+    <dc:subject>
+     <rdf:Bag/>
+    </dc:subject>
+    <dc:date/>
+    <dc:rights>
+     <cc:Agent>
+      <dc:title/>
+     </cc:Agent>
+    </dc:rights>
+    <dc:publisher>
+     <cc:Agent>
+      <dc:title/>
+     </cc:Agent>
+    </dc:publisher>
+    <dc:identifier/>
+    <dc:relation/>
+    <dc:language/>
+    <dc:coverage/>
+    <dc:description/>
+    <dc:contributor>
+     <cc:Agent>
+      <dc:title/>
+     </cc:Agent>
+    </dc:contributor>
+   </cc:Work>
+   <cc:License rdf:about="http://creativecommons.org/licenses/by-sa/4.0/">
+    <cc:permits rdf:resource="http://creativecommons.org/ns#Reproduction"/>
+    <cc:permits rdf:resource="http://creativecommons.org/ns#Distribution"/>
+    <cc:requires rdf:resource="http://creativecommons.org/ns#Notice"/>
+    <cc:requires rdf:resource="http://creativecommons.org/ns#Attribution"/>
+    <cc:permits rdf:resource="http://creativecommons.org/ns#DerivativeWorks"/>
+    <cc:requires rdf:resource="http://creativecommons.org/ns#ShareAlike"/>
+   </cc:License>
+  </rdf:RDF>
+ </metadata>
+ <g id="layer1" transform="translate(0,-172)">
+  <g id="layer9">
+   <path id="path945" d="m124 237a60 60 0 0 1-60 60 60 60 0 0 1-60-60 60 60 0 0 1 60-60 60 60 0 0 1 60 60z" style="enable-background:new;fill:#deddda;paint-order:normal"/>
+   <rect id="rect978" x="8" y="179" width="112" height="114" rx="56" ry="56" style="enable-background:new;fill:#d5d3cf;paint-order:normal"/>
+   <path id="path981" d="m124 235a60 60 0 0 1-60 60 60 60 0 0 1-60-60 60 60 0 0 1 60-60 60 60 0 0 1 60 60z" style="enable-background:new;fill:#f6f5f4;paint-order:normal"/>
+   <circle id="circle983" cx="64" cy="235" r="54" style="enable-background:new;fill:#3d3846;paint-order:normal"/>
+   <path id="path928" d="m90.035 207.99a1.0017 1.0017 0 0 0-0.77686 0.33008l-21.975 23.665a6 6 0 0 0-5.582-0.52246l-14.221-15.801a2.0033 2.0033 0 0 0-1.6035-0.68212 2.0033 2.0033 0 0 0-1.374 3.3618l14.219 15.799a6 6 0 0 0-0.20996 5.3052 6 6 0 0 0 2.4043 2.6992l-11.858 30.494a1.0017 1.0017 0 1 0 1.8672 0.72558l11.857-30.491a6 6 0 0 0 3.6533-0.39209 6 6 0 0 0 3.0352-7.9238 6 6 0 0 0-0.7251-1.2041l21.979-23.67a1.0017 1.0017 0 0 0-0.69092-1.6934z" style="color-rendering:auto;color:#000000;dominant-baseline:auto;enable-background:new;fill-rule:evenodd;font-feature-settings:normal;font-variant-alternates:normal;font-variant-caps:normal;font-variant-ligatures:normal;font-variant-numeric:normal;font-variant-position:normal;image-rendering:auto;isolation:auto;mix-blend-mode:normal;opacity:.2;shape-padding:0;shape-rendering:auto;solid-color:#000000;text-decoration-color:#000000;text-decoration-line:none;text-decoration-style:solid;text-indent:0;text-orientation:mixed;text-transform:none;white-space:normal"/>
+   <path id="path987" d="m64 235-18-20" style="enable-background:new;fill-rule:evenodd;fill:#c0bfbc;stroke-linecap:round;stroke-width:4.0063;stroke:url(#linearGradient1001)"/>
+   <path id="path989" d="m64 235 26-28" style="enable-background:new;fill:none;stroke-linecap:round;stroke-width:2.0031;stroke:#fff"/>
+   <path id="path991" d="m64 235-14 36" style="enable-background:new;fill:none;stroke-linecap:round;stroke-width:2.0031;stroke:#ed333b"/>
+   <circle id="circle993" transform="rotate(-24.039)" cx="-37.28" cy="240.69" r="6" style="color-rendering:auto;color:#000000;enable-background:accumulate;fill:#d5d3cf;image-rendering:auto;shape-rendering:auto"/>
+   <circle id="circle995" cx="64.029" cy="235" r="2.0031" style="color-rendering:auto;color:#000000;enable-background:accumulate;fill:#131c1a;image-rendering:auto;shape-rendering:auto"/>
+   <circle id="circle997" cx="64.029" cy="235" r="2" style="color-rendering:auto;color:#000000;enable-background:accumulate;fill:#131c1a;image-rendering:auto;shape-rendering:auto"/>
+   <path id="circle1003" d="m64 181a54 54 0 0 0-54 54 54 54 0 0 0 0.0415 1.1709 54 54 0 0 1 53.958-53.171 54 54 0 0 1 53.958 52.828 54 54 0 0 0 0.0415-0.82813 54 54 0 0 0-54-54z" style="enable-background:new;opacity:.1;paint-order:normal"/>
+  </g>
+ </g>
+</svg>

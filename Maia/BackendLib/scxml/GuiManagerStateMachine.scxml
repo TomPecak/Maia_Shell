@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" binding="early" xmlns:qt="http://www.qt.io/2015/02/scxml-ext" name="GuiManagerStateMachine" qt:editorversion="17.0.1">
+    <state id="Idle">
+        <qt:editorinfo scenegeometry="251.55;-78;191.55;-128;120;100" geometry="251.55;-78;-60;-50;120;100"/>
+        <transition type="external" event="initialStart" target="LoadingFrontend"/>
+    </state>
+    <state id="DeletingQmlObjects">
+        <qt:editorinfo scenegeometry="284.12;213.05;224.12;163.05;202.91;102" geometry="284.12;213.05;-60;-50;202.91;102"/>
+        <onentry>
+            <raise event="deleteQmlObjects"/>
+        </onentry>
+        <transition type="internal" event="qmlObjectsDeleted" target="EmittingFrontendChanged">
+            <qt:editorinfo endTargetFactors="47.98;19.28" movePointCond="-185.07;-7.40"/>
+        </transition>
+    </state>
+    <state id="ReconfiguringWindowManager">
+        <qt:editorinfo scenegeometry="-108.68;512.07;-168.68;462.07;260.94;102" geometry="-108.68;512.07;-60;-50;260.94;102"/>
+        <onentry>
+            <raise event="reconfigureWindowManager"/>
+        </onentry>
+        <transition type="internal" event="windowManagerReconfigured" target="EmittingFrontendChanged"/>
+    </state>
+    <state id="LoadingFrontend">
+        <qt:editorinfo scenegeometry="694.47;529.81;634.47;479.81;178.42;102" geometry="694.47;529.81;-60;-50;178.42;102"/>
+        <onentry>
+            <raise event="loadFrontend"/>
+        </onentry>
+        <transition type="internal" event="frontendLoaded" target="ReconfigureWindowManagerAfterLoading"/>
+    </state>
+    <state id="EmittingFrontendChanged">
+        <qt:editorinfo scenegeometry="272.92;529.81;212.92;479.81;225.33;102" geometry="272.92;529.81;-60;-50;225.33;102"/>
+        <onentry>
+            <raise event="emitFrontendChanged"/>
+        </onentry>
+        <transition type="internal" event="frontendChangedEmitted" target="LoadingFrontend"/>
+    </state>
+    <state id="ReconfigureWindowManagerAfterLoading">
+        <qt:editorinfo scenegeometry="723.68;307.08;543.71;257.08;359.94;100" geometry="723.68;307.08;-179.97;-50;359.94;100"/>
+        <transition type="external" event="reconfigured" target="Running">
+            <qt:editorinfo endTargetFactors="59.06;74.76"/>
+        </transition>
+        <qt:metadata>
+            <qt:item>No i co to jest?</qt:item>
+        </qt:metadata>
+    </state>
+    <state id="Running">
+        <qt:editorinfo scenegeometry="567.88;-31.55;507.88;-81.55;120;100" geometry="567.88;-31.55;-60;-50;120;100"/>
+        <transition type="internal" event="startFrontendChange" target="DeletingQmlObjects">
+            <qt:editorinfo startTargetFactors="34.77;75.10"/>
+        </transition>
+    </state>
+</scxml>

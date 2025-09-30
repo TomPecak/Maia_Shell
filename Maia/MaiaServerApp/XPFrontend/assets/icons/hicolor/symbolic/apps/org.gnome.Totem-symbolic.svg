@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="16" height="16" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <defs>
+  <filter id="a" x="0%" y="0%" width="100%" height="100%">
+   <feColorMatrix in="SourceGraphic" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 1 0"/>
+  </filter>
+  <mask id="e">
+   <g filter="url(#a)">
+    <path d="M0 0h16v16H0z" fill-opacity=".2"/>
+   </g>
+  </mask>
+  <linearGradient id="c" x1="56" x2="0" y1="252" y2="244" gradientTransform="translate(8 -156)" gradientUnits="userSpaceOnUse">
+   <stop stop-color="#fff" offset="0"/>
+   <stop stop-color="#fff" stop-opacity="0" offset="1"/>
+  </linearGradient>
+  <clipPath id="b">
+   <path d="M0 0h192v152H0z"/>
+  </clipPath>
+  <g id="d" clip-path="url(#b)">
+   <path d="m28.016 42.629c-0.04 12.11-4e-3 24.215-0.016 36.32v36.949c0 5.72 3.05 11 8 13.86a16.013 16.013 0 0 0 16 0l32-18.477a16.004 16.004 0 0 0 0-27.715l-32-18.472a15.843 15.843 0 0 0-1.176-0.602c-5.39-3.14-10.851-6.168-16.168-9.43-3.98-2.828-6.484-7.558-6.64-12.433z" fill="url(#c)" fill-rule="evenodd"/>
+  </g>
+ </defs>
+ <use transform="translate(-168 -16)" mask="url(#e)" xlink:href="#d"/>
+ <path d="M4.707 2.484A1.668 1.668 0 0 0 3 4.148v7.704c0 1.28 1.39 2.082 2.5 1.441l6.668-3.848a1.671 1.671 0 0 0 0-2.89L5.5 2.707a1.672 1.672 0 0 0-.793-.223zm0 0" fill="#3d3846" fill-rule="evenodd"/>
+</svg>

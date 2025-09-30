@@ -1,0 +1,6 @@
+module GnomeFrontend
+singleton UIStyle 1.0 style/UIStyle.qml
+Main 1.0 Main.qml
+AppLauncher 1.0 AppLauncher.qml
+SidePanelContent 1.0 SidePanelContent.qml
+ActionButton 1.0 common_qml/ActionButton.qml

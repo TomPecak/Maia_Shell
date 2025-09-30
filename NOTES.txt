@@ -1,0 +1,4 @@
+
+To change icon theme on GTK applications edit file:
+~/.config/gtk-3.0/settings.ini
+~/.config/gtk-4.0/settings.ini
