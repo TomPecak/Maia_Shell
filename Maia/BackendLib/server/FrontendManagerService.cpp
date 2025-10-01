@@ -110,10 +110,11 @@ void FrontendManagerService::loadFrontends()
 
 #else
     // Release build: use absolute path
-    gnomeFrontend.qmlFilePath = QString("/opt/Maia/Maia_") + QString(MAIA_VERSION_STRING) + "/frontends/Gnome/Main.qml";
+    //gnomeFrontend.qmlFilePath = QString("/opt/Maia/Maia_") + QString(MAIA_VERSION_STRING) + "/frontends/Gnome/Main.qml";
 
-    //gnomeFrontend.qmlFilePath
-    //    = QString("/media/john/Maia_pendrive/Maia_deploy/Maia_") + QString(MAIA_VERSION_STRING) + QString("/frontends/Gnome/Main.qml");
+    QString USER = qgetenv("USER");
+    gnomeFrontend.qmlFilePath
+        = QString("/media/") + USER + QString("/Maia_pendrive/Maia_deploy/Maia_") + QString(MAIA_VERSION_STRING) + QString("/frontends/Gnome/Main.qml");
 #endif
 
     gnomeFrontend.id = QString(

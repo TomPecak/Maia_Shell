@@ -107,14 +107,14 @@ target_link_libraries(${PROJECT_NAME} PRIVATE KF6::WindowSystem)
 1. Skompilować KDE (wg instrukcji ze strony)
 2. Wyszukać lokalizacje pliku KF6WindowSystemConfig.cmake
 3. Znalezione zostana dwie lokalizacje, wybrać ta z plikiem KF6WindowSystemTargets.cmake
-4. Dodać zmienna KF6WindowSystem_DIR = /home/john/kde/usr/lib/x86_64-linux-gnu/cmake/KF6WindowSystem do Wstepnej konfiguracji i do Bieżacej konfiguracji
+4. Dodać zmienna KF6WindowSystem_DIR = /home/tom/kde/usr/lib/x86_64-linux-gnu/cmake/KF6WindowSystem do Wstepnej konfiguracji i do Bieżacej konfiguracji
 5. Skompilować projekt
 
 
 
 Instalacja KDE/extra-cmake-modules (zależność do KDE / Nitrux/maui-core)
 
-1. export PATH=/home/john/Qt_6_8_0/Tools/CMake/bin:$PATH
+1. export PATH=/home/tom/Qt_6_8_0/Tools/CMake/bin:$PATH
 1. git clone --recurse-submodules https://github.com/KDE/extra-cmake-modules.git
 2. cd extra-cmake-modules/
 3. git fetch --tags
@@ -127,18 +127,18 @@ Instalacja KDE/extra-cmake-modules (zależność do KDE / Nitrux/maui-core)
 
 Build KDE workspace
 
-1. export PATH=/home/john/Qt_6_8_0/Tools/CMake/bin:$PATH
-2. export PATH=/home/john/Qt_6_8_0/6.8.0/gcc_64/bin:$PATH
+1. export PATH=/home/tom/Qt_6_8_0/Tools/CMake/bin:$PATH
+2. export PATH=/home/tom/Qt_6_8_0/6.8.0/gcc_64/bin:$PATH
 3. qmake --version
 4. kde-builder workspace
 
 
 
 ERROR, gdy pojawi sie ten error, to trzeba sprawdzić czy wersja ECM pasuje do wersji Qt:
-CMake Error at /home/john/kde/usr/share/ECM/modules/ECMQmlModule6.cmake:24 (qt6_policy):
+CMake Error at /home/tom/kde/usr/share/ECM/modules/ECMQmlModule6.cmake:24 (qt6_policy):
   Unknown CMake command "qt6_policy".
 Call Stack (most recent call first):
-  /home/john/kde/usr/share/ECM/modules/ECMQmlModule.cmake:184 (include)
+  /home/tom/kde/usr/share/ECM/modules/ECMQmlModule.cmake:184 (include)
   CMakeLists.txt:30 (include)
 -- Configuring incomplete, errors occurred!
 
@@ -150,19 +150,19 @@ Call Stack (most recent call first):
 
 zmienne środowiskowe do ustawienia:
 
-export PATH=/home/john/Qt_6_8_0/Tools/CMake/bin:$PATH
-export PATH=/home/john/Qt_6_8_0/6.8.0/gcc_64/bin:$PATH
+export PATH=/home/tom/Qt_6_8_0/Tools/CMake/bin:$PATH
+export PATH=/home/tom/Qt_6_8_0/6.8.0/gcc_64/bin:$PATH
 
-export KF6Notifications_DIR="/home/john/kde/usr/lib/x86_64-linux-gnu/cmake/KF6Notifications"
-export KF6CoreAddons_DIR="/home/john/kde/usr/lib/x86_64-linux-gnu/cmake/KF6CoreAddons"
-export KF6I18n_DIR="/home/john/kde/usr/lib/x86_64-linux-gnu/cmake/KF6I18n"
-export KF6WindowSystem_DIR="/home/john/kde/usr/lib/x86_64-linux-gnu/cmake/KF6WindowSystem"
-export KF6KIO_DIR="/home/john/kde/usr/lib/x86_64-linux-gnu/cmake/KF6KIO"
+export KF6Notifications_DIR="/home/tom/kde/usr/lib/x86_64-linux-gnu/cmake/KF6Notifications"
+export KF6CoreAddons_DIR="/home/tom/kde/usr/lib/x86_64-linux-gnu/cmake/KF6CoreAddons"
+export KF6I18n_DIR="/home/tom/kde/usr/lib/x86_64-linux-gnu/cmake/KF6I18n"
+export KF6WindowSystem_DIR="/home/tom/kde/usr/lib/x86_64-linux-gnu/cmake/KF6WindowSystem"
+export KF6KIO_DIR="/home/tom/kde/usr/lib/x86_64-linux-gnu/cmake/KF6KIO"
 
 
 //ustawienie tego sprawia ze cmake widzi wszystkie bybloteki KDE !!!!!!!!!!!!!!!
-export CMAKE_PREFIX_PATH="/home/john/kde/usr/lib/x86_64-linux-gnu/cmake:$CMAKE_PREFIX_PATH"
-export CMAKE_PREFIX_PATH="/home/john/kde/usr/lib/cmake:$CMAKE_PREFIX_PATH"   //To resolve error: Could not find a package configuration file provided by "PolkitQt6-1"
+export CMAKE_PREFIX_PATH="/home/tom/kde/usr/lib/x86_64-linux-gnu/cmake:$CMAKE_PREFIX_PATH"
+export CMAKE_PREFIX_PATH="/home/tom/kde/usr/lib/cmake:$CMAKE_PREFIX_PATH"   //To resolve error: Could not find a package configuration file provided by "PolkitQt6-1"
 
 
 kde-builder kpeople
@@ -249,8 +249,8 @@ qdbus org.kde.kmix /Mixers org.freedesktop.DBus.Properties.Get org.kde.KMix.MixS
 3. add lines:
 project kmix-fork:
   no-src: true
-4. export PATH=/home/john/Qt_6_8_0/Tools/CMake/bin:$PATH
-5. export PATH=/home/john/Qt_6_8_0/6.8.0/gcc_64/bin:$PATH
+4. export PATH=/home/tom/Qt_6_8_0/Tools/CMake/bin:$PATH
+5. export PATH=/home/tom/Qt_6_8_0/6.8.0/gcc_64/bin:$PATH
 6. kde-builder kmix  //build oryginal to build dependencies
 6. kde-builder kmix-fork //build fork
 
@@ -264,8 +264,8 @@ Dependencies:
 
 
 
-export PATH=/home/john/Qt/Qt_6_8_2/Tools/CMake/bin:$PATH
-export PATH=/home/john/Qt/Qt_6_8_2/6.8.2/gcc_64/bin:$PATH
+export PATH=/home/tom/Qt/Qt_6_8_2/Tools/CMake/bin:$PATH
+export PATH=/home/tom/Qt/Qt_6_8_2/6.8.2/gcc_64/bin:$PATH
 
 
 
@@ -364,7 +364,7 @@ cd qt-build/
 ../configure -help
 ../configure -list-features
 ../configure -no-feature-accessibility
-../configure -release -opensource -confirm-license -prefix /home/john/Qt/Qt_6_9_1_custom_build/
+../configure -release -opensource -confirm-license -prefix /home/tom/Qt/Qt_6_9_1_custom_build/
 
 cmake --build . --parallel
 cmake --install .
@@ -380,7 +380,7 @@ cmake --install .
 
 To begin, launch Qt Creator and navigate to the project for the Qt module. Open the CMakeLists.txt file corresponding to the module and proceed to configure the project to use your custom-built Qt kit.
 
-Set install dir in Projects->Build & Run -> Build -> Build Settings -> Current Configuration -> CMAKE_INSTALL_PREFIX = /home/john/Qt/Qt_6_9_1_custom_build
+Set install dir in Projects->Build & Run -> Build -> Build Settings -> Current Configuration -> CMAKE_INSTALL_PREFIX = /home/tom/Qt/Qt_6_9_1_custom_build
 
 If you require the library to be installed upon completion of the build process, enable the 'install' target by checking the corresponding box in the build steps. You can find this option under: Projects -> Active Project -> Build -> Build Steps -> Targets -> install.
 
