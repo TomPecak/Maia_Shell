@@ -1,3 +1,4 @@
+import QtCore
 import QtQuick
 import QtQuick.Controls
 
@@ -44,6 +45,46 @@ Window {
         id: frontendManager
     }
 
+    Settings {
+        id: settings
+        category: "ThemeInstallationWarning"
+        property bool dontShowAgain: false // Default false – dialog will be visible on first switch
+    }
+
+    // Warning Dialog – shows only once, on first frontend switch
+    Dialog {
+        id: warningDialog
+        title: qsTr("First Frontend Switch")
+        standardButtons: Dialog.Ok | Dialog.Cancel
+        modal: true
+        parent: Overlay.overlay  // Uses Overlay for better positioning in fullscreen
+        width: 400
+        anchors.centerIn: parent
+        property string pendingFrontendId: ""
+
+        contentItem: Text {
+            //width: warningDialog.availableWidth
+            wrapMode: Text.WordWrap
+            color: "red"
+            font.bold: true
+            text: qsTr("Welcome to Maia Shell! The first switch to a new frontend may take up to 5 minutes, " +
+                       "as it installs icons, themes, and other resources. This is a one-time setup – " +
+                       "please be patient and don't interrupt. Ready to proceed?")
+        }
+
+        onAccepted: {
+            // Switch frontend and mark warning as shown
+            frontendManager.activeFrontend = warningDialog.pendingFrontendId
+            settings.dontShowAgain = true
+            warningDialog.pendingFrontendId = ""  // Clear
+        }
+
+        onRejected: {
+            // Cancel – do not switch, clear pending
+            warningDialog.pendingFrontendId = ""
+        }
+    }
+
     GMenu {
         id: contextMenu
         //width: 209
@@ -79,7 +120,15 @@ Window {
                     active: !model.frontendActive
                     onTriggered: {
                         console.log("1-- onTrigger() new frontend = " + model.frontendId)
-                        frontendManager.activeFrontend = model.frontendId
+
+                        // Check if this is the first switch – if so, show dialog
+                        if (!settings.dontShowAgain) {
+                            warningDialog.pendingFrontendId = model.frontendId
+                            warningDialog.open()
+                        } else {
+                            // If already seen, switch immediately
+                            frontendManager.activeFrontend = model.frontendId
+                        }
                     }
                 }
 
@@ -291,31 +340,31 @@ Window {
     // Column{
     //     anchors.right: parent.right
     //     anchors.bottom: parent.bottom
-        // Button{
-        //     text: "poweroff"
-        //     onClicked: {
-        //         MSessionManager.poweroff()
-        //     }
-        // }
-        // Button{
-        //     text: "logout"
-        //     onClicked: {
-        //         MSessionManager.logout()
-        //     }
-        // }
-        // Button{
-        //     text: "reboot"
-        //     onClicked: {
-        //         MSessionManager.reboot()
-        //     }
-        // }
-        // Button{
-        //     text: "Luna XP"
-        //     onClicked: {
-        //         frontendManager.activeFrontend = "351c97c34271d2a3ac6c180b951c920528de19d8"
-        //     }
-        // }
-//    }
+    // Button{
+    //     text: "poweroff"
+    //     onClicked: {
+    //         MSessionManager.poweroff()
+    //     }
+    // }
+    // Button{
+    //     text: "logout"
+    //     onClicked: {
+    //         MSessionManager.logout()
+    //     }
+    // }
+    // Button{
+    //     text: "reboot"
+    //     onClicked: {
+    //         MSessionManager.reboot()
+    //     }
+    // }
+    // Button{
+    //     text: "Luna XP"
+    //     onClicked: {
+    //         frontendManager.activeFrontend = "351c97c34271d2a3ac6c180b951c920528de19d8"
+    //     }
+    // }
+    //    }
 
     // AppLauncherContent{
     //     id: appLauncherWindow

@@ -9,7 +9,9 @@
 #include <KSharedConfig>
 #include <KConfigGroup>
 
+#include <cmake_config.h>
 #include "../maia_version.h"
+
 
 FrontendManagerService::FrontendManagerService(QObject *parent) :
     QObject(parent)
@@ -104,18 +106,16 @@ void FrontendManagerService::loadFrontends()
     gnomeFrontend.name = "Ubuntu 24.04";
     gnomeFrontend.description = "Ubuntu 24.04 like frontend";
 
-#ifdef QT_DEBUG
-    // Debug build: use path relative to the build directory
-    nomeFrontend.qmlFilePath = QString("/opt/Maia/Maia_") + QString(MAIA_VERSION_STRING) + "/frontends/Gnome/Main.qml";
+//-----------------------------------------------------------------------------
+    QString runType = qgetenv("MAIA_QTCREATOR_RUN");
 
-#else
-    // Release build: use absolute path
-    gnomeFrontend.qmlFilePath = QString("/opt/Maia/Maia_") + QString(MAIA_VERSION_STRING) + "/frontends/Gnome/Main.qml";
-
-    //QString USER = qgetenv("USER");
-    //gnomeFrontend.qmlFilePath
-    //    = QString("/media/") + USER + QString("/Maia_pendrive/Maia_deploy/Maia_") + QString(MAIA_VERSION_STRING) + QString("/frontends/Gnome/Main.qml");
-#endif
+    if(runType == "1"){ //Maia is running form QtCreator (dev run)
+        QString cmake_deploy_prefix = QString::fromStdString(std::string(CMAKE_INSTALL_PREFIX));
+        gnomeFrontend.qmlFilePath = cmake_deploy_prefix + QString("/frontends/Gnome/Main.qml");
+    }else{  //normal Maia run, form login manager (SDDM, GDM, etc)
+        gnomeFrontend.qmlFilePath = QString("/opt/Maia/Maia_") + QString(MAIA_VERSION_STRING) + "/frontends/Gnome/Main.qml";
+    }
+//-----------------------------------------------------------------------------
 
     gnomeFrontend.id = QString(
         QCryptographicHash::hash(gnomeFrontend.name.toUtf8(), QCryptographicHash::Sha1).toHex());

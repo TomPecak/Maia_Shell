@@ -11,11 +11,11 @@ Image {
 
     source: "qrc:/assets/images/license_warning.svg"
 
-    // Ustawienia do zapisywania stanu dontShowAgain
+    // Settings to save dontShowAgain variable
     Settings {
         id: settings
         category: "LicenseWarning"
-        property bool dontShowAgain: false // Domyślnie false, komponent widoczny
+        property bool dontShowAgain: false // Default false, componet will be visible
     }
 
     // Przy inicjalizacji sprawdzamy zapisane ustawienia

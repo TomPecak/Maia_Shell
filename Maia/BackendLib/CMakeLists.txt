@@ -26,6 +26,11 @@ find_package(KF6 ${REQUIRED_KF_VERSION} REQUIRED COMPONENTS Config WindowSystem)
 find_package(KF6PulseAudioQt ${REQUIRED_PULSEAUDIOQT_VERSION} REQUIRED)
 
 
+# Generate cmake_config.h with CMAKE_INSTALL_PREFIX
+configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/cmake_config.h.in
+    ${CMAKE_CURRENT_BINARY_DIR}/cmake_config.h
+)
 
 qt_add_qml_module(${PROJECT_NAME}
     URI ${PROJECT_URI}
@@ -95,7 +100,11 @@ qt_add_qml_module(${PROJECT_NAME}
     SOURCES audio/MPreferredDevice.hpp
     SOURCES audio/MPreferredDevice.cpp
     SOURCES server/FrontendInfo.hpp
+    SOURCES cmake_config.h.in
 )
+
+# This ensures that cmake_config.h, which is generated in the build directory, will be seen by the compiler
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 
 qt6_add_statecharts(${PROJECT_NAME}
     scxml/GuiManagerStateMachine.scxml
