@@ -10,7 +10,6 @@ Maia Shell is an experimental proof-of-concept project. It supports basic functi
 
 ## Maia Shell in action
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/UC_YpOu7KqA?si=vWstZNR_9C2JVOJj" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
 ## System Requirements
 
