@@ -11,6 +11,127 @@ import "./windows"
 
 
 
+
+import "./hussars"
+
+Window{
+    id: root
+    title: qsTr("Red Theme")
+    visible: true
+
+    width: Screen.width
+    height: Screen.height
+    flags: Qt.Window | Qt.FramelessWindowHint | Qt.WindowStaysOnBottomHint
+    visibility: Window.FullScreen
+
+    FontLoader {
+        id: cnnFont
+        source: "./fonts/CNN.TTF"
+    }
+
+    FontLoader{
+        id: neverMindHandwritingMedium
+        source: "./fonts/NeverMindHandwriting-Medium.ttf"
+    }
+
+        Component.onCompleted: {
+            //backend.windowManager.reconfigure();
+            backend.setX11WindowTypeAsDesktop(root)
+            backend.setDefaultWindowDecoration()
+
+            MWindowManagerX11.hideFromTaskbar(root, true);
+            MWindowManagerX11.hideFromSwitcher(root, true);
+            MWindowManagerX11.hideFromPager(root, true);
+        }
+
+        Image {
+            id: wallpaper
+            anchors.fill: parent
+            //source: "./images/warty-final-ubuntu.png"
+            source: "./images/hussars.jpg"
+            //source: "./images/3840x2160.svg"
+            //source: "./images/white_wallpaper.png"
+            //source: "./images/blue_wallpaper.bmp"
+            //source: "./images/red_wallpaper.bmp"
+            //source: "./images/green_wallpaper.bmp"
+
+            MouseArea {
+                // anchors.top: topPanel.bottom
+                // anchors.left: sidePanel.right
+                // anchors.bottom: parent.bottom
+                // anchors.right: parent.right
+
+                anchors.fill: parent
+
+                acceptedButtons: Qt.LeftButton | Qt.RightButton
+                onClicked: (mouse) => {
+                               // if(controlBoard.visible){
+                               //     controlBoard.visible = false
+                               // }
+
+                               // if (mouse.button === Qt.RightButton){
+                               //     contextMenu.popup()
+                               //     //recentAppsContextMenu.popup()
+                               // }
+                           }
+                // onPressAndHold: (mouse) => {
+                //     if (mouse.source === Qt.MouseEventNotSynthesized)
+                //         contextMenu.popup()
+                // }
+            }
+        }
+
+        TaskbarContent{
+            anchors.bottom: parent.bottom
+            anchors.right: parent.right
+            anchors.left: parent.left
+            anchors.margins: 5
+
+        }
+
+        TopPanelContent{
+            id: topPanel
+
+            x:0
+            y:0
+            width: root.width
+            height: 29
+            visible: true
+
+            controlBoardVisible: false
+
+
+            property size dimensions: Qt.size(width, height)
+            onDimensionsChanged: {
+                backend.reservePanelTopArea(root, topPanel.x, topPanel.y, topPanel.width, topPanel.height)
+            }
+
+            onClicked: {
+
+            }
+        }
+
+        MProxyWindow{
+            id: appLauncherWindow
+            source: "./windows/AppsLauncherWindow.qml"
+            //source: Qt.resolvedUrl("./windows/AppsLauncherWindow.qml")
+            proxyVisible: true
+            anchors.right: parent.right
+            anchors.left: parent.left
+            anchors.top: parent.top
+            anchors.bottom: parent.bottom
+            swapInterval: 1
+
+            onProxyVisibleChanged: {
+                console.log("9999999999999999 PROXY VISIBLE CHANGED !! proxyVisible = " + appLauncherWindow.proxyVisible)
+            }
+        }
+
+}
+
+
+
+/*
 Window {
     id: root
     title: qsTr("Maia")
@@ -412,3 +533,4 @@ Window {
     }
 
 }
+*/

@@ -39,6 +39,7 @@ qt_add_qml_module(GnomeFrontend
 
         QML_FILES
         ${GNOME_QML_FILES}
+        QML_FILES hussars/TaskbarContent.qml
 )
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/

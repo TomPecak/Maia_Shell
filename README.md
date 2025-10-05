@@ -10,6 +10,10 @@ Maia Shell is an experimental proof-of-concept project. It supports basic functi
 
 ## Maia Shell in action
 
+## System Requirements
+
+Maia Shell v0.1.0 has been tested on Ubuntu 22.04 or later, but it may work on other Linux distributions as well.
+
 
 ## Instalation
 
