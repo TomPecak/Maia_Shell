@@ -8,7 +8,9 @@ Maia Shell is a lightweight, modular graphical shell for Linux, built with C++ a
 
 Maia Shell is an experimental proof-of-concept project. It supports basic functionality, including launching applications, managing a favorites list, session control (logout, reboot, shutdown), volume control, muting, and a functional taskbar. However, many features are not yet implemented, such as wallpaper settings, Wi-Fi and Bluetooth management. It currently supports only single-monitor setups and has been tested solely at FHD (1920x1080) resolution. This shell is ideal for enthusiasts who enjoy experimenting with early-stage software, but it is not a production-ready desktop environment.
 
-## Maia Shell in action
+## Maia Shell in action on YouTube
+
+[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/UC_YpOu7KqA/0.jpg)](https://www.youtube.com/watch?v=UC_YpOu7KqA)
 
 
 ## System Requirements
