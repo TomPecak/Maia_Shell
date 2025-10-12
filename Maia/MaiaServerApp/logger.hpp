@@ -1,7 +1,7 @@
 #pragma once
 
 #include <QElapsedTimer>
-#include <QLocalSocket>
+#include <QWebSocket>
 #include <QMessageLogContext>
 #include <QMutex>
 #include <QObject>
@@ -11,8 +11,6 @@
 class Logger : public QObject
 {
     Q_OBJECT
-
-    enum class CommandSend : uint8_t { LOG = 0x01 };
 
 public:
     explicit Logger(QObject *parent = nullptr);
@@ -26,8 +24,8 @@ public:
 private slots:
     void onSocketConnected();
     void onSocketDisconnected();
-    void onSocketReadyRead();
-    void onSocketError(QLocalSocket::LocalSocketError socketError);
+    void onSocketError(QAbstractSocket::SocketError socketError);
+    void onTextMessageReceived(const QString &message);
 
 private:
     static void messageHandler(QtMsgType type,
@@ -35,15 +33,15 @@ private:
                                const QString &msg);
     void init();
     void setOriginalHandler(QtMessageHandler handler);
-    void connectToServer(const QString &serverName);
+    void connectToServer(const QString &serverUrl);
     void sendLog(const QString message);
+    QString constructServerUrl();
 
 private:
     QtMessageHandler originalHandler = nullptr;
-    QLocalSocket m_socket;
+    QWebSocket m_socket;
     int reconnect_time = 0;
-    quint32 m_nextBlockSize = 0;
-    QString m_serverName;
+    QString m_serverUrl;
     static Logger *m_logger;
     QMutex logMutex;
     QElapsedTimer timer;

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" binding="early" xmlns:qt="http://www.qt.io/2015/02/scxml-ext" name="GuiManagerStateMachine" qt:editorversion="17.0.1">
+<scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" binding="early" xmlns:qt="http://www.qt.io/2015/02/scxml-ext" name="GuiManagerStateMachine" qt:editorversion="17.0.2">
     <state id="Idle">
-        <qt:editorinfo scenegeometry="251.55;-78;191.55;-128;120;100" geometry="251.55;-78;-60;-50;120;100"/>
+        <qt:editorinfo scenegeometry="256.24;-24.05;196.24;-74.05;120;100" geometry="256.24;-24.05;-60;-50;120;100"/>
         <transition type="external" event="initialStart" target="LoadingFrontend"/>
     </state>
     <state id="DeletingQmlObjects">
@@ -14,18 +14,18 @@
         </transition>
     </state>
     <state id="ReconfiguringWindowManager">
-        <qt:editorinfo scenegeometry="-108.68;512.07;-168.68;462.07;260.94;102" geometry="-108.68;512.07;-60;-50;260.94;102"/>
+        <qt:editorinfo scenegeometry="-123.56;659.69;-183.56;609.69;260.94;102" geometry="-123.56;659.69;-60;-50;260.94;102"/>
         <onentry>
             <raise event="reconfigureWindowManager"/>
         </onentry>
         <transition type="internal" event="windowManagerReconfigured" target="EmittingFrontendChanged"/>
     </state>
     <state id="LoadingFrontend">
-        <qt:editorinfo scenegeometry="694.47;529.81;634.47;479.81;178.42;102" geometry="694.47;529.81;-60;-50;178.42;102"/>
+        <qt:editorinfo scenegeometry="659.95;659.69;599.95;609.69;178.42;102" geometry="659.95;659.69;-60;-50;178.42;102"/>
         <onentry>
             <raise event="loadFrontend"/>
         </onentry>
-        <transition type="internal" event="frontendLoaded" target="ReconfigureWindowManagerAfterLoading"/>
+        <transition type="internal" event="frontendLoaded" target="WaitAfterLoaded"/>
     </state>
     <state id="EmittingFrontendChanged">
         <qt:editorinfo scenegeometry="272.92;529.81;212.92;479.81;225.33;102" geometry="272.92;529.81;-60;-50;225.33;102"/>
@@ -47,6 +47,12 @@
         <qt:editorinfo scenegeometry="567.88;-31.55;507.88;-81.55;120;100" geometry="567.88;-31.55;-60;-50;120;100"/>
         <transition type="internal" event="startFrontendChange" target="DeletingQmlObjects">
             <qt:editorinfo startTargetFactors="34.77;75.10"/>
+        </transition>
+    </state>
+    <state id="WaitAfterLoaded">
+        <qt:editorinfo scenegeometry="729.55;459.69;669.55;409.69;219.77;100" geometry="729.55;459.69;-60;-50;219.77;100"/>
+        <transition type="external" event="waitingLoadDelayEnded" target="ReconfigureWindowManagerAfterLoading">
+            <qt:editorinfo endTargetFactors="83.31;68.37"/>
         </transition>
     </state>
 </scxml>

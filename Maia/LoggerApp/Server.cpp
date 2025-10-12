@@ -1,92 +1,61 @@
 #include "Server.hpp"
 
-#include <QDataStream>
-#include <QLocalSocket>
+#include <QDebug>
 
 Server::Server(QObject *parent)
     : QObject(parent)
+    , m_server("LoggerServer", QWebSocketServer::NonSecureMode, this)
     , m_nextClientId(1)
 {
-    connect(&m_server, &QLocalServer::newConnection, this, &Server::handleNewConnection);
+    connect(&m_server, &QWebSocketServer::newConnection, this, &Server::handleNewConnection);
 }
 
-Server::~Server() {}
-
-bool Server::startServer(const QString &localAddress)
+Server::~Server()
 {
-    QLocalServer::removeServer(localAddress);
-    if (!m_server.listen(localAddress)) {
-        qDebug() << "[ERROR] Failed to start LoggerServer Local Socket Server";
+    for (QWebSocket *client : m_clients) {
+        client->deleteLater();
+    }
+}
+
+bool Server::startServer(int port)
+{
+    if (!m_server.listen(QHostAddress::Any, port)) {
+        qDebug() << "[ERROR] Failed to start WebSocket server on port" << port;
         return false;
     }
-    qDebug() << "[INFO] LoggerServer start listening on address: " << localAddress;
+    qDebug() << "[INFO] Logger Server started listening on port:" << port;
     return true;
 }
 
 void Server::handleNewConnection()
 {
-    qDebug() << "[INFO] LoggerServer handle new connection";
+    qDebug() << "[INFO] Logger Server: new connection";
     while (m_server.hasPendingConnections()) {
-        QLocalSocket *client = m_server.nextPendingConnection();
+        QWebSocket *client = m_server.nextPendingConnection();
         m_clients.append(client);
-        m_clientBlockSizes.insert(client, 0);
         m_clientIds.insert(client, m_nextClientId++);
 
-        connect(client, &QLocalSocket::disconnected, this, &Server::handleClientDisconnected);
-        connect(client, &QLocalSocket::readyRead, this, &Server::handleClientReadyRead);
+        connect(client, &QWebSocket::disconnected, this, &Server::handleClientDisconnected);
+        connect(client, &QWebSocket::textMessageReceived, this, &Server::handleTextMessageReceived);
     }
 }
 
 void Server::handleClientDisconnected()
 {
-    QLocalSocket *clientSocket = qobject_cast<QLocalSocket *>(sender());
+    QWebSocket *clientSocket = qobject_cast<QWebSocket *>(sender());
     if (clientSocket) {
         m_clients.removeAll(clientSocket);
-        m_clientBlockSizes.remove(clientSocket);
+        m_clientIds.remove(clientSocket);
         clientSocket->deleteLater();
-        qDebug() << "[INFO] LoggerServer: Client disconnected.";
+        qDebug() << "[INFO] Logger Server: client disconnected.";
     }
 }
 
-void Server::handleClientReadyRead()
+void Server::handleTextMessageReceived(const QString &message)
 {
-    QLocalSocket *clientSocket = qobject_cast<QLocalSocket *>(sender());
+    QWebSocket *clientSocket = qobject_cast<QWebSocket *>(sender());
     if (clientSocket) {
-        parseCommand(clientSocket);
-    }
-}
-
-void Server::parseCommand(QLocalSocket *clientSocket)
-{
-    QDataStream in(clientSocket);
-
-    quint32 &nextBlockSize = m_clientBlockSizes[clientSocket];
-
-    forever {
-        if (nextBlockSize == 0) {
-            if (clientSocket->bytesAvailable() < (int) sizeof(quint32))
-                break;
-            in >> nextBlockSize;
-        }
-
-        if (clientSocket->bytesAvailable() < nextBlockSize)
-            break;
-
-        // Mamy całą komendę
-        quint8 commandRaw;
-        in >> commandRaw;
-
-        auto command = static_cast<CommandReceived>(commandRaw);
-
-        if (command == CommandReceived::LOG) {
-            QString message;
-            in >> message;
-            int clientId = m_clientIds.value(clientSocket, 0);
-            emit messageReceived(clientId, clientSocket, message);
-        } else {
-            qDebug() << "[ERROR] LoggerServer: Received unknown command type:" << commandRaw;
-        }
-
-        nextBlockSize = 0; // Gotowi na następną komendę
+        int clientId = m_clientIds.value(clientSocket, 0);
+        emit messageReceived(clientId, clientSocket, message);
     }
 }

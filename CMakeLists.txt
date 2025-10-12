@@ -31,7 +31,8 @@ project(Maia VERSION ${MAIA_VERSION} LANGUAGES CXX)
 
 # set project deploy directory to  /{HOME}/Maia_deploy/Maia_version
 set(CMAKE_INSTALL_PREFIX "$ENV{HOME}/Maia_deploy/Maia_${PROJECT_VERSION}")
-#set(CMAKE_INSTALL_PREFIX "/media/$ENV{USER}/Maia_pendrive/Maia_deploy/Maia_${PROJECT_VERSION}")
+set(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT FALSE)  # This line prevents include(KDEInstallDirs) from changing CMAKE_INSTALL_PREFIX
+
 
 set(QT_MAJOR_VERSION 6)
 
@@ -45,6 +46,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(ECM ${REQUIRED_KF_VERSION} NO_MODULE)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${ECM_MODULE_PATH})
+
 
 include(ECMSourceVersionControl)
 include(ECMSetupVersion)
@@ -81,6 +83,9 @@ add_subdirectory(Maia/LoggerApp/)
 
 # gnome frontend qml module
 add_subdirectory(Maia/GnomeMod/)
+
+# xp luna frontend qml module
+add_subdirectory(Maia/XPLunaMod/)
 
 add_subdirectory(Maia/MaiaServerApp/)
 

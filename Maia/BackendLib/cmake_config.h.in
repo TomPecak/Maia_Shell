@@ -1,4 +1,8 @@
 #pragma once
 
+/*
+This file allows us to access the CMake variable CMAKE_INSTALL_PREFIX in C++ code, which is needed in the QML loading module to locate the path of QML modules.
+*/
+
 #define CMAKE_INSTALL_PREFIX "@CMAKE_INSTALL_PREFIX@"
 

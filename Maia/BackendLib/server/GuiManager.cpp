@@ -32,6 +32,7 @@ GuiManager::~GuiManager()
 
 void GuiManager::startGui(const FrontendInfo &frontend)
 {
+    qDebug() << "[STARTUP INFO] " << __PRETTY_FUNCTION__ << " frontend.name=" << frontend.name;
     //START KWIN
     startKwinAndWaitForReady(m_kwin);
 
@@ -49,6 +50,7 @@ void GuiManager::startGui(const FrontendInfo &frontend)
         if (active) {
             qDebug() << "Enter state: " << "DeletingQmlObjects";
             m_qmlGui.deleteQmlEngineRootObjects();
+            emit frontendUnloaded();
             changeFrontendStateMachine.submitEvent("qmlObjectsDeleted");
         } else {
             qDebug() << "Exit state: " << "DeletingQmlObjects";
@@ -109,7 +111,20 @@ void GuiManager::startGui(const FrontendInfo &frontend)
         }
     });
 
+    changeFrontendStateMachine.connectToState("WaitAfterLoaded", [=](bool active) {
+        if (active) {
+            qDebug() << "Enter state: " << "WaitAfterLoaded";
+            QTimer::singleShot(10000, [=]() {
+                changeFrontendStateMachine.submitEvent("waitingLoadDelayEnded");
+            });
+
+        } else {
+            qDebug() << "Exit state: " << "WaitAfterLoaded";
+        }
+    });
+
     //START QML GUI, submit event that kik off state machine form idle to running state
+    qDebug() << "[STARTUP INFO] changeFrontendStateMachine.submitEvent('initialStart')";
     changeFrontendStateMachine.submitEvent("initialStart");
 }
 
@@ -143,6 +158,7 @@ void GuiManager::handleKwinReconfigured()
 
 void GuiManager::loadFrontend()
 {
+    qDebug() << "[INFO] " << __PRETTY_FUNCTION__;
     if (m_currentFrontend.qmlFilePath != "") {
         m_qmlGui.load(m_currentFrontend.qmlFilePath);
     } else if (m_currentFrontend.qmlUri != "") {

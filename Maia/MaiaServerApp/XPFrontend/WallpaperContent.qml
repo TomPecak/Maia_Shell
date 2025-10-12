@@ -190,64 +190,64 @@ Image {
         }
     }
 
+    Column{
+        anchors.left: parent.left
+        anchors.top: parent.top
+        anchors.margins: 15
+        spacing: 7
 
-    // Rectangle{
-    //     id: cpuLoadBackground
-    //     anchors.right: parent.right
-    //     anchors.rightMargin: 15
-    //     anchors.top: parent.top
-    //     anchors.topMargin: 15
-    //     width: 150
-    //     height: 37
-    //     color: "#dd000000"
-    //     Text{
-    //         id: cpuLoad
-    //         anchors.centerIn: parent
-    //         text: "CPU: " + backend.cpuLoad.toFixed(1) + "%"
-    //         font.pixelSize: 24
-    //         color: "white"
+        Rectangle{
+            id: cpuLoadBackground
+            width: 150
+            height: 37
+            color: "#dd000000"
+            Text{
+                id: cpuLoad
+                anchors.centerIn: parent
+                text: "CPU: " + backend.cpuLoad.toFixed(1) + "%"
+                font.pixelSize: 24
+                color: "white"
 
-    //         Component.onCompleted: {
-    //             backend.measureCpuLoad = true
-    //         }
-    //     }
-    // }
+                Component.onCompleted: {
+                    backend.measureCpuLoad = true
+                }
+            }
+        }
 
-    // Rectangle{
-    //     id: qtVersionBackground
-    //     anchors.right: parent.right
-    //     anchors.rightMargin: 15
-    //     anchors.top: cpuLoadBackground.bottom
-    //     anchors.topMargin: 5
-    //     width: 150
-    //     height: 37
-    //     color: "#dd000000"
-    //     Text{
-    //         anchors.centerIn: parent
-    //         text: "Qt: " + backend.qtVersion
-    //         font.pixelSize: 24
-    //         color: "white"
-    //     }
+        Rectangle{
+            id: qtVersionBackground
+            width: 150
+            height: 37
+            color: "#dd000000"
+            Text{
+                anchors.centerIn: parent
+                text: "Qt: " + backend.qtVersion
+                font.pixelSize: 24
+                color: "white"
+            }
 
-    // }
+        }
 
-    // Rectangle{
-    //     id: dpiBackground
-    //     anchors.right: parent.right
-    //     anchors.rightMargin: 15
-    //     anchors.top: qtVersionBackground.bottom
-    //     anchors.topMargin: 5
-    //     width: 150
-    //     height: 37
-    //     color: "#dd000000"
-    //     Text{
-    //         anchors.centerIn: parent
-    //         text: "DPI: " + (Screen.pixelDensity * 25.4).toFixed(2)
-    //         font.pixelSize: 24
-    //         color: "white"
-    //     }
+        Rectangle{
+            id: dpiBackground
+            width: 150
+            height: 37
+            color: "#dd000000"
+            Text{
+                anchors.centerIn: parent
+                text: "DPI: " + (Screen.pixelDensity * 25.4).toFixed(2)
+                font.pixelSize: 24
+                color: "white"
+            }
 
-    // }
+        }
+    }
+
+
+
+
+
+
 
 
 

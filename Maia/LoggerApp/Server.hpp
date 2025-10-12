@@ -1,41 +1,31 @@
 #pragma once
 
-#include <QList>
-#include <QLocalServer>
 #include <QObject>
-#include <QQmlApplicationEngine>
-#include <QQuickWindow>
+#include <QList>
+#include <QWebSocketServer>
+#include <QWebSocket>
 
 class Server : public QObject
 {
     Q_OBJECT
 
-    enum class CommandSent : uint8_t {
-        SET_VISIBLE = 0x01,
-    };
-
-    enum class CommandReceived : uint8_t { LOG = 0x01 };
-
 public:
     explicit Server(QObject *parent = nullptr);
     ~Server();
 
-    bool startServer(const QString &proxyWindowAddress);
+    bool startServer(int port);
 
 signals:
-    void messageReceived(int clientId, QLocalSocket *socket, QString message);
+    void messageReceived(int clientId, QWebSocket *socket, QString message);
 
 private slots:
     void handleNewConnection();
     void handleClientDisconnected();
-    void handleClientReadyRead();
+    void handleTextMessageReceived(const QString &message);
 
 private:
-    void parseCommand(QLocalSocket *clientSocket);
-
-    QLocalServer m_server;
-    QList<QLocalSocket *> m_clients;
-    QHash<QLocalSocket *, quint32> m_clientBlockSizes;
-    QHash<QLocalSocket *, int> m_clientIds;
+    QWebSocketServer m_server;
+    QList<QWebSocket *> m_clients;
+    QHash<QWebSocket *, int> m_clientIds;
     int m_nextClientId;
 };

@@ -6,6 +6,7 @@
 #include <QMap>
 #include <QList>
 #include <QTimer>
+#include <QElapsedTimer>
 
 class MaskAlgorithm : public QObject {
     Q_OBJECT

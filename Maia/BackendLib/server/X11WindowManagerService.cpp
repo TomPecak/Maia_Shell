@@ -3,6 +3,7 @@
 #include <QDBusConnection>
 #include <QDBusPendingCallWatcher>
 #include <QDBusPendingReply>
+#include <QElapsedTimer>
 
 #include <KX11Extras>
 

@@ -11,7 +11,7 @@ import "./windows"
 
 
 
-
+/*
 import "./hussars"
 
 Window{
@@ -127,11 +127,11 @@ Window{
             }
         }
 
-}
+}*/
 
 
 
-/*
+
 Window {
     id: root
     title: qsTr("Maia")
@@ -533,4 +533,3 @@ Window {
     }
 
 }
-*/

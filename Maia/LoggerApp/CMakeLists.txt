@@ -4,7 +4,7 @@ project(Logger VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Quick QuickControls2)
+find_package(Qt6 REQUIRED COMPONENTS Quick QuickControls2 WebSockets)
 
 qt_standard_project_setup(REQUIRES 6.8)
 
@@ -37,6 +37,7 @@ set_target_properties(appLogger PROPERTIES
 target_link_libraries(appLogger
     PRIVATE Qt6::Quick
     PRIVATE Qt6::QuickControls2
+    PRIVATE Qt6::WebSockets
 )
 
 include(GNUInstallDirs)

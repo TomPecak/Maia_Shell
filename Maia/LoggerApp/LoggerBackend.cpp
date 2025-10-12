@@ -1,84 +1,100 @@
 #include "LoggerBackend.hpp"
 
+#include <QProcess>
+#include <QNetworkInterface>
+
 LoggerBackend::LoggerBackend(QObject *parent)
     : QObject(parent)
 {
-    for (int i = 0; i < CHANNELS_COUNT; i++) {
-        servers.append(new Server(this));
+    for (int port = 0 + 50000; port < PORT_CHANNELS_COUNT + 50000; port++) {
+        servers[port] = new Server(this);
     }
 
-    for (int i = 0; i < CHANNELS_COUNT; i++) {
-        logModels.append(new QStandardItemModel(this));
+    for (int port = 0 + 50000; port < PORT_CHANNELS_COUNT + 50000; port++) {
+        logModels[port] = new QStandardItemModel(this);
     }
 
     //MODEL CONFIG
-    for (int channel = 0; channel < CHANNELS_COUNT; channel++) {
-        initModel(channel);
+    for (int port = 0 + 50000; port < PORT_CHANNELS_COUNT + 50000; port++) {
+        initModel(port);
     }
 
     //SERVER CONFIG
-    for (int channel = 0; channel < CHANNELS_COUNT; channel++) {
-        initServer(channel);
+    for (int port = 0 + 50000; port < PORT_CHANNELS_COUNT + 50000; port++) {
+        initServer(port);
     }
 }
 
 LoggerBackend::~LoggerBackend() {}
 
-void LoggerBackend::initModel(int channelNumber)
+void LoggerBackend::initModel(int port)
 {
-    logModels[channelNumber]->setRowCount(1);
-    logModels[channelNumber]->setColumnCount(1);
+    logModels[port]->setRowCount(1);
+    logModels[port]->setColumnCount(1);
 
     QHash<int, QByteArray> roleNames;
     roleNames[Qt::DisplayRole] = "process_id";
     roleNames[Qt::UserRole + 1] = "message";
-    logModels[channelNumber]->setItemRoleNames(roleNames);
+    logModels[port]->setItemRoleNames(roleNames);
 
-    for (int row = 0; row < logModels.at(channelNumber)->rowCount(); ++row) {
+    for (int row = 0; row < logModels[port]->rowCount(); ++row) {
         QStandardItem *item = new QStandardItem();
         item->setData(QString("[OK] Test Model"), Qt::DisplayRole); // Pierwsze pole
         //item->setData(QString("Dodatkowy tekst %1").arg(row + 1), Qt::UserRole + 1); // Drugie pole
-        logModels[channelNumber]->setItem(row, 0, item);
+        logModels[port]->setItem(row, 0, item);
     }
 }
 
-void LoggerBackend::initServer(int channelNumber)
+void LoggerBackend::initServer(int port)
 {
-    connect(servers[channelNumber],
+    connect(servers[port],
             &Server::messageReceived,
             this,
-            [=](int clientId, QLocalSocket *socket, QString message) {
+            [=](int clientId, QWebSocket *socket, QString message) {
                 QStandardItem *item = new QStandardItem();
                 item->setData(QString::number(clientId), Qt::DisplayRole);
                 item->setData(message, Qt::UserRole + 1);
-                if (logModels[channelNumber]->rowCount() >= MAX_ROWS) {
-                    logModels[channelNumber]->removeRow(0);
+                if (logModels[port]->rowCount() >= MAX_ROWS) {
+                    logModels[port]->removeRow(0);
                 }
-                logModels[channelNumber]->appendRow(item);
+                logModels[port]->appendRow(item);
             });
-    servers[channelNumber]->startServer(QString("/tmp/MaiaLogger_channel_%1").arg(channelNumber));
+    servers[port]->startServer(port);
 }
 
 QStandardItemModel *LoggerBackend::getLogModel()
 {
-    return logModels[m_currentChannel];
+    return logModels[m_currentPort];
 }
 
 void LoggerBackend::clearCurrentLogModel()
 {
-    logModels[m_currentChannel]->removeRows(0, logModels[m_currentChannel]->rowCount());
+    logModels[m_currentPort]->removeRows(0, logModels[m_currentPort]->rowCount());
 }
 
-int LoggerBackend::channel()
+int LoggerBackend::port()
 {
-    return m_currentChannel;
+    return m_currentPort;
 }
 
-void LoggerBackend::setChannel(int channel)
+void LoggerBackend::setPort(int port)
 {
-    if (m_currentChannel != channel) {
-        m_currentChannel = channel;
-        emit channelChanged();
+    if (m_currentPort != port) {
+        m_currentPort = port;
+        emit portChanged();
         emit logModelChanged();
+        emit serverAddressesChanged();
     }
 }
+
+QStringList LoggerBackend::serverAddresses()
+{
+    QStringList addresses;
+    for (const QHostAddress &address : QNetworkInterface::allAddresses()) {
+        if (address.protocol() == QAbstractSocket::IPv4Protocol) {
+            addresses << QString("ws://%1:%2").arg(address.toString()).arg(m_currentPort);
+        }
+    }
+    return addresses;
+}
+

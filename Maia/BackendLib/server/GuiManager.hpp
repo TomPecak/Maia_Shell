@@ -26,6 +26,7 @@ public:
     void uninit();
 
 signals:
+    void frontendUnloaded();
     void frontendChanged(const QString frontendId);
 
 private slots:

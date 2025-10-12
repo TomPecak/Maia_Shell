@@ -32,6 +32,7 @@ Server::Server(QGuiApplication *app, int swapIntervalOption)
             &Server::handleGuiManagerFrontendChanged);
 
 
+
     m_guiManager.startGui(m_frontendManagerService.getCurrentFrontent());
 }
 

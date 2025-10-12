@@ -16,7 +16,6 @@ set(XPFRONTEND_QML_FILES
     contents/Clock3DContent.qml
     TurnOffContent.qml
     LogoutContent.qml
-    MainWindows.qml
     WallpaperContent.qml
     TaskbarContent.qml
     mask/MainMask.qml

@@ -71,6 +71,7 @@ void QmlGui::deleteQmlEngineRootObjects()
 
 void QmlGui::loadFromModule(QAnyStringView uri, QAnyStringView typeName)
 {
+    qDebug() << "[INFO] " << __PRETTY_FUNCTION__ << " uri=" << uri << " typeName=" << typeName;
     engine.loadFromModule(uri, typeName);
 
     //Make sure the main QML object is loaded.
@@ -82,6 +83,7 @@ void QmlGui::loadFromModule(QAnyStringView uri, QAnyStringView typeName)
 
 void QmlGui::load(const QString &filePath)
 {
+    qDebug() << "[INFO] " << __PRETTY_FUNCTION__ << " filePath=" << filePath;
     engine.load(filePath);
 
     //Make sure the main QML object is loaded.

@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Layouts
 
 Window {
     width: 640
@@ -11,52 +12,55 @@ Window {
     property int activeIndex: -1
 
     function generatePastelColor() {
-        // Generuje losowy kolor w formacie RGB z wysokimi wartościami jasności i niskim nasyceniem
-        var r = Math.floor(Math.random() * 46 + 210); // 200-255 dla jasnych odcieni
+        // Generates a random RGB color with high brightness and low saturation
+        var r = Math.floor(Math.random() * 46 + 210); // 200-255 for light shades
         var g = Math.floor(Math.random() * 46 + 210);
         var b = Math.floor(Math.random() * 46 + 210);
         return Qt.rgba(r / 255, g / 255, b / 255, 1);
     }
 
     function getPastelColor(processId) {
-        // Sprawdź, czy kolor dla process_id już istnieje
+        // Check if a color for process_id already exists
         if (colorMap.hasOwnProperty(processId)) {
             return colorMap[processId];
         }
 
-        // Zapisz kolor w mapie
+        // Store the color in the map
         var color = generatePastelColor();
         colorMap[processId] = color;
         return color;
     }
 
-    Row{
+    RowLayout {
         id: menu
         z: 1
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.right: parent.right
+        spacing: 7
 
-        CheckBox{
+        CheckBox {
             id: autoScroll
             text: "Autoscroll"
             checked: true
         }
-        Button{
+        Button {
             text: "Clear log"
             onClicked: {
                 backend.clearCurrentLogModel()
             }
         }
-
         ComboBox {
-            id: channelComboBox
-            model: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-            currentIndex: backend.channel // Synchronizacja z backend.channel
-            displayText: "Channel: " + backend.channel
+            id: portComboBox
+            model: [50000, 50001, 50002, 50003, 50004, 50005, 50006, 50007, 50008, 50009]
+            currentIndex: backend.port
+            displayText: "Port: " + backend.port
             onActivated: {
-                backend.channel = currentIndex // Zmiana kanału w backendzie
+                backend.port = model[index]
             }
+        }
+        Item {
+            Layout.fillWidth: true
         }
     }
 
@@ -65,17 +69,17 @@ Window {
         anchors.top: menu.bottom
         anchors.right: parent.right
         anchors.left: parent.left
-        anchors.bottom: parent.bottom
+        anchors.bottom: serverComboBox.top
 
         model: backend.logModel
         flickDeceleration: 0.01
 
         ScrollBar.vertical: ScrollBar {
-                    id: verticalScrollBar
-                    active: true // Pasek widoczny podczas przewijania
-                    policy: ScrollBar.AlwaysOn // Pasek pojawia się, gdy zawartość jest większa niż widok
-                    width: 12 // Szerokość paska przewijania
-                }
+            id: verticalScrollBar
+            active: true
+            policy: ScrollBar.AlwaysOn
+            width: 12
+        }
 
         delegate: Rectangle {
             width: logListView.width
@@ -87,7 +91,7 @@ Window {
             Row {
                 anchors.fill: parent
                 Text {
-                    text: process_id + " | "// message // Pierwsze pole
+                    text: process_id + " | " // message // First field
                 }
                 TextEdit {
                     text: message
@@ -97,24 +101,33 @@ Window {
             MouseArea {
                 anchors.fill: parent
                 onClicked: {
-                    activeIndex = index // Ustaw aktywny indeks po kliknięciu
+                    activeIndex = index // Set active index on click
                 }
                 onPressed: {
-                    //activeIndex = index // Ustaw aktywny indeks przy rozpoczęciu przeciągania
+                    //activeIndex = index // Set active index on drag start
                 }
                 onReleased: {
-                    // Opcjonalnie: można zresetować activeIndex po puszczeniu myszy
+                    // Optional: can reset activeIndex on mouse release
                     // activeIndex = -1
                 }
             }
         }
         onCountChanged: {
-            // Ustawienie currentIndex na ostatni element
-            if(autoScroll.checked){
+            // Set currentIndex to the last element
+            if(autoScroll.checked) {
                 currentIndex = count - 1
             }
         }
+    }
 
-
+    ComboBox {
+        id: serverComboBox
+        anchors.right: parent.right
+        anchors.left: parent.left
+        anchors.bottom: parent.bottom
+        model: backend.serverAddresses  // Directly use the list as the model
+        currentIndex: 0  // Default to the first address
+        // Optional: onActivated: { console.log("Selected: " + model[index]) } // If you want to do something with the selection
+        // displayText: "Server: " + currentText  // If you want to show only the selected item
     }
 }
