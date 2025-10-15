@@ -42,7 +42,7 @@ MenuItem {
         sourceSize.width: 4
         sourceSize.height: 7
         mipmap: true
-        source: "qrc:/assets/images/arrow_pixel_art.png"
+        source: "../assets/images/arrow_pixel_art.png"
     }
 
     // arrow: Canvas {

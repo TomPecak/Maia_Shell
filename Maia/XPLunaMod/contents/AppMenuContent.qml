@@ -9,7 +9,7 @@ Image{
 
     width: 380
     height: 478
-    source: "qrc:/assets/images/start_menu/start_menu.png"
+    source: "../assets/images/start_menu/start_menu.png"
 
     signal hideRequest()
     signal logoutClicked()
@@ -36,12 +36,12 @@ Image{
 
     FontLoader {
         id: tahomaRegular
-        source: "qrc:/assets/fonts/tahoma.ttf"
+        source: "../assets/fonts/tahoma.ttf"
     }
 
     FontLoader {
         id: tahomaBold
-        source: "qrc:/assets/fonts/tahomabd.ttf"
+        source: "../assets/fonts/tahomabd.ttf"
     }
 
     Rectangle{
@@ -196,7 +196,7 @@ Image{
         width: 174
 
         property bool activeHover: allProgramsButtonMouseArea.containsMouse? (true) : (appsListMenu.visible ? true : false)
-        source: activeHover? "qrc:/assets/images/start_menu/all_programs_button_hover.png" : "qrc:/assets/images/start_menu/all_programs_button_normal.png"
+        source: activeHover? "../assets/images/start_menu/all_programs_button_hover.png" : "../assets/images/start_menu/all_programs_button_normal.png"
 
         Text{
             id: allProgramsText
@@ -323,7 +323,7 @@ Image{
                 anchors.bottomMargin: 1
                 fillMode: Image.TileVertically
                 width: 6
-                source: "qrc:/assets/images/app_list/app_list_right_border.png"
+                source: "../assets/images/app_list/app_list_right_border.png"
             }
 
             ListView {
@@ -509,7 +509,7 @@ Image{
 
                 fillMode: Image.TileVertically
                 height: 1
-                source: "qrc:/assets/images/app_list/search_separator.png"
+                source: "../assets/images/app_list/search_separator.png"
             }
 
             TextField {
@@ -569,7 +569,7 @@ Image{
                 y: 3
                 width: 24
                 height: 24
-                source: "qrc:/assets/images/power_off_button.png"
+                source: "../assets/images/power_off_button.png"
             }
 
             Text{
@@ -595,11 +595,11 @@ Image{
             hoverEnabled:  true
             onEntered: {
                 turnOffButtonBackground.color = "#ff316ac5"
-                appMenuTurnOffButton.source = "qrc:/assets/images/power_off_button_hover.png"
+                appMenuTurnOffButton.source = "../assets/images/power_off_button_hover.png"
             }
             onExited: {
                 turnOffButtonBackground.color = "#00316ac5"
-                appMenuTurnOffButton.source = "qrc:/assets/images/power_off_button.png"
+                appMenuTurnOffButton.source = "../assets/images/power_off_button.png"
             }
             onPressed: {
                 turnOffButtonContent.x = 1;
@@ -635,7 +635,7 @@ Image{
                 y: 3
                 width: 24
                 height: 24
-                source: "qrc:/assets/images/menu_start_logout_normal.png"
+                source: "../assets/images/menu_start_logout_normal.png"
             }
 
             Text{
@@ -661,11 +661,11 @@ Image{
             hoverEnabled:  true
             onEntered: {
                 logoutButtonBackground.color = "#ff316ac5"
-                appMenuLogoutButton.source = "qrc:/assets/images/menu_start_logout_hover.png"
+                appMenuLogoutButton.source = "../assets/images/menu_start_logout_hover.png"
             }
             onExited: {
                 logoutButtonBackground.color = "#00316ac5"
-                appMenuLogoutButton.source = "qrc:/assets/images/menu_start_logout_normal.png"
+                appMenuLogoutButton.source = "../assets/images/menu_start_logout_normal.png"
             }
             onPressed: {
                 logoutButtonContent.x = 1;

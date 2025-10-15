@@ -8,7 +8,7 @@ import Maia.Client
 Image {
     id: wallpaper
     anchors.fill: parent
-    source: "qrc:/assets/images/images/xp_fhd.jpg"
+    source: "./assets/images/images/xp_fhd.jpg"
 
     signal leftMouseButtonClicked()
 
@@ -242,15 +242,6 @@ Image {
 
         }
     }
-
-
-
-
-
-
-
-
-
 
 }
 

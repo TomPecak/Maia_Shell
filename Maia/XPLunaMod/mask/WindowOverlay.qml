@@ -31,12 +31,12 @@ Window {
 
     FontLoader {
         id: tahomaBold
-        source: "qrc:/assets/fonts/tahomabd.ttf"
+        source: "../assets/fonts/tahomabd.ttf"
     }
 
     FontLoader {
        id: tahomaRegular
-        source: "qrc:/assets/fonts/tahoma.ttf"
+        source: "../assets/fonts/tahoma.ttf"
     }
 
     onActiveFocusItemChanged: {

@@ -30,7 +30,7 @@ Rectangle {
         anchors.centerIn: parent
         width: 314
         height: 200
-        source: "qrc:/assets/images/turn_off_dialog.png"
+        source: "./assets/images/turn_off_dialog.png"
 
         Image{
             id: turnOffButton
@@ -38,19 +38,19 @@ Rectangle {
             y: 81
             width: 33
             height: 33
-            source: "qrc:/assets/images/dialog_turn_off_power_button_normal.png"
+            source: "./assets/images/dialog_turn_off_power_button_normal.png"
 
             MouseArea {
                 anchors.fill: parent
                 onPressed: {
-                    turnOffButton.source = "qrc:/assets/images/dialog_turn_off_power_button_pressed.png"
+                    turnOffButton.source = "./assets/images/dialog_turn_off_power_button_pressed.png"
 
                 }
                 onReleased: {
                     if(containsMouse){
                         MSessionManager.poweroff()
                     }
-                    turnOffButton.source = "qrc:/assets/images/dialog_turn_off_power_button_normal.png"
+                    turnOffButton.source = "./assets/images/dialog_turn_off_power_button_normal.png"
                 }
             }
         }
@@ -61,28 +61,28 @@ Rectangle {
             y: 81
             width: 33
             height: 33
-            source: "qrc:/assets/images/dialog_turn_off_restart_button_normal.png"
+            source: "./assets/images/dialog_turn_off_restart_button_normal.png"
 
             MouseArea {
                 anchors.fill: parent
                 hoverEnabled:  true
                 onEntered: {
                     if(!pressed)
-                        restartButton.source = "qrc:/assets/images/dialog_turn_off_restart_button_hover.png"
+                        restartButton.source = "./assets/images/dialog_turn_off_restart_button_hover.png"
                 }
                 onExited: {
                     if(!pressed)
-                        restartButton.source = "qrc:/assets/images/dialog_turn_off_restart_button_normal.png"
+                        restartButton.source = "./assets/images/dialog_turn_off_restart_button_normal.png"
                 }
                 onPressed: {
-                    restartButton.source = "qrc:/assets/images/dialog_turn_off_restart_button_pressed.png"
+                    restartButton.source = "./assets/images/dialog_turn_off_restart_button_pressed.png"
                 }
                 onReleased: {
                     if(containsMouse){
-                        restartButton.source = "qrc:/assets/images/dialog_turn_off_restart_button_hover.png"
+                        restartButton.source = "./assets/images/dialog_turn_off_restart_button_hover.png"
                         MSessionManager.reboot()
                     }else{
-                        restartButton.source = "qrc:/assets/images/dialog_turn_off_restart_button_normal.png"
+                        restartButton.source = "./assets/images/dialog_turn_off_restart_button_normal.png"
                     }
                 }
             }
@@ -94,28 +94,28 @@ Rectangle {
             y: 168
             width: 61
             height: 21
-            source: "qrc:/assets/images/dialog_turn_off_cancel_button_normal.png"
+            source: "./assets/images/dialog_turn_off_cancel_button_normal.png"
 
             MouseArea{
                 anchors.fill: parent
                 hoverEnabled: true
                 onEntered: {
                     if(!pressed)
-                        cancelButton.source = "qrc:/assets/images/dialog_turn_off_cancel_button_hover.png"
+                        cancelButton.source = "./assets/images/dialog_turn_off_cancel_button_hover.png"
                 }
                 onExited: {
                     if(!pressed)
-                        cancelButton.source = "qrc:/assets/images/dialog_turn_off_cancel_button_normal.png"
+                        cancelButton.source = "./assets/images/dialog_turn_off_cancel_button_normal.png"
                 }
                 onPressed: {
-                    cancelButton.source = "qrc:/assets/images/dialog_turn_off_cancel_button_pressed.png"
+                    cancelButton.source = "./assets/images/dialog_turn_off_cancel_button_pressed.png"
                 }
                 onReleased: {
                     if(containsMouse){
-                        cancelButton.source = "qrc:/assets/images/dialog_turn_off_cancel_button_hover.png"
+                        cancelButton.source = "./assets/images/dialog_turn_off_cancel_button_hover.png"
                         root.cancelClicked()
                     }else{
-                        cancelButton.source = "qrc:/assets/images/dialog_turn_off_cancel_button_normal.png"
+                        cancelButton.source = "./assets/images/dialog_turn_off_cancel_button_normal.png"
                     }
                 }
             }

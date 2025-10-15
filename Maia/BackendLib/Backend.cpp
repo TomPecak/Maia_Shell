@@ -9,6 +9,7 @@
 #include <QStandardPaths>
 #include <QUrl>
 #include <QSettings>
+#include <QIcon>
 
 #include <KX11Extras>
 #include <KConfig>
@@ -60,44 +61,112 @@ void Backend::installAuroraeTheme(const QUrl &themeUrl, bool forceReinstall)
     installDirInternal(themeUrl, targetInstallDirPath, forceReinstall);
 }
 
-
-
 void Backend::setAuroraeTheme(const QString themeName)
 {
     qDebug() << "Attempting to set Aurorae theme to:" << themeName;
 
-#warning "This operation is not asynchnous"
+#warning "This operation is not asynchronous"
 
-    // Step 1: Verify that the theme exists and is valid
+    // Step 1: Verify that the theme exists
     QString themePath = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + "/aurorae/themes/" + themeName;
     QDir themeDir(themePath);
     if (!themeDir.exists()) {
-        qDebug() << "[ERROR] Aurorae theme directory does not exist at:" << themePath;
-        return;
+        qDebug() << "Aurorae theme directory does not exist at:" << themePath;
+        // Attempt to reinstall from stored URL
+        QSettings settings;
+        settings.beginGroup("[Installed_themes_URLs]");
+        QString savedUrl = settings.value(themeName, "").toString();
+        settings.endGroup();
+        if (!savedUrl.isEmpty()) {
+            qDebug() << "Attempting to reinstall missing Aurorae theme:" << themeName << "from URL:" << savedUrl;
+            QUrl themeUrl(savedUrl);
+            installAuroraeTheme(themeUrl, true); // Force reinstall
+            if (!themeDir.exists()) {
+                qDebug() << "[ERROR] Failed to reinstall Aurorae theme:" << themeName;
+                emit themeReinstallationFailed(themeName);
+                return;
+            }
+        } else {
+            qDebug() << "[ERROR] No URL found in settings for Aurorae theme:" << themeName;
+            emit themeReinstallationFailed(themeName);
+            return;
+        }
     }
+
+    // Step 2: Verify metadata
     if (!themeDir.exists("metadata.desktop")) {
         qDebug() << "[ERROR] Invalid Aurorae theme: metadata.desktop not found in" << themePath;
+        emit themeReinstallationFailed(themeName);
         return;
     }
 
-    // Step 2: Update kwinrc configuration using KSharedConfig
+    // Step 3: Update kwinrc configuration using KSharedConfig
     KSharedConfig::Ptr config = KSharedConfig::openConfig("kwinrc", KConfig::SimpleConfig);
     KConfigGroup decorationGroup(config, "org.kde.kdecoration2");
     decorationGroup.writeEntry("theme", "__aurorae__svg__" + themeName);
     decorationGroup.writeEntry("library", "org.kde.kwin.aurorae");
     if (!config->sync()) {
         qDebug() << "[ERROR] Failed to save kwinrc configuration for theme:" << themeName;
+        emit themeReinstallationFailed(themeName);
         return;
     }
 
     qDebug() << "Successfully updated kwinrc with theme:" << themeName;
 }
 
+void Backend::setIconTheme(const QString themeName)
+{
+    qDebug() << "Attempting to set icon theme to:" << themeName;
+
+#warning "This operation is not asynchronous"
+
+    // Step 1: Verify that the theme exists
+    QString themePath = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + "/icons/" + themeName;
+    QDir themeDir(themePath);
+    if (!themeDir.exists()) {
+        qDebug() << "Icon theme directory does not exist at:" << themePath;
+        // Attempt to reinstall from stored URL
+        QSettings settings;
+        settings.beginGroup("[Installed_themes_URLs]");
+        QString savedUrl = settings.value(themeName, "").toString();
+        settings.endGroup();
+        if (!savedUrl.isEmpty()) {
+            qDebug() << "Attempting to reinstall missing icon theme:" << themeName << "from URL:" << savedUrl;
+            QUrl themeUrl(savedUrl);
+            installIconTheme(themeUrl, true); // Force reinstall
+            if (!themeDir.exists()) {
+                qDebug() << "[ERROR] Failed to reinstall icon theme:" << themeName;
+                emit themeReinstallationFailed(themeName);
+                return;
+            }
+        } else {
+            qDebug() << "[ERROR] No URL found in settings for icon theme:" << themeName;
+            emit themeReinstallationFailed(themeName);
+            return;
+        }
+    }
+
+    // Step 2: Apply icon theme
+    QIcon::setThemeName(themeName);
+
+    // Optional: Update kdeglobals for KDE compatibility
+    KSharedConfig::Ptr config = KSharedConfig::openConfig("kdeglobals", KConfig::SimpleConfig);
+    KConfigGroup iconGroup(config, "Icons");
+    iconGroup.writeEntry("Theme", themeName);
+    if (!config->sync()) {
+        qDebug() << "[ERROR] Failed to save kdeglobals configuration for icon theme:" << themeName;
+        emit themeReinstallationFailed(themeName);
+        return;
+    }
+
+    qDebug() << "Successfully set icon theme to:" << themeName;
+}
+
 void Backend::setDefaultWindowDecoration()
 {
     qDebug() << "Attempting to set default window decoration";
 
-#warning "This operation is not asynchnous"
+#warning "This operation is not asynchronous"
 
     // Step 1: Update kwinrc configuration using KSharedConfig
     KSharedConfig::Ptr config = KSharedConfig::openConfig("kwinrc", KConfig::SimpleConfig);
@@ -113,8 +182,6 @@ void Backend::setDefaultWindowDecoration()
 
     qDebug() << "Successfully removed [org.kde.kdecoration2] group from kwinrc to use default window decoration";
 }
-
-
 
 bool Backend::copyLocalDirectory(const QString &sourcePath, const QString &targetPath)
 {
@@ -254,7 +321,6 @@ void Backend::reservePanelTopArea(QQuickWindow *window, int x, int y, int width,
     strutManager.reservePanelTopArea(window, x, y, width, height);
 }
 
-#warning "add 'later' to method name"
 void Backend::reservePanelBottomArea(QQuickWindow *window, int x, int y, int width, int height)
 {
     strutManager.reservePanelBottomArea(window, x, y, width, height);
@@ -413,13 +479,6 @@ bool Backend::installDirInternal(const QUrl &themeUrl, const QString &targetDirP
 {
     QDir targetDir(targetDirPath);
 
-    if (!targetDir.exists()) {
-        if (!targetDir.mkpath(".")) {
-            qDebug() << "[ERROR] Failed to create target directory:" << targetDirPath;
-            return false;
-        }
-    }
-
     if (!themeUrl.isValid()) {
         qDebug() << "Invalid theme URL:" << themeUrl;
         return false;
@@ -450,20 +509,40 @@ bool Backend::installDirInternal(const QUrl &themeUrl, const QString &targetDirP
     QString targetThemePath = targetDirPath + "/" + themeName;
     QDir targetThemeDir(targetThemePath);
 
-    // Check if the theme is already installed with the same URL
-    if (!forceReinstall && isUrlInstalled(themeName, themeUrl)) {
-        qDebug() << "Theme already installed with matching URL, skipping:" << themeName;
-        return true;
+
+    if(forceReinstall){
+        targetThemeDir.removeRecursively();
+        clearInstalledUrl(themeName);
     }
 
-    // Remove old/partial directory and settings entry if it exists
-    if (targetThemeDir.exists()) {
-        qDebug() << "Removing existing/partial theme directory:" << targetThemePath;
-        targetThemeDir.removeRecursively();
+    if(isUrlInstalled(themeName, targetThemePath)){
+        // Check if the theme directory exists and is recorded in settings
+        if(targetThemeDir.exists()){ //settings - ok ; dir - ok
+            qDebug() << "Theme already installed and directory exists, skipping:" << themeName;
+            return true;
+        // If directory is missing but URL is in settings, clear settings to force reinstall
+        }else{ //settings - ok ; dir - false
+            qDebug() << "Theme directory missing but recorded in settings, clearing settings for reinstall:" << themeName;
+            clearInstalledUrl(themeName);
+        }
+    }else{
+        if(targetThemeDir.exists()){ //settings - false ; dir - ok
+            qDebug() << "Theme directory exists but not recored in settings, so remove dir and reinstall";
+            targetThemeDir.removeRecursively();
+        }else{ //settings - false ; dir - false
+            qDebug() << "Install theme, theme directory doesn't exists and not recored in settings, so install";
+        }
     }
-    clearInstalledUrl(themeName); // Clear old setting
+
 
     // Copy
+    if (!targetDir.exists()) {
+        if (!targetDir.mkpath(".")) {
+            qDebug() << "[ERROR] Failed to create target directory:" << targetDirPath;
+            return false;
+        }
+    }
+
     bool success;
     if (themeUrl.scheme() == "qrc") {
         success = copyQrcDirectory(sourcePath, targetThemePath);
@@ -472,23 +551,9 @@ bool Backend::installDirInternal(const QUrl &themeUrl, const QString &targetDirP
     }
 
     if (success) {
-        // Verify metadata
-        QString requiredFile;
-        if (targetDirPath.endsWith("/aurorae/themes")) {
-            requiredFile = targetThemePath + "/metadata.desktop";
-        } else if (targetDirPath.endsWith("/icons")) {
-            requiredFile = targetThemePath + "/index.theme";
-        }
-        if (!requiredFile.isEmpty() && !QFile::exists(requiredFile)) {
-            qDebug() << "Required metadata file missing after install, removing partial theme:" << requiredFile;
-            targetThemeDir.removeRecursively();
-            clearInstalledUrl(themeName);
-            success = false;
-        } else {
-            // Save to settings
-            saveInstalledUrl(themeName, themeUrl);
-            qDebug() << "Theme installed successfully and marked in settings:" << targetThemePath;
-        }
+        // Save to settings
+        saveInstalledUrl(themeName, targetThemePath);
+        qDebug() << "Theme installed successfully and marked in settings:" << targetThemePath;
     } else {
         // Remove partial after error
         if (targetThemeDir.exists()) {
@@ -523,7 +588,7 @@ void Backend::saveInstalledUrl(const QString &themeName, const QUrl &themeUrl)
 {
     QSettings settings;
     settings.beginGroup("[Installed_themes_URLs]");
-    settings.setValue(themeName, themeUrl.toString());
+    settings.setValue(themeName ,themeUrl.toString());
     settings.endGroup();
     settings.sync(); // Ensure saving to disk
 }

@@ -4,7 +4,7 @@ import Maia.Client
 Image {
     id: panel
     height: 30
-    source: "qrc:/assets/images/task_bar_background.bmp"
+    source: "./assets/images/task_bar_background.bmp"
     property bool inputMenuVisible: false
 
     signal startPressed()
@@ -13,7 +13,7 @@ Image {
     onInputMenuVisibleChanged: {
         if(inputMenuVisible === false){
             if(!startButtonMouseArea.containsMouse){
-                startImage.source = "qrc:/assets/images/images/start_normal.bmp";
+                startImage.source = "./assets/images/images/start_normal.bmp";
             }
         }
     }
@@ -25,7 +25,7 @@ Image {
         anchors.bottom: parent.bottom
         height: parent.height
         width: 101
-        source: "qrc:/assets/images/images/start_normal.bmp"
+        source: "./assets/images/images/start_normal.bmp"
         fillMode: Image.TileHorizontally // or another option depending on the requirements.
 
         Component.onCompleted: {
@@ -41,16 +41,16 @@ Image {
 
             onEntered: {
                 if(inputMenuVisible){
-                    startImage.source = "qrc:/assets/images/images/start_pressed.bmp";
+                    startImage.source = "./assets/images/images/start_pressed.bmp";
                 }else{
-                    startImage.source = "qrc:/assets/images/images/start_hover.bmp";
+                    startImage.source = "./assets/images/images/start_hover.bmp";
                 }
             }
             onExited: {
                 if(inputMenuVisible){
-                    startImage.source = "qrc:/assets/images/images/start_pressed.bmp";
+                    startImage.source = "./assets/images/images/start_pressed.bmp";
                 }else{
-                    startImage.source = "qrc:/assets/images/images/start_normal.bmp";
+                    startImage.source = "./assets/images/images/start_normal.bmp";
                 }
             }
             onPressed: {
@@ -58,12 +58,12 @@ Image {
 
                 if(inputMenuVisible){
                     //backend.minimalizeAllWindows()
-                    startImage.source = "qrc:/assets/images/images/start_pressed.bmp";
+                    startImage.source = "./assets/images/images/start_pressed.bmp";
                 }else{
                     if (containsMouse) {
-                        startImage.source = "qrc:/assets/images/images/start_hover.bmp";
+                        startImage.source = "./assets/images/images/start_hover.bmp";
                     } else {
-                        startImage.source = "qrc:/assets/images/images/start_normal.bmp";
+                        startImage.source = "./assets/images/images/start_normal.bmp";
                     }
                 }
             }
@@ -71,12 +71,12 @@ Image {
                 panel.endPressed()
 
                 if(inputMenuVisible){
-                    startImage.source = "qrc:/assets/images/images/start_pressed.bmp";
+                    startImage.source = "./assets/images/images/start_pressed.bmp";
                 }else{
                     if (containsMouse) {
-                        startImage.source = "qrc:/assets/images/images/start_hover.bmp";
+                        startImage.source = "./assets/images/images/start_hover.bmp";
                     } else {
-                        startImage.source = "qrc:/assets/images/images/start_normal.bmp";
+                        startImage.source = "./assets/images/images/start_normal.bmp";
                     }
                 }
             }
@@ -151,7 +151,7 @@ Image {
         anchors.bottom: notificationAreaBackground.bottom
         height: notificationAreaBackground.height
         width: 10
-        source: "qrc:/assets/images/taskpanel_separator.bmp"
+        source: "./assets/images/taskpanel_separator.bmp"
         fillMode: Image.TileHorizontally
     }
 
@@ -161,7 +161,7 @@ Image {
         anchors.bottom: parent.bottom
         height: parent.height
         width: 104
-        source: "qrc:/assets/images/clock_background.bmp"
+        source: "./assets/images/clock_background.bmp"
         fillMode: Image.TileHorizontally
 
         Image{
@@ -171,7 +171,7 @@ Image {
             anchors.verticalCenter: parent.verticalCenter
             width:16
             height:16
-            source: "qrc:/assets/images/taskbar/notification_area/speaker.bmp"
+            source: "./assets/images/taskbar/notification_area/speaker.bmp"
             fillMode: Image.Stretch
 
             MouseArea{

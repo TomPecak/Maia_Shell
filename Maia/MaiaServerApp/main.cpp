@@ -28,8 +28,8 @@
 
 #include "logger.hpp"
 
-#include <QtQml/QQmlExtensionPlugin>
-Q_IMPORT_QML_PLUGIN(XPFrontendPlugin)
+// #include <QtQml/QQmlExtensionPlugin>
+// Q_IMPORT_QML_PLUGIN(XPFrontendPlugin)
 
 void getCmdLineOptions(const QCoreApplication &app,
                        QString &modeOption,

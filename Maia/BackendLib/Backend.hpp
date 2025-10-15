@@ -32,30 +32,30 @@ public:
     //qt version
     Q_PROPERTY(QString qtVersion READ qtVersion CONSTANT)
 
-    Q_INVOKABLE void installAuroraeTheme(const QUrl & themeUrl, bool forceReinstall = false);
-    Q_INVOKABLE void installIconTheme(const QUrl & themeUrl, bool forceReinstall = false);
+    Q_INVOKABLE void installAuroraeTheme(const QUrl &themeUrl, bool forceReinstall = false);
+    Q_INVOKABLE void installIconTheme(const QUrl &themeUrl, bool forceReinstall = false);
     Q_INVOKABLE void setAuroraeTheme(const QString themeName);
+    Q_INVOKABLE void setIconTheme(const QString themeName); // Added for icon theme application
     Q_INVOKABLE void setDefaultWindowDecoration();
 
     //mask
-    Q_INVOKABLE void addMaskedItem(QQuickItem * item);
-    Q_INVOKABLE void removeMaskedItem(QQuickItem * item);
+    Q_INVOKABLE void addMaskedItem(QQuickItem *item);
+    Q_INVOKABLE void removeMaskedItem(QQuickItem *item);
 
-    //
-    Q_INVOKABLE void activateWindow (WId win);
+    //window management
+    Q_INVOKABLE void activateWindow(WId win);
     Q_INVOKABLE void minimalizeAllWindows();
 
     //process
-    Q_INVOKABLE void startApplication(const QString & id);
-    Q_INVOKABLE void startProcess(const QString & proc);
-    Q_INVOKABLE void runCommand(const QString & cmd);
+    Q_INVOKABLE void startApplication(const QString &id);
+    Q_INVOKABLE void startProcess(const QString &proc);
+    Q_INVOKABLE void runCommand(const QString &cmd);
 
-    //panelLocation
-    // Panel location
-    Q_INVOKABLE void reservePanelLeftArea(QQuickWindow * window, int x, int y, int width, int height);
-    Q_INVOKABLE void reservePanelRightArea(QQuickWindow * window, int x, int y, int width, int height);
-    Q_INVOKABLE void reservePanelTopArea(QQuickWindow * window, int x, int y, int width, int height);
-    Q_INVOKABLE void reservePanelBottomArea(QQuickWindow * window, int x, int y, int width, int height);
+    //panel location
+    Q_INVOKABLE void reservePanelLeftArea(QQuickWindow *window, int x, int y, int width, int height);
+    Q_INVOKABLE void reservePanelRightArea(QQuickWindow *window, int x, int y, int width, int height);
+    Q_INVOKABLE void reservePanelTopArea(QQuickWindow *window, int x, int y, int width, int height);
+    Q_INVOKABLE void reservePanelBottomArea(QQuickWindow *window, int x, int y, int width, int height);
 
     Q_INVOKABLE void setX11WindowTypeAsNormal(QQuickWindow *window);
     Q_INVOKABLE void setX11WindowTypeAsDesktop(QQuickWindow *window);
@@ -70,7 +70,7 @@ public:
     //platform info
     QString platformName() const;
 
-    //qt Version
+    //qt version
     QString qtVersion() const;
 
     //cpu load
@@ -87,6 +87,7 @@ signals:
     void platformNameChanged();
     void cpuLoadChanged();
     void measureCpuLoadChanged();
+    void themeReinstallationFailed(const QString &themeName); // Added for error notification
 
 private:
     bool installDirInternal(const QUrl &themeUrl, const QString &targetInstallDirPath, bool forceReinstall);

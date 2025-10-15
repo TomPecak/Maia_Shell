@@ -10,17 +10,17 @@ TiledImage{
 
     visible: true
 
-    leftTopSource: "qrc:/assets/images/system_volume_dialog/top_left.bmp"
-    leftMiddleSource: "qrc:/assets/images/system_volume_dialog/middle_left.bmp"
-    leftBottomSource: "qrc:/assets/images/system_volume_dialog/bottom_left.bmp"
+    leftTopSource: "../assets/images/system_volume_dialog/top_left.bmp"
+    leftMiddleSource: "../assets/images/system_volume_dialog/middle_left.bmp"
+    leftBottomSource: "../assets/images/system_volume_dialog/bottom_left.bmp"
 
-    middleTopSource: "qrc:/assets/images/system_volume_dialog/top_middle.bmp"
-    middleMiddleSource: "qrc:/assets/images/system_volume_dialog/middle_middle.bmp"
-    middleBottomSource: "qrc:/assets/images/system_volume_dialog/bottom_middle.bmp"
+    middleTopSource: "../assets/images/system_volume_dialog/top_middle.bmp"
+    middleMiddleSource: "../assets/images/system_volume_dialog/middle_middle.bmp"
+    middleBottomSource: "../assets/images/system_volume_dialog/bottom_middle.bmp"
 
-    rightTopSource: "qrc:/assets/images/system_volume_dialog/top_right.bmp"
-    rightMiddleSource: "qrc:/assets/images/system_volume_dialog/middle_right.bmp"
-    rightBottomSource: "qrc:/assets/images/system_volume_dialog/bottom_right.bmp"
+    rightTopSource: "../assets/images/system_volume_dialog/top_right.bmp"
+    rightMiddleSource: "../assets/images/system_volume_dialog/middle_right.bmp"
+    rightBottomSource: "../assets/images/system_volume_dialog/bottom_right.bmp"
 
     Text{
         id: volumeText
@@ -66,9 +66,9 @@ TiledImage{
             implicitHeight: control.orientation === Qt.Horizontal ? (4) : (200)
             width: control.orientation === Qt.Horizontal ? (control.availableWidth) : implicitWidth
             height: control.orientation === Qt.Horizontal ? (implicitHeight) : (control.availableHeight)
-            topSource: "qrc:/assets/images/system_volume_dialog/slider/slider_background_top.bmp"
-            middleSource: "qrc:/assets/images/system_volume_dialog/slider/slider_background_middle.bmp"
-            bottomSource: "qrc:/assets/images/system_volume_dialog/slider/slider_background_bottom.bmp"
+            topSource: "../assets/images/system_volume_dialog/slider/slider_background_top.bmp"
+            middleSource: "../assets/images/system_volume_dialog/slider/slider_background_middle.bmp"
+            bottomSource: "../assets/images/system_volume_dialog/slider/slider_background_bottom.bmp"
         }
 
 
@@ -79,7 +79,7 @@ TiledImage{
             width: 22
             height: 11
 
-            source: "qrc:/assets/images/system_volume_dialog/slider/slider_handle_normal.bmp"
+            source: "../assets/images/system_volume_dialog/slider/slider_handle_normal.bmp"
 
             MouseArea {
                 anchors.fill: parent
@@ -88,19 +88,19 @@ TiledImage{
 
                 onEntered: {
                     console.log("onEntered()")
-                    customHandle.source = "qrc:/assets/images/system_volume_dialog/slider/slider_handle_hover.bmp";
+                    customHandle.source = "../assets/images/system_volume_dialog/slider/slider_handle_hover.bmp";
                 }
 
                 onExited: {
                     console.log("onExited()")
 
-                    customHandle.source = "qrc:/assets/images/system_volume_dialog/slider/slider_handle_normal.bmp";
+                    customHandle.source = "../assets/images/system_volume_dialog/slider/slider_handle_normal.bmp";
 
                 }
 
                 onPressed: (mouse) => {
                     console.log("onPressed()")
-                    customHandle.source = "qrc:/assets/images/system_volume_dialog/slider/slider_handle_pressed.bmp";
+                    customHandle.source = "../assets/images/system_volume_dialog/slider/slider_handle_pressed.bmp";
                     mouse.accepted = false; // Pozwala przesuwać suwak
                 }
 
@@ -108,8 +108,8 @@ TiledImage{
                     console.log("onRelease()")
 
                     customHandle.source = (containsMouse)
-                    ? "qrc:/assets/images/system_volume_dialog/slider/slider_handle_hover.bmp"
-                    : "qrc:/assets/images/system_volume_dialog/slider/slider_handle_normal.bmp";
+                    ? "../assets/images/system_volume_dialog/slider/slider_handle_hover.bmp"
+                    : "../assets/images/system_volume_dialog/slider/slider_handle_normal.bmp";
                     mouse.accepted = false; // Pozwala przesuwać suwak
                 }
             }
@@ -151,16 +151,16 @@ TiledImage{
             source: {
                 if (muteMouseArea.pressed) {
                     return audioBackend.prefferedOutputMuted
-                        ? "qrc:/assets/images/system_volume_dialog/mute_checkbox/mute_pressed_checked.bmp"
-                        : "qrc:/assets/images/system_volume_dialog/mute_checkbox/mute_pressed.bmp";
+                        ? "../assets/images/system_volume_dialog/mute_checkbox/mute_pressed_checked.bmp"
+                        : "../assets/images/system_volume_dialog/mute_checkbox/mute_pressed.bmp";
                 } else if (muteMouseArea.containsMouse) {
                     return audioBackend.prefferedOutputMuted
-                        ? "qrc:/assets/images/system_volume_dialog/mute_checkbox/mute_hover_checked.bmp"
-                        : "qrc:/assets/images/system_volume_dialog/mute_checkbox/mute_hover.bmp";
+                        ? "../assets/images/system_volume_dialog/mute_checkbox/mute_hover_checked.bmp"
+                        : "../assets/images/system_volume_dialog/mute_checkbox/mute_hover.bmp";
                 } else {
                     return audioBackend.prefferedOutputMuted
-                        ? "qrc:/assets/images/system_volume_dialog/mute_checkbox/mute_normal_checked.bmp"
-                        : "qrc:/assets/images/system_volume_dialog/mute_checkbox/mute_normal.bmp";
+                        ? "../assets/images/system_volume_dialog/mute_checkbox/mute_normal_checked.bmp"
+                        : "../assets/images/system_volume_dialog/mute_checkbox/mute_normal.bmp";
                 }
             }
         }

@@ -32,7 +32,7 @@ Rectangle {
         anchors.centerIn: parent
         width: 314
         height: 200
-        source: "qrc:/assets/images/images/log_off_dialog.bmp"
+        source: "./assets/images/images/log_off_dialog.bmp"
 
 
         Item{
@@ -52,21 +52,21 @@ Rectangle {
                     width: 33
                     height: 33
                     visible: !logOffButtonMouseArea.pressed && !logOffButtonMouseArea.containsMouse
-                    source: "qrc:/assets/images/images/dialog_log_off_logoff_button_normal.bmp"
+                    source: "./assets/images/images/dialog_log_off_logoff_button_normal.bmp"
                 }
                 Image{
                     id: logOffButtonHover
                     width: 33
                     height: 33
                     visible: !logOffButtonMouseArea.pressed && logOffButtonMouseArea.containsMouse
-                    source: "qrc:/assets/images/images/dialog_log_off_logoff_button_hover.bmp"
+                    source: "./assets/images/images/dialog_log_off_logoff_button_hover.bmp"
                 }
                 Image{
                     id: logOffButtonPressed
                     width: 33
                     height: 33
                     visible: logOffButtonMouseArea.pressed
-                    source: "qrc:/assets/images/images/dialog_log_off_logoff_button_pressed.bmp"
+                    source: "./assets/images/images/dialog_log_off_logoff_button_pressed.bmp"
                 }
                 MouseArea{
                     id: logOffButtonMouseArea
@@ -113,14 +113,14 @@ Rectangle {
                     width: 33
                     height: 33
                     visible: !switchUserButtonMouseArea.pressed
-                    source: "qrc:/assets/images/images/dialog_log_off_switchuser_button_normal.bmp"
+                    source: "./assets/images/images/dialog_log_off_switchuser_button_normal.bmp"
                 }
                 Image{
                     id: switchUserButtonPressed
                     width: 33
                     height: 33
                     visible: switchUserButtonMouseArea.pressed
-                    source: "qrc:/assets/images/images/dialog_log_off_switchuser_button_pressed.bmp"
+                    source: "./assets/images/images/dialog_log_off_switchuser_button_pressed.bmp"
                 }
                 MouseArea{
                     id: switchUserButtonMouseArea
@@ -157,28 +157,28 @@ Rectangle {
             y: 168
             width: 61
             height: 21
-            source: "qrc:/assets/images/dialog_turn_off_cancel_button_normal.png"
+            source: "./assets/images/dialog_turn_off_cancel_button_normal.png"
 
             MouseArea{
                 anchors.fill: parent
                 hoverEnabled: true
                 onEntered: {
                     if(!pressed)
-                        cancelButton.source = "qrc:/assets/images/dialog_turn_off_cancel_button_hover.png"
+                        cancelButton.source = "./assets/images/dialog_turn_off_cancel_button_hover.png"
                 }
                 onExited: {
                     if(!pressed)
-                        cancelButton.source = "qrc:/assets/images/dialog_turn_off_cancel_button_normal.png"
+                        cancelButton.source = "./assets/images/dialog_turn_off_cancel_button_normal.png"
                 }
                 onPressed: {
-                    cancelButton.source = "qrc:/assets/images/dialog_turn_off_cancel_button_pressed.png"
+                    cancelButton.source = "./assets/images/dialog_turn_off_cancel_button_pressed.png"
                 }
                 onReleased: {
                     if(containsMouse){
-                        cancelButton.source = "qrc:/assets/images/dialog_turn_off_cancel_button_hover.png"
+                        cancelButton.source = "./assets/images/dialog_turn_off_cancel_button_hover.png"
                         root.cancelClicked()
                     }else{
-                        cancelButton.source = "qrc:/assets/images/dialog_turn_off_cancel_button_normal.png"
+                        cancelButton.source = "./assets/images/dialog_turn_off_cancel_button_normal.png"
                     }
                 }
             }
