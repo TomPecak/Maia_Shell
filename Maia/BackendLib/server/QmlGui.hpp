@@ -32,7 +32,7 @@ private:
     Backend backend;
     BackendAppsIconsProvider appsIconProvider;
     TaskbarIconsProvider taskbarIconProvider;
-    ApplicationModel appsListModel;
+    DesktopApplicationModel appsListModel;
     FilterProxyModel filterProxyModel;
     MAudioBackend audioBackend;
 };

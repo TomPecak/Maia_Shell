@@ -36,17 +36,17 @@ Item{
         height: parent.height
         visible: parent.buttonState === TaskbarButton.ButtonState.Normal
 
-        leftTopSource: "./assets/images/taskbar/background_button_normal/top_left.png"
-        leftMiddleSource: "./assets/images/taskbar/background_button_normal/middle_left.png"
-        leftBottomSource: "./assets/images/taskbar/background_button_normal/bottom_left.png"
+        leftTopSource: Qt.resolvedUrl("./assets/images/taskbar/background_button_normal/top_left.png")
+        leftMiddleSource: Qt.resolvedUrl("./assets/images/taskbar/background_button_normal/middle_left.png")
+        leftBottomSource: Qt.resolvedUrl("./assets/images/taskbar/background_button_normal/bottom_left.png")
 
-        middleTopSource: "./assets/images/taskbar/background_button_normal/top_middle.png"
-        middleMiddleSource: "./assets/images/taskbar/background_button_normal/middle_middle.bmp"
-        middleBottomSource: "./assets/images/taskbar/background_button_normal/bottom_middle.png"
+        middleTopSource: Qt.resolvedUrl("./assets/images/taskbar/background_button_normal/top_middle.png")
+        middleMiddleSource: Qt.resolvedUrl("./assets/images/taskbar/background_button_normal/middle_middle.bmp")
+        middleBottomSource: Qt.resolvedUrl("./assets/images/taskbar/background_button_normal/bottom_middle.png")
 
-        rightTopSource: "./assets/images/taskbar/background_button_normal/top_right.png"
-        rightMiddleSource: "./assets/images/taskbar/background_button_normal/middle_right.png"
-        rightBottomSource: "./assets/images/taskbar/background_button_normal/bottom_right.png"
+        rightTopSource: Qt.resolvedUrl("./assets/images/taskbar/background_button_normal/top_right.png")
+        rightMiddleSource: Qt.resolvedUrl("./assets/images/taskbar/background_button_normal/middle_right.png")
+        rightBottomSource: Qt.resolvedUrl("./assets/images/taskbar/background_button_normal/bottom_right.png")
     }
 
     TiledImage{
@@ -55,17 +55,17 @@ Item{
         height: parent.height
         visible: parent.buttonState === TaskbarButton.ButtonState.NormalHover
 
-        leftTopSource: "./assets/images/taskbar/background_button_hover/left_top.bmp"
-        leftMiddleSource: "./assets/images/taskbar/background_button_hover/left_middle.bmp"
-        leftBottomSource: "./assets/images/taskbar/background_button_hover/left_bottom.bmp"
+        leftTopSource: Qt.resolvedUrl("./assets/images/taskbar/background_button_hover/left_top.bmp")
+        leftMiddleSource: Qt.resolvedUrl("./assets/images/taskbar/background_button_hover/left_middle.bmp")
+        leftBottomSource: Qt.resolvedUrl("./assets/images/taskbar/background_button_hover/left_bottom.bmp")
 
-        middleTopSource: "./assets/images/taskbar/background_button_hover/middle_top.bmp"
-        middleMiddleSource: "./assets/images/taskbar/background_button_hover/middle_middle.bmp"
-        middleBottomSource: "./assets/images/taskbar/background_button_hover/middle_bottom.bmp"
+        middleTopSource: Qt.resolvedUrl("./assets/images/taskbar/background_button_hover/middle_top.bmp")
+        middleMiddleSource: Qt.resolvedUrl("./assets/images/taskbar/background_button_hover/middle_middle.bmp")
+        middleBottomSource: Qt.resolvedUrl("./assets/images/taskbar/background_button_hover/middle_bottom.bmp")
 
-        rightTopSource: "./assets/images/taskbar/background_button_hover/right_top.bmp"
-        rightMiddleSource: "./assets/images/taskbar/background_button_hover/right_middle.bmp"
-        rightBottomSource: "./assets/images/taskbar/background_button_hover/right_bottom.bmp"
+        rightTopSource: Qt.resolvedUrl("./assets/images/taskbar/background_button_hover/right_top.bmp")
+        rightMiddleSource: Qt.resolvedUrl("./assets/images/taskbar/background_button_hover/right_middle.bmp")
+        rightBottomSource: Qt.resolvedUrl("./assets/images/taskbar/background_button_hover/right_bottom.bmp")
     }
 
     TiledImage{
@@ -74,17 +74,17 @@ Item{
         height: parent.height
         visible: parent.buttonState === TaskbarButton.ButtonState.Pressed
 
-        leftTopSource: "./assets/images/taskbar/background_button_pressed/left_top.bmp"
-        leftMiddleSource: "./assets/images/taskbar/background_button_pressed/left_middle.bmp"
-        leftBottomSource: "./assets/images/taskbar/background_button_pressed/left_bottom.bmp"
+        leftTopSource: Qt.resolvedUrl("./assets/images/taskbar/background_button_pressed/left_top.bmp")
+        leftMiddleSource: Qt.resolvedUrl("./assets/images/taskbar/background_button_pressed/left_middle.bmp")
+        leftBottomSource: Qt.resolvedUrl("./assets/images/taskbar/background_button_pressed/left_bottom.bmp")
 
-        middleTopSource: "./assets/images/taskbar/background_button_pressed/middle_top.bmp"
-        middleMiddleSource: "./assets/images/taskbar/background_button_pressed/middle_middle.bmp"
-        middleBottomSource: "./assets/images/taskbar/background_button_pressed/middle_bottom.bmp"
+        middleTopSource: Qt.resolvedUrl("./assets/images/taskbar/background_button_pressed/middle_top.bmp")
+        middleMiddleSource: Qt.resolvedUrl("./assets/images/taskbar/background_button_pressed/middle_middle.bmp")
+        middleBottomSource: Qt.resolvedUrl("./assets/images/taskbar/background_button_pressed/middle_bottom.bmp")
 
-        rightTopSource: "./assets/images/taskbar/background_button_pressed/right_top.bmp"
-        rightMiddleSource: "./assets/images/taskbar/background_button_pressed/right_middle.bmp"
-        rightBottomSource: "./assets/images/taskbar/background_button_pressed/right_bottom.bmp"
+        rightTopSource: Qt.resolvedUrl("./assets/images/taskbar/background_button_pressed/right_top.bmp")
+        rightMiddleSource: Qt.resolvedUrl("./assets/images/taskbar/background_button_pressed/right_middle.bmp")
+        rightBottomSource: Qt.resolvedUrl("./assets/images/taskbar/background_button_pressed/right_bottom.bmp")
     }
 
     TiledImage{
@@ -93,17 +93,17 @@ Item{
         height: parent.height
         visible: parent.buttonState === TaskbarButton.ButtonState.PressedHover
 
-        leftTopSource: "./assets/images/taskbar/background_button_pressed_hover/left_top.bmp"
-        leftMiddleSource: "./assets/images/taskbar/background_button_pressed_hover/left_middle.bmp"
-        leftBottomSource: "./assets/images/taskbar/background_button_pressed_hover/left_bottom.bmp"
+        leftTopSource: Qt.resolvedUrl("./assets/images/taskbar/background_button_pressed_hover/left_top.bmp")
+        leftMiddleSource: Qt.resolvedUrl("./assets/images/taskbar/background_button_pressed_hover/left_middle.bmp")
+        leftBottomSource: Qt.resolvedUrl("./assets/images/taskbar/background_button_pressed_hover/left_bottom.bmp")
 
-        middleTopSource: "./assets/images/taskbar/background_button_pressed_hover/middle_top.bmp"
-        middleMiddleSource: "./assets/images/taskbar/background_button_pressed_hover/middle_middle.bmp"
-        middleBottomSource: "./assets/images/taskbar/background_button_pressed_hover/middle_bottom.bmp"
+        middleTopSource: Qt.resolvedUrl("./assets/images/taskbar/background_button_pressed_hover/middle_top.bmp")
+        middleMiddleSource: Qt.resolvedUrl("./assets/images/taskbar/background_button_pressed_hover/middle_middle.bmp")
+        middleBottomSource: Qt.resolvedUrl("./assets/images/taskbar/background_button_pressed_hover/middle_bottom.bmp")
 
-        rightTopSource: "./assets/images/taskbar/background_button_pressed_hover/right_top.bmp"
-        rightMiddleSource: "./assets/images/taskbar/background_button_pressed_hover/right_middle.bmp"
-        rightBottomSource: "./assets/images/taskbar/background_button_pressed_hover/right_bottom.bmp"
+        rightTopSource: Qt.resolvedUrl("./assets/images/taskbar/background_button_pressed_hover/right_top.bmp")
+        rightMiddleSource: Qt.resolvedUrl("./assets/images/taskbar/background_button_pressed_hover/right_middle.bmp")
+        rightBottomSource: Qt.resolvedUrl("./assets/images/taskbar/background_button_pressed_hover/right_bottom.bmp")
     }
 
     Image{

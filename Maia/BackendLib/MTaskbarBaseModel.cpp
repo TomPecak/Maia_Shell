@@ -27,6 +27,7 @@ static bool isTaskbarEntry(WId id)
 MTaskbarModel::MTaskbarModel(QObject *parent)
     : QAbstractListModel(parent)
 {
+    qDebug() << "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKUUUUUUUUURWA !!!!!";
     initWindowList();
     initActiveWindow();
 

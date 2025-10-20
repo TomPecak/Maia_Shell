@@ -7,6 +7,7 @@
 #include <QObject>
 #include <QString>
 #include <QtMessageHandler>
+#include <QQueue>
 
 class Logger : public QObject
 {
@@ -36,6 +37,7 @@ private:
     void connectToServer(const QString &serverUrl);
     void sendLog(const QString message);
     QString constructServerUrl();
+    void sendBufferedLogs();
 
 private:
     QtMessageHandler originalHandler = nullptr;
@@ -46,4 +48,8 @@ private:
     QMutex logMutex;
     QElapsedTimer timer;
     qint64 lastLogTime = 0;
+
+    //buffer
+    QQueue<QString> m_logBuffer;
+    const int MAX_BUFFER_SIZE = 2048;
 };

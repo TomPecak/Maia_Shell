@@ -70,6 +70,7 @@ int main(int argc, char *argv[])
 
     Logger logger;
     logger.run();
+    qDebug() << "FIRST LOG ??????????????????????????";
 
     //INIT APPLICATION OPTIONS
     QString modeOption, sourceOption, proxyWinAddress;
@@ -92,7 +93,12 @@ int main(int argc, char *argv[])
     if (modeOption == "server") {
         //SERVER
 
+         qDebug() << "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH UJ 333333333 !!!";
+
         Server server(&app, swapInterwalOption);
+
+        qDebug() << "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH UJ !!!";
+
         int retValue = app.exec();
 
         qDebug() << "SERVER EXIT SUCESSFULL with retValue=" << retValue;
@@ -120,7 +126,7 @@ int main(int argc, char *argv[])
         engine.addImageProvider(QLatin1String("backendTaskbarIcons"), new TaskbarIconsProvider);
 
         //INIT QML ENGINE CONTEXT PROPERTIES
-        ApplicationModel appsListModel;
+        DesktopApplicationModel appsListModel;
         FilterProxyModel filterProxyModel;
         filterProxyModel.setSourceModel(&appsListModel);
 

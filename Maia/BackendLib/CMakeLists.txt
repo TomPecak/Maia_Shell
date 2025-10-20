@@ -101,6 +101,26 @@ qt_add_qml_module(${PROJECT_NAME}
     SOURCES audio/MPreferredDevice.cpp
     SOURCES server/FrontendInfo.hpp
     SOURCES cmake_config.h.in
+    SOURCES MIconItem.hpp
+    SOURCES MIconItem.cpp
+    SOURCES cutefish/applicationmodel.h
+    SOURCES cutefish/applicationmodel.cpp
+    SOURCES cutefish/applicationitem.h
+    SOURCES
+    SOURCES cutefish/systemappmonitor.h
+    SOURCES cutefish/systemappmonitor.cpp
+    SOURCES cutefish/systemappitem.h
+    SOURCES cutefish/systemappitem.cpp
+    SOURCES cutefish/xwindowinterface.h
+    SOURCES cutefish/xwindowinterface.cpp
+    SOURCES cutefish/docksettings.h
+    SOURCES cutefish/docksettings.cpp
+    SOURCES cutefish/utils.h
+    SOURCES cutefish/utils.cpp
+    SOURCES cutefish/processprovider.h
+    SOURCES cutefish/processprovider.cpp
+    SOURCES MWindowBlur.hpp
+    SOURCES MWindowBlur.cpp
 )
 
 # This ensures that cmake_config.h, which is generated in the build directory, will be seen by the compiler
@@ -114,7 +134,10 @@ add_library(MaiaBackendLib STATIC "")
 
 
 #so that in the main application it would be possible to use headers, e.g., #include <Backend.hpp>
-target_include_directories(MaiaBackendLib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(${PROJECT_NAME} PUBLIC
+    ${CMAKE_CURRENT_BINARY_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/cutefish
+)
 
 target_link_libraries(${PROJECT_NAME}
     PRIVATE Qt6::Core

@@ -8,7 +8,7 @@ import Maia.Client
 Image {
     id: wallpaper
     anchors.fill: parent
-    source: "./assets/images/images/xp_fhd.jpg"
+    source: Qt.resolvedUrl("./assets/images/images/xp_fhd.jpg")
 
     signal leftMouseButtonClicked()
 

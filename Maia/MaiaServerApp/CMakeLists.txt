@@ -53,7 +53,6 @@ target_link_libraries(appMaiaServer
 )
 
 target_link_libraries(appMaiaServer PRIVATE MaiaBackend)
-#target_link_libraries(appMaiaServer PRIVATE XPFrontendplugin)
 
 include(GNUInstallDirs)
 
@@ -78,5 +77,3 @@ install(FILES ${DEPLOY_FILES}
         PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
 )
 
-
-#add_subdirectory(./XPFrontend/)

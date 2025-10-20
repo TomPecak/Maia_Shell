@@ -75,16 +75,16 @@ QList<Application> getApplications() {
     return apps;
 }
 
-ApplicationModel::ApplicationModel(QObject *parent) : QAbstractListModel(parent) {
+DesktopApplicationModel::DesktopApplicationModel(QObject *parent) : QAbstractListModel(parent) {
     apps = getApplications();
 }
 
-int ApplicationModel::rowCount(const QModelIndex &parent) const {
+int DesktopApplicationModel::rowCount(const QModelIndex &parent) const {
     Q_UNUSED(parent);
     return apps.size();
 }
 
-QVariant ApplicationModel::data(const QModelIndex &index, int role) const {
+QVariant DesktopApplicationModel::data(const QModelIndex &index, int role) const {
     if (index.row() < 0 || index.row() >= apps.size()){
         return QVariant();
     }
@@ -105,7 +105,7 @@ QVariant ApplicationModel::data(const QModelIndex &index, int role) const {
     return QVariant();
 }
 
-QHash<int, QByteArray> ApplicationModel::roleNames() const {
+QHash<int, QByteArray> DesktopApplicationModel::roleNames() const {
     QHash<int, QByteArray> roles;
     roles[NameRole] = "name";
     roles[ExecRole] = "exec";
@@ -114,7 +114,7 @@ QHash<int, QByteArray> ApplicationModel::roleNames() const {
     return roles;
 }
 
-QString ApplicationModel::getExecById(const QString &appId) const {
+QString DesktopApplicationModel::getExecById(const QString &appId) const {
     for (const Application& app : apps) {
         if (app.id == appId) {
             return app.exec;
@@ -123,7 +123,7 @@ QString ApplicationModel::getExecById(const QString &appId) const {
     return QString("");
 }
 
-Application ApplicationModel::getApplicationById(const QString &appId) const
+Application DesktopApplicationModel::getApplicationById(const QString &appId) const
 {
     for (const Application &app : apps) {
         if (app.id == appId) {

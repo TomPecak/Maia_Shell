@@ -87,6 +87,9 @@ add_subdirectory(Maia/GnomeMod/)
 # xp luna frontend qml module
 add_subdirectory(Maia/XPLunaMod/)
 
+# cutefish frontend qml module
+add_subdirectory(Maia/CutefishMod/)
+
 add_subdirectory(Maia/MaiaServerApp/)
 
 # scripts thats will be copied while deploy

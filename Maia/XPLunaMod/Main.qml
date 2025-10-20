@@ -94,7 +94,7 @@ Window {
         //128ms - OK
         //256ms - OK
         //512ms - OK
-        running: true
+        running: false
         repeat: false
         onTriggered: {
             //MWindowManagerX11.reconfigure()

@@ -57,6 +57,18 @@ QString Logger::constructServerUrl()
     return QString("ws://%1:%2").arg(host).arg(logPort);
 }
 
+void Logger::sendBufferedLogs()
+{
+    QMutexLocker locker(&logMutex);
+
+    if (m_socket.isValid() && (m_socket.state() == QAbstractSocket::ConnectedState)) {
+        while (!m_logBuffer.isEmpty()) {
+            QString log = m_logBuffer.dequeue();
+            m_socket.sendTextMessage(log);
+        }
+    }
+}
+
 void Logger::run()
 {
     // Construct WebSocket URL and connect
@@ -91,6 +103,7 @@ void Logger::onSocketConnected()
 {
     qDebug() << "[OK] Connected to Logger server";
     reconnect_time = 0;
+    sendBufferedLogs();
 }
 
 void Logger::onTextMessageReceived(const QString &message)
@@ -124,12 +137,14 @@ void Logger::connectToServer(const QString &serverUrl)
 
 void Logger::sendLog(const QString message)
 {
-    if (!m_socket.isValid()) {
-        qDebug() << "[ERROR] WebSocket not connected. Cannot send message.";
-        return;
+    if (m_socket.isValid() && (m_socket.state() == QAbstractSocket::ConnectedState)) {
+        m_socket.sendTextMessage(message);
+    } else {
+        if (m_logBuffer.size() >= MAX_BUFFER_SIZE) {
+            m_logBuffer.dequeue();
+        }
+        m_logBuffer.enqueue(message);
     }
-
-    m_socket.sendTextMessage(message); // Send as text
 }
 
 void Logger::onSocketDisconnected()

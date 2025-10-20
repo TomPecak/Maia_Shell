@@ -76,7 +76,7 @@ QVector<FavApplication> FavoriteAppsDBus::getFavorites()
         return favApplications;
     }
 
-    auto *sourceModel = dynamic_cast<ApplicationModel *>(m_favoritesModel->sourceModel());
+    auto *sourceModel = dynamic_cast<DesktopApplicationModel *>(m_favoritesModel->sourceModel());
     if (!sourceModel) {
         qDebug() << "Invalid source model!";
         return favApplications;
@@ -84,7 +84,7 @@ QVector<FavApplication> FavoriteAppsDBus::getFavorites()
 
     for (int i = 0; i < m_favoritesModel->rowCount(); ++i) {
         QModelIndex proxyIndex = m_favoritesModel->index(i, 0);
-        QString appId = m_favoritesModel->data(proxyIndex, ApplicationModel::IdRole).toString();
+        QString appId = m_favoritesModel->data(proxyIndex, DesktopApplicationModel::IdRole).toString();
         Application appData = sourceModel->getApplicationById(appId);
 
         if (!appData.id.isEmpty()) {
@@ -101,7 +101,7 @@ void FavoriteAppsDBus::_onFavoriteAdded(const QString &appId)
     if (!m_favoritesModel)
         return;
 
-    auto *sourceModel = dynamic_cast<ApplicationModel *>(m_favoritesModel->sourceModel());
+    auto *sourceModel = dynamic_cast<DesktopApplicationModel *>(m_favoritesModel->sourceModel());
 
     if (!sourceModel)
         return;
@@ -121,7 +121,7 @@ void FavoriteAppsDBus::_onFavoriteRemoved(const QString &appId)
     if (!m_favoritesModel)
         return;
 
-    auto *sourceModel = dynamic_cast<ApplicationModel *>(m_favoritesModel->sourceModel());
+    auto *sourceModel = dynamic_cast<DesktopApplicationModel *>(m_favoritesModel->sourceModel());
 
     if (!sourceModel)
         return;

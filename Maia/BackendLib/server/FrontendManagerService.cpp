@@ -16,6 +16,7 @@
 FrontendManagerService::FrontendManagerService(QObject *parent) :
     QObject(parent)
 {
+            qDebug() << "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH UJ 222222222 !!!";
     qDBusRegisterMetaType<QVariantList>();
 
     QDBusConnection bus = QDBusConnection::sessionBus();
@@ -141,15 +142,28 @@ void FrontendManagerService::loadFrontends()
     qDebug() << "[STARTUP INFO] XP Luna frontend id = " << lunaFrontend.id;
     m_frontends.insert(lunaFrontend.id, lunaFrontend);
 
-    FrontendInfo xpFrontend;
-    xpFrontend.name = "XP Windows";
-    xpFrontend.description = "Windows XP like frontend";
-    xpFrontend.qmlFilePath = "";
-    xpFrontend.qmlUri = "XPFrontend";
-    xpFrontend.qmlTypeName = "Main";
-    xpFrontend.id = QString(QCryptographicHash::hash(xpFrontend.name.toUtf8(), QCryptographicHash::Sha1).toHex());
-    qDebug() << "[STARTUP INFO] XP Windows frontend id = " << xpFrontend.id;
-    m_frontends.insert(xpFrontend.id, xpFrontend);
+
+
+
+
+    FrontendInfo cutefishFrontend;
+    cutefishFrontend.name = "CutefishOS";
+    cutefishFrontend.description = "CutefishOS like frintend";
+    //----------------------------------------------------
+    if(runType == "1"){ //Maia is running form QtCreator (dev run)
+        QString cmake_deploy_prefix = QString::fromStdString(std::string(CMAKE_INSTALL_PREFIX));
+        cutefishFrontend.qmlFilePath = cmake_deploy_prefix + QString("/frontends/Cutefish/Main.qml");
+    }else{  //normal Maia run, form login manager (SDDM, GDM, etc)
+        cutefishFrontend.qmlFilePath = QString("/opt/Maia/Maia_") + QString(MAIA_VERSION_STRING) + "/frontends/Cutefish/Main.qml";
+    }
+    qDebug() << "KKKKKKKKKKKKKKKUrwa cutefish qml path: " << cutefishFrontend.qmlFilePath;
+    //-----------------------------------------------------
+    cutefishFrontend.id = QString(
+        QCryptographicHash::hash(cutefishFrontend.name.toUtf8(), QCryptographicHash::Sha1).toHex());
+    qDebug() << "[STARTUP INFO] CutefishOS frontend id = " << cutefishFrontend.id;
+    m_frontends.insert(cutefishFrontend.id, cutefishFrontend);
+
+
 
 
     QString savedFrontendId = readActiveFronted();

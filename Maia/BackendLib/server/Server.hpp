@@ -28,7 +28,7 @@ private:
     SessionService m_sessionService;
     FrontendManagerService m_frontendManagerService;
 
-    ApplicationModel m_applicationModel;
+    DesktopApplicationModel m_applicationModel;
     FavoriteAppsService m_favoriteAppsService;
 
     GuiManager m_guiManager;

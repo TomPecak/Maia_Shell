@@ -53,7 +53,7 @@ protected:
     bool filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const override
     {
         QModelIndex index = sourceModel()->index(sourceRow, 0, sourceParent);
-        QString appId = index.data(ApplicationModel::IdRole).toString();
+        QString appId = index.data(DesktopApplicationModel::IdRole).toString();
         return isFavorite(appId);
     }
 

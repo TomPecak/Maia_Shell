@@ -9,7 +9,7 @@ Image {
     height: 248 * scaleFactor
     width: 448 * scaleFactor
 
-    source: "../assets/images/license_warning.svg"
+    source: Qt.resolvedUrl("../assets/images/license_warning.svg")
 
     // Settings to save dontShowAgain variable
     Settings {
