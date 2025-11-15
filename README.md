@@ -7,7 +7,7 @@ Maia Shell is a lightweight, modular graphical shell for Linux, built with C++ a
 ## 📱 Social Media
 
 - **[Discord](https://discord.gg/ySdhVz9Fn)**
-- **[YouTube](www.youtube.com/@MaiaShell)**
+- **[YouTube](https://www.youtube.com/@MaiaShell)**
 
 ## Limitations
 
