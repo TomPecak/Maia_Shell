@@ -1,8 +1,12 @@
 import QtQuick
 
+import Maia.Client
+
 import "./menu"
 import "./contents"
 import "./windows"
+import "./launcher"
+import "./statusbar"
 
 
 Window{
@@ -27,9 +31,9 @@ Window{
 			anchors.fill: parent
 			acceptedButtons: Qt.LeftButton | Qt.RightButton
 			onClicked: (mouse)=> {
-			if (mouse.button === Qt.RightButton)
-				constextMenu.popup()
-			}
+						   if (mouse.button === Qt.RightButton)
+						   constextMenu.popup()
+					   }
 		}
 	}
 
@@ -42,12 +46,39 @@ Window{
 		x: root.width/2 - width/2
 		y: root.height - height - 6
 		visible: true
+
+		onAppsItemClicked: {
+			appLauncherWindow.visible = !appLauncherWindow.visible
+			console.log("MMMMMMMMMMMMMMMMMMain apps icon clicked !!!!!")
+		}
 	}
 
-	// DockContent{
+	// MProxyWindow{
+	// 	id: appLauncherWindow
+	// 	source: "./windows/AppsLauncherWindow.qml"
+	// 	proxyVisible: true
+	// 	anchors.right: parent.right
+	// 	anchors.left: parent.left
+	// 	anchors.top: parent.top
 	// 	anchors.bottom: parent.bottom
-	// 	anchors.horizontalCenter: parent.horizontalCenter
-	// 	anchors.bottomMargin: 6
+	// 	swapInterval: 1
 	// }
+
+	AppsLauncherWindow{
+		id: appLauncherWindow
+
+		x: root.x
+		y: root.y
+		width: root.width
+		height: root.height
+	}
+
+	StatusbarWindow{
+		x: 0
+		y: 0
+		width: root.width
+
+		visible: !appLauncherWindow.visible
+	}
 
 }

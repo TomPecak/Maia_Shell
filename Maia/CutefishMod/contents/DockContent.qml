@@ -10,7 +10,11 @@ Item {
     id: root
     property bool darkMode: false
 
+
+    property bool isHorizontal: true
     property real windowRadius: 0.3 * height
+
+    signal appsItemClicked(var mouse)
 
     MTaskbarModel{
         id: taskbarModel
@@ -18,20 +22,13 @@ Item {
 
     ApplicationModel{
         id: appModel
-        Component.onCompleted: {
-            console.log("DDDDDDDDDDDDUPA cutefishos application model completed")
-        }
     }
 
 
     implicitHeight: 56
     implicitWidth: implicitHeight
+    width: appItemView.count * root.height + launcherItem.width
 
-
-
-
-
-    width: appItemView.count * root.height
 
     Rectangle{
         id: _background
@@ -50,12 +47,32 @@ Item {
         //blurEnabled: false
     }
 
+
     GridLayout{
+        id: grid
         anchors.fill: parent
         anchors.topMargin: 0
         flow: Grid.LeftToRight
         columnSpacing: 0
         rowSpacing: 0
+
+        DockItem{
+            id: launcherItem
+            implicitWidth: isHorizontal ? root.height : root.width
+            implicitHeight: isHorizontal ? root.height : root.width
+            popupText: qsTr("Apps")
+            enableActivateDot: false
+            //iconName: "application-x-desktop"
+            //iconName: "user-trash-empty"
+            //iconName: "launcher"
+            //iconName: "launcher.svg"
+            //iconName: "../assets/images/launcher.svg"
+            iconName: Qt.resolvedUrl("../assets/images/launcher.svg")
+            onClicked: {
+                root.appsItemClicked(mouse)
+            }
+
+        }
 
         ListView{
             id: appItemView
@@ -81,8 +98,9 @@ Item {
                 implicitWidth: appItemView.height
                 implicitHeight: appItemView.height
 
+                isActive: model.isActive
                 iconName: model.iconName ? model.iconName : "application-x-desktop"
-                //iconName: "application-x-desktop"
+                popupText: model.visibleName
 
                 // Rectangle{
                 //     anchors.fill: parent
@@ -90,15 +108,6 @@ Item {
                 //     border.width: 1
                 //     border.color: "red"
                 // }
-                Text{
-                    anchors.centerIn: parent
-
-                    text: model.visibleName
-                    //text: windowName
-
-                    //text: model.windowIcon
-                    //text: "dupa"
-                }
             }
 
             moveDisplaced: Transition{
@@ -109,6 +118,68 @@ Item {
                 }
             }
 
+
+
+
         }
+
+
+
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

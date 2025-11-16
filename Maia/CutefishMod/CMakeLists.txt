@@ -12,6 +12,15 @@ set(CUTEFISH_QML_FILES
     Main.qml
 )
 
+set(CUTEFISH_QML_SINGLETONS
+        FishUI/Units.qml
+        FishUI/Theme.qml
+)
+
+set_source_files_properties(${CUTEFISH_QML_SINGLETONS}
+        PROPERTIES QT_QML_SINGLETON_TYPE TRUE
+)
+
 qt_add_qml_module(CutefishFrontend
         URI CutefishFrontend
         VERSION ${MAIA_VERSION}
@@ -25,6 +34,15 @@ qt_add_qml_module(CutefishFrontend
         QML_FILES items/DockItem.qml
         QML_FILES windows/DockWindow.qml
         QML_FILES popups/PopupTips.qml
+        ${CUTEFISH_QML_SINGLETONS}
+        QML_FILES launcher/AppsLauncherWindow.qml
+        QML_FILES launcher/LauncherContent.qml
+        QML_FILES launcher/AllAppsView.qml
+        QML_FILES launcher/GridItemDelegate.qml
+        QML_FILES statusbar/StatusbarWindow.qml
+        QML_FILES statusbar/StatusbarContent.qml
+        QML_FILES statusbar/StandardItem.qml
+        QML_FILES FishUI/DesktopMenu.qml
 )
 
 

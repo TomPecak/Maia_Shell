@@ -4,10 +4,16 @@ import Maia.Client
 
 import "../contents"
 
+import "../FishUI" as FishUI
+
 Window {
     id: root
     //flags: Qt.Popup //grab mouse events
     flags: Qt.Window | Qt.FramelessWindowHint //| Qt.X11BypassWindowManagerHint
+
+    signal appsItemClicked(var mouse)
+
+
 
     Component.onCompleted: {
         backend.setX11WindowTypeAsDock(root);
@@ -27,5 +33,8 @@ Window {
 
     DockContent{
         id: dockContent
+        onAppsItemClicked: {
+            root.appsItemClicked(mouse)
+        }
     }
 }

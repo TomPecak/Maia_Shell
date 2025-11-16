@@ -1,0 +1,27 @@
+module CutefishFrontend
+
+Main 0.0 Main.qml
+ChangeFrontendMenu 0.0 menu/ChangeFrontendMenu.qml
+WallpaperContent 0.0 contents/WallpaperContent.qml
+DockContent 0.0 contents/DockContent.qml
+AppItem 0.0 items/AppItem.qml
+DockItem 0.0 items/DockItem.qml
+DockWindow 0.0 windows/DockWindow.qml
+PopupTips 0.0 popups/PopupTips.qml
+singleton Units 0.0 FishUI/Units.qml
+singleton Theme 0.0 FishUI/Theme.qml
+AppsLauncherWindow 0.0 launcher/AppsLauncherWindow.qml
+LauncherContent 0.0 launcher/LauncherContent.qml
+AllAppsView 0.0 launcher/AllAppsView.qml
+GridItemDelegate 0.0 launcher/GridItemDelegate.qml
+StatusbarWindow 0.0 statusbar/StatusbarWindow.qml
+StatusbarContent 0.0 statusbar/StatusbarContent.qml
+
+
+
+
+
+
+
+
+

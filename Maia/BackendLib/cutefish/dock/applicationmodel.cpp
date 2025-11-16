@@ -354,12 +354,12 @@ void ApplicationModel::initPinnedApplications()
 
     // Launcher
     ApplicationItem *item = new ApplicationItem;
-    item->id = "cutefish-launcher";
-    item->exec = "cutefish-launcher";
-    item->iconName = "qrc:/images/launcher.svg";
-    item->visibleName = tr("Launcher");
-    item->fixed = true;
-    m_appItems.append(item);
+    // item->id = "cutefish-launcher";
+    // item->exec = "cutefish-launcher";
+    // item->iconName = "qrc:/images/launcher.svg";
+    // item->visibleName = tr("Launcher");
+    // item->fixed = true;
+    //m_appItems.append(item);
 
     // Pinned Apps
     for (int i = 0; i < groups.size(); ++i) {

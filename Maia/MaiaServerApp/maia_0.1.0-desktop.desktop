@@ -1,5 +1,5 @@
 [Desktop Entry]
 Name=Maia 0.1.0
 Comment=Desktop Environment using Qt
-Exec=env LD_LIBRARY_PATH=/opt/Maia/Maia_0.1.0/lib GTK_USE_PORTAL=0 /opt/Maia/Maia_0.1.0/bin/appMaiaServer
+Exec=env MAIA_LOG_PORT=50001 MAIA_LOG_HOST=192.168.0.154 LD_LIBRARY_PATH=/opt/Maia/Maia_0.1.0/lib GTK_USE_PORTAL=0 /opt/Maia/Maia_0.1.0/bin/appMaiaServer
 Type=Application

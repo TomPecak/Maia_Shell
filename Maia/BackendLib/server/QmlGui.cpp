@@ -3,6 +3,8 @@
 #include <QQmlContext>
 #include <QSurface>
 
+#include <iconthemeprovider.hpp>
+
 #include "../maia_version.h"
 
 QmlGui::QmlGui(QObject *parent, QGuiApplication *app, int swapIntervalOption)
@@ -31,6 +33,7 @@ void QmlGui::initQmlEngine()
     //INIT QML ENGINE ICON PROVIDERS
     engine.addImageProvider(QLatin1String("backend_app_icon"), &appsIconProvider);
     engine.addImageProvider(QLatin1String("backendTaskbarIcons"), &taskbarIconProvider);
+    engine.addImageProvider(QStringLiteral("icontheme"), new IconThemeProvider());
 
     //INIT QML ENGINE CONTEXT PROPERTIES
 

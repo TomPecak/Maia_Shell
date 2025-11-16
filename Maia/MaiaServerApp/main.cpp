@@ -23,6 +23,9 @@
 #include <helper/Process.hpp>
 #include <private/ProxyWindowServer.hpp>
 #include <server/Server.hpp>
+#include <iconthemeprovider.hpp>
+
+#include <cmake_config.h>
 
 #include "maia_version.h"
 
@@ -93,7 +96,7 @@ int main(int argc, char *argv[])
     if (modeOption == "server") {
         //SERVER
 
-         qDebug() << "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH UJ 333333333 !!!";
+        qDebug() << "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH UJ 333333333 !!!";
 
         Server server(&app, swapInterwalOption);
 
@@ -118,12 +121,36 @@ int main(int argc, char *argv[])
 
         QQmlApplicationEngine engine;
 
+
+        // QString runType = qgetenv("MAIA_QTCREATOR_RUN");
+        // QString gnomeModulePath;
+        // QString cutefishModulePath;
+        // QString xplunaModulePath;
+        // if(runType == "1"){ //Maia is running form QtCreator (dev run)
+        //     QString cmake_deploy_prefix = QString::fromStdString(std::string(CMAKE_INSTALL_PREFIX));
+        //     gnomeModulePath = cmake_deploy_prefix + QString("/frontends/Gnome/");
+        //     cutefishModulePath = cmake_deploy_prefix + QString("/frontends/Cutefish/");
+        //     xplunaModulePath = cmake_deploy_prefix + QString("/frontends/XPLuna/");
+        // }else{  //normal Maia run, form login manager (SDDM, GDM, etc)
+        //     gnomeModulePath = QString("/opt/Maia/Maia_") + QString(MAIA_VERSION_STRING) + "/frontends/Gnome/";
+        //     cutefishModulePath = QString("/opt/Maia/Maia_") + QString(MAIA_VERSION_STRING) + "/frontends/Cutefish/";
+        //     xplunaModulePath = QString("/opt/Maia/Maia_") + QString(MAIA_VERSION_STRING) + "/frontends/XPLuna/";
+        // }
+        // engine.addImportPath(gnomeModulePath);
+        // engine.addImportPath(cutefishModulePath);
+        // engine.addImportPath(xplunaModulePath);
+        // qDebug() << "[INFO] engine.addImportPath(gnomeModulePath) = " << gnomeModulePath;
+        // qDebug() << "[INFO] engine.addImportPath(cutefishModulePath) = " << cutefishModulePath;
+        // qDebug() << "[INFO] engine.addImportPath(xplunaModulePath) = " << xplunaModulePath;
+
+
         Backend backend(homePath);
 
         //INIT QML ENGINE ICON PROVIDERS
         BackendAppsIconsProvider appsIconProvider;
         engine.addImageProvider(QLatin1String("backend_app_icon"), &appsIconProvider);
         engine.addImageProvider(QLatin1String("backendTaskbarIcons"), new TaskbarIconsProvider);
+        engine.addImageProvider(QStringLiteral("icontheme"), new IconThemeProvider());
 
         //INIT QML ENGINE CONTEXT PROPERTIES
         DesktopApplicationModel appsListModel;
@@ -266,7 +293,7 @@ void getCmdLineOptions(const QCoreApplication &app,
                 target = value;
             } else {
                 qDebug() << "Invalid" << name << "value:" << parser.value(opt)
-                           << "(expected: non-negative integer)";
+                << "(expected: non-negative integer)";
             }
         }
     };

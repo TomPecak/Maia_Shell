@@ -83,32 +83,40 @@ Window {
 
         delegate: Rectangle {
             width: logListView.width
-            height: 20
+            // Usuń stałą wysokość!
+            // height: 20 → ZAMIENIĆ NA:
+            height: row.implicitHeight + 8  // + padding
+
             border.color: "#EEEEEE"
-            //color: getPastelColor(process_id)
             color: index === activeIndex ? Qt.lighter(getPastelColor(process_id), 1.3) : getPastelColor(process_id)
 
             Row {
+                id: row
                 anchors.fill: parent
+                anchors.margins: 4
+                spacing: 8
+
                 Text {
-                    text: process_id + " | " // message // First field
+                    text: process_id + " | "
+                    verticalAlignment: Text.AlignTop
+                    font.pointSize: 10
                 }
-                TextEdit {
+
+                Text {
                     text: message
+                    width: parent.width - parent.spacing - parent.children[0].width
+                    wrapMode: Text.WrapAnywhere
+                    font.pointSize: 10
+                    verticalAlignment: Text.AlignTop
+                    // Opcjonalnie: elide jeśli nie chcesz zawijania (ale wtedy nie widać całości)
+                    // elide: Text.ElideRight
                 }
             }
 
             MouseArea {
                 anchors.fill: parent
                 onClicked: {
-                    activeIndex = index // Set active index on click
-                }
-                onPressed: {
-                    //activeIndex = index // Set active index on drag start
-                }
-                onReleased: {
-                    // Optional: can reset activeIndex on mouse release
-                    // activeIndex = -1
+                    activeIndex = index
                 }
             }
         }
