@@ -64,8 +64,8 @@ MenuItem {
 
     background: Rectangle {
         anchors.fill: parent
-        implicitWidth: 200
-        implicitHeight: 40
+        implicitWidth: 121
+        implicitHeight: 17
         color: root.highlighted ? "#316ac5" : "#ffffff"
     }
 }

@@ -77,6 +77,7 @@ Window{
 		x: 0
 		y: 0
 		width: root.width
+		wallpaperUrl: wallpaper.source //pass wallpaper Url to Statusbar
 
 		visible: !appLauncherWindow.visible
 	}

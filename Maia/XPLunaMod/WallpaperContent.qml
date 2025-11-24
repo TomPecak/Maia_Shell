@@ -112,8 +112,8 @@ Image {
         z: 1
         x: 100
         y: 100
-        width: 127
-        height: 135 + 17
+        //width: 127
+        //height: 135 + 17
         visible: true
         popupType: Popup.Window
 
@@ -132,7 +132,7 @@ Image {
         XPMenu {
             id: frontendSubmenu
             title: qsTr("Change Frontend")
-            height: 40
+            //height: 40
             enabled: frontendsInstantiator.count > 0
 
             Instantiator {

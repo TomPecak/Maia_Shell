@@ -4,10 +4,11 @@ import QtQuick.Controls
 Menu {
     id: contextMenu
     implicitWidth: 127
-    implicitHeight: 229
+    //implicitHeight: 40
     topPadding: 3
     leftPadding: 3
     rightPadding: 3
+    bottomPadding: 3
 
     popupType: Popup.Window
     //popupType: Popup.Native
@@ -25,6 +26,10 @@ Menu {
 
     background: Rectangle{
         color: "#ffffff"
+
+        //implicitWidth: 127
+        //implicitHeight: 17
+
         border.width: 1
         border.color: "#aca899"
     }

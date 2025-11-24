@@ -165,12 +165,12 @@ Item {
             Layout.preferredHeight: 14
             Layout.fillWidth: true
 
-            Rectangle{
-                anchors.fill: parent
-                color: "transparent"
-                border.width: 1
-                border.color: "orange"
-            }
+            // Rectangle{
+            //     anchors.fill: parent
+            //     color: "transparent"
+            //     border.width: 1
+            //     border.color: "orange"
+            // }
         }
 
         Item {
@@ -203,19 +203,19 @@ Item {
 
 
 
-            Rectangle{
-                anchors.fill: gridItem
-                color: "transparent"
-                border.width: 1
-                border.color: "yellow"
-            }
+            // Rectangle{
+            //     anchors.fill: gridItem
+            //     color: "transparent"
+            //     border.width: 1
+            //     border.color: "yellow"
+            // }
 
-            Rectangle{
-                anchors.fill: appView
-                color: "transparent"
-                border.width: 1
-                border.color: "green"
-            }
+            // Rectangle{
+            //     anchors.fill: appView
+            //     color: "transparent"
+            //     border.width: 1
+            //     border.color: "green"
+            // }
         }
 
         PageIndicator {
@@ -274,12 +274,12 @@ Item {
 
 
 
-    Rectangle{
-        anchors.fill: mainLayout
-        color: "transparent"
-        border.width: 1
-        border.color: "red"
-    }
+    // Rectangle{
+    //     anchors.fill: mainLayout
+    //     color: "transparent"
+    //     border.width: 1
+    //     border.color: "red"
+    // }
 
 
 }

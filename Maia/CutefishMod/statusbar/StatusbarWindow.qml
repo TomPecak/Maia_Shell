@@ -5,6 +5,8 @@ import Maia.Client
 Window {
     id: statusbarWindow
 
+    property alias wallpaperUrl: statusbarContent.wallpaperUrl
+
     flags: Qt.FramelessWindowHint | Qt.WindowDoesNotAcceptFocus
     color: "transparent"
 
@@ -20,6 +22,12 @@ Window {
     }
 
     StatusbarContent{
+        id: statusbarContent
         anchors.fill: parent
+
+        windowX: statusbarWindow.x
+        windowY: statusbarWindow.y
+        windowWidth: statusbarWindow.width
+        windowHeight: statusbarWindow.height
     }
 }
