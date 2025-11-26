@@ -4,7 +4,7 @@ import QtQuick3D
 import QtQuick.Effects
 import QtCore
 
-import Maia.Client
+import Maia.Backend
 
 import "./style_items"
 import "./windows"

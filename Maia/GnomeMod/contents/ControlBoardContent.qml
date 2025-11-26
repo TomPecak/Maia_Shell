@@ -2,7 +2,7 @@ import QtQuick.Controls.Material
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import Maia.Client
+import Maia.Backend
 
 import "../common_qml"
 import "../style"

@@ -2,7 +2,7 @@ import QtQuick
 
 import QtQuick.Layouts
 
-import Maia.Client
+import Maia.Backend
 
 import "." as FishUI
 

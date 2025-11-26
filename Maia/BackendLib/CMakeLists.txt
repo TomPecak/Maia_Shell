@@ -1,6 +1,6 @@
 project(MaiaBackend VERSION ${MAIA_VERSION})
 
-set(PROJECT_URI Maia.Client)
+set(PROJECT_URI Maia.Backend)
 #set(QML_IMPORT_PATH "${CMAKE_CURRENT_BINARY_DIR}")
 
 include(GenerateExportHeader)
@@ -160,6 +160,7 @@ qt6_add_statecharts(${PROJECT_NAME}
 add_library(MaiaBackendLib STATIC "")
 
 
+
 #so that in the main application it would be possible to use headers, e.g., #include <Backend.hpp>
 target_include_directories(${PROJECT_NAME} PUBLIC
     ${CMAKE_CURRENT_BINARY_DIR}
@@ -183,6 +184,7 @@ target_link_libraries(${PROJECT_NAME}
     # PkgConfig::LIBPULSE
     # PkgConfig::LIBPULSE_MAINLOOP
 )
+
 target_link_libraries(MaiaBackendLib PRIVATE MaiaBackend)
 
 include(GNUInstallDirs)

@@ -52,7 +52,16 @@ target_link_libraries(appMaiaServer
     PRIVATE Qt6::WebSockets
 )
 
+# FIX: Prevent linker from stripping QML registration code from the static MaiaClient lib.
+# Since auto-generated QML types aren't explicitly referenced in C++, the linker
+# discards them as "unused", causing "MLocaleSettings is not a type" errors.
+# --whole-archive forces inclusion of all symbols; --no-whole-archive resets behavior.
+target_link_libraries(appMaiaServer
+    PUBLIC
+    -Wl,--whole-archive MaiaClient -Wl,--no-whole-archive
+)
 target_link_libraries(appMaiaServer PRIVATE MaiaBackend)
+
 
 include(GNUInstallDirs)
 

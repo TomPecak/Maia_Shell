@@ -3,7 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import "./style_items"
 import "./contents"
-import Maia.Client
+import Maia.Backend
 
 Image {
     id: wallpaper

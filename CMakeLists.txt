@@ -75,11 +75,9 @@ endif()
 
 # backend Library
 add_subdirectory(Maia/BackendLib/)
+add_subdirectory(Maia/Client/)
 
-add_subdirectory(Maia/MaiaClientLib/)
 
-# logger application
-add_subdirectory(Maia/LoggerApp/)
 
 # gnome frontend qml module
 add_subdirectory(Maia/GnomeMod/)
@@ -90,6 +88,8 @@ add_subdirectory(Maia/XPLunaMod/)
 # cutefish frontend qml module
 add_subdirectory(Maia/CutefishMod/)
 
+# logger application
+add_subdirectory(Maia/LoggerApp/)
 add_subdirectory(Maia/MaiaServerApp/)
 
 # scripts thats will be copied while deploy

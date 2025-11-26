@@ -1,5 +1,5 @@
 import QtQuick
-import Maia.Client
+import Maia.Backend
 import "../contents"
 
 Window {

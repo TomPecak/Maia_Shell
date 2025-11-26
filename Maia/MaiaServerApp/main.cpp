@@ -31,6 +31,9 @@
 
 #include "logger.hpp"
 
+//Maia Client Lib
+#include <MLocaleSettings.hpp>
+
 // #include <QtQml/QQmlExtensionPlugin>
 // Q_IMPORT_QML_PLUGIN(XPFrontendPlugin)
 
@@ -70,6 +73,8 @@ int main(int argc, char *argv[])
     QtWebEngineQuick::initialize();
 
     QGuiApplication app(argc, argv);
+
+    volatile auto registrationHack = [](){ MLocaleSettings s; };
 
     Logger logger;
     logger.run();

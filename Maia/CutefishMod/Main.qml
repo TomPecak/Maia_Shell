@@ -1,6 +1,6 @@
 import QtQuick
 
-import Maia.Client
+import Maia.Backend
 
 import "./menu"
 import "./contents"

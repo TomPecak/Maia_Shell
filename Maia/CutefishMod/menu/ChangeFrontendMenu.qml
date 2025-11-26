@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 
-import Maia.Client
+import Maia.Backend
 
 Menu {
     id: contextMenu

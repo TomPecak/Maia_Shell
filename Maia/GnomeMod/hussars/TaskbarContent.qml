@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Effects
-import Maia.Client
+import Maia.Backend
 
 Rectangle {
     implicitHeight: 35

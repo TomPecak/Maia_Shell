@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 
-import Maia.Client
+import Maia.Backend
 
 import "../items"
 import "../popups"

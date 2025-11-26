@@ -3,7 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Qt5Compat.GraphicalEffects
 
-import Maia.Client
+import Maia.Backend
 
 import ".."
 import "../items"

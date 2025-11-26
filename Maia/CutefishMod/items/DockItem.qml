@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Effects
 
-import Maia.Client
+import Maia.Backend
 
 import "../FishUI" as FishUI
 

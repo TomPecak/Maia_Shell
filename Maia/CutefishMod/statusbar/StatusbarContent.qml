@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
+import Maia.Backend
 import Maia.Client
 
 import "../FishUI" as FishUI
@@ -23,6 +24,10 @@ Item {
     property bool darkMode: false
     property color textColor: rootItem.darkMode ? "#FFFFFF" : "#000000";
     property var fontSize: rootItem.height ? rootItem.height / 3 : 1
+
+    MLocaleSettings{
+
+    }
 
     MBackgroundHelper {
         id: bgHelper

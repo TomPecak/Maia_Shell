@@ -2,7 +2,7 @@ import QtCore
 import QtQuick
 import QtQuick.Controls
 
-import Maia.Client
+import Maia.Backend
 
 import "./contents"
 import "./style"

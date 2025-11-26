@@ -1,6 +1,6 @@
 import QtQuick
 
-import Maia.Client
+import Maia.Backend
 
 Window {
     id: statusbarWindow
