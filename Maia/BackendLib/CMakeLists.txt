@@ -148,6 +148,10 @@ qt_add_qml_module(${PROJECT_NAME}
     SOURCES cutefish/fishui/iconthemeprovider.hpp
     SOURCES cutefish/statusbar/MBackgroundHelper.h
     SOURCES cutefish/statusbar/MBackgroundHelper.cpp
+    SOURCES
+    SOURCES
+    SOURCES server/LocaleSettingsService.hpp
+    SOURCES server/LocaleSettingsService.cpp
 )
 
 # This ensures that cmake_config.h, which is generated in the build directory, will be seen by the compiler

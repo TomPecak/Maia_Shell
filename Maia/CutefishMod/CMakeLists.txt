@@ -43,6 +43,7 @@ qt_add_qml_module(CutefishFrontend
         QML_FILES statusbar/StatusbarContent.qml
         QML_FILES statusbar/StandardItem.qml
         QML_FILES FishUI/DesktopMenu.qml
+        QML_FILES control_center/ControlCenter.qml
 )
 
 

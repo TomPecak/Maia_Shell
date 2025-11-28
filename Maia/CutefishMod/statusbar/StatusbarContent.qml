@@ -6,6 +6,7 @@ import Maia.Backend
 import Maia.Client
 
 import "../FishUI" as FishUI
+import "../control_center"
 
 Item {
     id: rootItem
@@ -25,8 +26,13 @@ Item {
     property color textColor: rootItem.darkMode ? "#FFFFFF" : "#000000";
     property var fontSize: rootItem.height ? rootItem.height / 3 : 1
 
-    MLocaleSettings{
+    property var timeFormat: localeSettings.twentyFourTime ? "HH:mm" : "h:mm ap"
 
+    MLocaleSettings{
+        id: localeSettings
+        onTwentyFourTimeChanged: {
+            console.log("TWENTY FOUR TIME = " + localeSettings.twentyFourTime)
+        }
     }
 
     MBackgroundHelper {
@@ -187,56 +193,10 @@ Item {
 
                 }
             }
-
-
-            // Pop-up notification center and calendar
-            StandardItem {
-                id: datetimeItem
-
-                animationEnabled: true
-                Layout.fillHeight: true
-                Layout.preferredWidth: _dateTimeLayout.implicitWidth + FishUI.Units.smallSpacing
-
-                onClicked: {
-                    //process.startDetached("cutefish-notificationd", ["-s"])
-                }
-
-                RowLayout {
-                    id: _dateTimeLayout
-                    anchors.fill: parent
-
-                    //                Image {
-                    //                    width: rootItem.iconSize
-                    //                    height: width
-                    //                    sourceSize: Qt.size(width, height)
-                    //                    source: "qrc:/images/" + (rootItem.darkMode ? "dark/" : "light/") + "notification-symbolic.svg"
-                    //                    asynchronous: true
-                    //                    Layout.alignment: Qt.AlignCenter
-                    //                    antialiasing: true
-                    //                    smooth: false
-                    //                }
-
-                    Label {
-                        id: timeLabel
-                        Layout.alignment: Qt.AlignCenter
-                        font.pointSize: rootItem.fontSize
-                        color: rootItem.textColor
-
-                        Timer {
-                            id: timeTimer
-                            interval: 1000
-                            repeat: true
-                            running: true
-                            triggeredOnStart: true
-                            onTriggered: {
-                            }
-
-                        }
-                    }
-                }
-            }
-
         }
+
+
+
 
         // App menu
         Item {
@@ -245,6 +205,141 @@ Item {
             Layout.fillWidth: true
         }
 
+
+
+        StandardItem {
+            id: controler
+
+            checked: controlCenter.item.visible
+            animationEnabled: true
+            Layout.fillHeight: true
+            Layout.preferredWidth: _controlerLayout.implicitWidth + FishUI.Units.largeSpacing
+
+            onClicked: {
+                toggleDialog()
+            }
+
+            function toggleDialog() {
+                if (controlCenter.item.visible)
+                    controlCenter.item.close()
+                else {
+                    // 先初始化，用户可能会通过Alt鼠标左键移动位置
+                    controlCenter.item.position = Qt.point(0, 0)
+                    controlCenter.item.position = mapToGlobal(0, 0)
+                    controlCenter.item.open()
+                }
+            }
+
+            RowLayout {
+                id: _controlerLayout
+                anchors.fill: parent
+                anchors.leftMargin: FishUI.Units.smallSpacing
+                anchors.rightMargin: FishUI.Units.smallSpacing
+
+                spacing: FishUI.Units.largeSpacing
+
+                Image {
+                    id: volumeIcon
+                    //visible: controlCenter.item.defaultSink
+                    visible: true
+                    source: Qt.resolvedUrl("../assets/images/" + (rootItem.darkMode ? "dark/" : "light/") + controlCenter.item.volumeIconName + ".svg")
+                    width: rootItem.iconSize
+                    height: width
+                    sourceSize: Qt.size(width, height)
+                    asynchronous: true
+                    Layout.alignment: Qt.AlignCenter
+                    antialiasing: true
+                    smooth: false
+                }
+            }
+        }
+
+
+        StandardItem {
+            id: shutdownItem
+
+            animationEnabled: true
+            Layout.fillHeight: true
+            Layout.preferredWidth: shutdownIcon.implicitWidth + FishUI.Units.smallSpacing
+            checked: shutdownDialog.item.visible
+
+            onClicked: {
+                shutdownDialog.item.position = Qt.point(0, 0)
+                shutdownDialog.item.position = mapToGlobal(0, 0)
+                shutdownDialog.item.open()
+            }
+
+            Image {
+                id: shutdownIcon
+                anchors.centerIn: parent
+                width: rootItem.iconSize
+                height: width
+                sourceSize: Qt.size(width, height)
+                //source: "qrc:/images/" + (rootItem.darkMode ? "dark/" : "light/") + "system-shutdown-symbolic.svg"
+                source: Qt.resolvedUrl("../assets/statusbar_images/" + (rootItem.darkMode ? "dark/" : "light/") + "system-shutdown-symbolic.svg")
+                asynchronous: true
+                antialiasing: true
+                smooth: false
+            }
+        }
+
+
+        // Pop-up notification center and calendar
+        StandardItem {
+            id: datetimeItem
+
+            animationEnabled: true
+            Layout.fillHeight: true
+            Layout.preferredWidth: _dateTimeLayout.implicitWidth + FishUI.Units.smallSpacing
+
+            onClicked: {
+                //process.startDetached("cutefish-notificationd", ["-s"])
+            }
+
+            RowLayout {
+                id: _dateTimeLayout
+                anchors.fill: parent
+
+                //                Image {
+                //                    width: rootItem.iconSize
+                //                    height: width
+                //                    sourceSize: Qt.size(width, height)
+                //                    source: "qrc:/images/" + (rootItem.darkMode ? "dark/" : "light/") + "notification-symbolic.svg"
+                //                    asynchronous: true
+                //                    Layout.alignment: Qt.AlignCenter
+                //                    antialiasing: true
+                //                    smooth: false
+                //                }
+
+                Label {
+                    id: timeLabel
+                    Layout.alignment: Qt.AlignCenter
+                    font.pointSize: rootItem.fontSize
+                    color: rootItem.textColor
+
+                    Timer {
+                        id: timeTimer
+                        interval: 1000
+                        repeat: true
+                        running: true
+                        triggeredOnStart: true
+                        onTriggered: {
+                            timeLabel.text = new Date().toLocaleTimeString(Qt.locale(), localeSettings.twentyFourTime ? rootItem.timeFormat
+                                                                                                                 : Locale.ShortFormat)
+                        }
+
+                    }
+                }
+            }
+        }
+
+    }
+
+    // Components
+    Loader {
+        id: controlCenter
+        sourceComponent: ControlCenter {}
+        asynchronous: true
     }
 }
 

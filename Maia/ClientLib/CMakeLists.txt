@@ -5,6 +5,7 @@ set(PROJECT_URI Maia.Client)
 set(CMAKE_AUTOMOC ON)
 
 find_package(Qt6 ${REQUIRED_QT_VERSION} REQUIRED NO_MODULE COMPONENTS Core Quick DBus)
+find_package(KF6 ${REQUIRED_KF_VERSION} REQUIRED COMPONENTS WindowSystem)
 
 qt_standard_project_setup(REQUIRES ${REQUIRED_QT_VERSION})
 qt_add_library(${PROJECT_NAME} STATIC)
@@ -26,6 +27,7 @@ target_link_libraries(${PROJECT_NAME}
     PRIVATE Qt6::Core
     PRIVATE Qt6::DBus
     PRIVATE Qt6::Quick
+    PRIVATE KF6::WindowSystem
 )
 
 include(GNUInstallDirs)

@@ -8,6 +8,7 @@
 #include "FrontendManagerService.hpp"
 #include "GuiManager.hpp"
 #include "SessionService.hpp"
+#include "LocaleSettingsService.hpp"
 
 class Server : public QObject
 {
@@ -30,6 +31,7 @@ private:
 
     DesktopApplicationModel m_applicationModel;
     FavoriteAppsService m_favoriteAppsService;
+    LocaleSettingsService m_localeSettingsService;
 
     GuiManager m_guiManager;
 };

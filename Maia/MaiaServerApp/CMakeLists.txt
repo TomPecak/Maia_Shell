@@ -60,6 +60,10 @@ target_link_libraries(appMaiaServer
     PUBLIC
     -Wl,--whole-archive MaiaClient -Wl,--no-whole-archive
 )
+target_link_libraries(appMaiaServer
+    PUBLIC
+    -Wl,--whole-archive MaiaUI -Wl,--no-whole-archive
+)
 target_link_libraries(appMaiaServer PRIVATE MaiaBackend)
 
 

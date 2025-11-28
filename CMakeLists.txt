@@ -73,9 +73,10 @@ endif()
 
 
 
-# backend Library
+# libraries
 add_subdirectory(Maia/BackendLib/)
-add_subdirectory(Maia/Client/)
+add_subdirectory(Maia/ClientLib/)
+add_subdirectory(Maia/UILib/)
 
 
 
