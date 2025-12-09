@@ -59,6 +59,30 @@ sudo ./install_on_ubuntu.sh
 
 
 
+## Contribution
+
+### Upgrade Qt version
+
+1. Install new Qt version
+2. Remove deploy dir: rm -r ~/Maia_deploy/
+3. Open CMakeLists.txt (from top level repository dir) in Qt Creator
+4. Configure project
+
+<img src="doc/qtcreator_configure_maia_shell_qt_upgrade.png" width="400" alt="Configure project">
+
+5. Setup Build & Run as following
+
+<img src="doc/upgrade_qt_configure_build_settings.png" width="400" alt="Configure Build Settings">
+
+<img src="doc/upgrade_qt_configure_deploy_settings.png" width="400" alt="Configure Deploy Settings">
+
+<img src="doc/upgrade_qt_configure_run_settings.png" width="400" alt="Configure Run Settings">
+
+
+
+
+
+
 
 
 
