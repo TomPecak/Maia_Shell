@@ -32,6 +32,27 @@ or
 ```-plugin libinput```)
 
 
+
+########################################################
+#!/bin/bash
+
+export WAYLAND_DISPLAY=wayland-1 &&
+export XDG_RUNTIME_DIR=/run/user/1000 &&
+export XDG_SESSION_TYPE="wayland"
+
+export QT_QPA_EGLFS_DEBUG=1
+export QT_LOGGING_RULES="qt.qpa.input=true"
+
+./minimal-qml -platform eglfs -plugin libinput &
+sleep 5
+qterminal -platform wayland &
+./textexample -platform wayland &
+
+# ./minimal-qml -plugin EvdevTouch -plugin EvdevMouse -plugin EvdevTablet -plugin EvdevKeyboard
+#########################################################
+
+
+
 How to run qt wayland fancy-compositor example:
 1. configure project
 2. in project run configuration set enviroment variable: WAYLAND_DISPLAY=wayland-1 and start example
