@@ -12,21 +12,43 @@ include(FindPkgConfig)
 include(KDEInstallDirs)
 include(KDECMakeSettings)
 
-# Generate maia_version.h file with version #definitions, file will be generated in build directories
+# Generate maia_version.h file with version #definitions.
+# The file will be generated in the build directory.
 ecm_setup_version(${MAIA_VERSION}
     VARIABLE_PREFIX MAIA
     VERSION_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/maia_version.h"
     PACKAGE_VERSION_FILE "${CMAKE_CURRENT_BINARY_DIR}/MaiaConfigVersion.cmake"
-    SOVERSION ${PROJECT_VERSION_MAJOR})
+    SOVERSION ${PROJECT_VERSION_MAJOR}
+)
 
+find_package(
+    Qt6 ${REQUIRED_QT_VERSION}
+    REQUIRED
+    NO_MODULE
+    COMPONENTS
+        Core
+        Gui
+        Quick
+        DBus
+        Concurrent
+        Scxml
+        WebEngineQuick
+)
 
-find_package(Qt6 ${REQUIRED_QT_VERSION} REQUIRED NO_MODULE COMPONENTS Core Gui Quick DBus Concurrent Scxml WebEngineQuick)
-find_package(KF6 ${REQUIRED_KF_VERSION} REQUIRED COMPONENTS Config WindowSystem)
+find_package(
+    KF6 ${REQUIRED_KF_VERSION}
+    REQUIRED
+    COMPONENTS
+        Config
+        WindowSystem
+)
 
-find_package(KF6PulseAudioQt ${REQUIRED_PULSEAUDIOQT_VERSION} REQUIRED)
+find_package(
+    KF6PulseAudioQt ${REQUIRED_PULSEAUDIOQT_VERSION}
+    REQUIRED
+)
 
-
-# Generate cmake_config.h with CMAKE_INSTALL_PREFIX
+# Generate cmake_config.h with CMAKE_INSTALL_PREFIX.
 configure_file(
     ${CMAKE_CURRENT_SOURCE_DIR}/cmake_config.h.in
     ${CMAKE_CURRENT_BINARY_DIR}/cmake_config.h
@@ -37,170 +59,241 @@ qt_add_qml_module(${PROJECT_NAME}
     VERSION 1.0
 
     SOURCES
-    Backend.hpp
-    Backend.cpp
-    AppsListModel.hpp
-    AppsListModel.cpp
+        Backend.hpp
+        Backend.cpp
+        AppsListModel.hpp
+        AppsListModel.cpp
 
-    SOURCES BackendAppsIconsProvider.hpp
-    SOURCES TaskbarIconProvider.hpp
-    SOURCES TaskbarIconProvider.cpp
-    SOURCES MAudioBackend.hpp
-    SOURCES MAudioBackend.cpp
-    SOURCES ThemesModel.hpp
-    SOURCES ThemesModel.cpp
-    SOURCES helper/Process.hpp
-    SOURCES helper/Process.cpp
-    SOURCES private/Mask.hpp
-    SOURCES private/Mask.cpp
-    SOURCES MMaskedItem.hpp
-    SOURCES MMaskedItem.cpp
-    SOURCES private/MaskAlgorithm.hpp
-    SOURCES private/MaskAlgorithm.cpp
-    SOURCES private/MaskTracker.hpp
-    SOURCES private/MaskTracker.cpp
-    SOURCES strut/Strut.hpp
-    SOURCES strut/StrutManager.hpp
-    SOURCES strut/StrutManager.cpp
-    SOURCES MSessionManager.hpp
-    SOURCES MSessionManager.cpp
-    SOURCES server/SessionService.hpp
-    SOURCES server/SessionService.cpp
-    SOURCES server/Server.hpp
-    SOURCES server/Server.cpp
-    SOURCES MTaskbarModel.hpp
-    SOURCES MTaskbarModel.cpp
-    SOURCES MTaskbarBaseModel.hpp
-    SOURCES MTaskbarBaseModel.cpp
-    SOURCES MFrontendModel.hpp
-    SOURCES MFrontendModel.cpp
-    SOURCES server/FrontendManagerService.hpp
-    SOURCES server/FrontendManagerService.cpp
-    SOURCES private/ProxyWindowServer.cpp
-    SOURCES private/ProxyWindowServer.hpp
-    SOURCES server/X11WindowManagerService.hpp
-    SOURCES server/X11WindowManagerService.cpp
-    SOURCES MWindowManagerX11.hpp
-    SOURCES MWindowManagerX11.cpp
-    SOURCES server/QmlGui.hpp
-    SOURCES server/QmlGui.cpp
-    SOURCES server/GuiManager.hpp
-    SOURCES server/GuiManager.cpp
-    SOURCES client/private/ProxyWindowController.hpp
-    SOURCES client/private/ProxyWindowController.cpp
-    SOURCES MProxyWindow.hpp
-    SOURCES MProxyWindow.cpp
-    SOURCES server/FavoriteAppsService.hpp
-    SOURCES server/FavoriteAppsService.cpp
-    SOURCES server/Application.hpp
-    SOURCES server/Application.cpp
-    SOURCES MFavoritesAppsModel.hpp
-    SOURCES MFavoritesAppsModel.cpp
-    SOURCES server/FavoriteAppsListModel.hpp
-    SOURCES audio/MPreferredDevice.hpp
-    SOURCES audio/MPreferredDevice.cpp
-    SOURCES server/FrontendInfo.hpp
-    SOURCES cmake_config.h.in
-    SOURCES MIconItem.hpp
-    SOURCES MIconItem.cpp
-    SOURCES cutefish/dock/applicationmodel.h
-    SOURCES cutefish/dock/applicationmodel.cpp
-    SOURCES cutefish/dock/applicationitem.h
-    SOURCES cutefish/dock/systemappmonitor.h
-    SOURCES cutefish/dock/systemappmonitor.cpp
-    SOURCES cutefish/dock/systemappitem.h
-    SOURCES cutefish/dock/systemappitem.cpp
-    SOURCES cutefish/dock/xwindowinterface.h
-    SOURCES cutefish/dock/xwindowinterface.cpp
-    SOURCES cutefish/dock/docksettings.h
-    SOURCES cutefish/dock/docksettings.cpp
-    SOURCES cutefish/dock/utils.h
-    SOURCES cutefish/dock/utils.cpp
-    SOURCES cutefish/dock/processprovider.h
-    SOURCES cutefish/dock/processprovider.cpp
-    SOURCES MWindowBlur.hpp
-    SOURCES MWindowBlur.cpp
-    SOURCES cutefish/launcher/launchermodel.h
-    SOURCES cutefish/launcher/launchermodel.cpp
-    SOURCES cutefish/launcher/appitem.h
-    SOURCES cutefish/launcher/appitem.cpp
-    SOURCES cutefish/launcher/desktopproperties.h
-    SOURCES cutefish/launcher/desktopproperties.cpp
-    SOURCES cutefish/launcher/processproviderlauncher.h
-    SOURCES cutefish/launcher/processproviderlauncher.cpp
-    SOURCES cutefish/launcher/pagemodel.h
-    SOURCES cutefish/launcher/pagemodel.cpp
-    SOURCES cutefish/launcher/iconitem.cpp
-    SOURCES cutefish/launcher/iconitem.h
-    SOURCES cutefish/statusbar/MMenuPopupWindow.h
-    SOURCES cutefish/statusbar/MMenuPopupWindow.cpp
-    SOURCES cutefish/fishui/MWindowShadow.h
-    SOURCES cutefish/fishui/MWindowShadow.cpp
-    SOURCES cutefish/fishui/tileset.h
-    SOURCES cutefish/fishui/tileset.cpp
-    SOURCES cutefish/fishui/boxshadowrenderer.h
-    SOURCES cutefish/fishui/boxshadowrenderer.cpp
-    SOURCES cutefish/statusbar/MActivity.hpp
-    SOURCES cutefish/statusbar/MActivity.cpp
-    SOURCES cutefish/statusbar/capplications.h
-    SOURCES cutefish/statusbar/capplications.cpp
-    SOURCES cutefish/fishui/iconthemeprovider.cpp
-    SOURCES cutefish/fishui/iconthemeprovider.hpp
-    SOURCES cutefish/statusbar/MBackgroundHelper.h
-    SOURCES cutefish/statusbar/MBackgroundHelper.cpp
-    SOURCES
-    SOURCES
-    SOURCES server/LocaleSettingsService.hpp
-    SOURCES server/LocaleSettingsService.cpp
+        BackendAppsIconsProvider.hpp
+
+        TaskbarIconProvider.hpp
+        TaskbarIconProvider.cpp
+
+        MAudioBackend.hpp
+        MAudioBackend.cpp
+
+        helper/Process.hpp
+        helper/Process.cpp
+
+        private/Mask.hpp
+        private/Mask.cpp
+
+        MMaskedItem.hpp
+        MMaskedItem.cpp
+
+        private/MaskAlgorithm.hpp
+        private/MaskAlgorithm.cpp
+
+        private/MaskTracker.hpp
+        private/MaskTracker.cpp
+
+        strut/Strut.hpp
+        strut/StrutManager.hpp
+        strut/StrutManager.cpp
+
+        MSessionManager.hpp
+        MSessionManager.cpp
+
+        server/SessionService.hpp
+        server/SessionService.cpp
+
+        server/Server.hpp
+        server/Server.cpp
+
+        MTaskbarModel.hpp
+        MTaskbarModel.cpp
+
+        MTaskbarBaseModel.hpp
+        MTaskbarBaseModel.cpp
+
+        MFrontendModel.hpp
+        MFrontendModel.cpp
+
+        server/FrontendManagerService.hpp
+        server/FrontendManagerService.cpp
+
+        private/ProxyWindowServer.cpp
+        private/ProxyWindowServer.hpp
+
+        server/X11WindowManagerService.hpp
+        server/X11WindowManagerService.cpp
+
+        MWindowManagerX11.hpp
+        MWindowManagerX11.cpp
+
+        server/QmlGui.hpp
+        server/QmlGui.cpp
+
+        server/GuiManager.hpp
+        server/GuiManager.cpp
+
+        client/private/ProxyWindowController.hpp
+        client/private/ProxyWindowController.cpp
+
+        MProxyWindow.hpp
+        MProxyWindow.cpp
+
+        server/FavoriteAppsService.hpp
+        server/FavoriteAppsService.cpp
+
+        server/Application.hpp
+        server/Application.cpp
+
+        MFavoritesAppsModel.hpp
+        MFavoritesAppsModel.cpp
+
+        server/FavoriteAppsListModel.hpp
+
+        audio/MPreferredDevice.hpp
+        audio/MPreferredDevice.cpp
+
+        server/FrontendInfo.hpp
+
+        cmake_config.h.in
+
+        MIconItem.hpp
+        MIconItem.cpp
+
+        cutefish/dock/applicationmodel.h
+        cutefish/dock/applicationmodel.cpp
+        cutefish/dock/applicationitem.h
+
+        cutefish/dock/systemappmonitor.h
+        cutefish/dock/systemappmonitor.cpp
+        cutefish/dock/systemappitem.h
+
+        cutefish/dock/xwindowinterface.h
+        cutefish/dock/xwindowinterface.cpp
+
+        cutefish/dock/docksettings.h
+        cutefish/dock/docksettings.cpp
+
+        cutefish/dock/utils.h
+        cutefish/dock/utils.cpp
+
+        cutefish/dock/processprovider.h
+        cutefish/dock/processprovider.cpp
+
+        MWindowBlur.hpp
+        MWindowBlur.cpp
+
+        cutefish/launcher/launchermodel.h
+        cutefish/launcher/launchermodel.cpp
+
+        cutefish/launcher/appitem.h
+        cutefish/launcher/appitem.cpp
+
+        cutefish/launcher/desktopproperties.h
+        cutefish/launcher/desktopproperties.cpp
+
+        cutefish/launcher/processproviderlauncher.h
+        cutefish/launcher/processproviderlauncher.cpp
+
+        cutefish/launcher/pagemodel.h
+        cutefish/launcher/pagemodel.cpp
+
+        cutefish/launcher/iconitem.cpp
+        cutefish/launcher/iconitem.h
+
+        cutefish/statusbar/MMenuPopupWindow.h
+        cutefish/statusbar/MMenuPopupWindow.cpp
+
+        cutefish/fishui/MWindowShadow.h
+        cutefish/fishui/MWindowShadow.cpp
+
+        cutefish/fishui/tileset.h
+        cutefish/fishui/tileset.cpp
+
+        cutefish/fishui/boxshadowrenderer.h
+        cutefish/fishui/boxshadowrenderer.cpp
+
+        cutefish/statusbar/MActivity.hpp
+        cutefish/statusbar/MActivity.cpp
+
+        cutefish/statusbar/capplications.h
+        cutefish/statusbar/capplications.cpp
+
+        cutefish/fishui/iconthemeprovider.cpp
+        cutefish/fishui/iconthemeprovider.hpp
+
+        cutefish/statusbar/MBackgroundHelper.h
+        cutefish/statusbar/MBackgroundHelper.cpp
+
+        server/LocaleSettingsService.hpp
+        server/LocaleSettingsService.cpp
 )
 
-# This ensures that cmake_config.h, which is generated in the build directory, will be seen by the compiler
-target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
+# This ensures that cmake_config.h, which is generated in the build
+# directory, will be seen by the compiler.
+target_include_directories(
+    ${PROJECT_NAME}
+    PUBLIC
+        ${CMAKE_CURRENT_BINARY_DIR}
+)
 
-qt6_add_statecharts(${PROJECT_NAME}
+qt6_add_statecharts(
+    ${PROJECT_NAME}
     scxml/GuiManagerStateMachine.scxml
 )
 
 add_library(MaiaBackendLib STATIC "")
 
-
-
-#so that in the main application it would be possible to use headers, e.g., #include <Backend.hpp>
-target_include_directories(${PROJECT_NAME} PUBLIC
-    ${CMAKE_CURRENT_BINARY_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/cutefish/dock
-    ${CMAKE_CURRENT_SOURCE_DIR}/cutefish/launcher
-    ${CMAKE_CURRENT_SOURCE_DIR}/cutefish/statusbar
-    ${CMAKE_CURRENT_SOURCE_DIR}/cutefish/fishui
+# Make it possible for the main application to use headers,
+# e.g. #include <Backend.hpp>.
+target_include_directories(
+    ${PROJECT_NAME}
+    PUBLIC
+        ${CMAKE_CURRENT_BINARY_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}/cutefish/dock
+        ${CMAKE_CURRENT_SOURCE_DIR}/cutefish/launcher
+        ${CMAKE_CURRENT_SOURCE_DIR}/cutefish/statusbar
+        ${CMAKE_CURRENT_SOURCE_DIR}/cutefish/fishui
 )
 
-target_link_libraries(${PROJECT_NAME}
-    PRIVATE Qt6::Core
-    PRIVATE Qt6::DBus
-    PRIVATE Qt6::Gui
-    PRIVATE Qt6::Quick
-    PRIVATE Qt6::Concurrent
-    PUBLIC Qt6::Scxml
-    PUBLIC Qt6::WebEngineQuick
-    PRIVATE KF6::ConfigCore
-    PRIVATE KF6::WindowSystem
-    PUBLIC KF6::PulseAudioQt
+target_link_libraries(
+    ${PROJECT_NAME}
+    PRIVATE
+        Qt6::Core
+        Qt6::DBus
+        Qt6::Gui
+        Qt6::Quick
+        Qt6::Concurrent
+
+    PUBLIC
+        Qt6::Scxml
+        Qt6::WebEngineQuick
+
+    PRIVATE
+        KF6::ConfigCore
+        KF6::WindowSystem
+
+    PUBLIC
+        KF6::PulseAudioQt
+
     # PkgConfig::LIBPULSE
     # PkgConfig::LIBPULSE_MAINLOOP
 )
 
-target_link_libraries(MaiaBackendLib PRIVATE MaiaBackend)
+target_link_libraries(
+    MaiaBackendLib
+    PRIVATE
+        MaiaBackend
+)
 
 include(GNUInstallDirs)
 
-install(TARGETS ${PROJECT_NAME}
-    # Executable files (runtime) go to the /bin subdirectory
+install(
+    TARGETS ${PROJECT_NAME}
+    # Executable files (runtime) go to the /bin subdirectory.
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-    # Libraries (.so, .dll) go to the /lib subdirectory
+
+    # Libraries (.so, .dll) go to the /lib subdirectory.
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    # Files for the archiver/linker go to the /lib subdirectory
+
+    # Files for the archiver/linker go to the /lib subdirectory.
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 
-#install(TARGETS ${PROJECT_NAME} ${KDE_INSTALL_TARGETS_DEFAULT_ARGS})
-#install(DIRECTORY assets/wallpapers/ DESTINATION ${KDE_INSTALL_WALLPAPERDIR}/Cask)
+# install(TARGETS ${PROJECT_NAME} ${KDE_INSTALL_TARGETS_DEFAULT_ARGS})
+# install(DIRECTORY assets/wallpapers/
+#         DESTINATION ${KDE_INSTALL_WALLPAPERDIR}/Cask)
