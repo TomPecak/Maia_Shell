@@ -82,6 +82,13 @@ sudo ./install_on_ubuntu.sh
 
 <img src="doc/upgrade_qt_configure_deploy_settings.png" width="400" alt="Configure Deploy Settings">
 
+DISPLAY=:1
+DBUS_SESSION_BUS_ADDRESS=unix:path=/tmp/maia-dev-dbus-1.sock
+MAIA_LOG_PORT=50001
+MAIA_LOG_HOST=192.168.0.129
+MAIA_QTCREATOR_RUN=1
+GTK_USE_PORTAL=0
+
 <img src="doc/upgrade_qt_configure_run_settings.png" width="400" alt="Configure Run Settings">
 
 

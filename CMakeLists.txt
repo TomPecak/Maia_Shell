@@ -101,7 +101,7 @@ add_subdirectory(Maia/DeployFiles/)
 add_custom_target(Documentation)
 target_sources(Documentation PRIVATE
     README.md
-    CONTRIBUTING.md
+    #CONTRIBUTING.md
 )
 
 feature_summary(WHAT ALL FATAL_ON_MISSING_REQUIRED_PACKAGES)
