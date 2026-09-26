@@ -80,6 +80,10 @@ sudo ./install_on_ubuntu.sh
 
 <img src="doc/upgrade_qt_configure_build_settings.png" width="400" alt="Configure Build Settings">
 
+dbus-run-session
+Xephyr :1 -screen 1280x720 -ac &
+%{buildDir}
+
 <img src="doc/upgrade_qt_configure_deploy_settings.png" width="400" alt="Configure Deploy Settings">
 
 DISPLAY=:1
