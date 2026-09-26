@@ -22,6 +22,11 @@ Maia Shell is an experimental proof-of-concept project. It supports basic functi
 
 Maia Shell v0.1.0 has been tested on Ubuntu 22.04, 24.04, 25.04, but it may work on other Linux distributions as well.
 
+## Supported Platforms
+| Maia Shell | OS | Qt | KDE Framework
+| :--- | :---: | :--- |:---|
+|0.1.0 | Ubuntu 22.04 24.04, 25.04 | 6.9.2 | 6.9.0
+
 
 ## Instalation
 
@@ -30,6 +35,7 @@ To install Maia Shell on Ubuntu, follow these steps:
 1. **Install dependencies:**
 
 ```bash
+sudo apt update
 sudo apt install --no-install-recommends --no-install-suggests kwin-x11
 sudo apt install --no-install-recommends --no-install-suggests kwin-common
 sudo apt install --no-install-recommends --no-install-suggests kwin-data
