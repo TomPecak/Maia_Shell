@@ -79,19 +79,21 @@ sudo ./install_on_ubuntu.sh
 5. Setup Build & Run as following
 
 <img src="doc/upgrade_qt_configure_build_settings.png" width="400" alt="Configure Build Settings">
-
+```bash
 dbus-run-session
 Xephyr :1 -screen 1280x720 -ac &
 %{buildDir}
+```
 
 <img src="doc/upgrade_qt_configure_deploy_settings.png" width="400" alt="Configure Deploy Settings">
-
+```bash
 DISPLAY=:1
 DBUS_SESSION_BUS_ADDRESS=unix:path=/tmp/maia-dev-dbus-1.sock
 MAIA_LOG_PORT=50001
 MAIA_LOG_HOST=192.168.0.129
 MAIA_QTCREATOR_RUN=1
 GTK_USE_PORTAL=0
+```
 
 <img src="doc/upgrade_qt_configure_run_settings.png" width="400" alt="Configure Run Settings">
 
