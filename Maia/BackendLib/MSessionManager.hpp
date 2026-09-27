@@ -20,6 +20,6 @@ public:
 private:
     QDBusInterface *m_dbusInterface;
 
-private slots:
+private Q_SLOTS:
     void onCallFinished(QDBusPendingCallWatcher *watcher);
 };

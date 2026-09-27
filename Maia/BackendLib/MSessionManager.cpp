@@ -8,9 +8,9 @@ MSessionManager::MSessionManager(QObject *parent)
     qDebug() << __PRETTY_FUNCTION__;
     // Connect to the D-Bus interface of the server
     m_dbusInterface = new QDBusInterface(
-        "org.maia.SessionService", // Service name
-        "/Session",            // Object path
-        "org.maia.SessionInterface", // Interface
+        u"org.maia.SessionService", // Service name
+        u"/Session",            // Object path
+        u"org.maia.SessionInterface", // Interface
         QDBusConnection::sessionBus(), // Session D-Bus connection
         this
         );

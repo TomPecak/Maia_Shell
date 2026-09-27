@@ -15,7 +15,7 @@ public:
     void itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value);
     void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry);
 
-private slots:
+private Q_SLOTS:
     void onWindowChanged(QQuickWindow *newWindow);
 
 private:

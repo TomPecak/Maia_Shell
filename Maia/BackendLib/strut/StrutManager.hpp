@@ -15,10 +15,10 @@ public:
     void reservePanelRightArea(QQuickWindow *window, int x, int y, int width, int height);
     void reservePanelBottomArea(QQuickWindow *window, int x, int y, int width, int height);
 
-signals:
+Q_SIGNALS:
     void updateRequested(QQuickWindow *window);
 
-private slots:
+private Q_SLOTS:
     void updateStructForWindow(QQuickWindow *window);
 
 private:

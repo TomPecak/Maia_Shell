@@ -80,10 +80,10 @@ public:
     bool measureCpuLoad() const;
     void setMeasureCpuLoad(bool enable);
 
-private slots:
+private Q_SLOTS:
     void updateCpuLoad();
 
-signals:
+Q_SIGNALS:
     void platformNameChanged();
     void cpuLoadChanged();
     void measureCpuLoadChanged();

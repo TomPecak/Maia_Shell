@@ -39,7 +39,7 @@ void LoggerBackend::initModel(int port)
 
     for (int row = 0; row < logModels[port]->rowCount(); ++row) {
         QStandardItem *item = new QStandardItem();
-        item->setData(QString("[OK] Test Model"), Qt::DisplayRole); // Pierwsze pole
+        item->setData(QString(u"[OK] Test Model"), Qt::DisplayRole); // Pierwsze pole
         //item->setData(QString("Dodatkowy tekst %1").arg(row + 1), Qt::UserRole + 1); // Drugie pole
         logModels[port]->setItem(row, 0, item);
     }
@@ -81,9 +81,9 @@ void LoggerBackend::setPort(int port)
 {
     if (m_currentPort != port) {
         m_currentPort = port;
-        emit portChanged();
-        emit logModelChanged();
-        emit serverAddressesChanged();
+        Q_EMIT portChanged();
+        Q_EMIT logModelChanged();
+        Q_EMIT serverAddressesChanged();
     }
 }
 
@@ -92,7 +92,7 @@ QStringList LoggerBackend::serverAddresses()
     QStringList addresses;
     for (const QHostAddress &address : QNetworkInterface::allAddresses()) {
         if (address.protocol() == QAbstractSocket::IPv4Protocol) {
-            addresses << QString("ws://%1:%2").arg(address.toString()).arg(m_currentPort);
+            addresses << QString(u"ws://%1:%2").arg(address.toString()).arg(m_currentPort);
         }
     }
     return addresses;

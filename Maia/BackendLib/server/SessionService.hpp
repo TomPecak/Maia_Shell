@@ -11,19 +11,19 @@ public:
     ~SessionService();
 
     //these slots are automaticly exposed by Qt mechanics as d-bus slots
-public slots:
+public Q_SLOTS:
     void logout();
     void reboot();
     void poweroff();
 
-private slots:
+private Q_SLOTS:
     void onCallFinished(QDBusPendingCallWatcher *watcher);
 
 private:
     void executeFreedesktopReboot();
     void executeFreedesktopPoweroff();
 
-signals:
+Q_SIGNALS:
     void logoutRequest();
     void rebootRequest();
     void poweroffRequest();

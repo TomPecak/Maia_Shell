@@ -124,8 +124,8 @@ void MAudioBackend::updatePreferredSink() {
         connect(currentSink, &PulseAudioQt::Sink::mutedChanged, this, &MAudioBackend::prefferedOutputMutedChanged);
 
         // Emit signals to notify about the current sink's state
-        emit prefferedOutputVolumeChanged();
-        emit prefferedOutputMutedChanged();
+        Q_EMIT prefferedOutputVolumeChanged();
+        Q_EMIT prefferedOutputMutedChanged();
     }
 
     previousSink = currentSink;
@@ -164,7 +164,7 @@ void MAudioBackend::setPrefferedOutputMuted(bool muted) {
         if (prefferedDevice->sink()->isMuted() != muted) {
             prefferedDevice->sink()->setMuted(muted);
             m_preferredOutputMuted = muted;
-            emit prefferedOutputMutedChanged();
+            Q_EMIT prefferedOutputMutedChanged();
         }
     }
 }

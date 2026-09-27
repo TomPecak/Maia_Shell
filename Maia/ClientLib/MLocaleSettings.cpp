@@ -56,13 +56,13 @@ void MLocaleSettings::setTwentyFourTime(bool newTwentyFourTime)
     // Update local state immediately so the UI feels instant.
     bool oldTwentyFourTime = m_twentyFourTime;
     m_twentyFourTime = newTwentyFourTime;
-    emit twentyFourTimeChanged();
+    Q_EMIT twentyFourTimeChanged();
 
     // Check if connected
     if (!m_dbusInterface || !m_dbusInterface->isValid()) {
         qWarning() << "MLocaleSettings: D-Bus service not available. Reverting.";
         m_twentyFourTime = oldTwentyFourTime;
-        emit twentyFourTimeChanged();
+        Q_EMIT twentyFourTimeChanged();
         return;
     }
 
@@ -94,7 +94,7 @@ void MLocaleSettings::setTwentyFourTime(bool newTwentyFourTime)
                     // Revert local state on error
                     if (m_twentyFourTime != oldTwentyFourTime) {
                         m_twentyFourTime = oldTwentyFourTime;
-                        emit twentyFourTimeChanged();
+                        Q_EMIT twentyFourTimeChanged();
                     }
                 } else {
                     qDebug() << "MLocaleSettings: Successfully set property on server.";
@@ -132,7 +132,7 @@ void MLocaleSettings::syncWithServer()
                     if (m_twentyFourTime != remoteValue) {
                         qDebug() << "[Client] Sync: Local updated from server:" << remoteValue;
                         m_twentyFourTime = remoteValue;
-                        emit twentyFourTimeChanged();
+                        Q_EMIT twentyFourTimeChanged();
                     }
                 } else {
                     qWarning() << "[Client] Sync failed:" << reply.error().message();
@@ -147,7 +147,7 @@ void MLocaleSettings::onRemoteChanged(bool value)
     if (m_twentyFourTime != value) {
         qDebug() << "[Client] Remote signal received:" << value;
         m_twentyFourTime = value;
-        emit twentyFourTimeChanged();
+        Q_EMIT twentyFourTimeChanged();
     }
 }
 

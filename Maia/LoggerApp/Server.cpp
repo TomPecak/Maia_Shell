@@ -4,7 +4,7 @@
 
 Server::Server(QObject *parent)
     : QObject(parent)
-    , m_server("LoggerServer", QWebSocketServer::NonSecureMode, this)
+    , m_server(u"LoggerServer", QWebSocketServer::NonSecureMode, this)
     , m_nextClientId(1)
 {
     connect(&m_server, &QWebSocketServer::newConnection, this, &Server::handleNewConnection);
@@ -56,6 +56,6 @@ void Server::handleTextMessageReceived(const QString &message)
     QWebSocket *clientSocket = qobject_cast<QWebSocket *>(sender());
     if (clientSocket) {
         int clientId = m_clientIds.value(clientSocket, 0);
-        emit messageReceived(clientId, clientSocket, message);
+        Q_EMIT messageReceived(clientId, clientSocket, message);
     }
 }

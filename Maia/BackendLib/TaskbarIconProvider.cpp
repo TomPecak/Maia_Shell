@@ -15,7 +15,7 @@ QDebug operator<<(QDebug dbg, const KWindowInfo &info) {
         return dbg.space();
     }
 
-    auto windowTypeToString = [](NET::WindowType type) -> QString {
+    auto windowTypeToString = [](NET::WindowType type) -> const char * {
         switch (type) {
         case NET::Unknown: return "Unknown";
         case NET::Normal: return "Normal";

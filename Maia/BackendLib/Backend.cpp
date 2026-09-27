@@ -22,17 +22,17 @@
 
 Backend::Backend(QString homeEnv, QObject *parent)
     : QObject(parent)
-    , m_cpuFile("/proc/stat")
+    , m_cpuFile(u"/proc/stat")
     , m_measureCpuLoad(false)
     , HOME_ENV(homeEnv)
     , mask(this)
     , strutManager(this)
 {
     m_platformName = QGuiApplication::platformName();
-    if (m_platformName == "xcb") {
-        m_platformName = "X11";
+    if (m_platformName == u"xcb") {
+        m_platformName = u"X11";
     }
-    emit platformNameChanged();
+    Q_EMIT platformNameChanged();
 
     //cpu load init
     connect(&m_timer, &QTimer::timeout, this, &Backend::updateCpuLoad);
@@ -83,12 +83,12 @@ void Backend::setAuroraeTheme(const QString themeName)
             installAuroraeTheme(themeUrl, true); // Force reinstall
             if (!themeDir.exists()) {
                 qDebug() << "[ERROR] Failed to reinstall Aurorae theme:" << themeName;
-                emit themeReinstallationFailed(themeName);
+                Q_EMIT themeReinstallationFailed(themeName);
                 return;
             }
         } else {
             qDebug() << "[ERROR] No URL found in settings for Aurorae theme:" << themeName;
-            emit themeReinstallationFailed(themeName);
+            Q_EMIT themeReinstallationFailed(themeName);
             return;
         }
     }
@@ -96,7 +96,7 @@ void Backend::setAuroraeTheme(const QString themeName)
     // Step 2: Verify metadata
     if (!themeDir.exists("metadata.desktop")) {
         qDebug() << "[ERROR] Invalid Aurorae theme: metadata.desktop not found in" << themePath;
-        emit themeReinstallationFailed(themeName);
+        Q_EMIT themeReinstallationFailed(themeName);
         return;
     }
 
@@ -107,7 +107,7 @@ void Backend::setAuroraeTheme(const QString themeName)
     decorationGroup.writeEntry("library", "org.kde.kwin.aurorae");
     if (!config->sync()) {
         qDebug() << "[ERROR] Failed to save kwinrc configuration for theme:" << themeName;
-        emit themeReinstallationFailed(themeName);
+        Q_EMIT themeReinstallationFailed(themeName);
         return;
     }
 
@@ -136,12 +136,12 @@ void Backend::setIconTheme(const QString themeName)
             installIconTheme(themeUrl, true); // Force reinstall
             if (!themeDir.exists()) {
                 qDebug() << "[ERROR] Failed to reinstall icon theme:" << themeName;
-                emit themeReinstallationFailed(themeName);
+                Q_EMIT themeReinstallationFailed(themeName);
                 return;
             }
         } else {
             qDebug() << "[ERROR] No URL found in settings for icon theme:" << themeName;
-            emit themeReinstallationFailed(themeName);
+            Q_EMIT themeReinstallationFailed(themeName);
             return;
         }
     }
@@ -150,12 +150,12 @@ void Backend::setIconTheme(const QString themeName)
     QIcon::setThemeName(themeName);
 
     // Optional: Update kdeglobals for KDE compatibility
-    KSharedConfig::Ptr config = KSharedConfig::openConfig("kdeglobals", KConfig::SimpleConfig);
-    KConfigGroup iconGroup(config, "Icons");
+    KSharedConfig::Ptr config = KSharedConfig::openConfig(u"kdeglobals", KConfig::SimpleConfig);
+    KConfigGroup iconGroup(config, u"Icons");
     iconGroup.writeEntry("Theme", themeName);
     if (!config->sync()) {
         qDebug() << "[ERROR] Failed to save kdeglobals configuration for icon theme:" << themeName;
-        emit themeReinstallationFailed(themeName);
+        Q_EMIT themeReinstallationFailed(themeName);
         return;
     }
 
@@ -169,8 +169,8 @@ void Backend::setDefaultWindowDecoration()
 #warning "This operation is not asynchronous"
 
     // Step 1: Update kwinrc configuration using KSharedConfig
-    KSharedConfig::Ptr config = KSharedConfig::openConfig("kwinrc", KConfig::SimpleConfig);
-    KConfigGroup decorationGroup(config, "org.kde.kdecoration2");
+    KSharedConfig::Ptr config = KSharedConfig::openConfig(u"kwinrc", KConfig::SimpleConfig);
+    KConfigGroup decorationGroup(config, u"org.kde.kdecoration2");
 
     // Delete the entire [org.kde.kdecoration2] group to reset to default
     decorationGroup.deleteGroup();
@@ -187,7 +187,7 @@ bool Backend::copyLocalDirectory(const QString &sourcePath, const QString &targe
 {
     QDir targetDir(targetPath);
 
-    if (!targetDir.exists() && !targetDir.mkpath(".")) {
+    if (!targetDir.exists() && !targetDir.mkpath(u".")) {
         qDebug() << "Failed to create target directory:" << targetPath;
         return false;
     }
@@ -221,7 +221,7 @@ bool Backend::copyLocalDirectory(const QString &sourcePath, const QString &targe
 bool Backend::copyQrcDirectory(const QString &sourcePath, const QString &targetPath)
 {
     QDir targetDir(targetPath);
-    if (!targetDir.exists() && !targetDir.mkpath(".")) {
+    if (!targetDir.exists() && !targetDir.mkpath(u".")) {
         qDebug() << "Failed to create target directory:" << targetPath;
         return false;
     }
@@ -265,7 +265,7 @@ void Backend::activateWindow(WId win)
 
 void Backend::minimalizeAllWindows()
 {
-    if (m_platformName == "X11") {
+    if (m_platformName == u"X11") {
         const QList<WId> windows = KX11Extras::windows();
         for (const WId &windowId : windows) {
             KX11Extras::minimizeWindow(windowId);
@@ -415,7 +415,7 @@ void Backend::setMeasureCpuLoad(bool enable)
         return; // Check if the state has changed
 
     m_measureCpuLoad = enable;
-    emit measureCpuLoadChanged();
+    Q_EMIT measureCpuLoadChanged();
 
     if (m_measureCpuLoad) {
         // Enable CPU measurement
@@ -468,7 +468,7 @@ void Backend::updateCpuLoad()
         long long idleDiff = totalIdle - prevIdle;
 
         m_cpuLoad = (1.0f - (float(idleDiff) / float(totalDiff))) * 100.0f;
-        emit cpuLoadChanged();
+        Q_EMIT cpuLoadChanged();
     }
 
     prevTotal = total;

@@ -47,12 +47,13 @@ QList<Application> getApplications() {
 
 #warning "Zmierzyć czas ładowania aplikacji, bo zmianie wczytywania menu za pomoca bibliotek KDE znaczaco wydłużł sie czas ładowania aplikacji"
 
-    QString xdgDataDirs = qgetenv("XDG_DATA_DIRS");
+   QString xdgDataDirs = QString::fromUtf8(qgetenv("XDG_DATA_DIRS"));
     if (xdgDataDirs.isEmpty()) {
-        xdgDataDirs = "/usr/local/share:/usr/share";
+        xdgDataDirs = QStringLiteral("/usr/local/share:/usr/share");
     }
 
-    QStringList desktopDirs = xdgDataDirs.split(":", Qt::SkipEmptyParts);
+    // Używamy u':' (znak w UTF-16) lub QStringLiteral(":")
+    QStringList desktopDirs = xdgDataDirs.split(u':', Qt::SkipEmptyParts);
     desktopDirs.append(QDir::homePath() + "/.local/share/applications/");
 
     for (const QString& dir : desktopDirs) {
@@ -61,7 +62,7 @@ QList<Application> getApplications() {
             continue;
         }
 
-        QStringList desktopFiles = applicationDir.entryList({"*.desktop"}, QDir::Files);
+        QStringList desktopFiles = applicationDir.entryList({QStringLiteral("*.desktop")}, QDir::Files);
         for (const QString& fileName : desktopFiles) {
             QString filePath = applicationDir.filePath(fileName);
             Application app = parseDesktopFile(filePath);
@@ -120,7 +121,7 @@ QString DesktopApplicationModel::getExecById(const QString &appId) const {
             return app.exec;
         }
     }
-    return QString("");
+    return QString(u"");
 }
 
 Application DesktopApplicationModel::getApplicationById(const QString &appId) const

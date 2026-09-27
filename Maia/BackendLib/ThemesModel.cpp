@@ -9,8 +9,8 @@ ThemesModel::ThemesModel(QObject *parent)
 
 void ThemesModel::initializeThemes()
 {
-    themes.push_back({ "Gnome", "Gnome", false });
-    themes.push_back({ "Windows XP", "Windows XP", true });
+    themes.push_back({ QStringLiteral("Gnome"), QStringLiteral("Gnome"), false });
+    themes.push_back({ QStringLiteral("Windows XP"), QStringLiteral("Windows XP"), true });
 }
 
 int ThemesModel::rowCount(const QModelIndex &parent) const
@@ -54,10 +54,10 @@ void ThemesModel::setActiveFrontend(const QString& frontendId)
     for (size_t i = 0; i < themes.size(); ++i) {
         if (themes[i].themeId == frontendId && !themes[i].themeActive) {
             themes[i].themeActive = true;
-            emit dataChanged(index(static_cast<int>(i)), index(static_cast<int>(i)), { ThemeActiveRole });
+            Q_EMIT dataChanged(index(static_cast<int>(i)), index(static_cast<int>(i)), { ThemeActiveRole });
         } else if (themes[i].themeActive) {
             themes[i].themeActive = false;
-            emit dataChanged(index(static_cast<int>(i)), index(static_cast<int>(i)), { ThemeActiveRole });
+            Q_EMIT dataChanged(index(static_cast<int>(i)), index(static_cast<int>(i)), { ThemeActiveRole });
         }
     }
 }

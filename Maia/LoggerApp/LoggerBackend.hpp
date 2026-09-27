@@ -28,7 +28,7 @@ public:
     static constexpr int MAX_ROWS = 10000;
     static constexpr int PORT_CHANNELS_COUNT = 10;
 
-signals:
+Q_SIGNALS:
     void portChanged();
     void logModelChanged();
     void serverAddressesChanged();

@@ -31,7 +31,7 @@ Q_SIGNALS:
     void prefferedOutputMutedChanged();
 
 
-private slots:
+private Q_SLOTS:
     void updatePreferredSink();
 
 private:

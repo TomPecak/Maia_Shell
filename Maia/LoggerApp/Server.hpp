@@ -15,10 +15,10 @@ public:
 
     bool startServer(int port);
 
-signals:
+Q_SIGNALS:
     void messageReceived(int clientId, QWebSocket *socket, QString message);
 
-private slots:
+private Q_SLOTS:
     void handleNewConnection();
     void handleClientDisconnected();
     void handleTextMessageReceived(const QString &message);

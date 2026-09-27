@@ -18,10 +18,10 @@ public:
     bool twentyFourTime() const;
     void setTwentyFourTime(bool newTwentyFourTime);
 
-signals:
+Q_SIGNALS:
     void twentyFourTimeChanged();
 
-private slots:
+private Q_SLOTS:
     // Slot called when D-Bus sends a signal (Server -> Client)
     void onRemoteChanged(bool value);
 

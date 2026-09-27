@@ -29,12 +29,12 @@ SessionService::SessionService(QObject *parent)
         qDebug() << "[Warning] Session bus is not connected.";
     }
 
-    if(!bus.registerService("org.maia.SessionService")){
+    if(!bus.registerService(u"org.maia.SessionService")){
         qDebug() << "[ERROR] Failed to register D-Bus service";
         return;
     }
 
-    if(!bus.registerObject("/Session", this, QDBusConnection::ExportAllSlots | QDBusConnection::ExportAllSignals)) {
+    if(!bus.registerObject(u"/Session", this, QDBusConnection::ExportAllSlots | QDBusConnection::ExportAllSignals)) {
         qDebug() << "[ERROR] Failed to register D-Bus object.";
     }
 }
@@ -43,18 +43,18 @@ SessionService::~SessionService() {}
 
 void SessionService::logout() {
     qDebug() << "[D-Bus] Logout received";
-    emit logoutRequest();
+    Q_EMIT logoutRequest();
 }
 
 void SessionService::reboot() {
     qDebug() << "[D-Bus] Reboot received";
-    emit rebootRequest();
+    Q_EMIT rebootRequest();
     executeFreedesktopReboot();
 }
 
 void SessionService::poweroff() {
     qDebug() << "[D-Bus] Poweroff received";
-    emit poweroffRequest();
+    Q_EMIT poweroffRequest();
     executeFreedesktopPoweroff();
 }
 
@@ -74,7 +74,7 @@ void SessionService::executeFreedesktopReboot()
 {
     qDebug() << __PRETTY_FUNCTION__;
     QDBusMessage message = QDBusMessage::createMethodCall(
-        "org.freedesktop.login1",
+        u"org.freedesktop.login1",
         "/org/freedesktop/login1",
         "org.freedesktop.login1.Manager",
         "Reboot"
@@ -83,7 +83,7 @@ void SessionService::executeFreedesktopReboot()
 
     QDBusPendingCall pendingCall = QDBusConnection::systemBus().asyncCall(message);
     QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(pendingCall, this);
-    watcher->setProperty("operation", "reboot");
+    watcher->setProperty("operation", u"reboot");
     connect(watcher, &QDBusPendingCallWatcher::finished, this, &SessionService::onCallFinished);
 }
 
@@ -91,7 +91,7 @@ void SessionService::executeFreedesktopPoweroff()
 {
     qDebug() << __PRETTY_FUNCTION__;
     QDBusMessage message = QDBusMessage::createMethodCall(
-        "org.freedesktop.login1",
+        u"org.freedesktop.login1",
         "/org/freedesktop/login1",
         "org.freedesktop.login1.Manager",
         "PowerOff"
