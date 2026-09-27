@@ -27,6 +27,54 @@ Maia Shell v0.1.0 has been tested on Ubuntu 22.04, 24.04, 25.04, but it may work
 | :--- | :---: | :--- |:---|
 |0.1.0 | Ubuntu 22.04 24.04, 25.04 | 6.9.2 | 6.9.0
 
+## Logger
+
+Maia Shell includes a dedicated, network-based logging application. It operates on a client-server architecture: the Logger application acts as a server, and Maia Shell connects to it as a client upon startup to stream log data over the network. This setup is highly beneficial for debugging, especially when troubleshooting startup issues. 
+
+The Logger application is cross-platform and can be compiled and run on Linux, Windows, and Android.
+
+### Running the Bundled Logger (Linux)
+
+The pre-compiled Linux version of the Logger is bundled with the Maia Shell installation packages. It is located at `/opt/Maia/Maia_X.Y.Z/bin/appLogger`. 
+
+For your convenience, a startup script is provided in the same directory. You can launch it by running:
+
+```bash
+cd /opt/Maia/Maia_X.Y.Z/bin/
+./run_logger.sh
+```
+
+### Building the Logger for Windows / Android
+
+Running the Logger on a separate device (such as a Windows PC or an Android smartphone) can be very convenient for monitoring logs during development without cluttering your main workspace.
+
+To compile and run the Logger on another platform:
+
+1. Clone the Maia Shell repository.
+2. **Crucial:** Checkout the Git tag that exactly matches your installed version of Maia Shell. *(The communication protocol between the client and server may change between versions, so version parity is required).*
+3. Open the Logger project in Qt Creator. The project file is located at: `[Maia repository]/Maia/LoggerApp/CMakeLists.txt`.
+4. Configure the project with the appropriate Qt version for your target platform.
+5. Compile and run the application.
+
+### Configuring Maia Shell (The Client)
+
+Since the Logger acts as a server, you must configure Maia Shell with the target IP address and port to establish the connection. 
+
+The application supports a specific port range: **50000 to 50009**. Providing 10 distinct channels is extremely useful during development. For instance, you can run your primary Maia Shell instance on one port, and simultaneously run a development instance (via Qt Creator and Xephyr) on another. This ensures that log streams from different instances do not conflict.
+
+To configure the connection, you need to set two environment variables: `MAIA_LOG_HOST` and `MAIA_LOG_PORT`. 
+
+If you are running Maia Shell as your primary desktop environment, you can set these variables in the session `.desktop` file located at `/usr/share/xsessions/maia_X.Y.Z-desktop.desktop`. Simply append the variables to the `Exec` line.
+
+**Example `maia_X.Y.Z-desktop.desktop` configuration:**
+
+```ini
+[Desktop Entry]
+Name=Maia 0.1.0
+Comment=Desktop Environment using Qt
+Exec=env LD_LIBRARY_PATH=/opt/Maia/Maia_0.1.0/lib GTK_USE_PORTAL=0 MAIA_LOG_PORT=50001 MAIA_LOG_HOST=10.34.204.173 /opt/Maia/Maia_0.1.0/bin/appMaiaServer
+Type=Application
+```
 
 ## Instalation
 
@@ -98,6 +146,8 @@ GTK_USE_PORTAL=0
 ```
 
 <img src="doc/upgrade_qt_configure_run_settings.png" width="400" alt="Configure Run Settings">
+
+
 
 
 
