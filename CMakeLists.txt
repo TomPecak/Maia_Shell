@@ -1,108 +1,93 @@
 cmake_minimum_required(VERSION 3.16)
 
-set(KDE_INSTALL_PREFIX "$ENV{HOME}/kde/usr/lib/x86_64-linux-gnu/cmake")
-
-set(KF6Codecs_DIR ${KDE_INSTALL_PREFIX}/KF6Codecs)
-set(KF6ColorScheme_DIR ${KDE_INSTALL_PREFIX}/KF6ColorScheme)
-set(KF6ConfigWidgets_DIR ${KDE_INSTALL_PREFIX}/KF6ConfigWidgets)
-set(KF6Config_DIR ${KDE_INSTALL_PREFIX}/KF6Config)
-set(KF6CoreAddons_DIR ${KDE_INSTALL_PREFIX}/KF6CoreAddons)
-set(KF6DBusAddons_DIR ${KDE_INSTALL_PREFIX}/KF6DBusAddons)
-set(KF6Declarative_DIR ${KDE_INSTALL_PREFIX}/KF6Declarative)
-set(KF6DocTools_DIR ${KDE_INSTALL_PREFIX}/KF6DocTools)
-set(KF6GlobalAccel_DIR ${KDE_INSTALL_PREFIX}/KF6GlobalAccel)
-set(KF6I18n_DIR ${KDE_INSTALL_PREFIX}/KF6I18n)
-set(KF6KCMUtils_DIR ${KDE_INSTALL_PREFIX}/KF6KCMUtils)
-set(KF6Package_DIR ${KDE_INSTALL_PREFIX}/KF6Package)
-set(KF6PulseAudioQt_DIR ${KDE_INSTALL_PREFIX}/KF6PulseAudioQt)
-set(KF6StatusNotifierItem_DIR ${KDE_INSTALL_PREFIX}/KF6StatusNotifierItem)
-set(KF6Svg_DIR ${KDE_INSTALL_PREFIX}/KF6Svg)
-set(KF6WidgetsAddons_DIR ${KDE_INSTALL_PREFIX}/KF6WidgetsAddons)
-set(KF6WindowSystem_DIR ${KDE_INSTALL_PREFIX}/KF6WindowSystem)
-set(KF6i18n_DIR ${KDE_INSTALL_PREFIX}/KF6I18n)
-set(Plasma_DIR ${KDE_INSTALL_PREFIX}/Plasma)
-
-# set(CMAKE_PREFIX_PATH ${HOME_DIR}/kde/usr/lib/x86_64-linux-gnu/cmake;${CMAKE_PREFIX_PATH})
-# set(CMAKE_PREFIX_PATH ${HOME_DIR}/kde/usr/lib/cmake;${CMAKE_PREFIX_PATH})
-
-
+# --- Definicja projektu ---
 set(MAIA_VERSION 0.1.0)
 project(Maia VERSION ${MAIA_VERSION} LANGUAGES CXX)
 
-# set project deploy directory to  /{HOME}/Maia_deploy/Maia_version
-set(CMAKE_INSTALL_PREFIX "$ENV{HOME}/Maia_deploy/Maia_${PROJECT_VERSION}")
-set(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT FALSE)  # This line prevents include(KDEInstallDirs) from changing CMAKE_INSTALL_PREFIX
-
-
-set(QT_MAJOR_VERSION 6)
-
-set(REQUIRED_QT_VERSION 6.8)
-set(REQUIRED_KF_VERSION 6.2.0)
-set(REQUIRED_PULSEAUDIOQT_VERSION 1.6.0)
-
+# --- Ustawienia C++ ---
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# --- Ustawienia wersji wymaganych pakietów ---
+set(QT_MAJOR_VERSION 6)
+set(REQUIRED_QT_VERSION 6.10)
+set(REQUIRED_KF_VERSION 6.24.0)
+set(REQUIRED_PULSEAUDIOQT_VERSION 1.6.0)
 
-find_package(ECM ${REQUIRED_KF_VERSION} NO_MODULE)
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${ECM_MODULE_PATH})
+# ==============================================================================
+# 1. ŁADOWANIE EXTRA CMAKE MODULES (ECM)
+# To musi być zrobione jak najwcześniej, żeby mieć dostęp do modułów KDE.
+# ==============================================================================
+find_package(ECM ${REQUIRED_KF_VERSION} REQUIRED NO_MODULE)
+set(CMAKE_MODULE_PATH ${ECM_MODULE_PATH} ${CMAKE_MODULE_PATH})
 
-
-include(ECMSourceVersionControl)
+# ==============================================================================
+# 2. STANDARDOWE USTAWIENIA KDE (To naprawia ostrzeżenia)
+# Ładujemy KDEInstallDirs PRZED jakimkolwiek find_package(Qt6 ...) w podkatalogach.
+# ==============================================================================
+include(KDEInstallDirs)
+include(KDECMakeSettings)
+include(KDECompilerSettings NO_POLICY_SCOPE)
+include(FeatureSummary)
 include(ECMSetupVersion)
+include(ECMSourceVersionControl)
 
+# --- Konfiguracja docelowego folderu instalacji (Maia_deploy) ---
+# Robimy to po KDEInstallDirs, aby CMake użył Twojego folderu, a nie systemowego /usr/local
+if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set(CMAKE_INSTALL_PREFIX "$ENV{HOME}/Maia_deploy/Maia_${PROJECT_VERSION}" CACHE PATH "Install path" FORCE)
+endif()
+
+# ==============================================================================
+# 3. KONTROLA WERSJI (GIT)
+# Zmieniono 'add_definitions' na nowocześniejsze 'add_compile_definitions'
+# ==============================================================================
 if(${ECM_SOURCE_UNDER_VERSION_CONTROL})
     execute_process(COMMAND git rev-parse --abbrev-ref HEAD
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         OUTPUT_VARIABLE GIT_BRANCH
         OUTPUT_STRIP_TRAILING_WHITESPACE)
 
-    # Get the latest abbreviated commit hash of the working branch
     execute_process(COMMAND git log -1 --format=%h
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         OUTPUT_VARIABLE GIT_COMMIT_HASH
         OUTPUT_STRIP_TRAILING_WHITESPACE)
 
-    add_definitions(-DGIT_COMMIT_HASH="${GIT_COMMIT_HASH}")
-    add_definitions(-DGIT_BRANCH="${GIT_BRANCH}")
-
+    add_compile_definitions(GIT_COMMIT_HASH="${GIT_COMMIT_HASH}" GIT_BRANCH="${GIT_BRANCH}")
 else()
-    add_definitions(-DGIT_COMMIT_HASH="${MAIA_VERSION}")
-    add_definitions(-DGIT_BRANCH="Stable")
+    add_compile_definitions(GIT_COMMIT_HASH="${MAIA_VERSION}" GIT_BRANCH="Stable")
 endif()
 
-
-
+# ==============================================================================
+# 4. DODAWANIE PODKATALOGÓW Z KODEM
+# Wewnątrz tych folderów powinieneś teraz używać normalnie find_package(KF6... REQUIRED)
+# ==============================================================================
 # libraries
-add_subdirectory(Maia/BackendLib/)
-add_subdirectory(Maia/ClientLib/)
-add_subdirectory(Maia/UILib/)
-
-
+add_subdirectory(Maia/BackendLib)
+add_subdirectory(Maia/ClientLib)
+add_subdirectory(Maia/UILib)
 
 # gnome frontend qml module
-add_subdirectory(Maia/GnomeMod/)
+add_subdirectory(Maia/GnomeMod)
 
 # xp luna frontend qml module
-add_subdirectory(Maia/XPLunaMod/)
+add_subdirectory(Maia/XPLunaMod)
 
 # cutefish frontend qml module
-add_subdirectory(Maia/CutefishMod/)
+add_subdirectory(Maia/CutefishMod)
 
-# logger application
-add_subdirectory(Maia/LoggerApp/)
-add_subdirectory(Maia/MaiaServerApp/)
+# logger & server applications
+add_subdirectory(Maia/LoggerApp)
+add_subdirectory(Maia/MaiaServerApp)
 
-# scripts thats will be copied while deploy
-add_subdirectory(Maia/DeployFiles/)
+# scripts that will be copied while deploy
+add_subdirectory(Maia/DeployFiles)
 
-#add_subdirectory(Experimental/gtk_simple_app/)
-
+# ==============================================================================
+# 5. DOKUMENTACJA I PODSUMOWANIE
+# ==============================================================================
 add_custom_target(Documentation)
-target_sources(Documentation PRIVATE
-    README.md
-    #CONTRIBUTING.md
-)
+target_sources(Documentation PRIVATE README.md)
 
-feature_summary(WHAT ALL FATAL_ON_MISSING_REQUIRED_PACKAGES)
-
+# Wypisuje ładną tabelkę na końcu konfiguracji co znaleziono, a czego brakuje
+feature_summary(WHAT ALL INCLUDE_QUIET_PACKAGES FATAL_ON_MISSING_REQUIRED_PACKAGES)
