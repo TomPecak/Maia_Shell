@@ -115,6 +115,66 @@ sudo ./install_on_ubuntu.sh
 
 ## Contribution
 
+### Build Maia Shell 0.2.0 from sources
+
+System requrements: Ubuntu 26.04, Maia Shell 0.2.0
+
+1. Install dependencies
+```bash
+sudo apt update
+
+sudo apt install -y git gitk
+
+sudo apt install -y \
+    build-essential \
+    cmake \
+    cmake-doc \
+    cmake-format \
+    elpa-cmake-mode \
+    ninja-build \
+    pkg-config \
+    extra-cmake-modules
+
+sudo apt install -y \
+    qtcreator \
+    qtcreator-data \
+    qtcreator-doc
+
+
+sudo apt install -y \
+    qt6-base-dev \
+    qt6-base-dev-tools \
+    qt6-base-private-dev \
+    qt6-base-examples \
+    qt6-declarative-dev \
+    qt6-declarative-examples \
+    qt6-wayland-dev \
+    qt6-scxml-dev \
+    qt6-svg-dev \
+    qt6-webengine-dev \
+    qt6-websockets-dev \
+    qt6-quick3d-dev
+
+sudo apt install -y \
+    libkf6kcmutils-dev \
+    libkf6windowsystem-dev \
+    libkf6pulseaudioqt-dev
+
+sudo apt install -y \
+    libwayland-dev \
+    wayland-protocols \
+    libxkbcommon-dev
+```
+
+```bash
+cd Maia_Shell
+mkdir build
+cd build
+cmake -G Ninja ..
+cmake --build .
+```
+
+
 ### Upgrade Qt version
 
 1. Install new Qt version
