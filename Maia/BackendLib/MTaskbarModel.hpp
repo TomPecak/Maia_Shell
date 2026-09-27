@@ -20,7 +20,7 @@
 //     bool filterNotification() const;
 //     bool setFilterNotification(bool enabled);
 
-// signals:
+// Q_SIGNALS:
 //     void filterDesktopChanged();
 //     void filterNotificationChanged();
 

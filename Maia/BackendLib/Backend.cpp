@@ -10,6 +10,7 @@
 #include <QUrl>
 #include <QSettings>
 #include <QIcon>
+#include <QStringLiteral>
 
 #include <KX11Extras>
 #include <KConfig>
@@ -22,15 +23,15 @@
 
 Backend::Backend(QString homeEnv, QObject *parent)
     : QObject(parent)
-    , m_cpuFile(u"/proc/stat")
+    , m_cpuFile(QStringLiteral("/proc/stat"))
     , m_measureCpuLoad(false)
     , HOME_ENV(homeEnv)
     , mask(this)
     , strutManager(this)
 {
     m_platformName = QGuiApplication::platformName();
-    if (m_platformName == u"xcb") {
-        m_platformName = u"X11";
+    if (m_platformName == QStringLiteral("xcb")) {
+        m_platformName = QStringLiteral("X11");
     }
     Q_EMIT platformNameChanged();
 
@@ -48,7 +49,7 @@ Backend::~Backend()
 void Backend::installIconTheme(const QUrl &themeUrl, bool forceReinstall)
 {
     // Docelowa lokalizacja: $HOME/.local/share/icons
-    QString targetInstallDirPath = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + "/icons";
+    QString targetInstallDirPath = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + QStringLiteral("/icons");
     installDirInternal(themeUrl, targetInstallDirPath, forceReinstall);
 }
 
@@ -57,7 +58,7 @@ void Backend::installAuroraeTheme(const QUrl &themeUrl, bool forceReinstall)
     qDebug() << __PRETTY_FUNCTION__ << themeUrl;
 
     // Docelowa lokalizacja: $HOME/.local/share/aurorae/themes
-    QString targetInstallDirPath = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + "/aurorae/themes";
+    QString targetInstallDirPath = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + QStringLiteral("/aurorae/themes");
     installDirInternal(themeUrl, targetInstallDirPath, forceReinstall);
 }
 
@@ -68,14 +69,14 @@ void Backend::setAuroraeTheme(const QString themeName)
 #warning "This operation is not asynchronous"
 
     // Step 1: Verify that the theme exists
-    QString themePath = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + "/aurorae/themes/" + themeName;
+    QString themePath = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + QStringLiteral("/aurorae/themes/") + themeName;
     QDir themeDir(themePath);
     if (!themeDir.exists()) {
         qDebug() << "Aurorae theme directory does not exist at:" << themePath;
         // Attempt to reinstall from stored URL
         QSettings settings;
         settings.beginGroup("[Installed_themes_URLs]");
-        QString savedUrl = settings.value(themeName, "").toString();
+        QString savedUrl = settings.value(themeName, QStringLiteral("")).toString();
         settings.endGroup();
         if (!savedUrl.isEmpty()) {
             qDebug() << "Attempting to reinstall missing Aurorae theme:" << themeName << "from URL:" << savedUrl;
@@ -94,17 +95,17 @@ void Backend::setAuroraeTheme(const QString themeName)
     }
 
     // Step 2: Verify metadata
-    if (!themeDir.exists("metadata.desktop")) {
+    if (!themeDir.exists(QStringLiteral("metadata.desktop"))) {
         qDebug() << "[ERROR] Invalid Aurorae theme: metadata.desktop not found in" << themePath;
         Q_EMIT themeReinstallationFailed(themeName);
         return;
     }
 
     // Step 3: Update kwinrc configuration using KSharedConfig
-    KSharedConfig::Ptr config = KSharedConfig::openConfig("kwinrc", KConfig::SimpleConfig);
-    KConfigGroup decorationGroup(config, "org.kde.kdecoration2");
-    decorationGroup.writeEntry("theme", "__aurorae__svg__" + themeName);
-    decorationGroup.writeEntry("library", "org.kde.kwin.aurorae");
+    KSharedConfig::Ptr config = KSharedConfig::openConfig(QStringLiteral("kwinrc"), KConfig::SimpleConfig);
+    KConfigGroup decorationGroup(config, QStringLiteral("org.kde.kdecoration2"));
+    decorationGroup.writeEntry(QStringLiteral("theme"), QStringLiteral("__aurorae__svg__") + themeName);
+    decorationGroup.writeEntry(QStringLiteral("library"), QStringLiteral("org.kde.kwin.aurorae"));
     if (!config->sync()) {
         qDebug() << "[ERROR] Failed to save kwinrc configuration for theme:" << themeName;
         Q_EMIT themeReinstallationFailed(themeName);
@@ -121,14 +122,14 @@ void Backend::setIconTheme(const QString themeName)
 #warning "This operation is not asynchronous"
 
     // Step 1: Verify that the theme exists
-    QString themePath = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + "/icons/" + themeName;
+    QString themePath = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + QStringLiteral("/icons/") + themeName;
     QDir themeDir(themePath);
     if (!themeDir.exists()) {
         qDebug() << "Icon theme directory does not exist at:" << themePath;
         // Attempt to reinstall from stored URL
         QSettings settings;
         settings.beginGroup("[Installed_themes_URLs]");
-        QString savedUrl = settings.value(themeName, "").toString();
+        QString savedUrl = settings.value(themeName, QStringLiteral("")).toString();
         settings.endGroup();
         if (!savedUrl.isEmpty()) {
             qDebug() << "Attempting to reinstall missing icon theme:" << themeName << "from URL:" << savedUrl;
@@ -150,8 +151,8 @@ void Backend::setIconTheme(const QString themeName)
     QIcon::setThemeName(themeName);
 
     // Optional: Update kdeglobals for KDE compatibility
-    KSharedConfig::Ptr config = KSharedConfig::openConfig(u"kdeglobals", KConfig::SimpleConfig);
-    KConfigGroup iconGroup(config, u"Icons");
+    KSharedConfig::Ptr config = KSharedConfig::openConfig(QStringLiteral("kdeglobals"), KConfig::SimpleConfig);
+    KConfigGroup iconGroup(config, QStringLiteral("Icons"));
     iconGroup.writeEntry("Theme", themeName);
     if (!config->sync()) {
         qDebug() << "[ERROR] Failed to save kdeglobals configuration for icon theme:" << themeName;
@@ -169,8 +170,8 @@ void Backend::setDefaultWindowDecoration()
 #warning "This operation is not asynchronous"
 
     // Step 1: Update kwinrc configuration using KSharedConfig
-    KSharedConfig::Ptr config = KSharedConfig::openConfig(u"kwinrc", KConfig::SimpleConfig);
-    KConfigGroup decorationGroup(config, u"org.kde.kdecoration2");
+    KSharedConfig::Ptr config = KSharedConfig::openConfig(QStringLiteral("kwinrc"), KConfig::SimpleConfig);
+    KConfigGroup decorationGroup(config, QStringLiteral("org.kde.kdecoration2"));
 
     // Delete the entire [org.kde.kdecoration2] group to reset to default
     decorationGroup.deleteGroup();
@@ -187,7 +188,7 @@ bool Backend::copyLocalDirectory(const QString &sourcePath, const QString &targe
 {
     QDir targetDir(targetPath);
 
-    if (!targetDir.exists() && !targetDir.mkpath(u".")) {
+    if (!targetDir.exists() && !targetDir.mkpath(QStringLiteral("."))) {
         qDebug() << "Failed to create target directory:" << targetPath;
         return false;
     }
@@ -221,12 +222,12 @@ bool Backend::copyLocalDirectory(const QString &sourcePath, const QString &targe
 bool Backend::copyQrcDirectory(const QString &sourcePath, const QString &targetPath)
 {
     QDir targetDir(targetPath);
-    if (!targetDir.exists() && !targetDir.mkpath(u".")) {
+    if (!targetDir.exists() && !targetDir.mkpath(QStringLiteral("."))) {
         qDebug() << "Failed to create target directory:" << targetPath;
         return false;
     }
 
-    QDir qrcDir(":/" + sourcePath);
+    QDir qrcDir(QStringLiteral(":/") + sourcePath);
     if (!qrcDir.exists()) {
         qDebug() << "QRC directory not found:" << sourcePath;
         return false;
@@ -248,7 +249,7 @@ bool Backend::copyQrcDirectory(const QString &sourcePath, const QString &targetP
     QDirIterator dirIt(":/" + sourcePath, QDir::Dirs | QDir::NoDotAndDotDot);
     while (dirIt.hasNext()) {
         dirIt.next();
-        QString srcSubDir = sourcePath + "/" + dirIt.fileName();
+        QString srcSubDir = sourcePath + QStringLiteral("/") + dirIt.fileName();
         QString dstSubDir = targetDir.absoluteFilePath(dirIt.fileName());
         if (!copyQrcDirectory(srcSubDir, dstSubDir)) {
             return false;
@@ -297,7 +298,7 @@ void Backend::runCommand(const QString &cmd)
     // If LD_LIBRARY_PATH points to Maia's library path, the application will link to Maia's libraries instead of the system libraries.
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
 
-    filterProcessEnvironment(env, QString("/opt/Maia/Maia_") + QString(MAIA_VERSION_STRING) + QString("/lib"));
+    filterProcessEnvironment(env, QStringLiteral("/opt/Maia/Maia_") + QStringLiteral(MAIA_VERSION_STRING) + QStringLiteral("/lib"));
 
     QProcess process;
     process.setProgram(program);
@@ -448,7 +449,7 @@ void Backend::updateCpuLoad()
     QTextStream in(&m_cpuFile);
     QString line = in.readLine();
 
-    QStringList cpuData = line.split(QRegularExpression("\\s+"));
+    QStringList cpuData = line.split(QRegularExpression(QStringLiteral("\\s+")));
     if (cpuData.size() < 8)
         return;
 
@@ -486,13 +487,13 @@ bool Backend::installDirInternal(const QUrl &themeUrl, const QString &targetDirP
 
     QString sourcePath;
     QDir sourceDir;
-    if (themeUrl.scheme() == "qrc") {
+    if (themeUrl.scheme() == QStringLiteral("qrc")) {
         sourcePath = themeUrl.path();
         if (sourcePath.startsWith('/')) {
             sourcePath = sourcePath.mid(1); // Remove leading "/"
         }
-        sourceDir.setPath(":/" + sourcePath);
-    } else if (themeUrl.scheme() == "file" || themeUrl.isLocalFile()) {
+        sourceDir.setPath(QStringLiteral(":/") + sourcePath);
+    } else if (themeUrl.scheme() == QStringLiteral("file") || themeUrl.isLocalFile()) {
         sourcePath = themeUrl.toLocalFile();
         sourceDir.setPath(sourcePath);
     } else {
@@ -537,14 +538,14 @@ bool Backend::installDirInternal(const QUrl &themeUrl, const QString &targetDirP
 
     // Copy
     if (!targetDir.exists()) {
-        if (!targetDir.mkpath(".")) {
+        if (!targetDir.mkpath(QStringLiteral("."))) {
             qDebug() << "[ERROR] Failed to create target directory:" << targetDirPath;
             return false;
         }
     }
 
     bool success;
-    if (themeUrl.scheme() == "qrc") {
+    if (themeUrl.scheme() == QStringLiteral("qrc")) {
         success = copyQrcDirectory(sourcePath, targetThemePath);
     } else {
         success = copyLocalDirectory(sourcePath, targetThemePath);
@@ -579,7 +580,7 @@ bool Backend::isUrlInstalled(const QString &themeName, const QUrl &themeUrl)
 {
     QSettings settings;
     settings.beginGroup("[Installed_themes_URLs]");
-    QString savedUrl = settings.value(themeName, "").toString();
+    QString savedUrl = settings.value(themeName, QStringLiteral("")).toString();
     settings.endGroup();
     return savedUrl == themeUrl.toString();
 }

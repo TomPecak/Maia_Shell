@@ -93,7 +93,7 @@ void ProxyWindowLocalServer::parseCommand(QLocalSocket *clientSocket)
 
     quint32 &nextBlockSize = m_clientBlockSizes[clientSocket];
 
-    forever {
+    while(true) {
         if (nextBlockSize == 0) {
             if (clientSocket->bytesAvailable() < (int) sizeof(quint32))
                 break;

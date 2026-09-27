@@ -23,7 +23,7 @@ public:
     void installWindow(QQmlApplicationEngine &engine);
     bool startServer(const QString &proxyWindowAddress);
 
-private slots:
+private Q_SLOTS:
     void handleNewConnection();
     void handleClientDisconnected();
     void handleClientReadyRead();

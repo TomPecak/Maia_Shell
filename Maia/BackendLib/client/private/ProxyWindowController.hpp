@@ -22,11 +22,11 @@ public:
 
     void connectToServer(const QString &serverName);
 
-signals:
+Q_SIGNALS:
     void visibleReceived(bool visible);
     void proxyWindowConnected();
 
-private slots:
+private Q_SLOTS:
     void onSocketConnected();
     void onSocketDisconnected();
     void onSocketReadyRead();

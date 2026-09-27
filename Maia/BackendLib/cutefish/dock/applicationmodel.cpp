@@ -118,8 +118,8 @@ void ApplicationModel::addItem(const QString &desktopFile)
 
     savePinAndUnPinList();
 
-    emit itemAdded();
-    emit countChanged();
+    Q_EMIT itemAdded();
+    Q_EMIT countChanged();
 }
 
 void ApplicationModel::removeItem(const QString &desktopFile)
@@ -256,8 +256,8 @@ void ApplicationModel::unPin(const QString &appId)
             m_appItems.removeAll(item);
             endRemoveRows();
 
-            emit itemRemoved();
-            emit countChanged();
+            Q_EMIT itemRemoved();
+            Q_EMIT countChanged();
         }
     }
 
@@ -401,8 +401,8 @@ void ApplicationModel::initPinnedApplications()
                 m_appItems.append(item);
                 endInsertRows();
 
-                emit itemAdded();
-                emit countChanged();
+                Q_EMIT itemAdded();
+                Q_EMIT countChanged();
 
                 set->endGroup();
                 break;
@@ -444,7 +444,7 @@ void ApplicationModel::handleDataChangedFromItem(ApplicationItem *item)
     QModelIndex idx = index(indexOf(item->id), 0, QModelIndex());
 
     if (idx.isValid()) {
-        emit dataChanged(idx, idx);
+        Q_EMIT dataChanged(idx, idx);
     }
 }
 
@@ -505,8 +505,8 @@ void ApplicationModel::onWindowAdded(quint64 wid)
         m_appItems << item;
         endInsertRows();
 
-        emit itemAdded();
-        emit countChanged();
+        Q_EMIT itemAdded();
+        Q_EMIT countChanged();
     }
 }
 
@@ -537,8 +537,8 @@ void ApplicationModel::onWindowRemoved(quint64 wid)
             m_appItems.removeAll(item);
             endRemoveRows();
 
-            emit itemRemoved();
-            emit countChanged();
+            Q_EMIT itemRemoved();
+            Q_EMIT countChanged();
         }
     }
 }
@@ -554,7 +554,7 @@ void ApplicationModel::onActiveChanged(quint64 wid)
 
             QModelIndex idx = index(indexOf(item->id), 0, QModelIndex());
             if (idx.isValid()) {
-                emit dataChanged(idx, idx);
+                Q_EMIT dataChanged(idx, idx);
             }
         }
     }

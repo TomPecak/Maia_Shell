@@ -4,7 +4,7 @@
 
 Server::Server(QObject *parent)
     : QObject(parent)
-    , m_server(u"LoggerServer", QWebSocketServer::NonSecureMode, this)
+    , m_server(QStringLiteral("LoggerServer"), QWebSocketServer::NonSecureMode, this)
     , m_nextClientId(1)
 {
     connect(&m_server, &QWebSocketServer::newConnection, this, &Server::handleNewConnection);

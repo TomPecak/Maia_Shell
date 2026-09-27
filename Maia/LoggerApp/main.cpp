@@ -9,7 +9,7 @@ int main(int argc, char *argv[])
     QGuiApplication app(argc, argv);
     LoggerBackend backend;
     QQmlApplicationEngine engine;
-    engine.rootContext()->setContextProperty("backend", &backend);
+    engine.rootContext()->setContextProperty(QStringLiteral("backend"), &backend);
     QObject::connect(
         &engine,
         &QQmlApplicationEngine::objectCreationFailed,

@@ -61,7 +61,7 @@ void LocaleSettingsService::setTwentyFourTime(bool newTwentyFourTime)
     // Persist change to disk
     saveSettings();
 
-    emit twentyFourTimeChanged(m_twentyFourTime);
+    Q_EMIT twentyFourTimeChanged(m_twentyFourTime);
 }
 
 void LocaleSettingsService::loadSettings()

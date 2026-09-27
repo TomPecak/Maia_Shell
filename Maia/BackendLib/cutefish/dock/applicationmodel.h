@@ -68,7 +68,7 @@ public:
 
     Q_INVOKABLE void move(int from, int to);
 
-signals:
+Q_SIGNALS:
     void countChanged();
 
     void itemAdded();

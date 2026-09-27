@@ -58,7 +58,7 @@ QDebug operator<<(QDebug dbg, const KWindowInfo &info) {
                   << "\tWindow Class Class: " << info.windowClassClass() << "\n"
                   << "\tGTK Application ID: " << info.gtkApplicationId() << "\n"
                   << "\tTransient For: " << info.transientFor() << "\n"
-                  << "\tActivities: " << info.activities().join(", ") << "\n"
+                  << "\tActivities: " << info.activities().join(u", ") << "\n"
                   << "\tWindow Type: "
                   << windowTypeToString(info.windowType(NET::AllTypesMask)) << "\n"; // Dodano typ okna
 
@@ -97,7 +97,7 @@ QPixmap TaskbarIconsProvider::requestPixmap(const QString &id, QSize *size, cons
 }
 
 QString TaskbarIconsProvider::getProcessNameByPid(qint64 pid) {
-    QString filePath = QString("/proc/%1/comm").arg(pid);
+    QString filePath = QStringLiteral("/proc/%1/comm").arg(pid);
     QFile file(filePath);
     if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         QTextStream in(&file);

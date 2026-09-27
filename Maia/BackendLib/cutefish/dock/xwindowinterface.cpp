@@ -255,6 +255,6 @@ void XWindowInterface::setIconGeometry(quint64 wid, const QRect &rect)
 void XWindowInterface::onWindowadded(quint64 wid)
 {
     if (isAcceptableWindow(wid)) {
-        emit windowAdded(wid);
+        Q_EMIT windowAdded(wid);
     }
 }

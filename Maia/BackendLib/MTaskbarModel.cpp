@@ -20,7 +20,7 @@
 //     if(m_filterTypes[NET::Desktop] != enabled){
 //         m_filterTypes[NET::Desktop] = enabled;
 //         invalidateFilter();
-//         emit filterDesktopChanged();
+//         Q_EMIT filterDesktopChanged();
 //     }
 // }
 
@@ -34,6 +34,6 @@
 //     if(m_filterTypes[NET::Notification] != enabled){
 //         m_filterTypes[NET::Notification] = enabled;
 //         invalidateFilter();
-//         emit filterNotificationChanged();
+//         Q_EMIT filterNotificationChanged();
 //     }
 // }

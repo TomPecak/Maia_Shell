@@ -22,7 +22,7 @@ public:
 
     Q_INVOKABLE void updateIcon();
 
-signals:
+Q_SIGNALS:
     void sourceChanged();
 
 protected:

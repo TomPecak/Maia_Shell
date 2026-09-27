@@ -18,13 +18,13 @@ public:
     void activeFrontendChangeConfirmation(const QString &frontendId);
     FrontendInfo getCurrentFrontent();
 
-public slots:
+public Q_SLOTS:
     //D-Bus API
     QVariantList getFrontendList();
     QString activeFrontend() const;
     void setActiveFrontend(const QString &frontendId);
 
-signals:
+Q_SIGNALS:
     //D-Bus API
     Q_SCRIPTABLE void frontendAdded(const QString &id,
                                     const QString &name,

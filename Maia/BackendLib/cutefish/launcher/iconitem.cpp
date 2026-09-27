@@ -30,7 +30,7 @@ void IconItem::setSource(const QVariant &source)
     }
 
     loadPixmap();
-    emit sourceChanged();
+    Q_EMIT sourceChanged();
 }
 
 QVariant IconItem::source() const

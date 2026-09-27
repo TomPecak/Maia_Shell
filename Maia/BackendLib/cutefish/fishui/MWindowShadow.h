@@ -81,7 +81,7 @@ public:
     qreal strength() const;
     void setStrength(qreal strength);
 
-private slots:
+private Q_SLOTS:
     void onViewVisibleChanged(bool);
 
 private:
@@ -90,7 +90,7 @@ private:
 
     QMargins shadowMargins(TileSet) const;
 
-signals:
+Q_SIGNALS:
     void geometryChanged();
     void enabledChanged();
     void viewChanged();

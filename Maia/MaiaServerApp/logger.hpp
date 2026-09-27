@@ -22,7 +22,7 @@ public:
 
     void uninit();
 
-private slots:
+private Q_SLOTS:
     void onSocketConnected();
     void onSocketDisconnected();
     void onSocketError(QAbstractSocket::SocketError socketError);

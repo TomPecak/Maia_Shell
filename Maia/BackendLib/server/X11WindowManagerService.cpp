@@ -12,7 +12,7 @@ WindowManagerX11Service::WindowManagerX11Service(QObject *parent)
     , m_kwinBus(QDBusConnection::sessionBus())
 {
     qDebug() << "[STARTUP INFO] Starting: " << __PRETTY_FUNCTION__;
-    QString dbusAddress = qgetenv("DBUS_SESSION_BUS_ADDRESS");
+    QString dbusAddress = QString::fromUtf8(qgetenv("DBUS_SESSION_BUS_ADDRESS"));
 
     if (!dbusAddress.isEmpty()) {
         //qDebug() << "DBUS_SESSION_BUS_ADDRESS:" << dbusAddress;
@@ -30,21 +30,21 @@ WindowManagerX11Service::WindowManagerX11Service(QObject *parent)
         qDebug() << "[Warning] Session bus is not connected.";
     }
 
-    if (!bus.registerService("org.maia.WindowManagerX11Service")) {
+    if (!bus.registerService(QStringLiteral("org.maia.WindowManagerX11Service"))) {
         qDebug() << "[ERROR] Failed to register D-Bus service";
         return;
     }
 
-    if (!bus.registerObject("/WindowManagerX11",
+    if (!bus.registerObject(QStringLiteral("/WindowManagerX11"),
                             this,
                             QDBusConnection::ExportAllSlots | QDBusConnection::ExportAllSignals)) {
         qDebug() << "[ERROR] Failed to register D-Bus object.";
     }
 
-    QDBusConnection::sessionBus().connect("org.kde.KWin",                // Service name
-                                          "/KWin",                       // Object path
-                                          "org.kde.KWin",                // Interface name
-                                          "reloadConfig",                // Signal name
+    QDBusConnection::sessionBus().connect(QStringLiteral("org.kde.KWin"),                // Service name
+                                          QStringLiteral("/KWin"),                       // Object path
+                                          QStringLiteral("org.kde.KWin"),                // Interface name
+                                          QStringLiteral("reloadConfig"),                // Signal name
                                           this,                          // Receiver object
                                           SLOT(handleKwinConfigReloaded) // Slot to be called
                                           );
@@ -56,10 +56,10 @@ void WindowManagerX11Service::unloadEffect(const QString &effectName)
 {
     //qDebug() << __PRETTY_FUNCTION__ << " effectName = " << effectName;
 
-    QDBusMessage message = QDBusMessage::createMethodCall("org.kde.KWin",         // Service
-                                                          "/Effects",             // Path
-                                                          "org.kde.kwin.Effects", // Interface
-                                                          "unloadEffect"          // Method
+    QDBusMessage message = QDBusMessage::createMethodCall(QStringLiteral("org.kde.KWin"),         // Service
+                                                          QStringLiteral("/Effects"),             // Path
+                                                          QStringLiteral("org.kde.kwin.Effects"), // Interface
+                                                          QStringLiteral("unloadEffect")          // Method
     );
 
     message << effectName;
@@ -71,11 +71,11 @@ void WindowManagerX11Service::unloadEffect(const QString &effectName)
     connect(watcher, &QDBusPendingCallWatcher::finished, this, [this, effectName, watcher]() {
         QDBusPendingReply<> reply = *watcher;
         if (reply.isError()) {
-            //emit errorOccurred(effectName, reply.error().message());
+            //Q_EMIT errorOccurred(effectName, reply.error().message());
             qDebug() << "[ERROR] " << __PRETTY_FUNCTION__ << " D-Bus unloadEffect error, effectName=" << effectName
                      << ":" << reply.error().message();
         } else {
-            //emit effectUnloaded(effectName);
+            //Q_EMIT effectUnloaded(effectName);
             //qDebug() << "[OK] Successfull unload " << effectName << " effect";
         }
         watcher->deleteLater();
@@ -85,10 +85,10 @@ void WindowManagerX11Service::unloadEffect(const QString &effectName)
 void WindowManagerX11Service::reconfigure()
 {
 
-    QDBusMessage message = QDBusMessage::createMethodCall("org.kde.KWin", // Service
-                                                          "/KWin",        // Path
-                                                          "org.kde.KWin", // Interface
-                                                          "reconfigure"   // Method
+    QDBusMessage message = QDBusMessage::createMethodCall(QStringLiteral("org.kde.KWin"), // Service
+                                                          QStringLiteral("/KWin"),        // Path
+                                                          QStringLiteral("org.kde.KWin"), // Interface
+                                                          QStringLiteral("reconfigure")   // Method
                                                           );
 
     // Create and start a timer
@@ -114,7 +114,7 @@ void WindowManagerX11Service::reconfigure()
         } else {
             qDebug() << "KWin reconfiguration completed successfully.";
         }
-        emit reconfigureFinished(success); // Emit signal with success information
+        Q_EMIT reconfigureFinished(success); // Emit signal with success information
         watcher->deleteLater();
     });
 }

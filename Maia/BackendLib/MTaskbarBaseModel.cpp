@@ -157,7 +157,7 @@ void MTaskbarModel::addItem(const WId id)
     }
 
     NET::WindowType type = info.windowType(NET::AllTypesMask);
-    QUrl imageUrl = QUrl(QString("image://backendtaskbaricons/") + QString::number(id));
+    QUrl imageUrl = QUrl(QStringLiteral("image://backendtaskbaricons/") + QString::number(id));
 
     beginInsertRows(QModelIndex(), rowCount(), rowCount());
     m_items.append({id, info.visibleName(), imageUrl, false, type});
@@ -197,7 +197,7 @@ void MTaskbarModel::setActiveWindow(WId newActiveWindow)
         if (wasActive != shouldBeActive) {
             m_items[i].windowActive = shouldBeActive;
             QModelIndex index = createIndex(i, 0);
-            emit dataChanged(index, index, {WindowActiveRole});
+            Q_EMIT dataChanged(index, index, {WindowActiveRole});
         }
     }
 }
@@ -208,7 +208,7 @@ void MTaskbarModel::updateWindowName(WId id, const QString &newName)
         if (m_items[i].id == id && m_items[i].text != newName) {
             m_items[i].text = newName;
             QModelIndex index = createIndex(i, 0);
-            emit dataChanged(index, index, {WindowNameRole});
+            Q_EMIT dataChanged(index, index, {WindowNameRole});
             break;
         }
     }
@@ -220,7 +220,7 @@ void MTaskbarModel::updateWindowType(WId id, NET::WindowType newType)
         if (m_items[i].id == id && m_items[i].windowType != newType) {
             m_items[i].windowType = newType;
             QModelIndex index = createIndex(i, 0);
-            emit dataChanged(index, index, {WindowTypeRole});
+            Q_EMIT dataChanged(index, index, {WindowTypeRole});
             break;
         }
     }

@@ -12,9 +12,9 @@ MFrontendModel::MFrontendModel(QObject *parent)
     qDBusRegisterMetaType<QVariantMap>();
     qDBusRegisterMetaType<QVariantList>();
 
-    m_dbusInterface = new QDBusInterface("org.maia.FrontendManager",
-                                         "/FrontendManager",
-                                         "org.maia.FrontendManager",
+    m_dbusInterface = new QDBusInterface(QStringLiteral("org.maia.FrontendManager"),
+                                         QStringLiteral("/FrontendManager"),
+                                         QStringLiteral("org.maia.FrontendManager"),
                                          QDBusConnection::sessionBus(),
                                          this);
 
@@ -32,7 +32,7 @@ MFrontendModel::MFrontendModel(QObject *parent)
             this,
             SLOT(handleActiveFrontendChanged(QString)));
 
-    QDBusPendingCall call = m_dbusInterface->asyncCall("getFrontendList");
+    QDBusPendingCall call = m_dbusInterface->asyncCall(QStringLiteral("getFrontendList"));
     QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(call, this);
     connect(watcher,
             &QDBusPendingCallWatcher::finished,
@@ -45,7 +45,7 @@ MFrontendModel::MFrontendModel(QObject *parent)
 
 void MFrontendModel::loadActiveFrontend()
 {
-    QDBusPendingCall call = m_dbusInterface->asyncCall("activeFrontend");
+    QDBusPendingCall call = m_dbusInterface->asyncCall(QStringLiteral("activeFrontend"));
     QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(call, this);
     connect(watcher,
             &QDBusPendingCallWatcher::finished,
@@ -147,7 +147,7 @@ void MFrontendModel::handleFrontendListReply(QDBusPendingCallWatcher *watcher)
             QVariantMap map;
 
             // Deserialize QDBusArgument as QVariantMap
-            if (dbusArg.currentSignature() == "a{sv}") {
+            if (dbusArg.currentSignature() == QStringLiteral("a{sv}")) {
                 dbusArg >> map;
             } else {
                 qDebug() << "Unexpected D-Bus argument signature:" << dbusArg.currentSignature();
@@ -155,11 +155,11 @@ void MFrontendModel::handleFrontendListReply(QDBusPendingCallWatcher *watcher)
             }
 
             Frontend frontend;
-            frontend.id = map["id"].toString();
-            frontend.name = map["name"].toString();
-            frontend.description = map["description"].toString();
-            frontend.path = map["path"].toString();
-            frontend.active = map["active"].toBool();
+            frontend.id = map[QStringLiteral("id")].toString();
+            frontend.name = map[QStringLiteral("name")].toString();
+            frontend.description = map[QStringLiteral("description")].toString();
+            frontend.path = map[QStringLiteral("path")].toString();
+            frontend.active = map[QStringLiteral("active")].toBool();
 
             //qDebug() << "FRONTEND NAME =" << frontend.name;
             //qDebug() << "FRONTEND ID = " << frontend.id;
@@ -220,11 +220,11 @@ void MFrontendModel::handleActiveFrontendChanged(const QString &frontendId)
             bool newActive = m_frontends[i].id == frontendId;
             if (m_frontends[i].active != newActive) {
                 m_frontends[i].active = newActive;
-                emit dataChanged(index(i), index(i), {ActiveRole});
+                Q_EMIT dataChanged(index(i), index(i), {ActiveRole});
             }
         }
         m_activeFrontendIdMirror = frontendId;
-        emit activeFrontendChanged();
+        Q_EMIT activeFrontendChanged();
     }
 }
 

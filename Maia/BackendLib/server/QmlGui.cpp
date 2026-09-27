@@ -11,14 +11,14 @@ QmlGui::QmlGui(QObject *parent, QGuiApplication *app, int swapIntervalOption)
     : QObject(parent)
     , m_app(app)
     , m_swapIntervalOption(swapIntervalOption)
-    , backend(qgetenv("HOME"))
+    , backend(QString::fromUtf8(qgetenv("HOME")))
 {}
 
 void QmlGui::initQmlEngine()
 {
     //READ ENVIROMENT VARIABLES
-    QString homePath = qgetenv("HOME");
-    QString gnomeModulePath = homePath + QString("/opt/Maia/Maia_") + QString(MAIA_VERSION_STRING) + "/frontends/Gnome";
+    QString homePath = QString::fromUtf8(qgetenv("HOME"));
+    QString gnomeModulePath = homePath + QStringLiteral("/opt/Maia/Maia_") + QStringLiteral(MAIA_VERSION_STRING) + QStringLiteral("/frontends/Gnome");
 
 
     //INIT SURFACE
@@ -39,14 +39,14 @@ void QmlGui::initQmlEngine()
 
     filterProxyModel.setSourceModel(&appsListModel);
 
-    engine.rootContext()->setContextProperty("HOME", homePath);
+    engine.rootContext()->setContextProperty(QStringLiteral("HOME"), homePath);
     //Apps List models
-    engine.rootContext()->setContextProperty("appsListModel", &filterProxyModel);
+    engine.rootContext()->setContextProperty(QStringLiteral("appsListModel"), &filterProxyModel);
 
-    engine.rootContext()->setContextProperty("backend", &backend);
+    engine.rootContext()->setContextProperty(QStringLiteral("backend"), &backend);
 
     //Audio backend
-    engine.rootContext()->setContextProperty("audioBackend", &audioBackend);
+    engine.rootContext()->setContextProperty(QStringLiteral("audioBackend"), &audioBackend);
 
     QObject::connect(
         &engine,

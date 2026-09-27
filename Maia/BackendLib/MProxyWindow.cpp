@@ -88,7 +88,7 @@ void MProxyWindow::setSource(const QUrl &source)
 
     if (m_sourceUrl != finalSource) {
         m_sourceUrl = finalSource;
-        emit sourceChanged();
+        Q_EMIT sourceChanged();
     }
 }
 
@@ -103,7 +103,7 @@ void MProxyWindow::setProxyVisible(bool visible)
     if (m_proxyWindowVisible != visible) {
         m_proxyWindowVisible = visible;
         m_winController->setVisible(m_proxyWindowVisible);
-        emit proxyVisibleChanged();
+        Q_EMIT proxyVisibleChanged();
     }
 }
 
@@ -116,7 +116,7 @@ void MProxyWindow::setSwapInterval(const int swapInterval)
 {
     if (m_swapInterval != swapInterval) {
         m_swapInterval = swapInterval;
-        emit swapIntervalChanged();
+        Q_EMIT swapIntervalChanged();
     }
 }
 
@@ -152,23 +152,23 @@ void MProxyWindow::startProcess()
 
     QString program = QCoreApplication::applicationFilePath();
 
-    QStringList args = {"--mode",
-                        "client",
-                        "--source",
+    QStringList args = {QStringLiteral("--mode"),
+                        QStringLiteral("client"),
+                        QStringLiteral("--source"),
                         m_sourceUrl.toString(),
-                        "--proxy-window-addr",
+                        QStringLiteral("--proxy-window-addr"),
                         m_serverName,
-                        "--x",
+                        QStringLiteral("--x"),
                         QString::number(x()),
-                        "--y",
+                        QStringLiteral("--y"),
                         QString::number(y()),
-                        "--width",
+                        QStringLiteral("--width"),
                         QString::number(width()),
-                        "--height",
+                        QStringLiteral("--height"),
                         QString::number(height()),
-                        "--swap-interval",
+                        QStringLiteral("--swap-interval"),
                         QString::number(swapInterval()),
-                        "--proxy-visible",
+                        QStringLiteral("--proxy-visible"),
                         QVariant(m_proxyWindowVisible).toString()};
 
     //qDebug() << "444444444444444 " << QVariant(m_proxyWindowVisible).toString();
@@ -204,7 +204,7 @@ void MProxyWindow::handleVisibleReceived(bool visible)
 {
     if (m_proxyWindowVisible != visible) {
         m_proxyWindowVisible = visible;
-        emit proxyVisibleChanged();
+        Q_EMIT proxyVisibleChanged();
     }
 }
 

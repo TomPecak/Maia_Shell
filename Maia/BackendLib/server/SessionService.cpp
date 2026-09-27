@@ -6,12 +6,13 @@
 #include <QCoreApplication>
 #include <QDBusMessage>
 #include <QDBusPendingReply>
+#include <QStringLiteral>
 
 SessionService::SessionService(QObject *parent)
     : QObject(parent) {
     qDebug() << __PRETTY_FUNCTION__;
 
-    QString dbusAddress = qgetenv("DBUS_SESSION_BUS_ADDRESS");
+    QString dbusAddress = QString::fromUtf8(qgetenv("DBUS_SESSION_BUS_ADDRESS"));
 
     if (!dbusAddress.isEmpty()) {
         //qDebug() << "DBUS_SESSION_BUS_ADDRESS:" << dbusAddress;
@@ -29,12 +30,12 @@ SessionService::SessionService(QObject *parent)
         qDebug() << "[Warning] Session bus is not connected.";
     }
 
-    if(!bus.registerService(u"org.maia.SessionService")){
+    if(!bus.registerService(QStringLiteral("org.maia.SessionService"))){
         qDebug() << "[ERROR] Failed to register D-Bus service";
         return;
     }
 
-    if(!bus.registerObject(u"/Session", this, QDBusConnection::ExportAllSlots | QDBusConnection::ExportAllSignals)) {
+    if(!bus.registerObject(QStringLiteral("/Session"), this, QDBusConnection::ExportAllSlots | QDBusConnection::ExportAllSignals)) {
         qDebug() << "[ERROR] Failed to register D-Bus object.";
     }
 }
@@ -74,16 +75,16 @@ void SessionService::executeFreedesktopReboot()
 {
     qDebug() << __PRETTY_FUNCTION__;
     QDBusMessage message = QDBusMessage::createMethodCall(
-        u"org.freedesktop.login1",
-        "/org/freedesktop/login1",
-        "org.freedesktop.login1.Manager",
-        "Reboot"
+        QStringLiteral("org.freedesktop.login1"),
+        QStringLiteral("/org/freedesktop/login1"),
+        QStringLiteral("org.freedesktop.login1.Manager"),
+        QStringLiteral("Reboot")
         );
     message << true;
 
     QDBusPendingCall pendingCall = QDBusConnection::systemBus().asyncCall(message);
     QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(pendingCall, this);
-    watcher->setProperty("operation", u"reboot");
+    watcher->setProperty("operation", QStringLiteral("reboot"));
     connect(watcher, &QDBusPendingCallWatcher::finished, this, &SessionService::onCallFinished);
 }
 
@@ -91,15 +92,15 @@ void SessionService::executeFreedesktopPoweroff()
 {
     qDebug() << __PRETTY_FUNCTION__;
     QDBusMessage message = QDBusMessage::createMethodCall(
-        u"org.freedesktop.login1",
-        "/org/freedesktop/login1",
-        "org.freedesktop.login1.Manager",
-        "PowerOff"
+        QStringLiteral("org.freedesktop.login1"),
+        QStringLiteral("/org/freedesktop/login1"),
+        QStringLiteral("org.freedesktop.login1.Manager"),
+        QStringLiteral("PowerOff")
         );
     message << true;
 
     QDBusPendingCall pendingCall = QDBusConnection::systemBus().asyncCall(message);
     QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(pendingCall, this);
-    watcher->setProperty("operation", "power off");
+    watcher->setProperty("operation", QStringLiteral("power off"));
     connect(watcher, &QDBusPendingCallWatcher::finished, this, &SessionService::onCallFinished);
 }

@@ -13,12 +13,12 @@ public:
     {
 #warning "Icons should be set in QML"
 
-        QString homePath = qgetenv("HOME");
+        QString homePath = QString::fromUtf8(qgetenv("HOME"));
         QStringList searchPaths;
 #warning "Icon path system must be better designed"
-        searchPaths << QString(homePath + "/.local/share/icons");
+        searchPaths << QString(homePath + QStringLiteral("/.local/share/icons"));
         QIcon::setThemeSearchPaths(searchPaths);
-        QIcon::setThemeName("oxygen");
+        QIcon::setThemeName(QStringLiteral("oxygen"));
         //QIcon::setThemeName("Windows XP");
     }
 
@@ -27,7 +27,7 @@ public:
         QIcon icon = QIcon::fromTheme(id);
 
         if(icon.isNull()){
-            icon = QIcon::fromTheme("xorg");
+            icon = QIcon::fromTheme(QStringLiteral("xorg"));
         }
 
         if(icon.isNull()){

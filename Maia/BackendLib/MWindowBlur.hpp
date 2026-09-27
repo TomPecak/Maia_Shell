@@ -43,7 +43,7 @@ public:
     void setWindowRadius(qreal radius);
     qreal windowRadius() const;
 
-private slots:
+private Q_SLOTS:
     void onWindowVisibleChanged(bool);
 
 private:
@@ -52,7 +52,7 @@ private:
     xcb_connection_t *x11Connection();
 #endif
 
-signals:
+Q_SIGNALS:
     void windowChanged();
     void enabledChanged();
     void windowRadiusChanged();

@@ -87,7 +87,7 @@ void MMenuPopupWindow::setPopupContentItem(QQuickItem *contentItem)
 void MMenuPopupWindow::dismissPopup()
 {
     m_dismissed = true;
-    emit popupDismissed();
+    Q_EMIT popupDismissed();
     hide();
 }
 

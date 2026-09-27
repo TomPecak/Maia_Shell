@@ -36,7 +36,7 @@ public:
     SystemAppItem *find(const QString &filePath);
     QList<SystemAppItem *> applications() { return m_items; }
 
-signals:
+Q_SIGNALS:
     void refreshed();
 
 private:

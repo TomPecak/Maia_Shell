@@ -40,7 +40,7 @@ void MBackgroundHelper::setWallpaperSource(const QUrl &source)
         m_wallpaper = source.toString();
     }
 
-    emit wallpaperSourceChanged();
+    Q_EMIT wallpaperSourceChanged();
 
     // Set mode to wallpaper and recalculate
     m_type = 0;
@@ -51,7 +51,7 @@ void MBackgroundHelper::setWindowX(int x)
 {
     if (m_windowX == x) return;
     m_windowX = x;
-    emit windowXChanged();
+    Q_EMIT windowXChanged();
     onChanged();
 }
 
@@ -59,7 +59,7 @@ void MBackgroundHelper::setWindowY(int y)
 {
     if (m_windowY == y) return;
     m_windowY = y;
-    emit windowYChanged();
+    Q_EMIT windowYChanged();
     onChanged();
 }
 
@@ -67,7 +67,7 @@ void MBackgroundHelper::setWindowHeight(int height)
 {
     if (m_windowHeight == height) return;
     m_windowHeight = height;
-    emit windowHeightChanged();
+    Q_EMIT windowHeightChanged();
     onChanged();
 }
 
@@ -75,7 +75,7 @@ void MBackgroundHelper::setWindowWidth(int width)
 {
     if (m_windowWidth == width) return;
     m_windowWidth = width;
-    emit windowWidthChanged();
+    Q_EMIT windowWidthChanged();
     onChanged();
 }
 
@@ -88,8 +88,8 @@ void MBackgroundHelper::setColor(QColor c)
                    c.green() * 0.587 +
                    c.blue() * 0.114) < 186;
 
-    emit newColor(c, isDark);
-    emit debugImageGenerated("");
+    Q_EMIT newColor(c, isDark);
+    Q_EMIT debugImageGenerated("");
 }
 
 void MBackgroundHelper::setBackgound(const QString &fileName)
@@ -104,7 +104,7 @@ void MBackgroundHelper::setBackgound(const QString &fileName)
     }
     if (m_wallpaperSource != newUrl) {
         m_wallpaperSource = newUrl;
-        emit wallpaperSourceChanged();
+        Q_EMIT wallpaperSourceChanged();
     }
 
     if (m_windowWidth <= 0 || m_windowHeight <= 0) {
@@ -150,7 +150,7 @@ void MBackgroundHelper::setBackgound(const QString &fileName)
     buffer.open(QIODevice::WriteOnly);
     img.save(&buffer, "PNG");
     QString base64 = QString::fromLatin1(byteArray.toBase64().data());
-    emit debugImageGenerated("data:image/png;base64," + base64);
+    Q_EMIT debugImageGenerated("data:image/png;base64," + base64);
 
     long long sumR = 0, sumG = 0, sumB = 0;
     int measureArea = size.width() * size.height();
@@ -177,7 +177,7 @@ void MBackgroundHelper::setBackgound(const QString &fileName)
 
     qDebug() << "Calculated color:" << c << " Text:" << textColor;
 
-    emit newColor(c, textColor == "#FFFFFF");
+    Q_EMIT newColor(c, textColor == "#FFFFFF");
 
     QPixmapCache::clear();
 }

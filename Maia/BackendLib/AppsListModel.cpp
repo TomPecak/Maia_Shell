@@ -54,10 +54,10 @@ QList<Application> getApplications() {
 
     // Używamy u':' (znak w UTF-16) lub QStringLiteral(":")
     QStringList desktopDirs = xdgDataDirs.split(u':', Qt::SkipEmptyParts);
-    desktopDirs.append(QDir::homePath() + "/.local/share/applications/");
+    desktopDirs.append(QDir::homePath() + QStringLiteral("/.local/share/applications/"));
 
     for (const QString& dir : desktopDirs) {
-        QDir applicationDir(dir + "/applications");
+        QDir applicationDir(dir + QStringLiteral("/applications"));
         if (!applicationDir.exists()) {
             continue;
         }

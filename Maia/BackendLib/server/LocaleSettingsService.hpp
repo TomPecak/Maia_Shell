@@ -16,10 +16,10 @@ public:
 
     bool twentyFourTime() const;
 
-public slots:
+public Q_SLOTS:
     void setTwentyFourTime(bool newTwentyFourTime);
 
-signals:
+Q_SIGNALS:
     void twentyFourTimeChanged(bool newTwentyFourTime);
 
 private:

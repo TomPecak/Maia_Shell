@@ -75,7 +75,7 @@ public:
     Style style() const;
     void setStyle(const Style &style);
 
-signals:
+Q_SIGNALS:
     void iconSizeChanged();
     void directionChanged();
     void visibilityChanged();

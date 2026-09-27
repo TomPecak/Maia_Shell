@@ -12,7 +12,7 @@ static QString s_systemAppFolder = "/usr/share/applications";
 
 static QByteArray detectDesktopEnvironment()
 {
-    const QByteArray desktop = qgetenv("XDG_CURRENT_DESKTOP");
+    const QByteArray desktop = QString::fromUtf8(qgetenv("XDG_CURRENT_DESKTOP"));
 
     if (!desktop.isEmpty())
         return desktop.toUpper();

@@ -15,7 +15,7 @@
 class DesktopProperties
 {
 public:
-    DesktopProperties(const QString &fileName = "", const QString &group = "");
+    DesktopProperties(const QString &fileName = QStringLiteral(""), const QString &group = QStringLiteral(""));
     ~DesktopProperties();
 
     QVariant value(const QString &key, const QVariant &defaultValue = QVariant());

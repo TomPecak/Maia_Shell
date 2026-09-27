@@ -22,12 +22,12 @@ public:
     QQuickItem *parentItem() const { return m_parentItem; }
     virtual void setParentItem(QQuickItem *);
 
-public slots:
+public Q_SLOTS:
     Q_INVOKABLE void show();
     Q_INVOKABLE void dismissPopup();
     Q_INVOKABLE void updateGeometry();
 
-signals:
+Q_SIGNALS:
     void popupDismissed();
     void geometryChanged();
 
@@ -37,7 +37,7 @@ protected:
     void mouseMoveEvent(QMouseEvent *) override;
     bool event(QEvent *) override;
 
-protected slots:
+protected Q_SLOTS:
     void applicationStateChanged(Qt::ApplicationState state);
 
 private:

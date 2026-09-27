@@ -19,19 +19,19 @@ public:
 
     void setFavoritesModel(FavoriteAppsProxyModel *model);
 
-signals:
+Q_SIGNALS:
     //D-bus API
     Q_SCRIPTABLE void favoriteAdded(const FavApplication &app);
     Q_SCRIPTABLE void favoriteRemoved(const FavApplication &app);
     Q_SCRIPTABLE void favoritesChanged();
 
-public slots:
+public Q_SLOTS:
     //D-bus API
     Q_SCRIPTABLE Q_NOREPLY void addFavorite(const QString &appId);
     Q_SCRIPTABLE Q_NOREPLY void removeFavorite(const QString &appId);
     Q_SCRIPTABLE QVector<FavApplication> getFavorites();
 
-private slots:
+private Q_SLOTS:
     // Private slots for handling signals from the model
     void _onFavoriteAdded(const QString &appId);
     void _onFavoriteRemoved(const QString &appId);

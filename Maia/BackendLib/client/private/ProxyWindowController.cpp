@@ -86,7 +86,7 @@ void ProxyWindowController::connectToServer(const QString &serverName)
 void ProxyWindowController::onSocketConnected()
 {
     reconnect_time = 0;
-    emit proxyWindowConnected();
+    Q_EMIT proxyWindowConnected();
 }
 
 void ProxyWindowController::onSocketDisconnected() {}
@@ -95,7 +95,7 @@ void ProxyWindowController::onSocketReadyRead()
 {
     QDataStream in(&m_socket);
 
-    forever {
+    while(true) {
         if (m_nextBlockSize == 0) {
             // We are at the beginning of a new frame, try to read its size
             if (m_socket.bytesAvailable() < (int) sizeof(quint32))
@@ -125,7 +125,7 @@ void ProxyWindowController::handleStateUpdate(QDataStream &stream)
     if (updateType == CommandReceived::SET_VISIBLE) {
         bool serverVisible;
         stream >> serverVisible;
-        emit visibleReceived(serverVisible);
+        Q_EMIT visibleReceived(serverVisible);
     } else {
         qDebug() << "[ERROR] ProxyWindowController: Received unknown state update type:" << updateTypeRaw;
     }

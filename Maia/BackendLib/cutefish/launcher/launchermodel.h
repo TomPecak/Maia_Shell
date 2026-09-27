@@ -61,7 +61,7 @@ public:
 
     void delaySave();
 
-public slots:
+public Q_SLOTS:
     Q_INVOKABLE bool launch(const QString &path);
 
 Q_SIGNALS:
@@ -69,7 +69,7 @@ Q_SIGNALS:
     void refreshed();
         void applicationLaunched();
 
-private slots:
+private Q_SLOTS:
     void onRefreshed();
     void onFileChanged(const QString &path);
     void addApp(const QString &fileName);

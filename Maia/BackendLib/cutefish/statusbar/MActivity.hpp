@@ -33,13 +33,13 @@ public:
 
     bool isAcceptableWindow(quint64 wid);
 
-private slots:
+private Q_SLOTS:
     void onActiveWindowChanged();
 
     void clearTitle();
     void clearIcon();
 
-signals:
+Q_SIGNALS:
     void titleChanged();
     void iconChanged();
     void launchPadChanged();

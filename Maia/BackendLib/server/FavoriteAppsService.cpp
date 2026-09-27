@@ -10,11 +10,11 @@ FavoriteAppsDBus::FavoriteAppsDBus(QObject *parent)
     FavApplication::registerDBusTypes();
 
     QDBusConnection sessionBus = QDBusConnection::sessionBus();
-    if (!sessionBus.registerService("org.maia.FavoriteApplications")) {
+    if (!sessionBus.registerService(QStringLiteral("org.maia.FavoriteApplications"))) {
         qDebug("[ERROR] Failed to register D-Bus service: %s", qPrintable(sessionBus.lastError().message()));
     }
 
-    if (!sessionBus.registerObject("/FavoriteApplications",
+    if (!sessionBus.registerObject(QStringLiteral("/FavoriteApplications"),
                                    this,
                                    QDBusConnection::ExportScriptableSlots
                                        | QDBusConnection::ExportScriptableSignals)) {
@@ -113,7 +113,7 @@ void FavoriteAppsDBus::_onFavoriteAdded(const QString &appId)
 
     FavApplication favApp{appData.id, appData.name, appData.exec, appData.icon};
 
-    emit favoriteAdded(favApp);
+    Q_EMIT favoriteAdded(favApp);
 }
 
 void FavoriteAppsDBus::_onFavoriteRemoved(const QString &appId)
@@ -133,7 +133,7 @@ void FavoriteAppsDBus::_onFavoriteRemoved(const QString &appId)
 
     FavApplication favApp{appData.id, appData.name, appData.exec, appData.icon};
 
-    emit favoriteRemoved(favApp);
+    Q_EMIT favoriteRemoved(favApp);
 }
 
 FavoriteAppsService::FavoriteAppsService(QObject *parent, QAbstractItemModel *sourceModel)

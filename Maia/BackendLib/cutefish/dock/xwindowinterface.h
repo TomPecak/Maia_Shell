@@ -63,7 +63,7 @@ public:
 
     xcb_connection_t *x11Connection();
     xcb_window_t rootWindow();
-signals:
+Q_SIGNALS:
     void windowAdded(quint64 wid);
     void windowRemoved(quint64 wid);
     void activeChanged(quint64 wid);

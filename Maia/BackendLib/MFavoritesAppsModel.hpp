@@ -24,7 +24,7 @@ public:
     Q_INVOKABLE void addFavorite(const QString &appId);
     Q_INVOKABLE void removeFavorite(const QString &appId);
 
-private slots:
+private Q_SLOTS:
     void handleFavoriteAdded(const FavApplication &favApp);
     void handleFavoriteRemoved(const FavApplication &favApp);
     //void handleFavoritesChanged();

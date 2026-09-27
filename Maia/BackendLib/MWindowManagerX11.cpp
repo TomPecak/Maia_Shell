@@ -6,9 +6,9 @@ MWindowManagerX11::MWindowManagerX11(QObject *parent)
 {
     qDebug() << __PRETTY_FUNCTION__;
 
-    m_dbusInterface = new QDBusInterface("org.maia.WindowManagerX11Service",
-                                         "/WindowManagerX11",
-                                         "org.maia.WindowManagerX11Interface",
+    m_dbusInterface = new QDBusInterface(QStringLiteral("org.maia.WindowManagerX11Service"),
+                                         QStringLiteral("/WindowManagerX11"),
+                                         QStringLiteral("org.maia.WindowManagerX11Interface"),
                                          QDBusConnection::sessionBus(),
                                          this);
 
@@ -33,7 +33,7 @@ void MWindowManagerX11::reconfigure()
         return;
     }
 
-    QDBusPendingCall call = m_dbusInterface->asyncCall("reconfigure");
+    QDBusPendingCall call = m_dbusInterface->asyncCall(QStringLiteral("reconfigure"));
     QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(call, this);
     connect(watcher, &QDBusPendingCallWatcher::finished, this, &MWindowManagerX11::onCallFinished);
 }
@@ -47,7 +47,7 @@ void MWindowManagerX11::unloadEffect(const QString &effectName)
         return;
     }
 
-    QDBusPendingCall call = m_dbusInterface->asyncCall("unloadEffect", effectName);
+    QDBusPendingCall call = m_dbusInterface->asyncCall(QStringLiteral("unloadEffect"), effectName);
     QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(call, this);
     connect(watcher, &QDBusPendingCallWatcher::finished, this, &MWindowManagerX11::onCallFinished);
 }
@@ -64,7 +64,7 @@ void MWindowManagerX11::hideFromTaskbar(const QWindow *window, const bool hide)
         return;
     }
 
-    QDBusPendingCall call = m_dbusInterface->asyncCall("hideFromTaskbar", window->winId(), hide);
+    QDBusPendingCall call = m_dbusInterface->asyncCall(QStringLiteral("hideFromTaskbar"), window->winId(), hide);
     QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(call, this);
     connect(watcher, &QDBusPendingCallWatcher::finished, this, &MWindowManagerX11::onCallFinished);
 }
@@ -81,7 +81,7 @@ void MWindowManagerX11::hideFromPager(const QWindow *window, const bool hide)
         return;
     }
 
-    QDBusPendingCall call = m_dbusInterface->asyncCall("hideFromPager", window->winId(), hide);
+    QDBusPendingCall call = m_dbusInterface->asyncCall(QStringLiteral("hideFromPager"), window->winId(), hide);
     QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(call, this);
     connect(watcher, &QDBusPendingCallWatcher::finished, this, &MWindowManagerX11::onCallFinished);
 }
@@ -98,7 +98,7 @@ void MWindowManagerX11::hideFromSwitcher(const QWindow *window, const bool hide)
         return;
     }
 
-    QDBusPendingCall call = m_dbusInterface->asyncCall("hideFromSwitcher", window->winId(), hide);
+    QDBusPendingCall call = m_dbusInterface->asyncCall(QStringLiteral("hideFromSwitcher"), window->winId(), hide);
     QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(call, this);
     connect(watcher, &QDBusPendingCallWatcher::finished, this, &MWindowManagerX11::onCallFinished);
 }

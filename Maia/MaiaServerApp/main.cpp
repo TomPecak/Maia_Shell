@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
     std::signal(SIGINT, signalHandler);  // Ctrl+C w terminalu
 
     //READ ENVIROMENT VARIABLES
-    QString homePath = qgetenv("HOME");
+    QString homePath = QString::fromUtf8(qgetenv("HOME"));
 
     //INIT APPLICATION
     QGuiApplication::setApplicationName(QString("Maia_") + MAIA_VERSION_STRING);
@@ -127,7 +127,7 @@ int main(int argc, char *argv[])
         QQmlApplicationEngine engine;
 
 
-        // QString runType = qgetenv("MAIA_QTCREATOR_RUN");
+        // QString runType = QString::fromUtf8(qgetenv("MAIA_QTCREATOR_RUN"));
         // QString gnomeModulePath;
         // QString cutefishModulePath;
         // QString xplunaModulePath;

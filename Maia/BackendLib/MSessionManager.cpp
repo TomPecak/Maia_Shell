@@ -8,9 +8,9 @@ MSessionManager::MSessionManager(QObject *parent)
     qDebug() << __PRETTY_FUNCTION__;
     // Connect to the D-Bus interface of the server
     m_dbusInterface = new QDBusInterface(
-        u"org.maia.SessionService", // Service name
-        u"/Session",            // Object path
-        u"org.maia.SessionInterface", // Interface
+        QStringLiteral("org.maia.SessionService"), // Service name
+        QStringLiteral("/Session"),            // Object path
+        QStringLiteral("org.maia.SessionInterface"), // Interface
         QDBusConnection::sessionBus(), // Session D-Bus connection
         this
         );
@@ -32,7 +32,7 @@ void MSessionManager::logout()
     qDebug() << __PRETTY_FUNCTION__;
     if (m_dbusInterface->isValid()) {
         // Asynchronous call to the logout method
-        QDBusPendingCall call = m_dbusInterface->asyncCall("logout");
+        QDBusPendingCall call = m_dbusInterface->asyncCall(QStringLiteral("logout"));
         QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(call, this);
         connect(watcher, &QDBusPendingCallWatcher::finished, this, &MSessionManager::onCallFinished);
     } else {
@@ -45,7 +45,7 @@ void MSessionManager::reboot()
     qDebug() << __PRETTY_FUNCTION__;
     if (m_dbusInterface->isValid()) {
         // Asynchronous call to the reboot method
-        QDBusPendingCall call = m_dbusInterface->asyncCall("reboot");
+        QDBusPendingCall call = m_dbusInterface->asyncCall(QStringLiteral("reboot"));
         QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(call, this);
         connect(watcher, &QDBusPendingCallWatcher::finished, this, &MSessionManager::onCallFinished);
     } else {
@@ -58,7 +58,7 @@ void MSessionManager::poweroff()
     qDebug() << __PRETTY_FUNCTION__;
     if (m_dbusInterface->isValid()) {
         // Asynchronous call to the poweroff method
-        QDBusPendingCall call = m_dbusInterface->asyncCall("poweroff");
+        QDBusPendingCall call = m_dbusInterface->asyncCall(QStringLiteral("poweroff"));
         QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(call, this);
         connect(watcher, &QDBusPendingCallWatcher::finished, this, &MSessionManager::onCallFinished);
     } else {

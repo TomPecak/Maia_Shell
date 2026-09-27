@@ -11,7 +11,7 @@
 
 static QByteArray detectDesktopEnvironment()
 {
-    const QByteArray desktop = qgetenv("XDG_CURRENT_DESKTOP");
+    const QByteArray desktop = QString::fromUtf8(qgetenv("XDG_CURRENT_DESKTOP"));
 
     if (!desktop.isEmpty())
         return desktop.toUpper();
@@ -22,7 +22,7 @@ static QByteArray detectDesktopEnvironment()
 LauncherModel::LauncherModel(QObject *parent)
     : QAbstractListModel(parent)
     , m_fileWatcher(new QFileSystemWatcher(this))
-    , m_settings("cutefishos", "launcher-applist", this)
+    , m_settings(QStringLiteral("cutefishos"), QStringLiteral("launcher-applist"), this)
     , m_mode(NormalMode)
     , m_firstLoad(false)
 {
@@ -36,7 +36,7 @@ LauncherModel::LauncherModel(QObject *parent)
 
     QtConcurrent::run(LauncherModel::refresh, this);
 
-    m_fileWatcher->addPath("/usr/share/applications");
+    m_fileWatcher->addPath(QStringLiteral("/usr/share/applications"));
     connect(m_fileWatcher, &QFileSystemWatcher::fileChanged, this, &LauncherModel::onFileChanged);
     connect(m_fileWatcher, &QFileSystemWatcher::directoryChanged, this, [this](const QString &) {
         QtConcurrent::run(LauncherModel::refresh, this);
@@ -138,7 +138,7 @@ void LauncherModel::search(const QString &key)
         }
     }
 
-    emit layoutChanged();
+    Q_EMIT layoutChanged();
 }
 
 void LauncherModel::sendToDock(const QString &key)
@@ -163,7 +163,7 @@ void LauncherModel::sendToDesktop(const QString &key)
         QFileInfo info(key);
 
         QString newFileName = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation);
-        newFileName.append(QString("/%1").arg(info.fileName()));
+        newFileName.append(QStringLiteral("/%1").arg(info.fileName()));
 
         QFile::copy(key, newFileName);
     }
@@ -201,7 +201,7 @@ void LauncherModel::refresh(LauncherModel *manager)
         addedEntries.append(item.id);
 
     QStringList allEntries;
-    QDirIterator it("/usr/share/applications", { "*.desktop" }, QDir::NoFilter, QDirIterator::Subdirectories);
+    QDirIterator it(QStringLiteral("/usr/share/applications"), { QStringLiteral("*.desktop") }, QDir::NoFilter, QDirIterator::Subdirectories);
 
     while (it.hasNext()) {
         const auto fileName = it.next();
@@ -295,14 +295,14 @@ bool LauncherModel::launch(const QString &path)
 
         if (item.newInstalled) {
             item.newInstalled = false;
-            emit dataChanged(LauncherModel::index(index), LauncherModel::index(index));
+            Q_EMIT dataChanged(LauncherModel::index(index), LauncherModel::index(index));
             delaySave();
         }
 
         // Because launcher has hidden animation,
         // cutefish-screenshot needs to be processed.
-        if (cmd == "cutefish-screenshot") {
-            ProcessProviderLauncher::startDetached(cmd, QStringList() << "-d" << "200");
+        if (cmd == QStringLiteral("cutefish-screenshot")) {
+            ProcessProviderLauncher::startDetached(cmd, QStringList() << QStringLiteral("-d") << QStringLiteral("200"));
         } else {
             ProcessProviderLauncher::startDetached(cmd, args);
         }
@@ -342,76 +342,76 @@ void LauncherModel::onFileChanged(const QString &path)
     }
 
     AppItem &item = m_appItems[index];
-    DesktopProperties desktop(item.id, "Desktop Entry");
-    QString appName = desktop.value(QString("Name[%1]").arg(QLocale::system().name())).toString();
-    QString appExec = desktop.value("Exec").toString();
+    DesktopProperties desktop(item.id, QStringLiteral("Desktop Entry"));
+    QString appName = desktop.value(QStringLiteral("Name[%1]").arg(QLocale::system().name())).toString();
+    QString appExec = desktop.value(QStringLiteral("Exec")).toString();
 
     // Update datas.
     if (appName.isEmpty())
-        appName = desktop.value("Name").toString();
+        appName = desktop.value(QStringLiteral("Name")).toString();
 
-    appExec.remove(QRegularExpression("%."));
-    appExec.remove(QRegularExpression("^\""));
-    appExec = appExec.replace("\"", "");
+    appExec.remove(QRegularExpression(QStringLiteral("%.")));
+    appExec.remove(QRegularExpression(QStringLiteral("^\"")));
+    appExec = appExec.replace(QStringLiteral("\""), QStringLiteral(""));
     appExec = appExec.simplified();
     item.name = appName;
-    item.genericName = desktop.value("Comment").toString();
-    item.comment = desktop.value("Comment").toString();
-    item.iconName = desktop.value("Icon").toString();
-    item.args = appExec.split(" ");
+    item.genericName = desktop.value(QStringLiteral("Comment")).toString();
+    item.comment = desktop.value(QStringLiteral("Comment")).toString();
+    item.iconName = desktop.value(QStringLiteral("Icon")).toString();
+    item.args = appExec.split(QStringLiteral(" "));
 
-    emit dataChanged(LauncherModel::index(index), LauncherModel::index(index));
+    Q_EMIT dataChanged(LauncherModel::index(index), LauncherModel::index(index));
 }
 
 void LauncherModel::addApp(const QString &fileName)
 {
     int index = findById(fileName);
 
-    DesktopProperties desktop(fileName, "Desktop Entry");
+    DesktopProperties desktop(fileName, QStringLiteral("Desktop Entry"));
 
-    if (desktop.contains("Terminal") && desktop.value("Terminal").toBool())
+    if (desktop.contains(QStringLiteral("Terminal")) && desktop.value(QStringLiteral("Terminal")).toBool())
         return;
 
-    if (desktop.contains("OnlyShowIn")) {
-        const QStringList items = desktop.value("OnlyShowIn").toString().split(';');
+    if (desktop.contains(QStringLiteral("OnlyShowIn"))) {
+        const QStringList items = desktop.value(QStringLiteral("OnlyShowIn")).toString().split(u';');
 
         if (!items.contains(detectDesktopEnvironment()))
             return;
     }
 
-    if (desktop.value("NoDisplay").toBool() ||
-        desktop.value("Hidden").toBool())
+    if (desktop.value(QStringLiteral("NoDisplay")).toBool() ||
+        desktop.value(QStringLiteral("Hidden")).toBool())
         return;
 
-    QString appName = desktop.value(QString("Name[%1]").arg(QLocale::system().name())).toString();
-    QString appExec = desktop.value("Exec").toString();
+    QString appName = desktop.value(QStringLiteral("Name[%1]").arg(QLocale::system().name())).toString();
+    QString appExec = desktop.value(QStringLiteral("Exec")).toString();
 
     if (appName.isEmpty())
-        appName = desktop.value("Name").toString();
+        appName = desktop.value(QStringLiteral("Name")).toString();
 
-    appExec.remove(QRegularExpression("%."));
-    appExec.remove(QRegularExpression("^\""));
+    appExec.remove(QRegularExpression(QStringLiteral("%.")));
+    appExec.remove(QRegularExpression(QStringLiteral("^\"")));
     // appExec.remove(QRegularExpression(" *$"));
-    appExec = appExec.replace("\"", "");
+    appExec = appExec.replace(QStringLiteral("\""), QStringLiteral(""));
     appExec = appExec.simplified();
 
 
     if (index >= 0 && index <= m_appItems.size()) {
         AppItem &item = m_appItems[index];
         item.name = appName;
-        item.genericName = desktop.value("Comment").toString();
-        item.comment = desktop.value("Comment").toString();
-        item.iconName = desktop.value("Icon").toString();
-        item.args = appExec.split(" ");
-        emit dataChanged(LauncherModel::index(index), LauncherModel::index(index));
+        item.genericName = desktop.value(QStringLiteral("Comment")).toString();
+        item.comment = desktop.value(QStringLiteral("Comment")).toString();
+        item.iconName = desktop.value(QStringLiteral("Icon")).toString();
+        item.args = appExec.split(QStringLiteral(" "));
+        Q_EMIT dataChanged(LauncherModel::index(index), LauncherModel::index(index));
     }  else {
         AppItem appItem;
         appItem.id = fileName;
         appItem.name = appName;
-        appItem.genericName = desktop.value("Comment").toString();
-        appItem.comment = desktop.value("Comment").toString();
-        appItem.iconName = desktop.value("Icon").toString();
-        appItem.args = appExec.split(" ");
+        appItem.genericName = desktop.value(QStringLiteral("Comment")).toString();
+        appItem.comment = desktop.value(QStringLiteral("Comment")).toString();
+        appItem.iconName = desktop.value(QStringLiteral("Icon")).toString();
+        appItem.args = appExec.split(QStringLiteral(" "));
         appItem.newInstalled = true;
 
         beginInsertRows(QModelIndex(), m_appItems.count(), m_appItems.count());

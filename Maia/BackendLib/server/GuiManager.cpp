@@ -14,7 +14,7 @@ GuiManager::GuiManager(QObject *parent, QGuiApplication *app, int swapIntervalOp
     , m_qmlGui(this, app, swapIntervalOption)
     , changeFrontendStateMachine(this)
 {
-    HOME_ENV = qgetenv("HOME");
+    HOME_ENV = QString::fromUtf8(qgetenv("HOME"));
 
     connect(&m_kwin, &QProcess::readyReadStandardOutput, [&]() {
         qDebug() << "[INFO KWIN] " << m_kwin.readAllStandardOutput();
@@ -46,18 +46,18 @@ void GuiManager::startGui(const FrontendInfo &frontend)
 
     changeFrontendStateMachine.start();
 
-    changeFrontendStateMachine.connectToState("DeletingQmlObjects", [=](bool active) {
+    changeFrontendStateMachine.connectToState(QStringLiteral("DeletingQmlObjects"), [=](bool active) {
         if (active) {
             qDebug() << "Enter state: " << "DeletingQmlObjects";
             m_qmlGui.deleteQmlEngineRootObjects();
-            emit frontendUnloaded();
-            changeFrontendStateMachine.submitEvent("qmlObjectsDeleted");
+            Q_EMIT frontendUnloaded();
+            changeFrontendStateMachine.submitEvent(QStringLiteral("qmlObjectsDeleted"));
         } else {
             qDebug() << "Exit state: " << "DeletingQmlObjects";
         }
     });
 
-    changeFrontendStateMachine.connectToState("ReconfiguringWindowManager", [=](bool active) {
+    changeFrontendStateMachine.connectToState(QStringLiteral("ReconfiguringWindowManager"), [=](bool active) {
         if (active) {
             qDebug() << "Enter state: " << "ReconfiguringWindowManager";
             m_x11WindowManagerService.reconfigure();
@@ -72,7 +72,7 @@ void GuiManager::startGui(const FrontendInfo &frontend)
     //configuration file 'kwinrc' and modifying its contents.
     //For this change to take effect, kwin needs to be reloaded.
 
-    changeFrontendStateMachine.connectToState("ReconfigureWindowManagerAfterLoading",
+    changeFrontendStateMachine.connectToState(QStringLiteral("ReconfigureWindowManagerAfterLoading"),
                                               [=](bool active) {
                                                   if (active) {
                                                       qDebug()
@@ -86,36 +86,36 @@ void GuiManager::startGui(const FrontendInfo &frontend)
                                                   }
                                               });
 
-    changeFrontendStateMachine.connectToState("EmittingFrontendChanged", [=](bool active) {
+    changeFrontendStateMachine.connectToState(QStringLiteral("EmittingFrontendChanged"), [=](bool active) {
         if (active) {
             qDebug() << "Enter state: " << "EmittingFrontendChanged";
 
-            qDebug() << "Server 9 " << __PRETTY_FUNCTION__ << " emit frontendChanged()";
-            emit frontendChanged(m_currentFrontend.id);
+            qDebug() << "Server 9 " << __PRETTY_FUNCTION__ << " Q_EMIT frontendChanged()";
+            Q_EMIT frontendChanged(m_currentFrontend.id);
 
-            changeFrontendStateMachine.submitEvent("frontendChangedEmitted");
+            changeFrontendStateMachine.submitEvent(QStringLiteral("frontendChangedEmitted"));
         } else {
             qDebug() << "Exit state: " << "EmittingFrontendChanged";
         }
     });
 
-    changeFrontendStateMachine.connectToState("LoadingFrontend", [=](bool active) {
+    changeFrontendStateMachine.connectToState(QStringLiteral("LoadingFrontend"), [=](bool active) {
         if (active) {
             qDebug() << "Enter state: " << "LoadingFrontend";
 
             loadFrontend();
 
-            changeFrontendStateMachine.submitEvent("frontendLoaded");
+            changeFrontendStateMachine.submitEvent(QStringLiteral("frontendLoaded"));
         } else {
             qDebug() << "Exit state: " << "LoadingFrontend";
         }
     });
 
-    changeFrontendStateMachine.connectToState("WaitAfterLoaded", [=](bool active) {
+    changeFrontendStateMachine.connectToState(QStringLiteral("WaitAfterLoaded"), [=](bool active) {
         if (active) {
             qDebug() << "Enter state: " << "WaitAfterLoaded";
             QTimer::singleShot(10000, [=]() {
-                changeFrontendStateMachine.submitEvent("waitingLoadDelayEnded");
+                changeFrontendStateMachine.submitEvent(QStringLiteral("waitingLoadDelayEnded"));
             });
 
         } else {
@@ -125,13 +125,13 @@ void GuiManager::startGui(const FrontendInfo &frontend)
 
     //START QML GUI, submit event that kik off state machine form idle to running state
     qDebug() << "[STARTUP INFO] changeFrontendStateMachine.submitEvent('initialStart')";
-    changeFrontendStateMachine.submitEvent("initialStart");
+    changeFrontendStateMachine.submitEvent(QStringLiteral("initialStart"));
 }
 
 void GuiManager::tryLoadFrontend(const FrontendInfo &frontend)
 {
     m_currentFrontend = frontend;
-    changeFrontendStateMachine.submitEvent("startFrontendChange");
+    changeFrontendStateMachine.submitEvent(QStringLiteral("startFrontendChange"));
 }
 
 void GuiManager::uninit()
@@ -147,21 +147,21 @@ void GuiManager::uninit()
 void GuiManager::handleKwinReconfigured()
 {
     qDebug() << __PRETTY_FUNCTION__ << changeFrontendStateMachine.activeStateNames();
-    if (changeFrontendStateMachine.isActive("ReconfiguringWindowManager")) {
+    if (changeFrontendStateMachine.isActive(QStringLiteral("ReconfiguringWindowManager"))) {
         qDebug() << "changeFrontendStateMachine.submitEvent(windowManagerReconfigured);";
-        changeFrontendStateMachine.submitEvent("windowManagerReconfigured");
-    } else if (changeFrontendStateMachine.isActive("ReconfigureWindowManagerAfterLoading")) {
+        changeFrontendStateMachine.submitEvent(QStringLiteral("windowManagerReconfigured"));
+    } else if (changeFrontendStateMachine.isActive(QStringLiteral("ReconfigureWindowManagerAfterLoading"))) {
         qDebug() << "changeFrontendStateMachine.submitEvent(reconfigured);";
-        changeFrontendStateMachine.submitEvent("reconfigured");
+        changeFrontendStateMachine.submitEvent(QStringLiteral("reconfigured"));
     }
 }
 
 void GuiManager::loadFrontend()
 {
     qDebug() << "[INFO] " << __PRETTY_FUNCTION__;
-    if (m_currentFrontend.qmlFilePath != "") {
+    if (m_currentFrontend.qmlFilePath != QStringLiteral("")) {
         m_qmlGui.load(m_currentFrontend.qmlFilePath);
-    } else if (m_currentFrontend.qmlUri != "") {
+    } else if (m_currentFrontend.qmlUri != QStringLiteral("")) {
         m_qmlGui.loadFromModule(m_currentFrontend.qmlUri, m_currentFrontend.qmlTypeName);
     }
 }
@@ -172,7 +172,7 @@ bool startKwinAndWaitForReady(QProcess &process, int timeoutMs)
 
     // Check if KWin is already running
     QDBusConnection sessionBus = QDBusConnection::sessionBus();
-    if (sessionBus.interface()->isServiceRegistered("org.kde.KWin")) {
+    if (sessionBus.interface()->isServiceRegistered(QStringLiteral("org.kde.KWin"))) {
         qDebug() << "[ERROR] KWin is already running, not starting a new process.";
         return true;
     }
@@ -188,13 +188,13 @@ bool startKwinAndWaitForReady(QProcess &process, int timeoutMs)
     // If LD_LIBRARY_PATH points to Maia's library path, KWin will link to Maia's libraries instead of the system libraries.
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
 
-    QString homePath = qgetenv("HOME");
+    QString homePath = QString::fromUtf8(qgetenv("HOME"));
 
-    filterProcessEnvironment(env, QString("/opt/Maia/Maia_") + QString(MAIA_VERSION_STRING) + QString("/lib"));
+    filterProcessEnvironment(env, QStringLiteral("/opt/Maia/Maia_") + QStringLiteral(MAIA_VERSION_STRING) + QStringLiteral("/lib"));
     process.setProcessEnvironment(env);
 
     // Start the process
-    process.start("kwin_x11"); // or "kwin_wayland" depending on the session
+    process.start(QStringLiteral("kwin_x11")); // or "kwin_wayland" depending on the session
 
     if (!process.waitForStarted(5000)) {
         qDebug() << "[ERROR] Failed to start kwin process! Error:" << process.errorString();
@@ -205,7 +205,7 @@ bool startKwinAndWaitForReady(QProcess &process, int timeoutMs)
                 "'org.kde.KWin'...";
 
     // Use QDBusServiceWatcher to wait for readiness
-    QDBusServiceWatcher watcher("org.kde.KWin",
+    QDBusServiceWatcher watcher(QStringLiteral("org.kde.KWin"),
                                 sessionBus,
                                 QDBusServiceWatcher::WatchForRegistration);
 

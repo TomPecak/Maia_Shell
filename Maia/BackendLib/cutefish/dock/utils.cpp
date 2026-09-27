@@ -48,7 +48,7 @@ Utils::Utils(QObject *parent)
 
 QStringList Utils::commandFromPid(quint32 pid)
 {
-    QFile file(QString("/proc/%1/cmdline").arg(pid));
+    QFile file(QStringLiteral("/proc/%1/cmdline").arg(pid));
 
     if (file.open(QIODevice::ReadOnly)) {
         QByteArray cmd = file.readAll();
@@ -67,14 +67,14 @@ QStringList Utils::commandFromPid(quint32 pid)
             QString name = QString::fromLocal8Bit(cmd.mid(processNameStart, zeroIndex - processNameStart));
 
             // reion: Remove parameters
-            name = name.split(' ').first();
+            name = name.split(u' ').first();
 
             cmd.replace('\0', ' ');
             QString command = QString::fromLocal8Bit(cmd).trimmed();
 
             // There may be parameters.
-            if (command.split(' ').size() > 1) {
-                command = command.split(' ').first();
+            if (command.split(u' ').size() > 1) {
+                command = command.split(u' ').first();
             }
 
             return { command, name };

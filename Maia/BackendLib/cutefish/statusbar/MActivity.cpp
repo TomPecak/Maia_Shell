@@ -145,14 +145,14 @@ void MActivity::onActiveWindowChanged()
 
 #warning 'this should be removed'
     m_launchPad = (info.windowClassClass() == "cutefish-launcher");
-    emit launchPadChanged();
+    Q_EMIT launchPadChanged();
 
     if (NET::typeMatchesMask(info.windowType(NET::AllTypesMask), NET::DesktopMask)) {
         m_title = tr("Desktop");
         m_icon = "";
 
-        emit titleChanged();
-        emit iconChanged();
+        Q_EMIT titleChanged();
+        Q_EMIT iconChanged();
 
         return;
     }
@@ -171,11 +171,11 @@ void MActivity::onActiveWindowChanged()
 
     if (item) {
         m_title = item->localName;
-        emit titleChanged();
+        Q_EMIT titleChanged();
 
         if (m_icon != item->icon) {
             m_icon = item->icon;
-            emit iconChanged();
+            Q_EMIT iconChanged();
         }
 
     } else {
@@ -191,13 +191,13 @@ void MActivity::onActiveWindowChanged()
 void MActivity::clearTitle()
 {
     m_title.clear();
-    emit titleChanged();
+    Q_EMIT titleChanged();
 }
 
 void MActivity::clearIcon()
 {
     m_icon.clear();
-    emit iconChanged();
+    Q_EMIT iconChanged();
 }
 
 xcb_connection_t * MActivity::x11Connection()

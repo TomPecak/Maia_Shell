@@ -34,11 +34,11 @@ public:
     Q_INVOKABLE void setColor(QColor c);
     Q_INVOKABLE void setBackgound(const QString &fileName);
 
-private slots:
+private Q_SLOTS:
     void onPrimaryScreenChanged();
     void onChanged();
 
-signals:
+Q_SIGNALS:
     void newColor(QColor color, bool darkMode);
     void debugImageGenerated(QString imageSource);
     void wallpaperSourceChanged();

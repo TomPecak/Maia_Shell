@@ -21,7 +21,7 @@ public:
     Q_INVOKABLE void hideFromPager(const QWindow *window, const bool hide);
     Q_INVOKABLE void hideFromSwitcher(const QWindow *window, const bool hide);
 
-private slots:
+private Q_SLOTS:
     void onCallFinished(QDBusPendingCallWatcher *watcher);
 
 private:

@@ -31,12 +31,12 @@ public:
     int swapInterval() const;
     void setSwapInterval(const int swapInterval);
 
-signals:
+Q_SIGNALS:
     void sourceChanged();
     void swapIntervalChanged();
     void proxyVisibleChanged();
 
-private slots:
+private Q_SLOTS:
     void onWindowChanged(QQuickWindow *window);
     void onAfterSynchronizing();
     void onProcessStarted();

@@ -29,14 +29,14 @@
 
 static SystemAppMonitor *SELF = nullptr;
 
-static QByteArray detectDesktopEnvironment()
+static QString detectDesktopEnvironment()
 {
-    const QByteArray desktop = qgetenv("XDG_CURRENT_DESKTOP");
+    const QString desktop = QString::fromLocal8Bit(qgetenv("XDG_CURRENT_DESKTOP"));
 
     if (!desktop.isEmpty())
         return desktop.toUpper();
 
-    return QByteArray("UNKNOWN");
+    return QStringLiteral("UNKNOWN");
 }
 
 SystemAppMonitor *SystemAppMonitor::self()
@@ -51,7 +51,7 @@ SystemAppMonitor::SystemAppMonitor(QObject *parent)
     : QObject(parent)
 {
     QFileSystemWatcher *watcher = new QFileSystemWatcher(this);
-    watcher->addPath(SystemApplicationsFolder);
+    watcher->addPath(QStringLiteral(SystemApplicationsFolder));
     connect(watcher, &QFileSystemWatcher::directoryChanged, this, &SystemAppMonitor::refresh);
     refresh();
 }
@@ -78,7 +78,7 @@ void SystemAppMonitor::refresh()
         addedEntries.append(item->path);
 
     QStringList allEntries;
-    QDirIterator it(SystemApplicationsFolder, { "*.desktop" }, QDir::NoFilter, QDirIterator::Subdirectories);
+    QDirIterator it(QStringLiteral(SystemApplicationsFolder), { QStringLiteral("*.desktop") }, QDir::NoFilter, QDirIterator::Subdirectories);
 
     while (it.hasNext()) {
         const QString &filePath = it.next();
@@ -101,7 +101,7 @@ void SystemAppMonitor::refresh()
         }
     }
 
-    emit refreshed();
+    Q_EMIT refreshed();
 }
 
 void SystemAppMonitor::addApplication(const QString &filePath)
@@ -127,14 +127,14 @@ void SystemAppMonitor::addApplication(const QString &filePath)
         return;
     }
 
-    QString appName = desktop.value(QString("Name[%1]").arg(QLocale::system().name())).toString();
+    QString appName = desktop.value(QStringLiteral("Name[%1]").arg(QLocale::system().name())).toString();
     QString appExec = desktop.value("Exec").toString();
 
     if (appName.isEmpty())
         appName = desktop.value("Name").toString();
 
-    appExec.remove(QRegularExpression("%."));
-    appExec.remove(QRegularExpression("^\""));
+    appExec.remove(QRegularExpression(QStringLiteral("%.")));
+    appExec.remove(QRegularExpression(QStringLiteral("^\"")));
     // appExec.remove(QRegularExpression(" *$"));
     appExec = appExec.simplified();
 
@@ -146,7 +146,7 @@ void SystemAppMonitor::addApplication(const QString &filePath)
     item->iconName = desktop.value("Icon").toString();
     item->startupWMClass = desktop.value("StartupWMClass").toString();
     item->exec = appExec;
-    item->args = appExec.split(" ");
+    item->args = appExec.split(QStringLiteral(" "));
 
     m_items.append(item);
 }

@@ -25,11 +25,11 @@ public:
 
     void uninit();
 
-signals:
+Q_SIGNALS:
     void frontendUnloaded();
     void frontendChanged(const QString frontendId);
 
-private slots:
+private Q_SLOTS:
     void handleKwinReconfigured();
 
 private:

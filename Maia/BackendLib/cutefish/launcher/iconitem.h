@@ -35,7 +35,7 @@ public:
 private:
     void loadPixmap();
 
-signals:
+Q_SIGNALS:
     void sourceChanged();
     void paintedSizeChanged();
 

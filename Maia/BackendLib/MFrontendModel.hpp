@@ -30,7 +30,7 @@ public:
     QString activeFrontend() const;
     Q_INVOKABLE void setActiveFrontend(const QString &frontendId);
 
-private slots:
+private Q_SLOTS:
     void handleFrontendListReply(QDBusPendingCallWatcher *watcher);
     void handleFrontendAdded(const QString &id,
                              const QString &name,
@@ -40,7 +40,7 @@ private slots:
     void handleActiveFrontendChanged(const QString &frontendId);
     void handleGetActiveFrontend(const QString &frontendId);
 
-signals:
+Q_SIGNALS:
     void activeFrontendChanged();
 
 private:

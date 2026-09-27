@@ -43,7 +43,7 @@ DockSettings::DockSettings(QObject *parent)
     , m_roundedWindowEnabled(true)
     , m_direction(Left)
     , m_visibility(AlwaysShow)
-    , m_settings(new QSettings(QSettings::UserScope, "cutefishos", "dock"))
+    , m_settings(new QSettings(QSettings::UserScope, QStringLiteral("cutefishos"), QStringLiteral("dock")))
 {
     if (!m_settings->contains("IconSize"))
         m_settings->setValue("IconSize", 53);
@@ -78,7 +78,7 @@ void DockSettings::setIconSize(int iconSize)
     if (m_iconSize != iconSize) {
         m_iconSize = iconSize;
         m_settings->setValue("IconSize", iconSize);
-        emit iconSizeChanged();
+        Q_EMIT iconSizeChanged();
     }
 }
 
@@ -92,7 +92,7 @@ void DockSettings::setDirection(const Direction &direction)
     if (m_direction != direction) {
         m_direction = direction;
         m_settings->setValue("Direction", direction);
-        emit directionChanged();
+        Q_EMIT directionChanged();
     }
 }
 
@@ -106,7 +106,7 @@ void DockSettings::setVisibility(const DockSettings::Visibility &visibility)
     if (m_visibility != visibility) {
         m_visibility = visibility;
         m_settings->setValue("Visibility", visibility);
-        emit visibilityChanged();
+        Q_EMIT visibilityChanged();
     }
 }
 
@@ -129,7 +129,7 @@ void DockSettings::setRoundedWindowEnabled(bool enabled)
 {
     if (m_roundedWindowEnabled != enabled) {
         m_roundedWindowEnabled = enabled;
-        emit roundedWindowEnabledChanged();
+        Q_EMIT roundedWindowEnabledChanged();
     }
 }
 
@@ -143,6 +143,6 @@ void DockSettings::setStyle(const DockSettings::Style &style)
     if (m_style != style) {
         m_style = style;
         m_settings->setValue("Style", style);
-        emit styleChanged();
+        Q_EMIT styleChanged();
     }
 }

@@ -12,19 +12,19 @@ public:
     explicit WindowManagerX11Service(QObject *parent = nullptr);
     ~WindowManagerX11Service();
 
-signals:
+Q_SIGNALS:
     // void effectUnloaded(const QString &effectName);
     // void errorOccurred(const QString &effectName, const QString &errorMessage);
     void reconfigureFinished(bool success); // Nowy sygnał
 
-public slots:
+public Q_SLOTS:
     void unloadEffect(const QString &effectName);
     void reconfigure();
     void hideFromTaskbar(WId winId, bool hide);
     void hideFromPager(WId winId, bool hide);
     void hideFromSwitcher(WId winId, bool hide);
 
-private slots:
+private Q_SLOTS:
     void handleKwinConfigReloaded();
 
 private:

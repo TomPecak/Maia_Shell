@@ -21,7 +21,7 @@ public:
     void handleFrontendChangeRequest(const QString &themeId);
     void handleFrontendChangeRequest(const FrontendInfo & forntend);
 
-private slots:
+private Q_SLOTS:
     void sessionLogout();
     void handleGuiManagerFrontendChanged(const QString &themeId);
 

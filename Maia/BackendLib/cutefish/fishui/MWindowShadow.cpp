@@ -79,7 +79,7 @@ void MWindowShadow::setView(QWindow *view)
 {
     if (view != m_view) {
         m_view = view;
-        emit viewChanged();
+        Q_EMIT viewChanged();
         configureTiles();
 
         connect(m_view, &QWindow::visibleChanged, this, &MWindowShadow::onViewVisibleChanged);
@@ -95,7 +95,7 @@ void MWindowShadow::setGeometry(const QRect &rect)
 {
     if (rect != m_rect) {
         m_rect = rect;
-        emit geometryChanged();
+        Q_EMIT geometryChanged();
         configureTiles();
     }
 }
@@ -109,7 +109,7 @@ void MWindowShadow::setRadius(qreal value)
 {
     if (m_radius != value) {
         m_radius = value;
-        emit radiusChanged();
+        Q_EMIT radiusChanged();
 
         this->classBegin();
 
@@ -130,7 +130,7 @@ void MWindowShadow::setStrength(qreal strength)
         this->classBegin();
         configureTiles();
 
-        emit strengthChanged();
+        Q_EMIT strengthChanged();
     }
 }
 

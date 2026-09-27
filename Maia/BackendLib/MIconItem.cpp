@@ -77,7 +77,7 @@ void MIconItem::setSource(const QVariant &source)
         loadPixmap();
     }
 
-    emit sourceChanged();
+    Q_EMIT sourceChanged();
 }
 
 QVariant MIconItem::source() const

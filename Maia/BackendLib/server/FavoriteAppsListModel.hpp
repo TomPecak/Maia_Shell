@@ -23,8 +23,8 @@ public:
             saveFavoritesAsync();
             invalidateFilter();
 
-            emit favoriteAdded(appId);
-            emit favoritesChanged();
+            Q_EMIT favoriteAdded(appId);
+            Q_EMIT favoritesChanged();
         }
     }
 
@@ -34,8 +34,8 @@ public:
             favoriteAppsIds.removeAll(appId);
             saveFavoritesAsync();
             invalidateFilter();
-            emit favoriteRemoved(appId);
-            emit favoritesChanged();
+            Q_EMIT favoriteRemoved(appId);
+            Q_EMIT favoritesChanged();
         }
     }
 
@@ -44,7 +44,7 @@ public:
         return favoriteAppsIds.contains(appId);
     }
 
-signals:
+Q_SIGNALS:
     void favoritesChanged();
     void favoriteAdded(const QString &appId);
     void favoriteRemoved(const QString &appId);
@@ -73,7 +73,7 @@ private:
             watcher->deleteLater();
 
             invalidateFilter();
-            emit favoritesChanged();
+            Q_EMIT favoritesChanged();
         });
         watcher->setFuture(future);
     }

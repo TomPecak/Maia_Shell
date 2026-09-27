@@ -21,12 +21,12 @@ FrontendManagerService::FrontendManagerService(QObject *parent) :
 
     QDBusConnection bus = QDBusConnection::sessionBus();
 
-    if(!bus.registerService("org.maia.FrontendManager")){
+    if(!bus.registerService(QStringLiteral("org.maia.FrontendManager"))){
         qDebug("ERROR] Failed to register D-Bus service: %s", qPrintable(bus.lastError().message()));
     }
 
     //register FronendManager object
-    if (!bus.registerObject("/FrontendManager",
+    if (!bus.registerObject(QStringLiteral("/FrontendManager"),
                             this,
                             QDBusConnection::ExportAllSlots
                                 | QDBusConnection::ExportScriptableSignals
@@ -50,7 +50,7 @@ void FrontendManagerService::activeFrontendChangeConfirmation(const QString &fro
     m_activeFrontendId = frontendId;
 
     saveActiveFronted(m_activeFrontendId);
-    emit activeFrontendChanged(m_activeFrontendId);
+    Q_EMIT activeFrontendChanged(m_activeFrontendId);
 }
 
 FrontendInfo FrontendManagerService::getCurrentFrontent()
@@ -64,11 +64,11 @@ QVariantList FrontendManagerService::getFrontendList()
     QVariantList frontends;
     for(const FrontendInfo &frontend : m_frontends) {
         QVariantMap map;
-        map["id"] = frontend.id;
-        map["name"] = frontend.name;
-        map["description"] = frontend.description;
-        map["path"] = frontend.qmlFilePath;
-        map["active"] = frontend.id == m_activeFrontendId;
+        map[QStringLiteral("id")] = frontend.id;
+        map[QStringLiteral("name")] = frontend.name;
+        map[QStringLiteral("description")] = frontend.description;
+        map[QStringLiteral("path")] = frontend.qmlFilePath;
+        map[QStringLiteral("active")] = frontend.id == m_activeFrontendId;
         frontends.append(map);
     }
     return frontends;
@@ -96,8 +96,8 @@ void FrontendManagerService::setActiveFrontend(const QString &frontendId)
         return;
     }
 
-    emit activeFrontendChangeRequest(m_frontends[frontendId]);
-    emit activeFrontendChangeRequest(frontendId);
+    Q_EMIT activeFrontendChangeRequest(m_frontends[frontendId]);
+    Q_EMIT activeFrontendChangeRequest(frontendId);
 }
 
 void FrontendManagerService::loadFrontends()
@@ -106,38 +106,38 @@ void FrontendManagerService::loadFrontends()
     m_frontends.clear();
 
     FrontendInfo gnomeFrontend;
-    gnomeFrontend.name = "Ubuntu 24.04";
-    gnomeFrontend.description = "Ubuntu 24.04 like frontend";
+    gnomeFrontend.name = QStringLiteral("Ubuntu 24.04");
+    gnomeFrontend.description = QStringLiteral("Ubuntu 24.04 like frontend");
 
 //-----------------------------------------------------------------------------
-    QString runType = qgetenv("MAIA_QTCREATOR_RUN");
+    QString runType = QString::fromUtf8(qgetenv("MAIA_QTCREATOR_RUN"));
 
-    if(runType == "1"){ //Maia is running form QtCreator (dev run)
+    if(runType == QStringLiteral("1")){ //Maia is running form QtCreator (dev run)
         QString cmake_deploy_prefix = QString::fromStdString(std::string(CMAKE_INSTALL_PREFIX));
-        gnomeFrontend.qmlFilePath = cmake_deploy_prefix + QString("/frontends/Gnome/Main.qml");
+        gnomeFrontend.qmlFilePath = cmake_deploy_prefix + QStringLiteral("/frontends/Gnome/Main.qml");
     }else{  //normal Maia run, form login manager (SDDM, GDM, etc)
-        gnomeFrontend.qmlFilePath = QString("/opt/Maia/Maia_") + QString(MAIA_VERSION_STRING) + "/frontends/Gnome/Main.qml";
+        gnomeFrontend.qmlFilePath = QStringLiteral("/opt/Maia/Maia_") + QStringLiteral(MAIA_VERSION_STRING) + "/frontends/Gnome/Main.qml";
     }
 //-----------------------------------------------------------------------------
 
-    gnomeFrontend.id = QString(
+    gnomeFrontend.id = QString::fromUtf8(
         QCryptographicHash::hash(gnomeFrontend.name.toUtf8(), QCryptographicHash::Sha1).toHex());
     qDebug() << "[STARTUP INFO] Ubuntu 24.04 frontend id = " << gnomeFrontend.id;
     m_frontends.insert(gnomeFrontend.id, gnomeFrontend);
 
 
     FrontendInfo lunaFrontend;
-    lunaFrontend.name = "XP Luna";
-    lunaFrontend.description = "XP Luna like frintend";
+    lunaFrontend.name = QStringLiteral("XP Luna");
+    lunaFrontend.description = QStringLiteral("XP Luna like frintend");
  //----------------------------------------------------
-    if(runType == "1"){ //Maia is running form QtCreator (dev run)
+    if(runType == QStringLiteral("1")){ //Maia is running form QtCreator (dev run)
         QString cmake_deploy_prefix = QString::fromStdString(std::string(CMAKE_INSTALL_PREFIX));
-        lunaFrontend.qmlFilePath = cmake_deploy_prefix + QString("/frontends/XPLuna/Main.qml");
+        lunaFrontend.qmlFilePath = cmake_deploy_prefix + QStringLiteral("/frontends/XPLuna/Main.qml");
     }else{  //normal Maia run, form login manager (SDDM, GDM, etc)
-        lunaFrontend.qmlFilePath = QString("/opt/Maia/Maia_") + QString(MAIA_VERSION_STRING) + "/frontends/XPLuna/Main.qml";
+        lunaFrontend.qmlFilePath = QStringLiteral("/opt/Maia/Maia_") + QStringLiteral(MAIA_VERSION_STRING) + QStringLiteral("/frontends/XPLuna/Main.qml");
     }
 //-----------------------------------------------------
-    lunaFrontend.id = QString(
+    lunaFrontend.id = QString::fromUtf8(
         QCryptographicHash::hash(lunaFrontend.name.toUtf8(), QCryptographicHash::Sha1).toHex());
     qDebug() << "[STARTUP INFO] XP Luna frontend id = " << lunaFrontend.id;
     m_frontends.insert(lunaFrontend.id, lunaFrontend);
@@ -147,18 +147,18 @@ void FrontendManagerService::loadFrontends()
 
 
     FrontendInfo cutefishFrontend;
-    cutefishFrontend.name = "CutefishOS";
-    cutefishFrontend.description = "CutefishOS like frintend";
+    cutefishFrontend.name = QStringLiteral("CutefishOS");
+    cutefishFrontend.description = QStringLiteral("CutefishOS like frintend");
     //----------------------------------------------------
-    if(runType == "1"){ //Maia is running form QtCreator (dev run)
+    if(runType == QStringLiteral("1")){ //Maia is running form QtCreator (dev run)
         QString cmake_deploy_prefix = QString::fromStdString(std::string(CMAKE_INSTALL_PREFIX));
-        cutefishFrontend.qmlFilePath = cmake_deploy_prefix + QString("/frontends/Cutefish/Main.qml");
+        cutefishFrontend.qmlFilePath = cmake_deploy_prefix + QStringLiteral("/frontends/Cutefish/Main.qml");
     }else{  //normal Maia run, form login manager (SDDM, GDM, etc)
-        cutefishFrontend.qmlFilePath = QString("/opt/Maia/Maia_") + QString(MAIA_VERSION_STRING) + "/frontends/Cutefish/Main.qml";
+        cutefishFrontend.qmlFilePath = QStringLiteral("/opt/Maia/Maia_") + QStringLiteral(MAIA_VERSION_STRING) + QStringLiteral("/frontends/Cutefish/Main.qml");
     }
     qDebug() << "KKKKKKKKKKKKKKKUrwa cutefish qml path: " << cutefishFrontend.qmlFilePath;
     //-----------------------------------------------------
-    cutefishFrontend.id = QString(
+    cutefishFrontend.id = QString::fromUtf8(
         QCryptographicHash::hash(cutefishFrontend.name.toUtf8(), QCryptographicHash::Sha1).toHex());
     qDebug() << "[STARTUP INFO] CutefishOS frontend id = " << cutefishFrontend.id;
     m_frontends.insert(cutefishFrontend.id, cutefishFrontend);
@@ -173,25 +173,25 @@ void FrontendManagerService::loadFrontends()
     if (!savedFrontendId.isEmpty() && m_frontends.contains(savedFrontendId)) {
         m_activeFrontendId = savedFrontendId;
     } else {
-        m_activeFrontendId = m_frontends.isEmpty() ? "" : gnomeFrontend.id; // Default frontend
+        m_activeFrontendId = m_frontends.isEmpty() ? QStringLiteral("") : gnomeFrontend.id; // Default frontend
     }
 
     // Emit signal if the active frontend is set
     if (!m_activeFrontendId.isEmpty()) {
-        emit activeFrontendChanged(m_activeFrontendId);
+        Q_EMIT activeFrontendChanged(m_activeFrontendId);
     }
 }
 
 void FrontendManagerService::addFrontend(const FrontendInfo &frontend)
 {
     m_frontends.insert(frontend.id, frontend);
-    emit frontendAdded(frontend.id, frontend.name, frontend.description, frontend.qmlFilePath);
+    Q_EMIT frontendAdded(frontend.id, frontend.name, frontend.description, frontend.qmlFilePath);
 }
 
 void FrontendManagerService::removeFrontend(const QString &frontendId)
 {
     if (m_frontends.remove(frontendId)) {
-        emit frontendRemoved(frontendId);
+        Q_EMIT frontendRemoved(frontendId);
         if (m_activeFrontendId == frontendId && !m_frontends.isEmpty()) {
             // Use iterator to get an arbitrary key
             setActiveFrontend(m_frontends.firstKey());
@@ -203,9 +203,9 @@ QString FrontendManagerService::readActiveFronted()
 {
 #warning "this code is not asynchronous"
 
-    KSharedConfig::Ptr config = KSharedConfig::openConfig(QString("./Maia/maiarc_")
+    KSharedConfig::Ptr config = KSharedConfig::openConfig(QStringLiteral("./Maia/maiarc_")
                                                           + MAIA_VERSION_STRING);
-    KConfigGroup group = config->group("FrontendManagerService");
+    KConfigGroup group = config->group(QStringLiteral("FrontendManagerService"));
     return group.readEntry("activeFrontendId", QString());
 }
 
@@ -215,9 +215,9 @@ void FrontendManagerService::saveActiveFronted(const QString &frontedId)
 
     // Save activeFrontendId to KSharedConfig
     KSharedConfig::Ptr config = KSharedConfig::openConfig(
-        QString("./Maia/maiarc_")
+        QStringLiteral("./Maia/maiarc_")
         + MAIA_VERSION_STRING); // Configuration file name, e.g., ~/.config/Maia/maiarc_0.1.0
-    KConfigGroup group = config->group("FrontendManagerService");
+    KConfigGroup group = config->group(QStringLiteral("FrontendManagerService"));
     group.writeEntry("activeFrontendId", frontedId);
     config->sync(); // Ensure saving to the file
 }
