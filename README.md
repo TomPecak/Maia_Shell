@@ -164,6 +164,12 @@ sudo apt install -y \
     libwayland-dev \
     wayland-protocols \
     libxkbcommon-dev
+
+sudo apt install -y \
+    libxcb1-dev \
+    libxcb-shape0-dev \
+    libxcb-icccm4-dev \
+    xserver-xephyr
 ```
 
 ```bash

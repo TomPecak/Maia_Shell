@@ -11,8 +11,8 @@
 MProxyWindow::MProxyWindow(QQuickItem *parent)
     : QQuickItem(parent)
     , m_swapInterval(1)
-    , m_serverName(QString("/tmp/MProxyWindowServer%1")
-                       .arg(QUuid::createUuid().toString(QUuid::WithoutBraces).remove('-')))
+    , m_serverName(QStringLiteral("/tmp/MProxyWindowServer%1")
+                       .arg(QUuid::createUuid().toString(QUuid::WithoutBraces).remove(u'-')))
 {
     setFlag(ItemHasContents, false);
     setVisible(false);

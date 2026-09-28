@@ -14,8 +14,8 @@
 #include <NETWM>
 
 
-static const QStringList blockList = {"cutefish-launcher",
-                                      "cutefish-statusbar"};
+static const QStringList blockList = {QStringLiteral("cutefish-launcher"),
+                                      QStringLiteral("cutefish-statusbar")};
 
 MActivity::MActivity(QObject *parent)
     : QObject(parent)
@@ -144,12 +144,12 @@ void MActivity::onActiveWindowChanged()
                      NET::WM2WindowClass);
 
 #warning 'this should be removed'
-    m_launchPad = (info.windowClassClass() == "cutefish-launcher");
+    m_launchPad = (QString::fromUtf8(info.windowClassClass()) == QStringLiteral("cutefish-launcher"));
     Q_EMIT launchPadChanged();
 
     if (NET::typeMatchesMask(info.windowType(NET::AllTypesMask), NET::DesktopMask)) {
         m_title = tr("Desktop");
-        m_icon = "";
+        m_icon = QStringLiteral("");
 
         Q_EMIT titleChanged();
         Q_EMIT iconChanged();
@@ -158,14 +158,15 @@ void MActivity::onActiveWindowChanged()
     }
 
     if (!isAcceptableWindow(KX11Extras::activeWindow())
-        || blockList.contains(info.windowClassClass())) {
+        || blockList.contains(QString::fromUtf8(info.windowClassClass()))) {
         clearTitle();
         clearIcon();
         return;
     }
 
     m_pid = info.pid();
-    m_windowClass = info.windowClassClass().toLower();
+    m_windowClass = QString::fromUtf8(info.windowClassClass()).toLower();
+
 
     CAppItem *item = m_cApps->matchItem(m_pid, m_windowClass);
 
@@ -182,7 +183,7 @@ void MActivity::onActiveWindowChanged()
         QString title = info.visibleName();
         if (title != m_title) {
             m_title = title;
-            emit titleChanged();
+            Q_EMIT titleChanged();
             clearIcon();
         }
     }

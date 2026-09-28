@@ -116,7 +116,7 @@ void FrontendManagerService::loadFrontends()
         QString cmake_deploy_prefix = QString::fromStdString(std::string(CMAKE_INSTALL_PREFIX));
         gnomeFrontend.qmlFilePath = cmake_deploy_prefix + QStringLiteral("/frontends/Gnome/Main.qml");
     }else{  //normal Maia run, form login manager (SDDM, GDM, etc)
-        gnomeFrontend.qmlFilePath = QStringLiteral("/opt/Maia/Maia_") + QStringLiteral(MAIA_VERSION_STRING) + "/frontends/Gnome/Main.qml";
+        gnomeFrontend.qmlFilePath = QStringLiteral("/opt/Maia/Maia_") + QStringLiteral(MAIA_VERSION_STRING) + QStringLiteral("/frontends/Gnome/Main.qml");
     }
 //-----------------------------------------------------------------------------
 
@@ -204,7 +204,7 @@ QString FrontendManagerService::readActiveFronted()
 #warning "this code is not asynchronous"
 
     KSharedConfig::Ptr config = KSharedConfig::openConfig(QStringLiteral("./Maia/maiarc_")
-                                                          + MAIA_VERSION_STRING);
+                                                          + QStringLiteral(MAIA_VERSION_STRING));
     KConfigGroup group = config->group(QStringLiteral("FrontendManagerService"));
     return group.readEntry("activeFrontendId", QString());
 }
@@ -216,7 +216,7 @@ void FrontendManagerService::saveActiveFronted(const QString &frontedId)
     // Save activeFrontendId to KSharedConfig
     KSharedConfig::Ptr config = KSharedConfig::openConfig(
         QStringLiteral("./Maia/maiarc_")
-        + MAIA_VERSION_STRING); // Configuration file name, e.g., ~/.config/Maia/maiarc_0.1.0
+        + QStringLiteral(MAIA_VERSION_STRING)); // Configuration file name, e.g., ~/.config/Maia/maiarc_0.1.0
     KConfigGroup group = config->group(QStringLiteral("FrontendManagerService"));
     group.writeEntry("activeFrontendId", frontedId);
     config->sync(); // Ensure saving to the file

@@ -104,7 +104,7 @@ void Backend::setAuroraeTheme(const QString themeName)
     // Step 3: Update kwinrc configuration using KSharedConfig
     KSharedConfig::Ptr config = KSharedConfig::openConfig(QStringLiteral("kwinrc"), KConfig::SimpleConfig);
     KConfigGroup decorationGroup(config, QStringLiteral("org.kde.kdecoration2"));
-    decorationGroup.writeEntry(QStringLiteral("theme"), QStringLiteral("__aurorae__svg__") + themeName);
+    decorationGroup.writeEntry(QStringLiteral("theme"), QStringLiteral("__aurorae__svg__%1").arg(themeName));
     decorationGroup.writeEntry(QStringLiteral("library"), QStringLiteral("org.kde.kwin.aurorae"));
     if (!config->sync()) {
         qDebug() << "[ERROR] Failed to save kwinrc configuration for theme:" << themeName;
@@ -234,7 +234,7 @@ bool Backend::copyQrcDirectory(const QString &sourcePath, const QString &targetP
     }
 
     // Copy files
-    QDirIterator fileIt(":/" + sourcePath, QDir::Files | QDir::NoDotAndDotDot);
+    QDirIterator fileIt(QStringLiteral(":/") + sourcePath, QDir::Files | QDir::NoDotAndDotDot);
     while (fileIt.hasNext()) {
         fileIt.next();
         QString srcFilePath = fileIt.filePath();
@@ -246,7 +246,7 @@ bool Backend::copyQrcDirectory(const QString &sourcePath, const QString &targetP
     }
 
     // Copy subdirectories
-    QDirIterator dirIt(":/" + sourcePath, QDir::Dirs | QDir::NoDotAndDotDot);
+    QDirIterator dirIt(QStringLiteral(":/") + sourcePath, QDir::Dirs | QDir::NoDotAndDotDot);
     while (dirIt.hasNext()) {
         dirIt.next();
         QString srcSubDir = sourcePath + QStringLiteral("/") + dirIt.fileName();
@@ -285,11 +285,11 @@ void Backend::startProcess(const QString &proc)
 
 void Backend::runCommand(const QString &cmd)
 {
-    QStringList parts = cmd.split(' ', Qt::SkipEmptyParts);
+    QStringList parts = cmd.split(u' ', Qt::SkipEmptyParts);
     QString program = parts.takeFirst();
     QStringList filteredArgs;
     for (const QString &arg : parts) {
-        if (!arg.startsWith('%')) {
+        if (!arg.startsWith(u'%')) {
             filteredArgs << arg;
         }
     }
@@ -397,7 +397,7 @@ QString Backend::platformName() const
 
 QString Backend::qtVersion() const
 {
-    return QString(qVersion());
+    return QString(QLatin1StringView(qVersion()));
 }
 
 float Backend::cpuLoad() const
@@ -489,7 +489,7 @@ bool Backend::installDirInternal(const QUrl &themeUrl, const QString &targetDirP
     QDir sourceDir;
     if (themeUrl.scheme() == QStringLiteral("qrc")) {
         sourcePath = themeUrl.path();
-        if (sourcePath.startsWith('/')) {
+        if (sourcePath.startsWith(u'/')) {
             sourcePath = sourcePath.mid(1); // Remove leading "/"
         }
         sourceDir.setPath(QStringLiteral(":/") + sourcePath);
@@ -507,7 +507,7 @@ bool Backend::installDirInternal(const QUrl &themeUrl, const QString &targetDirP
     }
 
     QString themeName = sourceDir.dirName();
-    QString targetThemePath = targetDirPath + "/" + themeName;
+    QString targetThemePath = targetDirPath + QStringLiteral("/") + themeName;
     QDir targetThemeDir(targetThemePath);
 
 
@@ -516,7 +516,7 @@ bool Backend::installDirInternal(const QUrl &themeUrl, const QString &targetDirP
         clearInstalledUrl(themeName);
     }
 
-    if(isUrlInstalled(themeName, targetThemePath)){
+    if(isUrlInstalled(themeName, QUrl::fromLocalFile(targetThemePath))){
         // Check if the theme directory exists and is recorded in settings
         if(targetThemeDir.exists()){ //settings - ok ; dir - ok
             qDebug() << "Theme already installed and directory exists, skipping:" << themeName;
@@ -553,7 +553,7 @@ bool Backend::installDirInternal(const QUrl &themeUrl, const QString &targetDirP
 
     if (success) {
         // Save to settings
-        saveInstalledUrl(themeName, targetThemePath);
+        saveInstalledUrl(themeName, QUrl::fromLocalFile(targetThemePath));
         qDebug() << "Theme installed successfully and marked in settings:" << targetThemePath;
     } else {
         // Remove partial after error

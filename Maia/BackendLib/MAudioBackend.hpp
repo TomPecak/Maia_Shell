@@ -4,9 +4,10 @@
 
 #include <QObject>
 
-#include <PulseAudioQt/Sink>
+//#include <PulseAudioQt/Sink>
 
 #include "./audio/MPreferredDevice.hpp"
+
 
 class MAudioBackend : public QObject{
     Q_OBJECT

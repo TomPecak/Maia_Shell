@@ -89,7 +89,7 @@ void MBackgroundHelper::setColor(QColor c)
                    c.blue() * 0.114) < 186;
 
     Q_EMIT newColor(c, isDark);
-    Q_EMIT debugImageGenerated("");
+    Q_EMIT debugImageGenerated(QStringLiteral(""));
 }
 
 void MBackgroundHelper::setBackgound(const QString &fileName)
@@ -99,7 +99,7 @@ void MBackgroundHelper::setBackgound(const QString &fileName)
 
     // Sync QUrl if setBackgound is called directly, ensuring the getter returns the current value
     QUrl newUrl = QUrl::fromUserInput(fileName);
-    if (newUrl.isLocalFile() && !fileName.startsWith("file:")) {
+    if (newUrl.isLocalFile() && !fileName.startsWith(QStringLiteral("file:"))) {
         newUrl = QUrl::fromLocalFile(fileName);
     }
     if (m_wallpaperSource != newUrl) {
@@ -150,7 +150,7 @@ void MBackgroundHelper::setBackgound(const QString &fileName)
     buffer.open(QIODevice::WriteOnly);
     img.save(&buffer, "PNG");
     QString base64 = QString::fromLatin1(byteArray.toBase64().data());
-    Q_EMIT debugImageGenerated("data:image/png;base64," + base64);
+    Q_EMIT debugImageGenerated(QStringLiteral("data:image/png;base64,") + base64);
 
     long long sumR = 0, sumG = 0, sumB = 0;
     int measureArea = size.width() * size.height();

@@ -19,8 +19,8 @@ public:
     ~DesktopProperties();
 
     QVariant value(const QString &key, const QVariant &defaultValue = QVariant());
-    bool load(const QString &fileName, const QString &group = "");
-    bool save(const QString &fileName, const QString &group = "");
+    bool load(const QString &fileName, const QString &group = QStringLiteral(""));
+    bool save(const QString &fileName, const QString &group = QStringLiteral(""));
     void set(const QString &key, const QVariant &value);
     bool contains(const QString &key) const;
     QStringList allKeys() const;

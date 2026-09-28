@@ -9,15 +9,17 @@
 #include <QDBusMessage>
 #include <QDBusConnection>
 
-static QByteArray detectDesktopEnvironment()
+static QString detectDesktopEnvironment()
 {
-    const QByteArray desktop = QString::fromUtf8(qgetenv("XDG_CURRENT_DESKTOP"));
+    // qgetenv zwraca QByteArray, konwertujemy go jawnie na QString za pomocą zUtf8() lub fromUtf8()
+    const QString desktop = QString::fromUtf8(qgetenv("XDG_CURRENT_DESKTOP"));
 
     if (!desktop.isEmpty())
         return desktop.toUpper();
 
-    return QByteArray("UNKNOWN");
+    return QStringLiteral("UNKNOWN");
 }
+
 
 LauncherModel::LauncherModel(QObject *parent)
     : QAbstractListModel(parent)

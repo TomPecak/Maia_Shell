@@ -39,7 +39,8 @@ void Logger::init()
 QString Logger::constructServerUrl()
 {
     // Get host from environment variable or use localhost as fallback
-    QString host = qEnvironmentVariable("MAIA_LOG_HOST", "localhost");
+    QString host = qEnvironmentVariable("MAIA_LOG_HOST", QStringLiteral("localhost"));
+
 
 
     // Get log port from environment variable
@@ -54,8 +55,9 @@ QString Logger::constructServerUrl()
     }
 
     // Construct WebSocket URL
-    return QString("ws://%1:%2").arg(host).arg(logPort);
+    return QStringLiteral("ws://%1:%2").arg(host).arg(logPort);
 }
+
 
 void Logger::sendBufferedLogs()
 {
@@ -177,8 +179,8 @@ void Logger::messageHandler(QtMsgType type, const QMessageLogContext &context, c
     double deltaTimeMs = deltaTimeNs / 1000000.0;
     m_logger->lastLogTime = currentTimeNs;
 
-    ts << qSetFieldWidth(8) << qSetPadChar(' ') << totalElapsedMs << "ms "
-       << "(+" << qSetFieldWidth(7) << qSetPadChar(' ') << QString::asprintf("%.3f", deltaTimeMs)
+    ts << qSetFieldWidth(8) << qSetPadChar(u' ') << totalElapsedMs << "ms "
+       << "(+" << qSetFieldWidth(7) << qSetPadChar(u' ') << QString::asprintf("%.3f", deltaTimeMs)
        << "ms) ";
 
     switch (type) {

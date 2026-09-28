@@ -91,13 +91,13 @@ QString Utils::desktopPathFromMetadata(const QString &appId, quint32 pid, const 
     // The value returned from the commandFromPid() may be empty.
     // Calling first() and last() below will cause the statusbar to crash.
     if (commands.isEmpty() || xWindowWMClassName.isEmpty())
-        return "";
+        return QStringLiteral("");
 
     QString command = commands.first();
     QString commandName = commands.last();
 
     if (command.isEmpty())
-        return "";
+        return QStringLiteral("");
 
     QString result;
 
@@ -163,9 +163,9 @@ QMap<QString, QString> Utils::readInfoFromDesktop(const QString &desktopFile)
     QMap<QString, QString> info;
     for (SystemAppItem *item : m_sysAppMonitor->applications()) {
         if (item->path == desktopFile) {
-            info.insert("Icon", item->iconName);
-            info.insert("Name", item->name);
-            info.insert("Exec", item->exec);
+            info.insert(QStringLiteral("Icon"), item->iconName);
+            info.insert(QStringLiteral("Name"), item->name);
+            info.insert(QStringLiteral("Exec"), item->exec);
         }
     }
 

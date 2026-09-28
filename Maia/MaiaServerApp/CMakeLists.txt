@@ -30,6 +30,7 @@ qt_add_executable(appMaiaServer
     main_proxy_window.hpp
     logger.hpp
     logger.cpp
+
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
@@ -64,6 +65,7 @@ target_link_libraries(appMaiaServer
     PUBLIC
     -Wl,--whole-archive MaiaUI -Wl,--no-whole-archive
 )
+#target_link_libraries(appMaiaServer PRIVATE MaiaBackendplugin)
 target_link_libraries(appMaiaServer PRIVATE MaiaBackend)
 
 

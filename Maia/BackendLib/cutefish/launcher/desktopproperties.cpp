@@ -48,13 +48,13 @@ bool DesktopProperties::load(const QString &fileName, const QString &group)
         // Read group
         // NOTE: symbols '[' and ']' can be found not only in group names, but
         // only group can start with '['
-        if (!group.isEmpty() && line.trimmed().startsWith("[")) {
-            QString tmp = line.trimmed().replace("[", "").replace("]", "");
+        if (!group.isEmpty() && line.trimmed().startsWith(QStringLiteral("["))) {
+            QString tmp = line.trimmed().replace(QStringLiteral("["), QStringLiteral("")).replace(QStringLiteral("]"), QStringLiteral(""));
             groupFound = group.trimmed().compare(tmp) == 0;
         }
 
         // If we are in correct group and line contains assignment then read data
-        int first_equal = line.indexOf('=');
+        int first_equal = line.indexOf(u'=');
 
         if (groupFound && first_equal >= 0) {
             data.insert(line.left(first_equal).trimmed(), line.mid(first_equal + 1).trimmed());
@@ -76,13 +76,15 @@ bool DesktopProperties::save(const QString &fileName, const QString &group)
     // Write group
     QTextStream out(&file);
     if (!group.isEmpty()) {
-        out << "[" + group + "]\n";
+        out << u'[' << group << u']' << u'\n';
     }
 
     // Write data
-    foreach (QString key, data.keys()) {
-        out << key << "=" << data.value(key).toString() << "\n";
+    // Write data
+    for (const QString &key : data.keys()) {
+        out << key << QStringLiteral("=") << data.value(key).toString() << "\n";
     }
+
 
     // Exit
     file.close();

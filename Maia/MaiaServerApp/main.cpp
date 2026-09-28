@@ -68,8 +68,8 @@ int main(int argc, char *argv[])
     QString homePath = QString::fromUtf8(qgetenv("HOME"));
 
     //INIT APPLICATION
-    QGuiApplication::setApplicationName(QString("Maia_") + MAIA_VERSION_STRING);
-    QGuiApplication::setOrganizationName("Maia");
+    QGuiApplication::setApplicationName(QStringLiteral("Maia_%1").arg(QStringLiteral(MAIA_VERSION_STRING)));
+    QGuiApplication::setOrganizationName(QStringLiteral("Maia"));
     QtWebEngineQuick::initialize();
 
     QGuiApplication app(argc, argv);
@@ -98,7 +98,7 @@ int main(int argc, char *argv[])
 
     qDebug() << "[STARTUP INFO] " << "Proxy Window Address: " << proxyWinAddress;
 
-    if (modeOption == "server") {
+    if (modeOption == QStringLiteral("server")) {
         //SERVER
 
         qDebug() << "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH UJ 333333333 !!!";
@@ -167,15 +167,15 @@ int main(int argc, char *argv[])
             return -1;
         }
 
-        engine.rootContext()->setContextProperty("HOME", homePath);
+        engine.rootContext()->setContextProperty(QStringLiteral("HOME"), homePath);
         //Apps List models
-        engine.rootContext()->setContextProperty("appsListModel", &filterProxyModel);
+        engine.rootContext()->setContextProperty(QStringLiteral("appsListModel"), &filterProxyModel);
 
-        engine.rootContext()->setContextProperty("backend", &backend);
+        engine.rootContext()->setContextProperty(QStringLiteral("backend"), &backend);
 
         //Audio backend
         MAudioBackend audioBackend;
-        engine.rootContext()->setContextProperty("audioBackend", &audioBackend);
+        engine.rootContext()->setContextProperty(QStringLiteral("audioBackend"), &audioBackend);
 
         QObject::connect(
             &engine,
@@ -216,26 +216,27 @@ void getCmdLineOptions(const QCoreApplication &app,
                        bool &proxyVisible)
 {
     QCommandLineParser parser;
-    parser.setApplicationDescription("Command-line options parser for the application");
+    parser.setApplicationDescription(QStringLiteral("Command-line options parser for the application"));
     parser.addHelpOption();
     parser.addVersionOption();
 
     // Define command-line options
-    QCommandLineOption modeOpt("mode", "Set application mode (server/client)", "value", "server");
-    QCommandLineOption sourceOpt("source", "Set QML source URL (e.g., qrc:///Clock3D.qml)", "value");
-    QCommandLineOption xOpt("x", "Set window X position", "x", "100");
-    QCommandLineOption yOpt("y", "Set window Y position", "y", "100");
-    QCommandLineOption widthOpt("width", "Set window width", "width", "800");
-    QCommandLineOption heightOpt("height", "Set window height", "height", "600");
-    QCommandLineOption swapIntervalOpt("swap-interval", "Set swap interval", "value", "1");
-    QCommandLineOption proxyWinAddressOpt("proxy-window-addr",
-                                          "Set proxy window local socket address",
-                                          "value",
-                                          "/tmp/maia-XYZ");
-    QCommandLineOption proxyVisibleOpt("proxy-visible",
-                                       "Set proxy window visibility (true/false)",
-                                       "value",
-                                       "false");
+    QCommandLineOption modeOpt(QStringLiteral("mode"), QStringLiteral("Set application mode (server/client)"), QStringLiteral("value"), QStringLiteral("server"));
+    QCommandLineOption sourceOpt(QStringLiteral("source"), QStringLiteral("Set QML source URL (e.g., qrc:///Clock3D.qml)"), QStringLiteral("value"));
+    QCommandLineOption xOpt(QStringLiteral("x"), QStringLiteral("Set window X position"), QStringLiteral("x"), QStringLiteral("100"));
+    QCommandLineOption yOpt(QStringLiteral("y"), QStringLiteral("Set window Y position"), QStringLiteral("y"), QStringLiteral("100"));
+    QCommandLineOption widthOpt(QStringLiteral("width"), QStringLiteral("Set window width"), QStringLiteral("width"), QStringLiteral("800"));
+    QCommandLineOption heightOpt(QStringLiteral("height"), QStringLiteral("Set window height"), QStringLiteral("height"), QStringLiteral("600"));
+    QCommandLineOption swapIntervalOpt(QStringLiteral("swap-interval"), QStringLiteral("Set swap interval"), QStringLiteral("value"), QStringLiteral("1"));
+    QCommandLineOption proxyWinAddressOpt(QStringLiteral("proxy-window-addr"),
+                                          QStringLiteral("Set proxy window local socket address"),
+                                          QStringLiteral("value"),
+                                          QStringLiteral("/tmp/maia-XYZ"));
+    QCommandLineOption proxyVisibleOpt(QStringLiteral("proxy-visible"),
+                                       QStringLiteral("Set proxy window visibility (true/false)"),
+                                       QStringLiteral("value"),
+                                       QStringLiteral("false"));
+
 
     // Add options to parser
     parser.addOptions({modeOpt,
@@ -265,7 +266,7 @@ void getCmdLineOptions(const QCoreApplication &app,
     // Parse mode option
     if (parser.isSet(modeOpt)) {
         QString value = parser.value(modeOpt).toLower();
-        if (value == "server" || value == "client") {
+        if (value == QStringLiteral("server") || value == QStringLiteral("client")) {
             modeOption = value;
         } else {
             qDebug() << "Invalid --mode value:" << value << "(expected: server or client)";
@@ -280,9 +281,9 @@ void getCmdLineOptions(const QCoreApplication &app,
     // Parse proxy-visible option
     if (parser.isSet(proxyVisibleOpt)) {
         QString value = parser.value(proxyVisibleOpt).toLower();
-        if (value == "true") {
+        if (value == QStringLiteral("true")) {
             proxyVisible = true;
-        } else if (value == "false") {
+        } else if (value == QStringLiteral("false")) {
             proxyVisible = false;
         } else {
             qDebug() << "Invalid --proxy-visible value:" << value << "(expected: true or false)";

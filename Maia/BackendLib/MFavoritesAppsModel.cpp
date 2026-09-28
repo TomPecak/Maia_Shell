@@ -7,9 +7,9 @@ MFavoritesAppsModel::MFavoritesAppsModel(QObject *parent)
     //qDebug() << "[STARTUP INFO] " << __PRETTY_FUNCTION__;
     FavApplication::registerDBusTypes();
 
-    m_dbusInterface = new QDBusInterface("org.maia.FavoriteApplications",
-                                         "/FavoriteApplications",
-                                         "org.maia.FavoriteApplications",
+    m_dbusInterface = new QDBusInterface(QStringLiteral("org.maia.FavoriteApplications"),
+                                         QStringLiteral("/FavoriteApplications"),
+                                         QStringLiteral("org.maia.FavoriteApplications"),
                                          QDBusConnection::sessionBus(),
                                          this);
 
@@ -30,7 +30,7 @@ MFavoritesAppsModel::MFavoritesAppsModel(QObject *parent)
     //connect(m_dbusInterface, SIGNAL(favoritesChanged()), this, SLOT(handleFavoritesChanged()));
 
     // Init - get favorites
-    QDBusPendingCall call = m_dbusInterface->asyncCall("getFavorites");
+    QDBusPendingCall call = m_dbusInterface->asyncCall(QStringLiteral("getFavorites"));
     QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(call, this);
     connect(watcher,
             &QDBusPendingCallWatcher::finished,
@@ -89,7 +89,7 @@ void MFavoritesAppsModel::addFavorite(const QString &appId)
         return;
     }
 
-    m_dbusInterface->asyncCall("addFavorite", appId);
+    m_dbusInterface->asyncCall(QStringLiteral("addFavorite"), appId);
 }
 
 void MFavoritesAppsModel::removeFavorite(const QString &appId)
@@ -100,7 +100,7 @@ void MFavoritesAppsModel::removeFavorite(const QString &appId)
         return;
     }
 
-    m_dbusInterface->asyncCall("removeFavorite", appId);
+    m_dbusInterface->asyncCall(QStringLiteral("removeFavorite"), appId);
 }
 
 void MFavoritesAppsModel::handleFavoriteAdded(const FavApplication &favApp)

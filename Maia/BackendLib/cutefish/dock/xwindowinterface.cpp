@@ -108,20 +108,21 @@ QMap<QString, QVariant> XWindowInterface::requestInfo(quint64 wid)
                                 | NET::WM2AllowedActions
                                 | NET::WM2TransientFor };
     QMap<QString, QVariant> result;
-    const QString winClass = QString(winfo.windowClassClass());
+    const QString winClass = QString::fromUtf8(winfo.windowClassClass());
 
-    result.insert("iconName", winClass.toLower());
-    result.insert("active", wid == KX11Extras::activeWindow());
-    result.insert("visibleName", winfo.visibleName());
-    result.insert("id", winClass);
+    result.insert(QStringLiteral("iconName"), winClass.toLower());
+    result.insert(QStringLiteral("active"), wid == KX11Extras::activeWindow());
+    result.insert(QStringLiteral("visibleName"), winfo.visibleName());
+    result.insert(QStringLiteral("id"), winClass);
 
     return result;
 }
 
 QString XWindowInterface::requestWindowClass(quint64 wid)
 {
-    return KWindowInfo(wid, NET::Supported, NET::WM2WindowClass).windowClassClass();
+    return QString::fromUtf8(KWindowInfo(wid, NET::Supported, NET::WM2WindowClass).windowClassClass());
 }
+
 
 bool XWindowInterface::isAcceptableWindow(quint64 wid)
 {
@@ -224,15 +225,17 @@ QString XWindowInterface::desktopFilePath(quint64 wid)
     auto rootWin = rootWindow();
 
     if(conn){
-        return Utils::instance()->desktopPathFromMetadata(info.windowClassClass(),
+        return Utils::instance()->desktopPathFromMetadata(QString::fromUtf8(info.windowClassClass()),
                                                           NETWinInfo(conn, wid,
                                                                      rootWin,
                                                                      NET::WMPid,
                                                                      NET::Properties2()).pid(),
-                                                          info.windowClassName());
+                                                          QString::fromUtf8(info.windowClassName()));
+
     }
 
-    return "";
+
+    return QString();
 }
 
 void XWindowInterface::setIconGeometry(quint64 wid, const QRect &rect)

@@ -115,7 +115,7 @@ QString MFrontendModel::activeFrontend() const
 void MFrontendModel::setActiveFrontend(const QString &frontendId)
 {
     //qDebug() << "Client 1 " << __PRETTY_FUNCTION__ << " Client side, befor send request via d-bus";
-    QDBusPendingCall call = m_dbusInterface->asyncCall("setActiveFrontend", frontendId);
+    QDBusPendingCall call = m_dbusInterface->asyncCall(QStringLiteral("setActiveFrontend"), frontendId);
     QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(call, this);
     connect(watcher, &QDBusPendingCallWatcher::finished, this, [](QDBusPendingCallWatcher *watcher) {
         if (watcher->isError()) {

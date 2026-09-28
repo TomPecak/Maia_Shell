@@ -5,6 +5,7 @@
 #include <QScopedPointerPodDeleter>
 #include <QScreen>
 #include <QPainterPath>
+#include <QList>
 
 #ifndef USE_KDE_BLUR
 #include <xcb/xcb.h>
@@ -137,8 +138,8 @@ void MWindowBlur::updateBlur()
         path.addRoundedRect(QRectF(QPoint(0, 0), m_window->size() * devicePixelRatio),
                             m_windowRadius * devicePixelRatio,
                             m_windowRadius * devicePixelRatio);
-        QVector<uint32_t> data;
-        foreach (const QPolygonF &polygon, path.toFillPolygons()) {
+        QList<uint32_t> data; // W Qt6 QVector to po prostu alias na QList
+        for (const QPolygonF &polygon : path.toFillPolygons()) {
             QRegion region = polygon.toPolygon();
             for (auto i = region.begin(); i != region.end(); ++i) {
                 data << i->x() << i->y() << i->width() << i->height();

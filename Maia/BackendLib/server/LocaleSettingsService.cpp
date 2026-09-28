@@ -66,10 +66,10 @@ void LocaleSettingsService::setTwentyFourTime(bool newTwentyFourTime)
 
 void LocaleSettingsService::loadSettings()
 {
-    QString configPath = QString("./Maia/maiarc_") + MAIA_VERSION_STRING;
+    QString configPath = QStringLiteral("./Maia/maiarc_") + QStringLiteral(MAIA_VERSION_STRING);
 
     KSharedConfig::Ptr config = KSharedConfig::openConfig(configPath);
-    KConfigGroup group = config->group("LocaleSettingsService");
+    KConfigGroup group = config->group(QStringLiteral("LocaleSettingsService"));
 
     // Read with default value (false)
     m_twentyFourTime = group.readEntry("twentyFourTime", false);
@@ -79,10 +79,10 @@ void LocaleSettingsService::loadSettings()
 
 void LocaleSettingsService::saveSettings()
 {
-    QString configPath = QString("./Maia/maiarc_") + MAIA_VERSION_STRING;
+    QString configPath = QStringLiteral("./Maia/maiarc_%1").arg(QStringLiteral(MAIA_VERSION_STRING));
 
     KSharedConfig::Ptr config = KSharedConfig::openConfig(configPath);
-    KConfigGroup group = config->group("LocaleSettingsService");
+    KConfigGroup group = config->group(QStringLiteral("LocaleSettingsService"));
 
     group.writeEntry("twentyFourTime", m_twentyFourTime);
     config->sync(); // Force save to disk

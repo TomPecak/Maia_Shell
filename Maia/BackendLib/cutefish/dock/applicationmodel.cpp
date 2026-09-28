@@ -101,9 +101,9 @@ void ApplicationModel::addItem(const QString &desktopFile)
     beginInsertRows(QModelIndex(), rowCount(), rowCount());
     ApplicationItem *item = new ApplicationItem;
     QMap<QString, QString> desktopInfo = Utils::instance()->readInfoFromDesktop(desktopFile);
-    item->iconName = desktopInfo.value("Icon");
-    item->visibleName = desktopInfo.value("Name");
-    item->exec = desktopInfo.value("Exec");
+    item->iconName = desktopInfo.value(QStringLiteral("Icon"));
+    item->visibleName = desktopInfo.value(QStringLiteral("Name"));
+    item->exec = desktopInfo.value(QStringLiteral("Exec"));
     item->desktopPath = desktopFile;
     item->isPinned = true;
 
@@ -197,7 +197,7 @@ bool ApplicationModel::openNewInstance(const QString &appId)
         return false;
 
     if (!item->exec.isEmpty()) {
-        QStringList args = item->exec.split(" ");
+        QStringList args = item->exec.split(QStringLiteral(" "));
         QString exec = args.first();
         args.removeFirst();
 
@@ -346,8 +346,8 @@ int ApplicationModel::indexOf(const QString &id)
 
 void ApplicationModel::initPinnedApplications()
 {
-    QSettings settings(QSettings::UserScope, "cutefishos", "dock_pinned");
-    QSettings systemSettings("/etc/cutefish-dock-list.conf", QSettings::IniFormat);
+    QSettings settings(QSettings::UserScope, QStringLiteral("cutefishos"), QStringLiteral("dock_pinned"));
+    QSettings systemSettings(QStringLiteral("/etc/cutefish-dock-list.conf"), QSettings::IniFormat);
     QSettings *set = (QFile(settings.fileName()).exists()) ? &settings
                                                            : &systemSettings;
     QStringList groups = set->childGroups();
@@ -383,9 +383,9 @@ void ApplicationModel::initPinnedApplications()
                 // Read from desktop file.
                 if (!item->desktopPath.isEmpty()) {
                     QMap<QString, QString> desktopInfo = Utils::instance()->readInfoFromDesktop(item->desktopPath);
-                    item->iconName = desktopInfo.value("Icon");
-                    item->visibleName = desktopInfo.value("Name");
-                    item->exec = desktopInfo.value("Exec");
+                    item->iconName = desktopInfo.value(QStringLiteral("Icon"));
+                    item->visibleName = desktopInfo.value(QStringLiteral("Name"));
+                    item->exec = desktopInfo.value(QStringLiteral("Exec"));
                 }
 
                 // Read from config file.
@@ -415,7 +415,7 @@ void ApplicationModel::initPinnedApplications()
 
 void ApplicationModel::savePinAndUnPinList()
 {
-    QSettings settings(QSettings::UserScope, "cutefishos", "dock_pinned");
+    QSettings settings(QSettings::UserScope, QStringLiteral("cutefishos"), QStringLiteral("dock_pinned"));
     settings.clear();
 
     int index = 0;
@@ -451,10 +451,10 @@ void ApplicationModel::handleDataChangedFromItem(ApplicationItem *item)
 void ApplicationModel::onWindowAdded(quint64 wid)
 {
      QMap<QString, QVariant> info = m_iface->requestInfo(wid);
-     const QString id = info.value("id").toString();
+     const QString id = info.value(QStringLiteral("id")).toString();
 
     // Skip...
-    if (id == "cutefish-launcher")
+     if (id == QStringLiteral("cutefish-launcher"))
          return;
 
      QString desktopPath = m_iface->desktopFilePath(wid);
@@ -464,7 +464,7 @@ void ApplicationModel::onWindowAdded(quint64 wid)
     if (!desktopPath.isEmpty() && desktopItem != nullptr) {
         desktopItem->wids.append(wid);
         // Need to update application active status.
-        desktopItem->isActive = info.value("active").toBool();
+        desktopItem->isActive = info.value(QStringLiteral("active")).toBool();
 
         if (desktopItem->id != id) {
             desktopItem->id = id;
@@ -479,7 +479,7 @@ void ApplicationModel::onWindowAdded(quint64 wid)
             if (item->id == id) {
                 item->wids.append(wid);
                 // Need to update application active status.
-                item->isActive = info.value("active").toBool();
+                item->isActive = info.value(QStringLiteral("active")).toBool();
                 handleDataChangedFromItem(item);
             }
         }
@@ -489,16 +489,16 @@ void ApplicationModel::onWindowAdded(quint64 wid)
         beginInsertRows(QModelIndex(), rowCount(), rowCount());
         ApplicationItem *item = new ApplicationItem;
         item->id = id;
-        item->iconName = info.value("iconName").toString();
-        item->visibleName = info.value("visibleName").toString();
-        item->isActive = info.value("active").toBool();
+        item->iconName = info.value(QStringLiteral("iconName")).toString();
+        item->visibleName = info.value(QStringLiteral("visibleName")).toString();
+        item->isActive = info.value(QStringLiteral("active")).toBool();
         item->wids.append(wid);
 
         if (!desktopPath.isEmpty()) {
             QMap<QString, QString> desktopInfo = Utils::instance()->readInfoFromDesktop(desktopPath);
-            item->iconName = desktopInfo.value("Icon");
-            item->visibleName = desktopInfo.value("Name");
-            item->exec = desktopInfo.value("Exec");
+            item->iconName = desktopInfo.value(QStringLiteral("Icon"));
+            item->visibleName = desktopInfo.value(QStringLiteral("Name"));
+            item->exec = desktopInfo.value(QStringLiteral("Exec"));
             item->desktopPath = desktopPath;
         }
 

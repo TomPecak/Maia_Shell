@@ -36,9 +36,9 @@ void MIconItem::setSource(const QVariant &source)
         localFile = QUrl(sourceString).toLocalFile();
     } else if (sourceString.startsWith(QLatin1Char('/'))) {
         localFile = sourceString;
-    } else if (sourceString.startsWith("qrc:/")) {
+    } else if (sourceString.startsWith(QStringLiteral("qrc:/"))) {
         localFile = sourceString.remove(0, 3);
-    } else if (sourceString.startsWith(":/")) {
+    } else if (sourceString.startsWith(QStringLiteral(":/"))) {
         localFile = sourceString;
     }
 
@@ -119,7 +119,7 @@ void MIconItem::loadPixmap()
         QIcon icon = QIcon::fromTheme(m_iconName);
 
         if (icon.isNull())
-            icon = QIcon::fromTheme("application-x-desktop");
+            icon = QIcon::fromTheme(QStringLiteral("application-x-desktop"));
 
         result = icon.pixmap(size * qApp->devicePixelRatio());
     } else if (!m_icon.isNull()) {

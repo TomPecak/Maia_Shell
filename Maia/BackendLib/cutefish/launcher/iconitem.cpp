@@ -132,13 +132,13 @@ void IconItem::loadPixmap()
     } else if (!m_source.isNull()) {
         QString localFile;
 
-        if (sourceString.startsWith("file:"))
+        if (sourceString.startsWith(QStringLiteral("file:")))
             localFile = QUrl(sourceString).toLocalFile();
-        else if (sourceString.startsWith('/'))
+        else if (sourceString.startsWith(u'/'))
             localFile = sourceString;
-        else if (sourceString.startsWith("qrc:/"))
+        else if (sourceString.startsWith(QStringLiteral("qrc:/")))
             localFile = sourceString.remove(0, 3);
-        else if (sourceString.startsWith(":/"))
+        else if (sourceString.startsWith(QStringLiteral(":/")))
             localFile = sourceString;
 
         if (!localFile.isEmpty()) {
@@ -152,7 +152,7 @@ void IconItem::loadPixmap()
     }
 
     if (m_iconPixmap.isNull()) {
-        QIcon icon = QIcon::fromTheme(sourceString, QIcon::fromTheme("application-x-desktop"));
+        QIcon icon = QIcon::fromTheme(sourceString, QIcon::fromTheme(QStringLiteral("application-x-desktop")));
         m_iconPixmap = icon.pixmap(QSize(size * qApp->devicePixelRatio(),
                                          size * qApp->devicePixelRatio()));
         m_iconPixmap.setDevicePixelRatio(qApp->devicePixelRatio());

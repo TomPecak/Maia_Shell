@@ -25,6 +25,9 @@ find_package(KF6 ${REQUIRED_KF_VERSION} REQUIRED COMPONENTS Config WindowSystem)
 
 find_package(KF6PulseAudioQt ${REQUIRED_PULSEAUDIOQT_VERSION} REQUIRED)
 
+pkg_check_modules(XCB_SHAPE REQUIRED IMPORTED_TARGET xcb-shape)
+pkg_check_modules(XCB_ICCCM REQUIRED IMPORTED_TARGET xcb-icccm)
+
 
 # Generate cmake_config.h with CMAKE_INSTALL_PREFIX
 configure_file(
@@ -35,7 +38,7 @@ configure_file(
 qt_add_qml_module(${PROJECT_NAME}
     URI ${PROJECT_URI}
     VERSION 1.0
-
+STATIC
     SOURCES
     Backend.hpp
     Backend.cpp
@@ -161,7 +164,6 @@ qt6_add_statecharts(${PROJECT_NAME}
     scxml/GuiManagerStateMachine.scxml
 )
 
-add_library(MaiaBackendLib STATIC "")
 
 
 
@@ -187,9 +189,11 @@ target_link_libraries(${PROJECT_NAME}
     PUBLIC KF6::PulseAudioQt
     # PkgConfig::LIBPULSE
     # PkgConfig::LIBPULSE_MAINLOOP
+
+    PRIVATE PkgConfig::XCB_SHAPE
+    PRIVATE PkgConfig::XCB_ICCCM
 )
 
-target_link_libraries(MaiaBackendLib PRIVATE MaiaBackend)
 
 include(GNUInstallDirs)
 

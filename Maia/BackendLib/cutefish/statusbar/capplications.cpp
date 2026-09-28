@@ -8,17 +8,18 @@
 #include <QDir>
 
 static CApplications *SELF = nullptr;
-static QString s_systemAppFolder = "/usr/share/applications";
+static QString s_systemAppFolder = QStringLiteral("/usr/share/applications");
 
-static QByteArray detectDesktopEnvironment()
+static QString detectDesktopEnvironment()
 {
-    const QByteArray desktop = QString::fromUtf8(qgetenv("XDG_CURRENT_DESKTOP"));
+    const QString desktop = QString::fromUtf8(qgetenv("XDG_CURRENT_DESKTOP"));
 
     if (!desktop.isEmpty())
         return desktop.toUpper();
 
-    return QByteArray("UNKNOWN");
+    return QStringLiteral("UNKNOWN");
 }
+
 
 CApplications *CApplications::self()
 {
@@ -115,7 +116,7 @@ void CApplications::refresh()
     }
 
     QStringList allEntries;
-    QDirIterator it(s_systemAppFolder, { "*.desktop" }, QDir::NoFilter, QDirIterator::Subdirectories);
+    QDirIterator it(s_systemAppFolder, { QStringLiteral("*.desktop") }, QDir::NoFilter, QDirIterator::Subdirectories);
 
     while (it.hasNext()) {
         const QString &filePath = it.next();
@@ -164,14 +165,14 @@ void CApplications::addApplication(const QString &filePath)
     }
 
     // Local Name
-    QString localName = desktop.value(QString("Name[%1]").arg(QLocale::system().name())).toString();
+    QString localName = desktop.value(QStringLiteral("Name[%1]").arg(QLocale::system().name())).toString();
     if (localName.isEmpty())
         localName = desktop.value("Name").toString();
 
     // Exec
     QString simplifiedExec = desktop.value("Exec").toString();
-    simplifiedExec.remove(QRegularExpression("%."));
-    simplifiedExec.remove(QRegularExpression("^\""));
+    simplifiedExec.remove(QRegularExpression(QStringLiteral("%.")));
+    simplifiedExec.remove(QRegularExpression(QStringLiteral("^\"")));
     // appExec.remove(QRegularExpression(" *$"));
     simplifiedExec = simplifiedExec.simplified();
 
@@ -209,7 +210,7 @@ void CApplications::removeApplications(QList<CAppItem *> items)
 
 QStringList CApplications::commandFromPid(quint32 pid)
 {
-    QFile file(QString("/proc/%1/cmdline").arg(pid));
+    QFile file(QStringLiteral("/proc/%1/cmdline").arg(pid));
 
     if (file.open(QIODevice::ReadOnly)) {
         QByteArray cmd = file.readAll();
@@ -228,14 +229,14 @@ QStringList CApplications::commandFromPid(quint32 pid)
             QString name = QString::fromLocal8Bit(cmd.mid(processNameStart, zeroIndex - processNameStart));
 
             // reion: Remove parameters
-            name = name.split(' ').first();
+            name = name.split(u' ').first();
 
             cmd.replace('\0', ' ');
             QString command = QString::fromLocal8Bit(cmd).trimmed();
 
             // There may be parameters.
-            if (command.split(' ').size() > 1) {
-                command = command.split(' ').first();
+            if (command.split(u' ').size() > 1) {
+                command = command.split(u' ').first();
             }
 
             return { command, name };
