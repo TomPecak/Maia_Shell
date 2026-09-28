@@ -13,6 +13,7 @@
 #include <QWindow>
 #include <QtQuick3D/qquick3d.h>
 #include <QtWebEngineQuick>
+#include <QtPlugin>
 
 #include <AppsListModel.hpp>
 #include <MAudioBackend.hpp>
@@ -23,7 +24,10 @@
 #include <helper/Process.hpp>
 #include <private/ProxyWindowServer.hpp>
 #include <server/Server.hpp>
-#include <iconthemeprovider.hpp>
+
+#include <QtQml/qqmlextensionplugin.h>
+
+#include <cutefish/fishui/iconthemeprovider.hpp>
 
 #include <cmake_config.h>
 
@@ -34,8 +38,10 @@
 //Maia Client Lib
 #include <MLocaleSettings.hpp>
 
-// #include <QtQml/QQmlExtensionPlugin>
+#include <QtQml/QQmlExtensionPlugin>
 // Q_IMPORT_QML_PLUGIN(XPFrontendPlugin)
+
+Q_IMPORT_QML_PLUGIN(Maia_BackendPlugin) // URI, '.' dots replaced with '_'
 
 void getCmdLineOptions(const QCoreApplication &app,
                        QString &modeOption,

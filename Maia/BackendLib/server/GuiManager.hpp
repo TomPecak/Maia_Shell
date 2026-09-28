@@ -7,8 +7,9 @@
 #include "QmlGui.hpp"
 #include "X11WindowManagerService.hpp"
 
-#include <QScxmlStateMachine>
-#include "GuiManagerStateMachine.h"
+
+
+class GuiManagerStateMachine;
 
 class GuiManager : public QObject
 {
@@ -41,5 +42,5 @@ private:
     QmlGui m_qmlGui;
     QProcess m_kwin;
     FrontendInfo m_currentFrontend;
-    GuiManagerStateMachine changeFrontendStateMachine;
+    GuiManagerStateMachine *changeFrontendStateMachine;
 };

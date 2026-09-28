@@ -2,7 +2,9 @@
 
 #include <QDBusConnectionInterface>
 #include <QDBusServiceWatcher>
+#include <QScxmlStateMachine>
 
+#include "GuiManagerStateMachine.h"
 #include "../maia_version.h"
 #include "../helper/Process.hpp"
 
@@ -12,7 +14,7 @@ GuiManager::GuiManager(QObject *parent, QGuiApplication *app, int swapIntervalOp
     : QObject(parent)
     , m_x11WindowManagerService(this)
     , m_qmlGui(this, app, swapIntervalOption)
-    , changeFrontendStateMachine(this)
+    , changeFrontendStateMachine(new GuiManagerStateMachine(this))
 {
     HOME_ENV = QString::fromUtf8(qgetenv("HOME"));
 
@@ -44,20 +46,20 @@ void GuiManager::startGui(const FrontendInfo &frontend)
             this,
             &GuiManager::handleKwinReconfigured);
 
-    changeFrontendStateMachine.start();
+    changeFrontendStateMachine->start();
 
-    changeFrontendStateMachine.connectToState(QStringLiteral("DeletingQmlObjects"), [=](bool active) {
+    changeFrontendStateMachine->connectToState(QStringLiteral("DeletingQmlObjects"), [=](bool active) {
         if (active) {
             qDebug() << "Enter state: " << "DeletingQmlObjects";
             m_qmlGui.deleteQmlEngineRootObjects();
             Q_EMIT frontendUnloaded();
-            changeFrontendStateMachine.submitEvent(QStringLiteral("qmlObjectsDeleted"));
+            changeFrontendStateMachine->submitEvent(QStringLiteral("qmlObjectsDeleted"));
         } else {
             qDebug() << "Exit state: " << "DeletingQmlObjects";
         }
     });
 
-    changeFrontendStateMachine.connectToState(QStringLiteral("ReconfiguringWindowManager"), [=](bool active) {
+    changeFrontendStateMachine->connectToState(QStringLiteral("ReconfiguringWindowManager"), [=](bool active) {
         if (active) {
             qDebug() << "Enter state: " << "ReconfiguringWindowManager";
             m_x11WindowManagerService.reconfigure();
@@ -72,7 +74,7 @@ void GuiManager::startGui(const FrontendInfo &frontend)
     //configuration file 'kwinrc' and modifying its contents.
     //For this change to take effect, kwin needs to be reloaded.
 
-    changeFrontendStateMachine.connectToState(QStringLiteral("ReconfigureWindowManagerAfterLoading"),
+    changeFrontendStateMachine->connectToState(QStringLiteral("ReconfigureWindowManagerAfterLoading"),
                                               [=](bool active) {
                                                   if (active) {
                                                       qDebug()
@@ -86,36 +88,36 @@ void GuiManager::startGui(const FrontendInfo &frontend)
                                                   }
                                               });
 
-    changeFrontendStateMachine.connectToState(QStringLiteral("EmittingFrontendChanged"), [=](bool active) {
+    changeFrontendStateMachine->connectToState(QStringLiteral("EmittingFrontendChanged"), [=](bool active) {
         if (active) {
             qDebug() << "Enter state: " << "EmittingFrontendChanged";
 
             qDebug() << "Server 9 " << __PRETTY_FUNCTION__ << " Q_EMIT frontendChanged()";
             Q_EMIT frontendChanged(m_currentFrontend.id);
 
-            changeFrontendStateMachine.submitEvent(QStringLiteral("frontendChangedEmitted"));
+            changeFrontendStateMachine->submitEvent(QStringLiteral("frontendChangedEmitted"));
         } else {
             qDebug() << "Exit state: " << "EmittingFrontendChanged";
         }
     });
 
-    changeFrontendStateMachine.connectToState(QStringLiteral("LoadingFrontend"), [=](bool active) {
+    changeFrontendStateMachine->connectToState(QStringLiteral("LoadingFrontend"), [=](bool active) {
         if (active) {
             qDebug() << "Enter state: " << "LoadingFrontend";
 
             loadFrontend();
 
-            changeFrontendStateMachine.submitEvent(QStringLiteral("frontendLoaded"));
+            changeFrontendStateMachine->submitEvent(QStringLiteral("frontendLoaded"));
         } else {
             qDebug() << "Exit state: " << "LoadingFrontend";
         }
     });
 
-    changeFrontendStateMachine.connectToState(QStringLiteral("WaitAfterLoaded"), [=](bool active) {
+    changeFrontendStateMachine->connectToState(QStringLiteral("WaitAfterLoaded"), [=](bool active) {
         if (active) {
             qDebug() << "Enter state: " << "WaitAfterLoaded";
             QTimer::singleShot(10000, [=]() {
-                changeFrontendStateMachine.submitEvent(QStringLiteral("waitingLoadDelayEnded"));
+                changeFrontendStateMachine->submitEvent(QStringLiteral("waitingLoadDelayEnded"));
             });
 
         } else {
@@ -124,14 +126,14 @@ void GuiManager::startGui(const FrontendInfo &frontend)
     });
 
     //START QML GUI, submit event that kik off state machine form idle to running state
-    qDebug() << "[STARTUP INFO] changeFrontendStateMachine.submitEvent('initialStart')";
-    changeFrontendStateMachine.submitEvent(QStringLiteral("initialStart"));
+    qDebug() << "[STARTUP INFO] changeFrontendStateMachine->submitEvent('initialStart')";
+    changeFrontendStateMachine->submitEvent(QStringLiteral("initialStart"));
 }
 
 void GuiManager::tryLoadFrontend(const FrontendInfo &frontend)
 {
     m_currentFrontend = frontend;
-    changeFrontendStateMachine.submitEvent(QStringLiteral("startFrontendChange"));
+    changeFrontendStateMachine->submitEvent(QStringLiteral("startFrontendChange"));
 }
 
 void GuiManager::uninit()
@@ -146,13 +148,13 @@ void GuiManager::uninit()
 
 void GuiManager::handleKwinReconfigured()
 {
-    qDebug() << __PRETTY_FUNCTION__ << changeFrontendStateMachine.activeStateNames();
-    if (changeFrontendStateMachine.isActive(QStringLiteral("ReconfiguringWindowManager"))) {
-        qDebug() << "changeFrontendStateMachine.submitEvent(windowManagerReconfigured);";
-        changeFrontendStateMachine.submitEvent(QStringLiteral("windowManagerReconfigured"));
-    } else if (changeFrontendStateMachine.isActive(QStringLiteral("ReconfigureWindowManagerAfterLoading"))) {
-        qDebug() << "changeFrontendStateMachine.submitEvent(reconfigured);";
-        changeFrontendStateMachine.submitEvent(QStringLiteral("reconfigured"));
+    qDebug() << __PRETTY_FUNCTION__ << changeFrontendStateMachine->activeStateNames();
+    if (changeFrontendStateMachine->isActive(QStringLiteral("ReconfiguringWindowManager"))) {
+        qDebug() << "changeFrontendStateMachine->submitEvent(windowManagerReconfigured);";
+        changeFrontendStateMachine->submitEvent(QStringLiteral("windowManagerReconfigured"));
+    } else if (changeFrontendStateMachine->isActive(QStringLiteral("ReconfigureWindowManagerAfterLoading"))) {
+        qDebug() << "changeFrontendStateMachine->submitEvent(reconfigured);";
+        changeFrontendStateMachine->submitEvent(QStringLiteral("reconfigured"));
     }
 }
 

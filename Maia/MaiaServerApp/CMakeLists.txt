@@ -8,6 +8,7 @@ set(CMAKE_AUTOMOC ON)
 include(ECMGenerateHeaders)
 
 find_package(Qt6 ${REQUIRED_QT_VERSION} REQUIRED COMPONENTS Core Quick Quick3D DBus WebEngineQuick WebSockets)
+find_package(KF6PulseAudioQt ${REQUIRED_PULSEAUDIOQT_VERSION} REQUIRED)
 
 # Generate maia_version.h file with version #definitions, file will be generated in build directories
 ecm_setup_version(${MAIA_VERSION}
@@ -51,6 +52,8 @@ target_link_libraries(appMaiaServer
     PRIVATE Qt6::Quick3D
     PUBLIC Qt6::WebEngineQuick
     PRIVATE Qt6::WebSockets
+
+    PUBLIC KF6::PulseAudioQt
 )
 
 # FIX: Prevent linker from stripping QML registration code from the static MaiaClient lib.
@@ -65,9 +68,12 @@ target_link_libraries(appMaiaServer
     PUBLIC
     -Wl,--whole-archive MaiaUI -Wl,--no-whole-archive
 )
-#target_link_libraries(appMaiaServer PRIVATE MaiaBackendplugin)
-target_link_libraries(appMaiaServer PRIVATE MaiaBackend)
 
+target_link_libraries(appMaiaServer
+    PRIVATE
+        MaiaBackend   # Cel z Twoim kodem C++ (utworzony przez qt_add_library(MaiaBackend ...))
+        MaiaBackendplugin    # Cel rejestrujący typy w QML (generowany aut. przez qt_add_qml_module: "NazwaModułu" + "plugin")
+)
 
 include(GNUInstallDirs)
 

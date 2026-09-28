@@ -28,6 +28,7 @@ find_package(KF6PulseAudioQt ${REQUIRED_PULSEAUDIOQT_VERSION} REQUIRED)
 pkg_check_modules(XCB_SHAPE REQUIRED IMPORTED_TARGET xcb-shape)
 pkg_check_modules(XCB_ICCCM REQUIRED IMPORTED_TARGET xcb-icccm)
 
+qt_add_library(${PROJECT_NAME} STATIC)
 
 # Generate cmake_config.h with CMAKE_INSTALL_PREFIX
 configure_file(
@@ -38,7 +39,6 @@ configure_file(
 qt_add_qml_module(${PROJECT_NAME}
     URI ${PROJECT_URI}
     VERSION 1.0
-STATIC
     SOURCES
     Backend.hpp
     Backend.cpp
@@ -186,7 +186,7 @@ target_link_libraries(${PROJECT_NAME}
     PUBLIC Qt6::WebEngineQuick
     PRIVATE KF6::ConfigCore
     PRIVATE KF6::WindowSystem
-    PUBLIC KF6::PulseAudioQt
+    PRIVATE KF6::PulseAudioQt
     # PkgConfig::LIBPULSE
     # PkgConfig::LIBPULSE_MAINLOOP
 
