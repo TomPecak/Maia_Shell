@@ -107,11 +107,7 @@ int main(int argc, char *argv[])
     if (modeOption == QStringLiteral("server")) {
         //SERVER
 
-        qDebug() << "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH UJ 333333333 !!!";
-
         Server server(&app, swapInterwalOption);
-
-        qDebug() << "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH UJ !!!";
 
         int retValue = app.exec();
 
@@ -133,26 +129,29 @@ int main(int argc, char *argv[])
         QQmlApplicationEngine engine;
 
 
-        // QString runType = QString::fromUtf8(qgetenv("MAIA_QTCREATOR_RUN"));
-        // QString gnomeModulePath;
-        // QString cutefishModulePath;
-        // QString xplunaModulePath;
-        // if(runType == "1"){ //Maia is running form QtCreator (dev run)
-        //     QString cmake_deploy_prefix = QString::fromStdString(std::string(CMAKE_INSTALL_PREFIX));
-        //     gnomeModulePath = cmake_deploy_prefix + QString("/frontends/Gnome/");
-        //     cutefishModulePath = cmake_deploy_prefix + QString("/frontends/Cutefish/");
-        //     xplunaModulePath = cmake_deploy_prefix + QString("/frontends/XPLuna/");
-        // }else{  //normal Maia run, form login manager (SDDM, GDM, etc)
-        //     gnomeModulePath = QString("/opt/Maia/Maia_") + QString(MAIA_VERSION_STRING) + "/frontends/Gnome/";
-        //     cutefishModulePath = QString("/opt/Maia/Maia_") + QString(MAIA_VERSION_STRING) + "/frontends/Cutefish/";
-        //     xplunaModulePath = QString("/opt/Maia/Maia_") + QString(MAIA_VERSION_STRING) + "/frontends/XPLuna/";
+        // QString basePath;
+        // QString envFrontendPath = QString::fromUtf8(qgetenv("MAIA_FRONTENDS_PATH"));
+
+        // // Ustalenie ścieżki bazowej (dev lub produkcja)
+        // if (!envFrontendPath.isEmpty()) {
+        //     basePath = envFrontendPath;
+        // } else {
+        //     basePath = QStringLiteral("/opt/Maia/Maia_") + QStringLiteral(MAIA_VERSION_STRING) + QStringLiteral("/frontends");
         // }
+
+        // // Budowanie ostatecznych ścieżek
+        // QString gnomeModulePath = basePath + QStringLiteral("/Gnome/");
+        // QString cutefishModulePath = basePath + QStringLiteral("/Cutefish/");
+        // QString xplunaModulePath = basePath + QStringLiteral("/XPLuna/");
+
+        // // Dodanie ścieżek importu do silnika QML
         // engine.addImportPath(gnomeModulePath);
         // engine.addImportPath(cutefishModulePath);
         // engine.addImportPath(xplunaModulePath);
-        // qDebug() << "[INFO] engine.addImportPath(gnomeModulePath) = " << gnomeModulePath;
-        // qDebug() << "[INFO] engine.addImportPath(cutefishModulePath) = " << cutefishModulePath;
-        // qDebug() << "[INFO] engine.addImportPath(xplunaModulePath) = " << xplunaModulePath;
+
+        // qDebug() << "[INFO] engine.addImportPath(gnomeModulePath) =" << gnomeModulePath;
+        // qDebug() << "[INFO] engine.addImportPath(cutefishModulePath) =" << cutefishModulePath;
+        // qDebug() << "[INFO] engine.addImportPath(xplunaModulePath) =" << xplunaModulePath;
 
 
         Backend backend(homePath);

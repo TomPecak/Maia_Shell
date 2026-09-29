@@ -55,7 +55,7 @@ void FrontendManagerService::activeFrontendChangeConfirmation(const QString &fro
 
 FrontendInfo FrontendManagerService::getCurrentFrontent()
 {
-    qDebug() << "[INFO] " << __PRETTY_FUNCTION__ << " frontend.name=" << m_frontends[m_activeFrontendId].name;
+    qDebug() << "[ INFO ] " << __PRETTY_FUNCTION__ << " frontend.name=" << m_frontends[m_activeFrontendId].name;
     return m_frontends[m_activeFrontendId];
 }
 
@@ -102,81 +102,79 @@ void FrontendManagerService::setActiveFrontend(const QString &frontendId)
 
 void FrontendManagerService::loadFrontends()
 {
-    qDebug() << "[STARTUP INFO] " << __PRETTY_FUNCTION__;
+    qDebug() << "[ INFO ] " << __PRETTY_FUNCTION__;
     m_frontends.clear();
 
+    // 1. Ustalenie ścieżki bazowej dla frontendów
+    QString basePath;
+    QString envFrontendPath = QString::fromUtf8(qgetenv("MAIA_FRONTENDS_PATH"));
+
+    if (!envFrontendPath.isEmpty()) {
+        // Uruchomienie deweloperskie ze wskazaną ścieżką
+        basePath = envFrontendPath;
+        qDebug() << "[ INFO ] MAIA_FRONTENDS_PATH is set. Using custom frontend path:" << basePath;
+    } else {
+        // Standardowe uruchomienie (np. przez menedżer logowania)
+        basePath = QStringLiteral("/opt/Maia/Maia_") + QStringLiteral(MAIA_VERSION_STRING) + QStringLiteral("/frontends");
+        qDebug() << "[ INFO ] Using default frontend path:" << basePath;
+    }
+
+    // ========================================================================
+    // Ubuntu 24.04
+    // ========================================================================
     FrontendInfo gnomeFrontend;
     gnomeFrontend.name = QStringLiteral("Ubuntu 24.04");
     gnomeFrontend.description = QStringLiteral("Ubuntu 24.04 like frontend");
-
-//-----------------------------------------------------------------------------
-    QString runType = QString::fromUtf8(qgetenv("MAIA_QTCREATOR_RUN"));
-
-    if(runType == QStringLiteral("1")){ //Maia is running form QtCreator (dev run)
-        QString cmake_deploy_prefix = QString::fromStdString(std::string(CMAKE_INSTALL_PREFIX));
-        gnomeFrontend.qmlFilePath = cmake_deploy_prefix + QStringLiteral("/frontends/Gnome/Main.qml");
-    }else{  //normal Maia run, form login manager (SDDM, GDM, etc)
-        gnomeFrontend.qmlFilePath = QStringLiteral("/opt/Maia/Maia_") + QStringLiteral(MAIA_VERSION_STRING) + QStringLiteral("/frontends/Gnome/Main.qml");
-    }
-//-----------------------------------------------------------------------------
-
+    gnomeFrontend.qmlFilePath = basePath + QStringLiteral("/Gnome/Main.qml");
     gnomeFrontend.id = QString::fromUtf8(
         QCryptographicHash::hash(gnomeFrontend.name.toUtf8(), QCryptographicHash::Sha1).toHex());
-    qDebug() << "[STARTUP INFO] Ubuntu 24.04 frontend id = " << gnomeFrontend.id;
+
+    qDebug() << "[STARTUP INFO] Ubuntu 24.04 frontend id =" << gnomeFrontend.id;
     m_frontends.insert(gnomeFrontend.id, gnomeFrontend);
 
-
+    // ========================================================================
+    // XP Luna
+    // ========================================================================
     FrontendInfo lunaFrontend;
     lunaFrontend.name = QStringLiteral("XP Luna");
-    lunaFrontend.description = QStringLiteral("XP Luna like frintend");
- //----------------------------------------------------
-    if(runType == QStringLiteral("1")){ //Maia is running form QtCreator (dev run)
-        QString cmake_deploy_prefix = QString::fromStdString(std::string(CMAKE_INSTALL_PREFIX));
-        lunaFrontend.qmlFilePath = cmake_deploy_prefix + QStringLiteral("/frontends/XPLuna/Main.qml");
-    }else{  //normal Maia run, form login manager (SDDM, GDM, etc)
-        lunaFrontend.qmlFilePath = QStringLiteral("/opt/Maia/Maia_") + QStringLiteral(MAIA_VERSION_STRING) + QStringLiteral("/frontends/XPLuna/Main.qml");
-    }
-//-----------------------------------------------------
+    lunaFrontend.description = QStringLiteral("XP Luna like frontend");
+    lunaFrontend.qmlFilePath = basePath + QStringLiteral("/XPLuna/Main.qml");
     lunaFrontend.id = QString::fromUtf8(
         QCryptographicHash::hash(lunaFrontend.name.toUtf8(), QCryptographicHash::Sha1).toHex());
-    qDebug() << "[STARTUP INFO] XP Luna frontend id = " << lunaFrontend.id;
+
+    qDebug() << "[STARTUP INFO] XP Luna frontend id =" << lunaFrontend.id;
     m_frontends.insert(lunaFrontend.id, lunaFrontend);
 
-
-
-
-
+    // ========================================================================
+    // CutefishOS
+    // ========================================================================
     FrontendInfo cutefishFrontend;
     cutefishFrontend.name = QStringLiteral("CutefishOS");
-    cutefishFrontend.description = QStringLiteral("CutefishOS like frintend");
-    //----------------------------------------------------
-    if(runType == QStringLiteral("1")){ //Maia is running form QtCreator (dev run)
-        QString cmake_deploy_prefix = QString::fromStdString(std::string(CMAKE_INSTALL_PREFIX));
-        cutefishFrontend.qmlFilePath = cmake_deploy_prefix + QStringLiteral("/frontends/Cutefish/Main.qml");
-    }else{  //normal Maia run, form login manager (SDDM, GDM, etc)
-        cutefishFrontend.qmlFilePath = QStringLiteral("/opt/Maia/Maia_") + QStringLiteral(MAIA_VERSION_STRING) + QStringLiteral("/frontends/Cutefish/Main.qml");
-    }
+    cutefishFrontend.description = QStringLiteral("CutefishOS like frontend");
+    cutefishFrontend.qmlFilePath = basePath + QStringLiteral("/Cutefish/Main.qml");
+
     qDebug() << "KKKKKKKKKKKKKKKUrwa cutefish qml path: " << cutefishFrontend.qmlFilePath;
-    //-----------------------------------------------------
+
     cutefishFrontend.id = QString::fromUtf8(
         QCryptographicHash::hash(cutefishFrontend.name.toUtf8(), QCryptographicHash::Sha1).toHex());
-    qDebug() << "[STARTUP INFO] CutefishOS frontend id = " << cutefishFrontend.id;
+
+    qDebug() << "[STARTUP INFO] CutefishOS frontend id =" << cutefishFrontend.id;
     m_frontends.insert(cutefishFrontend.id, cutefishFrontend);
 
-
-
-
+    // ========================================================================
+    // Aktywacja zapisanego frontendu
+    // ========================================================================
     QString savedFrontendId = readActiveFronted();
     qDebug() << "[STARTUP INFO] Readed saved frontend id=" << savedFrontendId;
 
-    // Set the active frontend: saved if it exists and is valid, otherwise default
+    // Ustaw aktywny frontend: zapisany jeśli istnieje, w przeciwnym razie domyślny
     if (!savedFrontendId.isEmpty() && m_frontends.contains(savedFrontendId)) {
         m_activeFrontendId = savedFrontendId;
     } else {
-        m_activeFrontendId = m_frontends.isEmpty() ? QStringLiteral("") : gnomeFrontend.id; // Default frontend
+        m_activeFrontendId = m_frontends.isEmpty() ? QStringLiteral("") : gnomeFrontend.id; // Domyślny
     }
 
-    // Emit signal if the active frontend is set
+    // Wyślij sygnał o zmianie
     if (!m_activeFrontendId.isEmpty()) {
         Q_EMIT activeFrontendChanged(m_activeFrontendId);
     }

@@ -110,7 +110,11 @@ sudo ./install_on_ubuntu.sh
 
 <img src="doc/simple_architecture.jpeg" width="400" alt="Maia simplified architecture">
 
+## Enviroment variables
 
+**MAIA_FRONTENDS_PATH**=/opt/Maia/Maia_0.1.0/frontends/
+**MAIA_LOG_PORT**=50001
+**MAIA_LOG_HOST**=192.168.0.129
 
 
 ## Contribution

@@ -160,7 +160,9 @@ void GuiManager::handleKwinReconfigured()
 
 void GuiManager::loadFrontend()
 {
-    qDebug() << "[INFO] " << __PRETTY_FUNCTION__;
+    qDebug() << "[ INFO ] " << __PRETTY_FUNCTION__;
+    qDebug() << "[ INFO ] Current frontend name = " << m_currentFrontend.name;
+    qDebug() << "[ INFO ] Current frontend qmlFilePath = " << m_currentFrontend.qmlFilePath;
     if (m_currentFrontend.qmlFilePath != QStringLiteral("")) {
         m_qmlGui.load(m_currentFrontend.qmlFilePath);
     } else if (m_currentFrontend.qmlUri != QStringLiteral("")) {
