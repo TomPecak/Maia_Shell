@@ -1,4 +1,4 @@
-#include "GuiManager.hpp"
+#include "FrontendLoader.hpp"
 
 #include <QDBusConnectionInterface>
 #include <QDBusServiceWatcher>
@@ -10,7 +10,7 @@
 
 static bool startKwinAndWaitForReady(QProcess &process, int timeoutMs = 15000);
 
-GuiManager::GuiManager(QObject *parent, QGuiApplication *app, int swapIntervalOption)
+FrontendLoader::FrontendLoader(QObject *parent, QGuiApplication *app, int swapIntervalOption)
     : QObject(parent)
     , m_x11WindowManagerService(this)
     , m_qmlGui(this, app, swapIntervalOption)
@@ -27,12 +27,12 @@ GuiManager::GuiManager(QObject *parent, QGuiApplication *app, int swapIntervalOp
     });
 }
 
-GuiManager::~GuiManager()
+FrontendLoader::~FrontendLoader()
 {
     qDebug() << __PRETTY_FUNCTION__;
 }
 
-void GuiManager::startGui(const FrontendInfo &frontend)
+void FrontendLoader::startGui(const FrontendInfo &frontend)
 {
     qDebug() << "[STARTUP INFO] " << __PRETTY_FUNCTION__ << " frontend.name=" << frontend.name;
     //START KWIN
@@ -44,7 +44,7 @@ void GuiManager::startGui(const FrontendInfo &frontend)
     connect(&m_x11WindowManagerService,
             &WindowManagerX11Service::reconfigureFinished,
             this,
-            &GuiManager::handleKwinReconfigured);
+            &FrontendLoader::handleKwinReconfigured);
 
     changeFrontendStateMachine->start();
 
@@ -130,13 +130,13 @@ void GuiManager::startGui(const FrontendInfo &frontend)
     changeFrontendStateMachine->submitEvent(QStringLiteral("initialStart"));
 }
 
-void GuiManager::tryLoadFrontend(const FrontendInfo &frontend)
+void FrontendLoader::tryLoadFrontend(const FrontendInfo &frontend)
 {
     m_currentFrontend = frontend;
     changeFrontendStateMachine->submitEvent(QStringLiteral("startFrontendChange"));
 }
 
-void GuiManager::uninit()
+void FrontendLoader::uninit()
 {
     m_qmlGui.deleteQmlEngineRootObjects();
 
@@ -146,7 +146,7 @@ void GuiManager::uninit()
     }
 }
 
-void GuiManager::handleKwinReconfigured()
+void FrontendLoader::handleKwinReconfigured()
 {
     qDebug() << __PRETTY_FUNCTION__ << changeFrontendStateMachine->activeStateNames();
     if (changeFrontendStateMachine->isActive(QStringLiteral("ReconfiguringWindowManager"))) {
@@ -158,7 +158,7 @@ void GuiManager::handleKwinReconfigured()
     }
 }
 
-void GuiManager::loadFrontend()
+void FrontendLoader::loadFrontend()
 {
     qDebug() << "[ INFO ] " << __PRETTY_FUNCTION__;
     qDebug() << "[ INFO ] Current frontend name = " << m_currentFrontend.name;

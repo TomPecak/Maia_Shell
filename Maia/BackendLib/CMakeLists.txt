@@ -87,8 +87,8 @@ qt_add_qml_module(${PROJECT_NAME}
     SOURCES MWindowManagerX11.cpp
     SOURCES server/QmlGui.hpp
     SOURCES server/QmlGui.cpp
-    SOURCES server/GuiManager.hpp
-    SOURCES server/GuiManager.cpp
+    SOURCES server/FrontendLoader.hpp
+    SOURCES server/FrontendLoader.cpp
     SOURCES client/private/ProxyWindowController.hpp
     SOURCES client/private/ProxyWindowController.cpp
     SOURCES MProxyWindow.hpp

@@ -28,7 +28,7 @@ Server::Server(QGuiApplication *app, int swapIntervalOption)
             qOverload<const FrontendInfo & >(&Server::handleFrontendChangeRequest));
 
     connect(&m_guiManager,
-            &GuiManager::frontendChanged,
+            &FrontendLoader::frontendChanged,
             this,
             &Server::handleGuiManagerFrontendChanged);
 

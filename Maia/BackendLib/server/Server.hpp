@@ -6,7 +6,7 @@
 
 #include "FavoriteAppsService.hpp"
 #include "FrontendManagerService.hpp"
-#include "GuiManager.hpp"
+#include "FrontendLoader.hpp"
 #include "SessionService.hpp"
 #include "LocaleSettingsService.hpp"
 
@@ -33,5 +33,5 @@ private:
     FavoriteAppsService m_favoriteAppsService;
     LocaleSettingsService m_localeSettingsService;
 
-    GuiManager m_guiManager;
+    FrontendLoader m_guiManager;
 };

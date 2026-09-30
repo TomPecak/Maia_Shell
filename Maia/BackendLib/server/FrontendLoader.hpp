@@ -11,14 +11,14 @@
 
 class GuiManagerStateMachine;
 
-class GuiManager : public QObject
+class FrontendLoader : public QObject
 {
     Q_OBJECT
 public:
-    explicit GuiManager(QObject *parent = nullptr,
+    explicit FrontendLoader(QObject *parent = nullptr,
                         QGuiApplication *app = nullptr,
                         int swapIntervalOption = 0);
-    ~GuiManager();
+    ~FrontendLoader();
 
     void startGui(const FrontendInfo & frontend);
 
