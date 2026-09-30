@@ -181,6 +181,7 @@ cd Maia_Shell
 mkdir build
 cd build
 cmake -G Ninja ..
+(cmake -G Ninja -DCMAKE_INSTALL_PREFIX=$HOME/Maia_deploy/Maia_0.2.0 ..)
 cmake --build .
 sudo cmake --install .
 ```
