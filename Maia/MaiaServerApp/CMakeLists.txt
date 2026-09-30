@@ -83,14 +83,6 @@ install(TARGETS appMaiaServer
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
-# Generowanie skryptu do deployowania aplikacji Qt Quick
-qt_generate_deploy_qml_app_script(
-    TARGET appMaiaServer
-    OUTPUT_SCRIPT deploy_script
-)
-
-# Instalacja skryptu (gdzie skrypt będzie uruchomiony podczas instalacji)
-install(SCRIPT ${deploy_script})
 
 # Deploy maia_version-desktop.desktop file
 install(FILES ${DEPLOY_FILES}

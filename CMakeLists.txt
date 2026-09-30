@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 
 # --- Definicja projektu ---
-set(MAIA_VERSION 0.1.0)
+set(MAIA_VERSION 0.2.0)
 project(Maia VERSION ${MAIA_VERSION} LANGUAGES CXX)
 
 # --- Ustawienia C++ ---
