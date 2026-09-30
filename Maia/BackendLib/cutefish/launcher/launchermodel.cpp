@@ -143,7 +143,7 @@ void LauncherModel::search(const QString &key)
     Q_EMIT layoutChanged();
 }
 
-void LauncherModel::sendToDock(const QString &key)
+void LauncherModel::sendToDock(const QString &/*key*/)
 {
     // int index = findById(key);
 

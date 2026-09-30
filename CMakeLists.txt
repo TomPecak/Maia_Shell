@@ -67,14 +67,7 @@ add_subdirectory(Maia/BackendLib)
 add_subdirectory(Maia/ClientLib)
 add_subdirectory(Maia/UILib)
 
-# gnome frontend qml module
-add_subdirectory(Maia/GnomeMod)
 
-# xp luna frontend qml module
-add_subdirectory(Maia/XPLunaMod)
-
-# cutefish frontend qml module
-add_subdirectory(Maia/CutefishMod)
 
 # logger & server applications
 add_subdirectory(Maia/LoggerApp)
@@ -82,6 +75,11 @@ add_subdirectory(Maia/MaiaServerApp)
 
 # scripts that will be copied while deploy
 add_subdirectory(Maia/DeployFiles)
+
+# FRONTENDS
+add_subdirectory(Maia/frontends/Gnome)
+add_subdirectory(Maia/frontends/XPLuna)
+add_subdirectory(Maia/frontends/Cutefish)
 
 # ==============================================================================
 # 5. DOKUMENTACJA I PODSUMOWANIE
