@@ -215,6 +215,8 @@ MAIA_FRONTENDS_PATH=/opt/Maia/Maia_0.1.0/frontends/
 GTK_USE_PORTAL=0
 ```
 
+//TODO update config image
+
 <img src="doc/upgrade_qt_configure_run_settings.png" width="400" alt="Configure Run Settings">
 
 
