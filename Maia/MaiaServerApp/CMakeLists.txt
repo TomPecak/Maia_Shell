@@ -17,8 +17,14 @@ ecm_setup_version(${MAIA_VERSION}
     PACKAGE_VERSION_FILE "${CMAKE_CURRENT_BINARY_DIR}/MaiaConfigVersion.cmake"
     SOVERSION ${PROJECT_VERSION_MAJOR})
 
-set(DEPLOY_FILES
-    "maia_0.1.0-desktop.desktop"
+# Definiujemy dynamiczną nazwę dla docelowego pliku (np. maia_0.2.0-desktop.desktop)
+set(DESKTOP_FILE_NAME "maia_${MAIA_VERSION}-desktop.desktop")
+
+# Generujemy plik na podstawie szablonu
+configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/maia-desktop.desktop.in
+    ${CMAKE_CURRENT_BINARY_DIR}/${DESKTOP_FILE_NAME}
+    @ONLY
 )
 
 qt_standard_project_setup(REQUIRES ${REQUIRED_QT_VERSION})
@@ -84,8 +90,8 @@ install(TARGETS appMaiaServer
 )
 
 
-# Deploy maia_version-desktop.desktop file
-install(FILES ${DEPLOY_FILES}
+# Deploy maia_version-desktop.desktop file (wygenerowany dynamicznie)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${DESKTOP_FILE_NAME}
         DESTINATION "${CMAKE_INSTALL_PREFIX}/bin"
         PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
 )

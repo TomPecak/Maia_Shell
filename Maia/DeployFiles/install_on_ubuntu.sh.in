@@ -1,12 +1,18 @@
 #!/bin/bash
 
+# Zdefiniowana wersja wstrzyknięta przez CMake
+VERSION="@PROJECT_VERSION@"
+MAIA_DIR_NAME="Maia_${VERSION}"
+MAIA_OPT_PATH="/opt/Maia/${MAIA_DIR_NAME}"
+
 # Update package lists
 sudo apt update
 
 # Install kwin-x11
 
 # Ubuntu 24.04
-sudo apt install --no-install-recommends --no-install-suggests kwin-x11  #kwin
+#kwin
+sudo apt install --no-install-recommends --no-install-suggests kwin-x11
 # kwin aurorae engine libraries
 sudo apt install --no-install-recommends --no-install-suggests kwin-common
 # kwin aurorae qml-s data files
@@ -17,32 +23,29 @@ sudo apt install --no-install-recommends --no-install-suggests kwin-addons
 # additional dependiences for kwin
 sudo apt install libkf5globalaccel-bin breeze libkf5kcmutils5
 
-
 # INSTALL MAIA
 
 # Remove existing Maia directory if it exists
-sudo rm -v -r "/opt/Maia/Maia_0.1.0"
+sudo rm -v -r "${MAIA_OPT_PATH}"
 
 # Create /opt/Maia dir
 sudo mkdir -p "/opt/Maia"
 
 # Copy "Maia_version to /opt/Maia/Maia_version
-sudo cp -v -r "$(dirname "$0")/Maia_0.1.0" "/opt/Maia/Maia_0.1.0"
+sudo cp -v -r "$(dirname "$0")/${MAIA_DIR_NAME}" "${MAIA_OPT_PATH}"
 
 # Set executable permissions for specific scripts
-sudo chmod +x "/opt/Maia/Maia_0.1.0/bin/run.sh"
-sudo chmod +x "/opt/Maia/Maia_0.1.0/bin/run_logger.sh"
-sudo chmod +x "/opt/Maia/Maia_0.1.0/bin/run_maia_in_xephyr.sh"
+sudo chmod +x "${MAIA_OPT_PATH}/bin/run.sh"
+sudo chmod +x "${MAIA_OPT_PATH}/bin/run_logger.sh"
+sudo chmod +x "${MAIA_OPT_PATH}/bin/run_maia_in_xephyr.sh"
+
 
 # Set read, write, and execute permissions for all users on the Maia directory and its contents
 # sudo chmod -R 777 "/opt/Maia"
 
 # Copy maia_version-desktop.desktop file to /usr/share/xsessions
-sudo cp -v "$(dirname "$0")/Maia_0.1.0/bin/maia_0.1.0-desktop.desktop" "/usr/share/xsessions/"
-
-
-
-
+# Upewnij się, że plik desktop też ma poprawną nazwę podczas kopiowania deploja!
+sudo cp -v "$(dirname "$0")/${MAIA_DIR_NAME}/bin/maia_${VERSION}-desktop.desktop" "/usr/share/xsessions/"
 
 
 ## Check for available updates (equivalent to apt update)
@@ -52,5 +55,3 @@ sudo cp -v "$(dirname "$0")/Maia_0.1.0/bin/maia_0.1.0-desktop.desktop" "/usr/sha
 #sudo dnf install --setopt=install_weak_deps=False kwin-common
 ## sudo dnf install --setopt=install_weak_deps=False kwin-data - unavailable
 ## sudo dnf install --setopt=install_weak_deps=False kwin-addons - unavailable
-
-
