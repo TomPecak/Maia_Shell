@@ -39,7 +39,7 @@ sudo mkdir -p "/opt/Maia"
 sudo cp -v -r "$(dirname "$0")/${MAIA_DIR_NAME}" "${MAIA_OPT_PATH}"
 
 # Set executable permissions for specific scripts
-sudo chmod +x "${MAIA_OPT_PATH}/bin/run.sh"
+sudo chmod +x "${MAIA_OPT_PATH}/bin/run_maia_xsession.sh"
 sudo chmod +x "${MAIA_OPT_PATH}/bin/run_logger.sh"
 sudo chmod +x "${MAIA_OPT_PATH}/bin/run_maia_in_xephyr.sh"
 

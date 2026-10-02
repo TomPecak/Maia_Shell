@@ -1,0 +1,56 @@
+#!/bin/bash
+
+# Zdefiniowana wersja wstrzyknięta przez CMake
+VERSION="@PROJECT_VERSION@"
+MAIA_DIR_NAME="Maia_${VERSION}"
+MAIA_OPT_PATH="/opt/Maia/${MAIA_DIR_NAME}"
+
+# Logujemy wszystko z sesji do katalogu domowego aktualnego użytkownika
+exec > "$HOME/maia_xsession.log" 2>&1
+
+echo "--- START Maia Shell (wersja ${VERSION}) ---"
+
+# 1. Mówimy usługom KDE/KWin, że jesteśmy w środowisku akceptującym ich usługi
+export XDG_CURRENT_DESKTOP=KDE
+export KDE_FULL_SESSION=true
+export GTK_USE_PORTAL=0
+export QT_DEBUG_PLUGINS=1
+
+# 3. WSTRZYKNIĘCIE ZMIENNYCH DO D-BUS (Kluczowe dla usług w tle!)
+# Informujemy procesy systemowe, na jakim ekranie i w jakim środowisku działamy.
+# Dzięki temu KWin będzie w stanie poprawnie wywołać 'kglobalaccel' przez D-Busa.
+if command -v dbus-update-activation-environment >/dev/null 2>&1; then
+    dbus-update-activation-environment --systemd DISPLAY XAUTHORITY XDG_CURRENT_DESKTOP KDE_FULL_SESSION
+fi
+
+
+# 3. RĘCZNE URUCHOMIENIE DEMONA SKRÓTÓW (Ominięcie błędu KWin D-Bus Timeout)
+# Uruchamiamy go w naszym wyczyszczonym środowisku, więc już nie zrzuci pamięci.
+# echo "Ręczne uruchamianie kglobalaccel5..."
+# /usr/lib/x86_64-linux-gnu/libexec/kglobalacceld &
+# sleep 2 # Dajemy mu czas na zarejestrowanie się w D-Bus
+
+echo "Uruchamianie usługi kglobalacceld przez systemd..."
+systemctl --user start plasma-kglobalaccel.service &
+sleep 2
+
+unset QT_DEBUG_PLUGINS
+
+echo "Uruchamianie serwera Maia z lokalizacji: ${MAIA_OPT_PATH}..."
+
+# 3. UWAGA: Przypisujemy LD_LIBRARY_PATH bezpośrednio przy komendzie, aby
+# nie "zatruć" reszty środowiska naszymi bibliotekami
+export MAIA_LOG_FILE="$HOME/maia_server.log"
+export MAIA_LOG_PORT=50001
+export MAIA_LOG_HOST=127.0.0.1
+
+# Ścieżki bazują na dynamicznie wygenerowanym MAIA_OPT_PATH
+#env LD_LIBRARY_PATH="${MAIA_OPT_PATH}/lib" "${MAIA_OPT_PATH}/bin/appMaiaServer"
+
+
+# Jeśli Maia ma własne moduły (np. C++ .so, które nie są systemowe), odkomentuj poniższą linię:
+# export LD_LIBRARY_PATH="${MAIA_OPT_PATH}/lib"
+# Uruchamiamy bezpośrednio
+env -u QT_QPA_PLATFORMTHEME \
+    -u QT_PLUGIN_PATH \
+    "${MAIA_OPT_PATH}/bin/appMaiaServer"

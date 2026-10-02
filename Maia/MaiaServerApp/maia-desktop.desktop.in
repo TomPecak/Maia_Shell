@@ -4,8 +4,15 @@
 #Exec=env MAIA_LOG_PORT=50001 MAIA_LOG_HOST=127.0.0.1 LD_LIBRARY_PATH=/opt/Maia/Maia_@MAIA_VERSION@/lib GTK_USE_PORTAL=0 /opt/Maia/Maia_@MAIA_VERSION@/bin/appMaiaServer
 #Type=Application
 
+#[Desktop Entry]
+#Name=Maia @MAIA_VERSION@
+#Comment=Desktop Environment using Qt
+#Exec=sh -c "env MAIA_LOG_FILE=$HOME/maia_server.log MAIA_LOG_PORT=50001 MAIA_LOG_HOST=127.0.0.1 LD_LIBRARY_PATH=/opt/Maia/Maia_@MAIA_VERSION@/lib GTK_USE_PORTAL=0 /opt/Maia/Maia_@MAIA_VERSION@/bin/appMaiaServer"
+#Type=Application
+
 [Desktop Entry]
 Name=Maia @MAIA_VERSION@
 Comment=Desktop Environment using Qt
-Exec=sh -c "env MAIA_LOG_FILE=$HOME/maia_server.log MAIA_LOG_PORT=50001 MAIA_LOG_HOST=127.0.0.1 LD_LIBRARY_PATH=/opt/Maia/Maia_@MAIA_VERSION@/lib GTK_USE_PORTAL=0 /opt/Maia/Maia_@MAIA_VERSION@/bin/appMaiaServer"
+Exec=/opt/Maia/Maia_@MAIA_VERSION@/bin/run_maia_xsession.sh
 Type=Application
+DesktopNames=Maia
