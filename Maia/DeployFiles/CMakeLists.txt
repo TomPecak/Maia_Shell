@@ -22,6 +22,7 @@ target_sources(DeployScripts
     PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/install_on_ubuntu.sh
 )
 
+
 # Install the RUN_SCRIPTS to the specified directory under CMAKE_INSTALL_PREFIX
 install(FILES ${RUN_SCRIPTS}
         DESTINATION "${CMAKE_INSTALL_PREFIX}/bin"

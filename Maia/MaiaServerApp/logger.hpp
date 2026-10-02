@@ -8,6 +8,8 @@
 #include <QString>
 #include <QtMessageHandler>
 #include <QQueue>
+#include <QFile>
+#include <memory>
 
 class Logger : public QObject
 {
@@ -19,8 +21,10 @@ public:
 
     void run();
     void stop();
-
     void uninit();
+
+    // Zmienione: Funkcja wywoływana asynchronicznie (Thread-safe) do wysyłania przez sieć
+    Q_INVOKABLE void processQueuedLogs();
 
 private Q_SLOTS:
     void onSocketConnected();
@@ -35,9 +39,9 @@ private:
     void init();
     void setOriginalHandler(QtMessageHandler handler);
     void connectToServer(const QString &serverUrl);
-    void sendLog(const QString message);
     QString constructServerUrl();
     void sendBufferedLogs();
+    void setupFileLogging(); // Zmienione: nowa metoda do plików
 
 private:
     QtMessageHandler originalHandler = nullptr;
@@ -49,7 +53,10 @@ private:
     QElapsedTimer timer;
     qint64 lastLogTime = 0;
 
-    //buffer
+    // Plik do logowania
+    std::unique_ptr<QFile> m_logFile;
+
+    // Bufor logów dla WebSocketa
     QQueue<QString> m_logBuffer;
     const int MAX_BUFFER_SIZE = 2048;
 };

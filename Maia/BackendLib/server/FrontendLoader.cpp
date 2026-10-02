@@ -8,7 +8,7 @@
 #include "../maia_version.h"
 #include "../helper/Process.hpp"
 
-static bool startKwinAndWaitForReady(QProcess &process, int timeoutMs = 15000);
+static bool startKwinAndWaitForReady(QProcess &process, int timeoutMs = 30000);
 
 FrontendLoader::FrontendLoader(QObject *parent, QGuiApplication *app, int swapIntervalOption)
     : QObject(parent)
@@ -172,6 +172,9 @@ void FrontendLoader::loadFrontend()
 
 bool startKwinAndWaitForReady(QProcess &process, int timeoutMs)
 {
+
+    qDebug() << "[ INFO ]  Start Kwin and wait for ready for " << timeoutMs << "ms.";
+
 #warning "This code should be modified; it should be handled in a state machine."
 
     // Check if KWin is already running

@@ -21,7 +21,11 @@ sudo apt install --no-install-recommends --no-install-suggests kwin-addons
 
 # Ubuntu 24.10
 # additional dependiences for kwin
-sudo apt install libkf5globalaccel-bin breeze libkf5kcmutils5
+# sudo apt install libkf5globalaccel-bin breeze libkf5kcmutils5
+
+# Ubnunt 26.04
+sudo apt install kglobalacceld breeze libkf6kcmutils-bin
+
 
 # INSTALL MAIA
 

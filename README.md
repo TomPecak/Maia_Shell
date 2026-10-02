@@ -212,7 +212,8 @@ Xephyr :1 -screen 1280x720 -ac &
 DISPLAY=:1
 DBUS_SESSION_BUS_ADDRESS=unix:path=/tmp/maia-dev-dbus-1.sock
 MAIA_LOG_PORT=50001
-MAIA_LOG_HOST=192.168.0.129
+MAIA_LOG_HOST=127.0.0.1
+MAIA_LOG_FILE=$HOME/maia.log
 MAIA_FRONTENDS_PATH=%{sourceDir}/Maia/frontends
 GTK_USE_PORTAL=0
 ```
