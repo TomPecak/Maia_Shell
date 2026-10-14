@@ -19,6 +19,10 @@ fi
 # kwin (-y option automatically confirms the installation)
 sudo apt install -y --no-install-recommends --no-install-suggests kwin-wayland
 sudo apt install -y --no-install-recommends --no-install-suggests xwayland
+# Qt Wayland platform plugin with shell integrations (xdg-shell). Without it Qt applications
+# started in the session (QT_QPA_PLATFORM="wayland;xcb") cannot run natively on Wayland
+# and fall back to Xwayland. Required later when Maia itself switches to QT_QPA_PLATFORM=wayland.
+sudo apt install -y --no-install-recommends --no-install-suggests qt6-wayland
 # kwin aurorae engine libraries
 sudo apt install -y --no-install-recommends --no-install-suggests kwin-common
 # kwin aurorae qml-s data files
