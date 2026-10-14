@@ -97,9 +97,16 @@ echo "Uruchamianie zagnieżdżonego kwin_wayland (${MAIA_NESTED_WIDTH:-1280}x${M
 # dbus-run-session: osobna magistrala D-Bus, dzięki czemu org.kde.KWin i org.maia.*
 # z sesji deweloperskiej nie kolidują z główną sesją.
 # WAYLAND_DISPLAY/DISPLAY z bieżącej sesji zostają - KWin otworzy się jako okno.
-exec dbus-run-session -- kwin_wayland \
+dbus-run-session -- kwin_wayland \
     --width "${MAIA_NESTED_WIDTH:-1280}" \
     --height "${MAIA_NESTED_HEIGHT:-720}" \
     --socket "${MAIA_NESTED_SOCKET:-wayland-maia-dev}" \
     --xwayland \
-    --exit-with-session="${SCRIPT_PATH}"
+    --exit-with-session="${SCRIPT_PATH}" &
+DBUS_RUN_SESSION_PID=$!
+
+# dbus-run-session nie przekazuje SIGTERM dalej, więc zatrzymanie samego skryptu
+# (Stop w Qt Creatorze, kill, timeout) zostawiłoby KWina i Maię w tle.
+# Zamykamy KWina jawnie - on z kolei kończy Maię i Xwayland.
+trap 'pkill -TERM -P "${DBUS_RUN_SESSION_PID}"; wait "${DBUS_RUN_SESSION_PID}"' INT TERM
+wait "${DBUS_RUN_SESSION_PID}"
