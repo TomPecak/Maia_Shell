@@ -1,14 +1,11 @@
 #include "FrontendLoader.hpp"
 
 #include <QDBusConnectionInterface>
-#include <QDBusServiceWatcher>
 #include <QScxmlStateMachine>
 
 #include "GuiManagerStateMachine.h"
-#include "../maia_version.h"
-#include "../helper/Process.hpp"
 
-static bool startKwinAndWaitForReady(QProcess &process, int timeoutMs = 30000);
+static bool verifyRunningUnderKwinWayland();
 
 FrontendLoader::FrontendLoader(QObject *parent, QGuiApplication *app, int swapIntervalOption)
     : QObject(parent)
@@ -17,14 +14,6 @@ FrontendLoader::FrontendLoader(QObject *parent, QGuiApplication *app, int swapIn
     , changeFrontendStateMachine(new GuiManagerStateMachine(this))
 {
     HOME_ENV = QString::fromUtf8(qgetenv("HOME"));
-
-    connect(&m_kwin, &QProcess::readyReadStandardOutput, [&]() {
-        qDebug() << "[INFO KWIN] " << m_kwin.readAllStandardOutput();
-    });
-
-    connect(&m_kwin, &QProcess::readyReadStandardError, [&]() {
-        qDebug() << "[ERROR KWIN] " << m_kwin.readAllStandardError();
-    });
 }
 
 FrontendLoader::~FrontendLoader()
@@ -35,8 +24,8 @@ FrontendLoader::~FrontendLoader()
 void FrontendLoader::startGui(const FrontendInfo &frontend)
 {
     qDebug() << "[STARTUP INFO] " << __PRETTY_FUNCTION__ << " frontend.name=" << frontend.name;
-    //START KWIN
-    startKwinAndWaitForReady(m_kwin);
+    //Maia does not start KWin, kwin_wayland starts Maia, check that we are really running under it
+    verifyRunningUnderKwinWayland();
 
     m_qmlGui.initQmlEngine();
     m_currentFrontend = frontend;
@@ -139,11 +128,6 @@ void FrontendLoader::tryLoadFrontend(const FrontendInfo &frontend)
 void FrontendLoader::uninit()
 {
     m_qmlGui.deleteQmlEngineRootObjects();
-
-    if (m_kwin.state() != QProcess::NotRunning) {
-        m_kwin.terminate();
-        m_kwin.waitForFinished();
-    }
 }
 
 void FrontendLoader::handleKwinReconfigured()
@@ -170,85 +154,32 @@ void FrontendLoader::loadFrontend()
     }
 }
 
-bool startKwinAndWaitForReady(QProcess &process, int timeoutMs)
+bool verifyRunningUnderKwinWayland()
 {
+    // Since the X11 session was dropped, Maia no longer starts the window manager.
+    // Maia is started by kwin_wayland (--exit-with-session in run_maia_wayland.sh
+    // or run_maia_nested_wayland.sh), so KWin must already be running at this point.
+    // Maia itself may still run as an X11 client through Xwayland (QT_QPA_PLATFORM=xcb),
+    // but WAYLAND_DISPLAY is always inherited from kwin_wayland.
+    bool ok = true;
 
-    qDebug() << "[ INFO ]  Start Kwin and wait for ready for " << timeoutMs << "ms.";
-
-#warning "This code should be modified; it should be handled in a state machine."
-
-    // Check if KWin is already running
-    QDBusConnection sessionBus = QDBusConnection::sessionBus();
-    if (sessionBus.interface()->isServiceRegistered(QStringLiteral("org.kde.KWin"))) {
-        qDebug() << "[ERROR] KWin is already running, not starting a new process.";
-        return true;
+    if (qEnvironmentVariableIsEmpty("WAYLAND_DISPLAY")) {
+        qDebug() << "[STARTUP ERROR] WAYLAND_DISPLAY is not set. Maia must be started by kwin_wayland "
+                    "(run_maia_wayland.sh or run_maia_nested_wayland.sh).";
+        ok = false;
     }
 
-    qDebug() << "Starting kwin process...";
-
-    //Create and start a timer to measure time
-    QElapsedTimer startupTimer;
-    startupTimer.start();
-
-    // Set the environment as before
-    // Why do we filter environment variables? Let's assume Maia is compiled with different libraries than KWin in the target system.
-    // If LD_LIBRARY_PATH points to Maia's library path, KWin will link to Maia's libraries instead of the system libraries.
-    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
-
-    QString homePath = QString::fromUtf8(qgetenv("HOME"));
-
-    filterProcessEnvironment(env, QStringLiteral("/opt/Maia/Maia_") + QStringLiteral(MAIA_VERSION_STRING) + QStringLiteral("/lib"));
-    process.setProcessEnvironment(env);
-
-    // Start the process
-    process.start(QStringLiteral("kwin_x11")); // or "kwin_wayland" depending on the session
-
-    if (!process.waitForStarted(5000)) {
-        qDebug() << "[ERROR] Failed to start kwin process! Error:" << process.errorString();
-        return false;
+    QDBusConnectionInterface *busInterface = QDBusConnection::sessionBus().interface();
+    if (!busInterface || !busInterface->isServiceRegistered(QStringLiteral("org.kde.KWin"))) {
+        qDebug() << "[STARTUP ERROR] KWin D-Bus service 'org.kde.KWin' is not registered on the session bus. "
+                    "Window manager reconfiguration and KWin effects will not work.";
+        ok = false;
     }
 
-    qDebug() << "[STARTUP INFO] KWin process started. Waiting for D-Bus service registration "
-                "'org.kde.KWin'...";
-
-    // Use QDBusServiceWatcher to wait for readiness
-    QDBusServiceWatcher watcher(QStringLiteral("org.kde.KWin"),
-                                sessionBus,
-                                QDBusServiceWatcher::WatchForRegistration);
-
-    // Create an event loop to wait for the signal without blocking everything
-    QEventLoop loop;
-
-    // Connect the service registration signal to exit the event loop
-    QObject::connect(&watcher, &QDBusServiceWatcher::serviceRegistered, &loop, &QEventLoop::quit);
-
-    // Set a timeout to avoid waiting indefinitely
-    QTimer timeoutTimer; // Renamed for clarity
-    timeoutTimer.setSingleShot(true);
-    QObject::connect(&timeoutTimer, &QTimer::timeout, &loop, &QEventLoop::quit);
-    timeoutTimer.start(timeoutMs);
-
-    // Run the event loop. It will exit when the service registers or the timeout expires.
-    loop.exec();
-
-    // Check why we exited the loop
-    if (timeoutTimer.isActive()) {
-        // Timer is still active, meaning the watcher's signal ended the loop
-        timeoutTimer.stop();
-
-        // Get and display the elapsed time
-        qint64 elapsedMs = startupTimer.elapsed();
-        qDebug().nospace() << "[STARTUP INFO] KWin is ready (D-Bus service registered). "
-                              "Startup took: "
-                           << elapsedMs << " ms.";
-
-        return true;
-    } else {
-        // Timer expired
-        qDebug() << "[STARTUP ERROR] Timeout! KWin did not register its D-Bus service within "
-                 << timeoutMs << "ms.";
-process.terminate(); // Terminate the process, which likely hung
-        process.waitForFinished(1000);
-        return false;
+    if (ok) {
+        qDebug() << "[STARTUP INFO] Running under kwin_wayland, WAYLAND_DISPLAY="
+                 << qgetenv("WAYLAND_DISPLAY") << " platform=" << QGuiApplication::platformName();
     }
+
+    return ok;
 }

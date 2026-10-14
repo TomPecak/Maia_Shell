@@ -1,7 +1,6 @@
 #pragma once
 
 #include <QObject>
-#include <QProcess>
 
 #include "FrontendInfo.hpp"
 #include "QmlGui.hpp"
@@ -40,7 +39,6 @@ private:
     QString HOME_ENV;
     WindowManagerX11Service m_x11WindowManagerService;
     QmlGui m_qmlGui;
-    QProcess m_kwin;
     FrontendInfo m_currentFrontend;
     GuiManagerStateMachine *changeFrontendStateMachine;
 };
