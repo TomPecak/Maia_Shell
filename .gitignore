@@ -1,5 +1,5 @@
 build/
-
+build_ninja/
 # C++ objects and libs
 *.slo
 *.lo

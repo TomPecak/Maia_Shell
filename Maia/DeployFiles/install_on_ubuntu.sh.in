@@ -70,14 +70,16 @@ sudo chmod +x "${MAIA_OPT_PATH}/bin/run_maia_in_xephyr.sh"
 sudo chmod -R 777 "/opt/Maia"
 
 
-# Create xsessions directory (the -p parameter ensures no error is thrown if the directory already exists)
+# COPY XSESSION STARTUP DESKTOP FILE
 sudo mkdir -p "/usr/share/xsessions"
-
-# Copy maia_version-desktop.desktop file to /usr/share/xsessions
-sudo cp -v "$(dirname "$0")/${MAIA_DIR_NAME}/bin/maia_${VERSION}-desktop.desktop" "/usr/share/xsessions/"
-
-# Grant full read, write, and modify permissions for the .desktop file to all users
+sudo cp -v "$(dirname "$0")/${MAIA_DIR_NAME}/bin/maia_${VERSION}-xsession.desktop" "/usr/share/xsessions/"
 sudo chmod 777 "/usr/share/xsessions/maia_${VERSION}-desktop.desktop"
+
+# COPY WAYLAND STARTUP DESKTOP FILE
+sudo mkdir -p "/usr/share/wayland-sessions"
+# Używamy osobnego, wygenerowanego pliku dla Wayland!
+sudo cp -v "$(dirname "$0")/${MAIA_DIR_NAME}/bin/maia_${VERSION}-wayland.desktop" "/usr/share/wayland-sessions/"
+sudo chmod 777 "/usr/share/wayland-sessions/maia_${VERSION}-wayland.desktop"
 
 
 ## Check for available updates (equivalent to apt update)

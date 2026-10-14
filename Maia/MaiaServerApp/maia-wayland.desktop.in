@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=Maia @MAIA_VERSION@
+Comment=Desktop Environment using Qt
+Exec=/opt/Maia/Maia_@MAIA_VERSION@/bin/run_maia_wayland.sh
+Type=Application
+DesktopNames=Maia

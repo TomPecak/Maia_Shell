@@ -17,13 +17,30 @@ ecm_setup_version(${MAIA_VERSION}
     PACKAGE_VERSION_FILE "${CMAKE_CURRENT_BINARY_DIR}/MaiaConfigVersion.cmake"
     SOVERSION ${PROJECT_VERSION_MAJOR})
 
-# Definiujemy dynamiczną nazwę dla docelowego pliku (np. maia_0.2.0-desktop.desktop)
-set(DESKTOP_FILE_NAME "maia_${MAIA_VERSION}-desktop.desktop")
 
-# Generujemy plik na podstawie szablonu
+
+add_custom_target(DesktopFiles)
+
+target_sources(DesktopFiles
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/maia-xsession.desktop.in
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/maia-wayland.desktop.in
+)
+
+# Definiujemy dynamiczną nazwę dla docelowego pliku (np. maia_0.2.0-xsession.desktop)
+set(XSESSION_FILE_NAME "maia_${MAIA_VERSION}-xsession.desktop")
+set(WAYLAND_FILE_NAME "maia_${MAIA_VERSION}-wayland.desktop")
+
+# Generujemy plik XSESSION na podstawie szablonu
 configure_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/maia-desktop.desktop.in
-    ${CMAKE_CURRENT_BINARY_DIR}/${DESKTOP_FILE_NAME}
+    ${CMAKE_CURRENT_SOURCE_DIR}/maia-xsession.desktop.in
+    ${CMAKE_CURRENT_BINARY_DIR}/${XSESSION_FILE_NAME}
+    @ONLY
+)
+
+# Generujemy plik WAYLAND na podstawie szablonu
+configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/maia-wayland.desktop.in
+    ${CMAKE_CURRENT_BINARY_DIR}/${WAYLAND_FILE_NAME}
     @ONLY
 )
 
@@ -90,8 +107,12 @@ install(TARGETS appMaiaServer
 )
 
 
-# Deploy maia_version-desktop.desktop file (wygenerowany dynamicznie)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${DESKTOP_FILE_NAME}
+
+# Deploy maia_version-xsession.desktop file (wygenerowany dynamicznie)
+# Deploy maia_version-wayland.desktop file (wygenerowany dynamicznie)
+install(FILES
+        ${CMAKE_CURRENT_BINARY_DIR}/${XSESSION_FILE_NAME}
+        ${CMAKE_CURRENT_BINARY_DIR}/${WAYLAND_FILE_NAME}
         DESTINATION "${CMAKE_INSTALL_PREFIX}/bin"
         PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
 )
