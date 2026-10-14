@@ -5,6 +5,7 @@ add_custom_target(DeployScripts)
 # List the scripts to be installed (bez install_on_ubuntu.sh!)
 set(RUN_SCRIPTS
     run_maia_in_xephyr.sh
+    run_maia_nested_wayland.sh
     run_logger.sh
 )
 

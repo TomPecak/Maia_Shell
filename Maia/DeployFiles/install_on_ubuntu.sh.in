@@ -64,6 +64,7 @@ sudo chmod +x "${MAIA_OPT_PATH}/bin/run_maia_xsession.sh"
 sudo chmod +x "${MAIA_OPT_PATH}/bin/run_maia_wayland.sh"
 sudo chmod +x "${MAIA_OPT_PATH}/bin/run_logger.sh"
 sudo chmod +x "${MAIA_OPT_PATH}/bin/run_maia_in_xephyr.sh"
+sudo chmod +x "${MAIA_OPT_PATH}/bin/run_maia_nested_wayland.sh"
 
 
 # Set read, write, and execute permissions for all users on the Maia directory and its contents
