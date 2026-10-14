@@ -4,7 +4,6 @@ add_custom_target(DeployScripts)
 
 # List the scripts to be installed (bez install_on_ubuntu.sh!)
 set(RUN_SCRIPTS
-    run_maia_in_xephyr.sh
     run_maia_nested_wayland.sh
     run_logger.sh
 )
@@ -13,12 +12,6 @@ set(RUN_SCRIPTS
 configure_file(
     ${CMAKE_CURRENT_SOURCE_DIR}/install_on_ubuntu.sh.in
     ${CMAKE_CURRENT_BINARY_DIR}/install_on_ubuntu.sh
-    @ONLY
-)
-
-configure_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/run_maia_xsession.sh.in
-    ${CMAKE_CURRENT_BINARY_DIR}/run_maia_xsession.sh
     @ONLY
 )
 
@@ -33,19 +26,17 @@ configure_file(
 target_sources(DeployScripts
     PRIVATE ${RUN_SCRIPTS}
     PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/install_on_ubuntu.sh
-    PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/run_maia_xsession.sh
     PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/run_maia_wayland.sh
 )
 
 add_custom_target(DeployScriptsTemplates)
 target_sources(DeployScriptsTemplates
     PRIVATE install_on_ubuntu.sh.in
-    PRIVATE run_maia_xsession.sh.in
     PRIVATE run_maia_wayland.sh.in
 )
 
 # Install the RUN_SCRIPTS to the specified directory under CMAKE_INSTALL_PREFIX
-install(FILES ${RUN_SCRIPTS} ${CMAKE_CURRENT_BINARY_DIR}/run_maia_xsession.sh ${CMAKE_CURRENT_BINARY_DIR}/run_maia_wayland.sh
+install(FILES ${RUN_SCRIPTS} ${CMAKE_CURRENT_BINARY_DIR}/run_maia_wayland.sh
         DESTINATION "${CMAKE_INSTALL_PREFIX}/bin"
         PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
 )

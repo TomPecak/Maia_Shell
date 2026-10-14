@@ -15,11 +15,10 @@ if ! sudo apt update; then
     exit 1
 fi
 
-# Install kwin-x11
-
-# Ubuntu 24.04
+# Install kwin_wayland (compositor) and Xwayland (X11 compatibility, Maia itself still runs as an X11 client)
 # kwin (-y option automatically confirms the installation)
-sudo apt install -y --no-install-recommends --no-install-suggests kwin-x11
+sudo apt install -y --no-install-recommends --no-install-suggests kwin-wayland
+sudo apt install -y --no-install-recommends --no-install-suggests xwayland
 # kwin aurorae engine libraries
 sudo apt install -y --no-install-recommends --no-install-suggests kwin-common
 # kwin aurorae qml-s data files
@@ -60,10 +59,8 @@ sudo mkdir -p "/opt/Maia"
 sudo cp -v -r "$(dirname "$0")/${MAIA_DIR_NAME}" "${MAIA_OPT_PATH}"
 
 # Set executable permissions for specific scripts
-sudo chmod +x "${MAIA_OPT_PATH}/bin/run_maia_xsession.sh"
 sudo chmod +x "${MAIA_OPT_PATH}/bin/run_maia_wayland.sh"
 sudo chmod +x "${MAIA_OPT_PATH}/bin/run_logger.sh"
-sudo chmod +x "${MAIA_OPT_PATH}/bin/run_maia_in_xephyr.sh"
 sudo chmod +x "${MAIA_OPT_PATH}/bin/run_maia_nested_wayland.sh"
 
 
@@ -72,10 +69,9 @@ sudo chmod +x "${MAIA_OPT_PATH}/bin/run_maia_nested_wayland.sh"
 sudo chmod -R 777 "/opt/Maia"
 
 
-# COPY XSESSION STARTUP DESKTOP FILE
-sudo mkdir -p "/usr/share/xsessions"
-sudo cp -v "$(dirname "$0")/${MAIA_DIR_NAME}/bin/maia_${VERSION}-xsession.desktop" "/usr/share/xsessions/"
-sudo chmod 777 "/usr/share/xsessions/maia_${VERSION}-xsession.desktop"
+# REMOVE OBSOLETE X11 SESSION FILES (Maia supports only the Wayland session now)
+sudo rm -v -f "/usr/share/xsessions/maia_${VERSION}-desktop.desktop"
+sudo rm -v -f "/usr/share/xsessions/maia_${VERSION}-xsession.desktop"
 
 # COPY WAYLAND STARTUP DESKTOP FILE
 sudo mkdir -p "/usr/share/wayland-sessions"
@@ -87,7 +83,7 @@ sudo chmod 777 "/usr/share/wayland-sessions/maia_${VERSION}-wayland.desktop"
 ## Check for available updates (equivalent to apt update)
 #sudo dnf check-update
 ## Install KWin packages without weak dependencies
-#sudo dnf install -y --setopt=install_weak_deps=False kwin-x11
+#sudo dnf install -y --setopt=install_weak_deps=False kwin-wayland
 #sudo dnf install -y --setopt=install_weak_deps=False kwin-common
 ## sudo dnf install -y --setopt=install_weak_deps=False kwin-data - unavailable
 ## sudo dnf install -y --setopt=install_weak_deps=False kwin-addons - unavailable

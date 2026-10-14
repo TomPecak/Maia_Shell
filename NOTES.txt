@@ -8,7 +8,7 @@ To change icon theme on GTK applications edit file:
 
 # Contributing
 
-sudo nano /usr/share/xsessions/maia_version-desktop.desktop
+sudo nano /opt/Maia/Maia_version/bin/run_maia_wayland.sh
 
 sudo apt update
 sudo apt install snapd
@@ -275,21 +275,22 @@ To change qt app apperance eg. pcmanfm-qt, qterminal use qt5ct app
 and set enviroment variable
 export QT_QPA_PLATFORMTHEME=qt5ct
 
-# Run Maia in Xephyr
+# Run Maia in nested kwin_wayland
 
 ```console
-DBUS_SESSION_BUS_ADDRESS=unix:path=/tmp/maia-dev-dbus.sock dbus-run-session Xephyr :1 -screen 1280x720 -ac &
+Maia/DeployFiles/run_maia_nested_wayland.sh --compositor-only
 ```
 
 Run -> Add.. -> Custom Executable
 
-Executable: dbus-run-session
-Command Line Arguments: /home/tom/Maia/build/Desktop_Qt_6_9_1-Debug/MaiaServerApp/appMaiaServer
+Executable: /home/tom/Maia/build/Desktop_Qt_6_9_1-Debug/MaiaServerApp/appMaiaServer
 Working Directory: /home/tom/Maia/build/Desktop_Qt_6_9_1-Debug/MaiaServerApp
 
-Set in QtCreator Run Enviroment Variables:
+Set in QtCreator Run Enviroment Variables (values from $XDG_RUNTIME_DIR/maia-nested-wayland.env):
 DISPLAY=:1
-DBUS_SESSION_BUS_ADDRESS=unix:path=/tmp/maia-dev-dbus.sock
+WAYLAND_DISPLAY=wayland-maia-dev
+DBUS_SESSION_BUS_ADDRESS=unix:path=/tmp/dbus-XXXXXXXXXX,guid=...
+QT_QPA_PLATFORM=xcb
 
 
 ![Configure Run Maia](doc/qtcreator_maia_run_xephyr.png)
@@ -298,7 +299,7 @@ DBUS_SESSION_BUS_ADDRESS=unix:path=/tmp/maia-dev-dbus.sock
 # Add Maia to Display Manager
 
 ```console
-sudo nano /usr/share/xsessions/maia_version-desktop.desktop
+sudo nano /usr/share/wayland-sessions/maia_version-wayland.desktop
 ```
 
 # Build Qt6 from sources

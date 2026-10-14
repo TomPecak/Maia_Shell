@@ -22,6 +22,8 @@ Maia Shell is an experimental proof-of-concept project. It supports basic functi
 
 Maia Shell v0.1.0 has been tested on Ubuntu 22.04, 24.04, 25.04, but it may work on other Linux distributions as well.
 
+Starting with v0.2.0, Maia Shell runs only as a Wayland session on top of `kwin_wayland` from KDE Plasma 6 (developed on Ubuntu 26.04). The X11 session (`kwin_x11`) is no longer supported. Maia itself still runs as an X11 client through Xwayland during the migration to Wayland.
+
 ## Supported Platforms
 | Maia Shell | OS | Qt | KDE Framework
 | :--- | :---: | :--- |:---|
@@ -60,20 +62,18 @@ To compile and run the Logger on another platform:
 
 Since the Logger acts as a server, you must configure Maia Shell with the target IP address and port to establish the connection. 
 
-The application supports a specific port range: **50000 to 50009**. Providing 10 distinct channels is extremely useful during development. For instance, you can run your primary Maia Shell instance on one port, and simultaneously run a development instance (via Qt Creator and Xephyr) on another. This ensures that log streams from different instances do not conflict.
+The application supports a specific port range: **50000 to 50009**. Providing 10 distinct channels is extremely useful during development. For instance, you can run your primary Maia Shell instance on one port, and simultaneously run a development instance (via Qt Creator and a nested `kwin_wayland`) on another. This ensures that log streams from different instances do not conflict.
 
 To configure the connection, you need to set two environment variables: `MAIA_LOG_HOST` and `MAIA_LOG_PORT`. 
 
-If you are running Maia Shell as your primary desktop environment, you can set these variables in the session `.desktop` file located at `/usr/share/xsessions/maia_X.Y.Z-desktop.desktop`. Simply append the variables to the `Exec` line.
+If you are running Maia Shell as your primary desktop environment, you can set these variables in the session startup script located at `/opt/Maia/Maia_X.Y.Z/bin/run_maia_wayland.sh` (the session `.desktop` file `/usr/share/wayland-sessions/maia_X.Y.Z-wayland.desktop` only runs this script).
 
-**Example `maia_X.Y.Z-desktop.desktop` configuration:**
+**Example fragment of `run_maia_wayland.sh`:**
 
-```ini
-[Desktop Entry]
-Name=Maia 0.1.0
-Comment=Desktop Environment using Qt
-Exec=env LD_LIBRARY_PATH=/opt/Maia/Maia_0.1.0/lib GTK_USE_PORTAL=0 MAIA_LOG_PORT=50001 MAIA_LOG_HOST=10.34.204.173 /opt/Maia/Maia_0.1.0/bin/appMaiaServer
-Type=Application
+```bash
+export MAIA_LOG_FILE="$HOME/maia_server.log"
+export MAIA_LOG_PORT=50001
+export MAIA_LOG_HOST=10.34.204.173
 ```
 
 ## Instalation
@@ -84,11 +84,11 @@ To install Maia Shell on Ubuntu, follow these steps:
 
 ```bash
 sudo apt update
-sudo apt install --no-install-recommends --no-install-suggests kwin-x11
+sudo apt install --no-install-recommends --no-install-suggests kwin-wayland xwayland
 sudo apt install --no-install-recommends --no-install-suggests kwin-common
 sudo apt install --no-install-recommends --no-install-suggests kwin-data
 sudo apt install --no-install-recommends --no-install-suggests kwin-addons
-sudo apt install --no-install-recommends --no-install-suggests libkf5globalaccel-bin breeze libkf5kcmutils5
+sudo apt install kglobalacceld breeze libkf6kcmutils-bin
 ```
 2. **Download and install:**
 	* Download the latest release package from GitHub.
@@ -102,7 +102,8 @@ sudo ./install_on_ubuntu.sh
 
 3. **Start Maia Shell:**
 	- Log out of your current session.
-	- Select the "Maia" session from your login manager and log in.
+	- Select the "Maia X.Y.Z (Wayland)" session from your login manager and log in.
+	- Session logs are written to `~/maia_wayland_session.log` and `~/maia_server.log`.
 	
 	
 	
@@ -172,8 +173,11 @@ sudo apt install -y \
 sudo apt install -y \
     libxcb1-dev \
     libxcb-shape0-dev \
-    libxcb-icccm4-dev \
-    xserver-xephyr
+    libxcb-icccm4-dev
+
+sudo apt install -y \
+    kwin-wayland \
+    xwayland
 ```
 
 ```bash
@@ -200,17 +204,26 @@ sudo cmake --install .
 
 <img src="doc/upgrade_qt_configure_build_settings.png" width="400" alt="Configure Build Settings">
 
+Maia is developed inside a nested `kwin_wayland` window with its own D-Bus session bus, started by `Maia/DeployFiles/run_maia_nested_wayland.sh`:
+
 ```bash
-dbus-run-session
-Xephyr :1 -screen 1280x720 -ac &
-%{buildDir}
+# compositor + Maia from the build directory
+Maia/DeployFiles/run_maia_nested_wayland.sh %{buildDir}/Maia/MaiaServerApp/appMaiaServer
+
+# compositor only (e.g. to run or debug Maia from Qt Creator),
+# connection variables are written to $XDG_RUNTIME_DIR/maia-nested-wayland.env
+Maia/DeployFiles/run_maia_nested_wayland.sh --compositor-only
 ```
 
 <img src="doc/upgrade_qt_configure_deploy_settings.png" width="400" alt="Configure Deploy Settings">
 
 ```bash
+# copy DISPLAY, WAYLAND_DISPLAY and DBUS_SESSION_BUS_ADDRESS
+# from $XDG_RUNTIME_DIR/maia-nested-wayland.env
 DISPLAY=:1
-DBUS_SESSION_BUS_ADDRESS=unix:path=/tmp/maia-dev-dbus-1.sock
+WAYLAND_DISPLAY=wayland-maia-dev
+DBUS_SESSION_BUS_ADDRESS=unix:path=/tmp/dbus-XXXXXXXXXX,guid=...
+QT_QPA_PLATFORM=xcb
 MAIA_LOG_PORT=50001
 MAIA_LOG_HOST=127.0.0.1
 MAIA_LOG_FILE=$HOME/maia.log
