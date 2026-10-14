@@ -31,6 +31,10 @@ sudo apt install -y --no-install-recommends --no-install-suggests kwin-addons
 
 # Ubuntu 26.04
 sudo apt install -y kglobalacceld breeze libkf6kcmutils-bin
+# Qt platform theme plugin for KDE sessions. With KDE_FULL_SESSION and KDE_SESSION_VERSION set
+# (run_maia_wayland.sh) Qt selects the KDE theme, and without this plugin kwin_wayland crashes
+# at startup on Ubuntu (Kubuntu has it preinstalled)
+sudo apt install -y --no-install-recommends --no-install-suggests plasma-integration
 
 
 
@@ -43,6 +47,8 @@ sudo apt install -y qml6-module-qtquick-controls
 sudo apt install -y qml6-module-qtcore
 sudo apt install -y qml6-module-qtquick-effects
 sudo apt install -y libqt6svg6
+# Qt SVG image format and icon engine plugins (without them QML Image cannot load .svg files)
+sudo apt install -y qt6-svg-plugins
 sudo apt install -y qml6-module-qtquick-shapes
 
 sudo apt install -y libkf6pulseaudioqt5
