@@ -33,6 +33,7 @@ target_sources(DeployScripts
     PRIVATE ${RUN_SCRIPTS}
     PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/install_on_ubuntu.sh
     PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/run_maia_xsession.sh
+    PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/run_maia_wayland.sh
 )
 
 add_custom_target(DeployScriptsTemplates)

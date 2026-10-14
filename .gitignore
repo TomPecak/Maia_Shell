@@ -54,3 +54,6 @@ compile_commands.json
 *creator.user*
 
 *_qmlcache.qrc
+
+# Kate swap files
+*.kate-swp

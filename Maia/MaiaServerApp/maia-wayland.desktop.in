@@ -1,6 +1,7 @@
 [Desktop Entry]
-Name=Maia @MAIA_VERSION@
+Name=Maia @MAIA_VERSION@ (Wayland)
 Comment=Desktop Environment using Qt
 Exec=/opt/Maia/Maia_@MAIA_VERSION@/bin/run_maia_wayland.sh
+TryExec=/opt/Maia/Maia_@MAIA_VERSION@/bin/run_maia_wayland.sh
 Type=Application
 DesktopNames=Maia

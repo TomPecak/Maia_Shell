@@ -11,8 +11,9 @@
 #Type=Application
 
 [Desktop Entry]
-Name=Maia @MAIA_VERSION@
+Name=Maia @MAIA_VERSION@ (X11)
 Comment=Desktop Environment using Qt
 Exec=/opt/Maia/Maia_@MAIA_VERSION@/bin/run_maia_xsession.sh
+TryExec=/opt/Maia/Maia_@MAIA_VERSION@/bin/run_maia_xsession.sh
 Type=Application
 DesktopNames=Maia

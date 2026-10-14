@@ -1,0 +1,98 @@
+#!/bin/bash
+
+# Zdefiniowana wersja wstrzyknięta przez CMake
+VERSION="@PROJECT_VERSION@"
+MAIA_DIR_NAME="Maia_${VERSION}"
+MAIA_OPT_PATH="/opt/Maia/${MAIA_DIR_NAME}"
+SCRIPT_PATH="${MAIA_OPT_PATH}/bin/run_maia_wayland.sh"
+SESSION_LOG="$HOME/maia_wayland_session.log"
+
+# Skrypt działa w dwóch fazach:
+#  FAZA 1 - uruchomiony przez SDDM, ustawia środowisko i startuje kompozytor kwin_wayland
+#  FAZA 2 - uruchomiony przez KWin (--exit-with-session), startuje serwer Maia
+# Fazy rozróżniamy zmienną MAIA_SESSION_STAGE.
+
+# ==========================================================================
+# FAZA 1: start z SDDM, przed kompozytorem
+# ==========================================================================
+if [ "${MAIA_SESSION_STAGE}" != "inside_kwin" ]; then
+
+    # Logujemy wszystko z sesji do katalogu domowego aktualnego użytkownika
+    exec > "${SESSION_LOG}" 2>&1
+    echo "--- START Maia Shell Wayland (wersja ${VERSION}) - faza 1 ---"
+
+    # Brak magistrali D-Bus sesji -> uruchamiamy się ponownie wewnątrz dbus-run-session
+    # (to samo robi Plasma przez plasma-dbus-run-session-if-needed)
+    if [ -z "${DBUS_SESSION_BUS_ADDRESS}" ]; then
+        echo "Brak DBUS_SESSION_BUS_ADDRESS, uruchamiam dbus-run-session..."
+        exec dbus-run-session "${SCRIPT_PATH}"
+    fi
+
+    # 1. Typ sesji i tożsamość pulpitu
+    export XDG_SESSION_TYPE=wayland
+    export XDG_CURRENT_DESKTOP=KDE
+    export XDG_SESSION_DESKTOP=Maia
+    export KDE_FULL_SESSION=true
+    export KDE_SESSION_VERSION=6
+
+    # 2. Backendy toolkitów dla aplikacji uruchamianych w sesji
+    export QT_QPA_PLATFORM="wayland;xcb"
+    export GDK_BACKEND="wayland,x11"
+    export ELECTRON_OZONE_PLATFORM_HINT=auto
+    export MOZ_ENABLE_WAYLAND=1
+    export _JAVA_AWT_WM_NONREPARENTING=1
+    export QT_WAYLAND_RECONNECT=1   # aplikacje Qt przeżyją restart KWina po crashu
+    export GTK_USE_PORTAL=0
+
+    # 3. TYLKO NA CZAS DEWELOPMENTU: KWin nie sprawdza uprawnień do protokołów
+    #    uprzywilejowanych (plasma_window_management, plasma_shell, ...)
+    export KWIN_WAYLAND_NO_PERMISSION_CHECKS=1
+
+    # 4. Pozostałości po X11 z ekranu logowania nie mogą przeciec do sesji
+    unset DISPLAY WAYLAND_DISPLAY XAUTHORITY
+
+    # 5. Startujemy kompozytor. Wrapper restartuje KWina po crashu,
+    #    --exit-with-session kończy sesję, gdy faza 2 (czyli Maia) się zakończy.
+    export MAIA_SESSION_STAGE=inside_kwin
+    echo "Uruchamianie kwin_wayland_wrapper..."
+    exec kwin_wayland_wrapper --xwayland --exit-with-session="${SCRIPT_PATH}"
+fi
+
+# ==========================================================================
+# FAZA 2: uruchomione przez KWin, WAYLAND_DISPLAY i DISPLAY już ustawione
+# ==========================================================================
+exec >> "${SESSION_LOG}" 2>&1
+echo "--- Maia Shell Wayland - faza 2 (wewnątrz KWin) ---"
+echo "WAYLAND_DISPLAY=${WAYLAND_DISPLAY} DISPLAY=${DISPLAY} XAUTHORITY=${XAUTHORITY}"
+
+unset MAIA_SESSION_STAGE
+unset KWIN_WAYLAND_NO_PERMISSION_CHECKS   # potrzebne tylko procesowi KWina
+
+# WSTRZYKNIĘCIE ZMIENNYCH DO D-BUS / systemd
+# Usługi aktywowane przez D-Bus (portale, kded, aplikacje) muszą znać nasz ekran.
+if command -v dbus-update-activation-environment >/dev/null 2>&1; then
+    dbus-update-activation-environment --systemd \
+        WAYLAND_DISPLAY DISPLAY XAUTHORITY \
+        XDG_SESSION_TYPE XDG_CURRENT_DESKTOP XDG_SESSION_DESKTOP \
+        KDE_FULL_SESSION KDE_SESSION_VERSION \
+        QT_QPA_PLATFORM GDK_BACKEND QT_WAYLAND_RECONNECT
+fi
+
+# UWAGA: NIE uruchamiamy plasma-kglobalaccel.service!
+# kwin_wayland ma kglobalacceld wbudowany (linkuje libKGlobalAccelD)
+# i sam rejestruje org.kde.kglobalaccel.
+
+export MAIA_LOG_FILE="$HOME/maia_server.log"
+export MAIA_LOG_PORT=50001
+export MAIA_LOG_HOST=127.0.0.1
+
+# ETAP 1 migracji: sama Maia działa jeszcze jako klient X11 przez Xwayland,
+# żeby KX11Extras, struty i typy okien działały bez zmian w kodzie.
+# Gdy kod będzie gotowy na Waylanda: MAIA_QPA_PLATFORM=wayland
+MAIA_QPA_PLATFORM="${MAIA_QPA_PLATFORM:-xcb}"
+
+echo "Uruchamianie serwera Maia (QT_QPA_PLATFORM=${MAIA_QPA_PLATFORM}) z: ${MAIA_OPT_PATH}..."
+exec env -u QT_QPA_PLATFORMTHEME \
+         -u QT_PLUGIN_PATH \
+         QT_QPA_PLATFORM="${MAIA_QPA_PLATFORM}" \
+         "${MAIA_OPT_PATH}/bin/appMaiaServer"

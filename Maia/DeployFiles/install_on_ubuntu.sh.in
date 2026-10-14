@@ -61,6 +61,7 @@ sudo cp -v -r "$(dirname "$0")/${MAIA_DIR_NAME}" "${MAIA_OPT_PATH}"
 
 # Set executable permissions for specific scripts
 sudo chmod +x "${MAIA_OPT_PATH}/bin/run_maia_xsession.sh"
+sudo chmod +x "${MAIA_OPT_PATH}/bin/run_maia_wayland.sh"
 sudo chmod +x "${MAIA_OPT_PATH}/bin/run_logger.sh"
 sudo chmod +x "${MAIA_OPT_PATH}/bin/run_maia_in_xephyr.sh"
 
@@ -73,7 +74,7 @@ sudo chmod -R 777 "/opt/Maia"
 # COPY XSESSION STARTUP DESKTOP FILE
 sudo mkdir -p "/usr/share/xsessions"
 sudo cp -v "$(dirname "$0")/${MAIA_DIR_NAME}/bin/maia_${VERSION}-xsession.desktop" "/usr/share/xsessions/"
-sudo chmod 777 "/usr/share/xsessions/maia_${VERSION}-desktop.desktop"
+sudo chmod 777 "/usr/share/xsessions/maia_${VERSION}-xsession.desktop"
 
 # COPY WAYLAND STARTUP DESKTOP FILE
 sudo mkdir -p "/usr/share/wayland-sessions"
