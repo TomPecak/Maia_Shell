@@ -158,22 +158,28 @@ void FrontendManagerService::loadFrontends()
     // ========================================================================
     // Aktywacja zapisanego frontendu
     // ========================================================================
-    QString savedFrontendId = readActiveFronted();
-    qDebug() << "[STARTUP INFO] Readed saved frontend id=" << savedFrontendId;
+    // TYMCZASOWO WYŁĄCZONE: Maia zawsze startuje z domyślnym frontendem "Ubuntu 24.04",
+    // zapisany wybór z konfiguracji jest ignorowany (nadal jest zapisywany przy przełączaniu).
+    // QString savedFrontendId = readActiveFronted();
+    // qDebug() << "[STARTUP INFO] Readed saved frontend id=" << savedFrontendId;
+    //
+    // // Ustaw aktywny frontend: zapisany jeśli istnieje, w przeciwnym razie domyślny
+    // if (!savedFrontendId.isEmpty() && m_frontends.contains(savedFrontendId)) {
+    //     m_activeFrontendId = savedFrontendId;
+    // } else {
 
-    // Ustaw aktywny frontend: zapisany jeśli istnieje, w przeciwnym razie domyślny
-    if (!savedFrontendId.isEmpty() && m_frontends.contains(savedFrontendId)) {
-        m_activeFrontendId = savedFrontendId;
+    // Domyślny: "Ubuntu 24.04" jeśli istnieje, w przeciwnym razie pierwszy znaleziony
+    const QString defaultFrontendId = QString::fromUtf8(
+        QCryptographicHash::hash(QByteArrayLiteral("Ubuntu 24.04"), QCryptographicHash::Sha1).toHex());
+    if (m_frontends.contains(defaultFrontendId)) {
+        m_activeFrontendId = defaultFrontendId;
     } else {
-        // Domyślny: Gnome jeśli istnieje, w przeciwnym razie pierwszy znaleziony
-        const QString defaultFrontendId = QString::fromUtf8(
-            QCryptographicHash::hash(QByteArrayLiteral("Gnome"), QCryptographicHash::Sha1).toHex());
-        if (m_frontends.contains(defaultFrontendId)) {
-            m_activeFrontendId = defaultFrontendId;
-        } else {
-            m_activeFrontendId = m_frontends.isEmpty() ? QStringLiteral("") : m_frontends.firstKey();
-        }
+        qDebug() << "[ERROR] Default frontend \"Ubuntu 24.04\" not found, using the first available one";
+        m_activeFrontendId = m_frontends.isEmpty() ? QStringLiteral("") : m_frontends.firstKey();
     }
+    qDebug() << "[STARTUP INFO] Starting with default frontend id=" << m_activeFrontendId;
+
+    // }
 
     // Wyślij sygnał o zmianie
     if (!m_activeFrontendId.isEmpty()) {
