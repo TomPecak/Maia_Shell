@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(MainaFrontend VERSION ${MAIA_VERSION} LANGUAGES CXX)
+project(MaiaFrontend VERSION ${MAIA_VERSION} LANGUAGES CXX)
 
 find_package(Qt6 ${REQUIRED_QT_VERSION} REQUIRED COMPONENTS Quick)
 
@@ -16,5 +16,5 @@ qt_add_qml_module(MaiaFrontend
 
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/
-        DESTINATION "${CMAKE_INSTALL_PREFIX}/frontends/Cutefish"
+        DESTINATION "${CMAKE_INSTALL_PREFIX}/frontends/Maia"
 )

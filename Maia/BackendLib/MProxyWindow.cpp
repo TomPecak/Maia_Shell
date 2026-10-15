@@ -189,7 +189,7 @@ void MProxyWindow::onProcessReadyReadStandardOutput()
     const QByteArray data = m_process->readAllStandardOutput();
     // Print it to the console of the main process with a prefix to indicate its source
     // Use noquote() to avoid extra quotes and trimmed() to remove trailing whitespace
-    //qDebug().noquote() << "[REMOTE STDOUT]" << QString::fromLocal8Bit(data).trimmed();
+    qDebug().noquote() << "[REMOTE STDOUT]" << QString::fromLocal8Bit(data).trimmed();
 }
 
 void MProxyWindow::onProcessReadyReadStandardError()
@@ -197,7 +197,7 @@ void MProxyWindow::onProcessReadyReadStandardError()
     // Read everything available on standard error
     const QByteArray data = m_process->readAllStandardError();
     // Print it as a warning to the console of the main process with an appropriate prefix
-    //qDebug().noquote() << "[REMOTE STDERR]" << QString::fromLocal8Bit(data).trimmed();
+    qDebug().noquote() << "[REMOTE STDERR]" << QString::fromLocal8Bit(data).trimmed();
 }
 
 void MProxyWindow::handleVisibleReceived(bool visible)
