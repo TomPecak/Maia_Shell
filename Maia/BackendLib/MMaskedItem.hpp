@@ -6,7 +6,7 @@
 #include <QTimer>
 #include <QElapsedTimer>
 
-#include "./private/MaskTracker.hpp"
+#include "./private/WindowInputMask.hpp"
 
 class MMaskedItem : public QQuickItem
 {
@@ -22,7 +22,7 @@ protected:
     void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
 
 public:
-    MaskTracker *m_maskTracker;
+    WindowInputMask *m_windowInputMask;
 };
 
 

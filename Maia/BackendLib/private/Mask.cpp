@@ -5,7 +5,7 @@
 Mask::Mask(QObject *parent) : QObject(parent) {}
 
 Mask::~Mask() {
-    for (MaskTracker* tracker : trackedItems.values()) {
+    for (WindowInputMask* tracker : trackedItems.values()) {
         delete tracker;
     }
     trackedItems.clear();
@@ -14,14 +14,14 @@ Mask::~Mask() {
 void Mask::addMaskedItem(QQuickItem *item) {
     //qDebug() << __PRETTY_FUNCTION__;
     if (!item || trackedItems.contains(item)) return;
-    MaskTracker* maskTracker = new MaskTracker(item, true);
+    WindowInputMask* maskTracker = new WindowInputMask(item, true);
     trackedItems[item] = maskTracker;
 }
 
 void Mask::removeMaskedItem(QQuickItem *item) {
     //qDebug() << __PRETTY_FUNCTION__;
     if (!item || !trackedItems.contains(item)) return;
-    MaskTracker* tracker = trackedItems.take(item);
+    WindowInputMask* tracker = trackedItems.take(item);
     delete tracker;
 }
 

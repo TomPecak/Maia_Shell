@@ -58,10 +58,14 @@ qt_add_qml_module(${PROJECT_NAME}
     SOURCES private/Mask.cpp
     SOURCES MMaskedItem.hpp
     SOURCES MMaskedItem.cpp
-    SOURCES private/MaskAlgorithm.hpp
-    SOURCES private/MaskAlgorithm.cpp
+    SOURCES MaskArea.hpp
+    SOURCES MaskArea.cpp
     SOURCES private/MaskTracker.hpp
     SOURCES private/MaskTracker.cpp
+    SOURCES private/MaskAlgorithm.hpp
+    SOURCES private/MaskAlgorithm.cpp
+    SOURCES private/WindowInputMask.hpp
+    SOURCES private/WindowInputMask.cpp
     SOURCES strut/Strut.hpp
     SOURCES strut/StrutManager.hpp
     SOURCES strut/StrutManager.cpp

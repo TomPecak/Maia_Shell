@@ -1,34 +1,30 @@
 #pragma once
 
+#include <QList>
 #include <QObject>
 #include <QQuickItem>
 #include <QQuickWindow>
+#include <QRegion>
 
-#include "MaskAlgorithm.hpp"
-
-class MaskTracker : public QObject{
+// TODO
+// One per window, created automatically by the first MaskArea in that window.
+// Once per rendered frame it merges the rectangles of all visible MaskArea items
+// into the window input mask (on Wayland: the wl_surface input region).
+class MaskTracker : public QObject
+{
     Q_OBJECT
 public:
-    explicit MaskTracker(QQuickItem *parent = nullptr, bool useSignals = false);
-    ~MaskTracker();
+    static MaskTracker *forWindow(QQuickWindow *window);
 
-    void itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value);
-    void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry);
-
-private Q_SLOTS:
-    void onWindowChanged(QQuickWindow *newWindow);
+    void add(QQuickItem *item);
+    void remove(QQuickItem *item);
 
 private:
-    static void printTime(QString funcName);
-    static void processScheduledMaskUpdates(QQuickWindow * win);
-    static void updateMaskForWindow(QQuickWindow *win);
-    void scheduleMaskUpdateForWindow(QQuickWindow *win);
+    explicit MaskTracker(QQuickWindow *window);
 
-    static QSet<QQuickWindow*> pendingUpdates; // Set of windows awaiting updates
-    static SimpleMaskAlgorithm maskAlgorithm;
-    static QMap<QQuickWindow*, QSet<QQuickItem*>> instances; // List of all MaskedItem instances
-    QElapsedTimer elapsedTimer;
-    QQuickItem *trackedItem = nullptr;
-    QQuickWindow *m_previousWindow = nullptr;
-    bool m_useSignals = false;
+    void update();
+
+    QQuickWindow *m_window;
+    QList<QQuickItem *> m_areas;
+    QRegion m_last;
 };

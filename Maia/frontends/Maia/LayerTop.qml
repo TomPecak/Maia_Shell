@@ -1,7 +1,7 @@
 import QtQuick
 import org.kde.layershell 1.0 as LayerShell
 
-import Maia.Backend
+import Maia.Backend as Maia
 
 Window{
     id: root
@@ -24,6 +24,10 @@ Window{
     AvailableFonts{
         anchors.left: parent.left
         anchors.verticalCenter: parent.verticalCenter
+
+        Maia.MaskArea{
+            anchors.fill: parent
+        }
     }
 
 }

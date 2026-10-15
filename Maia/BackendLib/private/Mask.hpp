@@ -8,7 +8,7 @@
 #include <QRegion>
 #include <QElapsedTimer>
 
-#include "MaskTracker.hpp"
+#include "WindowInputMask.hpp"
 
 class Mask : public QObject {
     Q_OBJECT
@@ -20,5 +20,5 @@ public:
     void removeMaskedItem(QQuickItem *item);
 
 private:
-    QMap<QQuickItem*, MaskTracker*> trackedItems;
+    QMap<QQuickItem*, WindowInputMask*> trackedItems;
 };

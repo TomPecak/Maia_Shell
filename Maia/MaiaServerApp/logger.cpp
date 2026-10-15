@@ -150,7 +150,7 @@ void Logger::onSocketError(QAbstractSocket::SocketError socketError)
 {
     Q_UNUSED(socketError);
     // Logujemy awarię (trafi do pliku logów, bo mamy przejęty handler)
-    qWarning() << "[LOGGER NETWORK] WebSocket connection error:" << m_socket.errorString();
+    //qWarning() << "[LOGGER NETWORK] WebSocket connection error:" << m_socket.errorString();
 
     m_socket.close();
 

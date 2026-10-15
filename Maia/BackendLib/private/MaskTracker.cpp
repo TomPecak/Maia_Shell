@@ -1,137 +1,62 @@
 #include "MaskTracker.hpp"
 
-#include <QQuickWindow>
+MaskTracker *MaskTracker::forWindow(QQuickWindow *window)
+{
+    auto *mask = window->findChild<MaskTracker *>(QString(), Qt::FindDirectChildrenOnly);
+    return mask ? mask : new MaskTracker(window);
+}
 
-#include "../MMaskedItem.hpp"
+MaskTracker::MaskTracker(QQuickWindow *window)
+    : QObject(window)
+    , m_window(window)
+{
+    // afterAnimating: GUI thread, once per rendered frame, before the frame is synchronized,
+    // so the mask matches the frame that is about to be rendered
+    connect(window, &QQuickWindow::afterAnimating, this, &MaskTracker::update);
+}
 
-QMap<QQuickWindow*, QSet<QQuickItem*>> MaskTracker::instances;
-QSet<QQuickWindow*> MaskTracker::pendingUpdates;
-SimpleMaskAlgorithm MaskTracker::maskAlgorithm;
+void MaskTracker::add(QQuickItem *item)
+{
+    m_areas.append(item);
+    m_window->update(); // request a frame, so the mask is recalculated
+}
 
-MaskTracker::MaskTracker(QQuickItem *parent, bool useSignals):
-    QObject(parent),
-    m_useSignals(useSignals){
-    //qDebug() << __PRETTY_FUNCTION__;
-    trackedItem = parent;
+void MaskTracker::remove(QQuickItem *item)
+{
+    m_areas.removeOne(item);
+    m_window->update();
+}
 
-    if (!trackedItem) return;
-
-    // Add this item to the list of instances
-    QQuickWindow *win = trackedItem->window();
-    if(win)
-        instances[win].insert(trackedItem);
-
-    if(m_useSignals){
-        connect(trackedItem, &QQuickItem::visibleChanged, this, [this]() {
-            scheduleMaskUpdateForWindow(trackedItem->window());
-        });
-        connect(trackedItem, &QQuickItem::parentChanged, this, [this]() {
-            scheduleMaskUpdateForWindow(trackedItem->window());
-        });
-        connect(trackedItem, &QQuickItem::widthChanged, this, [this]() {
-            scheduleMaskUpdateForWindow(trackedItem->window());
-        });
-        connect(trackedItem, &QQuickItem::heightChanged, this, [this]() {
-            scheduleMaskUpdateForWindow(trackedItem->window());
-        });
-        connect(trackedItem, &QQuickItem::xChanged, this, [this]() {
-            scheduleMaskUpdateForWindow(trackedItem->window());
-        });
-        connect(trackedItem, &QQuickItem::yChanged, this, [this]() {
-            scheduleMaskUpdateForWindow(trackedItem->window());
-        });
+// TODO: Optimization. The mask is recalculated on every frame rendered by the window
+// (afterAnimating), even when no MaskArea has moved, e.g. while a ListView scrolls or
+// an unrelated animation runs in the same window. Only setMask() is skipped when the
+// region did not change. This is cheap for tens of areas, but could be optimized with
+// a "dirty" flag set when an area or one of its ancestors changes position, size,
+// visibility or transformation (needs tracking of all ancestors, the public Qt Quick API
+// has no single "scene position changed" notification). Other limitations: opacity: 0
+// and clipping by ancestors (clip: true) are not taken into account, only bounding
+// rectangles are used.
+void MaskTracker::update()
+{
+    static uint32_t updateIndex = 0;
+    qDebug() << "[ INFO ] MaskTracker::update() : " << updateIndex++;
+    QRegion region;
+    for (QQuickItem *item : std::as_const(m_areas)) {
+        if (item->isVisible()) {
+            // mapRectToScene takes ancestor positions and transformations (scale, translate) into account
+            region += item->mapRectToScene(QRectF(0, 0, item->width(), item->height())).toAlignedRect();
+        }
     }
 
-    connect(trackedItem, &QQuickItem::windowChanged, this, &MaskTracker::onWindowChanged);
-
-    scheduleMaskUpdateForWindow(trackedItem->window());
-}
-
-MaskTracker::~MaskTracker()
-{
-    //qDebug() << __PRETTY_FUNCTION__;
-    instances[trackedItem->window()].remove(trackedItem);
-    scheduleMaskUpdateForWindow(trackedItem->window()); // Schedule an update for the window upon removal
-}
-
-void MaskTracker::onWindowChanged(QQuickWindow *newWindow)
-{
-    //qDebug() << __PRETTY_FUNCTION__;
-    if (m_previousWindow) {
-        instances[m_previousWindow].remove(trackedItem);
-        scheduleMaskUpdateForWindow(m_previousWindow); // Report an update for the old window
+    // An empty QRegion removes the mask (the whole window receives input),
+    // so when nothing is visible we use a region outside of the window
+    if (region.isEmpty()) {
+        region = QRegion(-1, -1, 1, 1);
     }
 
-    m_previousWindow = newWindow;
-    if(newWindow){
-        instances[newWindow].insert(trackedItem);
-        scheduleMaskUpdateForWindow(newWindow); // Report an update for the new window
-    }
-}
-
-void MaskTracker::scheduleMaskUpdateForWindow(QQuickWindow *win)
-{
-    if (!win || pendingUpdates.contains(win)) return;
-
-    pendingUpdates.insert(win);
-
-    //MaskedItem::processScheduledMaskUpdates(win); //working implementation
-
-    QTimer::singleShot(0, win, [win]() {
-        MaskTracker::processScheduledMaskUpdates(win);
-    });
-
-}
-
-void MaskTracker::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value)
-{
-    if(m_useSignals)
+    if (region == m_last)
         return;
 
-    switch (change) {
-    case QQuickItem::ItemSceneChange:
-    case QQuickItem::ItemVisibleHasChanged:
-    case QQuickItem::ItemParentHasChanged:
-        scheduleMaskUpdateForWindow(trackedItem->window());
-        break;
-    default:
-        break;
-    }
+    m_last = region;
+    m_window->setMask(region);
 }
-
-void MaskTracker::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
-{
-    if(m_useSignals)
-        return;
-
-    scheduleMaskUpdateForWindow(trackedItem->window());
-}
-
-void MaskTracker::printTime(QString funcName)
-{
-    //qDebug() << __PRETTY_FUNCTION__;
-    static QMap<QString, qint64> prevTimes;
-    static qint64 prevTime;
-    qint64 currTime = QDateTime::currentMSecsSinceEpoch();
-    qDebug() << "t=" << QDateTime::currentMSecsSinceEpoch() << "mill dt=" << currTime - prevTimes[funcName] << "ms "  << " ddt=" << QDateTime::currentMSecsSinceEpoch() - prevTime << "ms "<<   funcName << "()";
-    prevTimes[funcName] = currTime;
-    prevTime = currTime;
-}
-
-void MaskTracker::processScheduledMaskUpdates(QQuickWindow * win)
-{
-    //qDebug() << __PRETTY_FUNCTION__;
-    if (!win || !pendingUpdates.contains(win)) return;
-
-    updateMaskForWindow(win);
-
-    pendingUpdates.remove(win);
-}
-
-void MaskTracker::updateMaskForWindow(QQuickWindow *win)
-{
-    //qDebug() << __PRETTY_FUNCTION__;
-    if (!win) return;
-    maskAlgorithm.updateMask(win, &instances);
-}
-
