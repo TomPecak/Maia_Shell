@@ -77,9 +77,10 @@ add_subdirectory(Maia/MaiaServerApp)
 add_subdirectory(Maia/DeployFiles)
 
 # FRONTENDS
-add_subdirectory(Maia/frontends/Gnome)
+add_subdirectory("Maia/frontends/Ubuntu 24.04/")
 add_subdirectory(Maia/frontends/XPLuna)
 add_subdirectory(Maia/frontends/Cutefish)
+add_subdirectory(Maia/frontends/Maia)
 
 # ==============================================================================
 # 5. DOKUMENTACJA I PODSUMOWANIE

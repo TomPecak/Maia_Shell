@@ -290,7 +290,7 @@ Set in QtCreator Run Enviroment Variables (values from $XDG_RUNTIME_DIR/maia-nes
 DISPLAY=:1
 WAYLAND_DISPLAY=wayland-maia-dev
 DBUS_SESSION_BUS_ADDRESS=unix:path=/tmp/dbus-XXXXXXXXXX,guid=...
-QT_QPA_PLATFORM=xcb
+QT_QPA_PLATFORM=wayland
 
 
 ![Configure Run Maia](doc/qtcreator_maia_run_xephyr.png)

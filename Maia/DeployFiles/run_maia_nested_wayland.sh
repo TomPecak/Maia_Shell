@@ -14,7 +14,8 @@
 # Zmienne konfiguracyjne (opcjonalne):
 #   MAIA_NESTED_WIDTH, MAIA_NESTED_HEIGHT - rozmiar okna (domyślnie 1280x720)
 #   MAIA_NESTED_SOCKET                    - nazwa gniazda Wayland (domyślnie wayland-maia-dev)
-#   MAIA_QPA_PLATFORM                     - platforma Qt dla Mai (domyślnie xcb, przez Xwayland)
+#   MAIA_QPA_PLATFORM                     - platforma Qt dla Mai (domyślnie wayland,
+#                                           xcb = Maia przez Xwayland, do porównań)
 #   MAIA_LOG_PORT                         - port Loggera (domyślnie 50003)
 
 ENV_FILE="${XDG_RUNTIME_DIR:-/tmp}/maia-nested-wayland.env"
@@ -32,7 +33,7 @@ if [ "${MAIA_NESTED_STAGE}" = "inside_kwin" ]; then
         echo "DISPLAY=${DISPLAY}"
         echo "XAUTHORITY=${XAUTHORITY}"
         echo "DBUS_SESSION_BUS_ADDRESS=${DBUS_SESSION_BUS_ADDRESS}"
-        echo "QT_QPA_PLATFORM=${MAIA_QPA_PLATFORM:-xcb}"
+        echo "QT_QPA_PLATFORM=${MAIA_QPA_PLATFORM:-wayland}"
         echo "MAIA_LOG_PORT=${MAIA_LOG_PORT}"
     } > "${ENV_FILE}"
 
@@ -50,13 +51,13 @@ if [ "${MAIA_NESTED_STAGE}" = "inside_kwin" ]; then
         exec sleep infinity
     fi
 
-    # ETAP 1 migracji: Maia działa jako klient X11 przez Xwayland
-    echo "Uruchamianie ${MAIA_NESTED_APP} (QT_QPA_PLATFORM=${MAIA_QPA_PLATFORM:-xcb})..."
+    # Maia natywnie na Waylandzie. Platforma przez -platform, żeby aplikacje
+    # uruchamiane z Mai dziedziczyły QT_QPA_PLATFORM="wayland;xcb" (fallback na Xwayland).
+    echo "Uruchamianie ${MAIA_NESTED_APP} (-platform ${MAIA_QPA_PLATFORM:-wayland})..."
     cd "$(dirname "${MAIA_NESTED_APP}")" || exit 1
     exec env -u QT_QPA_PLATFORMTHEME \
              -u QT_PLUGIN_PATH \
-             QT_QPA_PLATFORM="${MAIA_QPA_PLATFORM:-xcb}" \
-             "${MAIA_NESTED_APP}"
+             "${MAIA_NESTED_APP}" -platform "${MAIA_QPA_PLATFORM:-wayland}"
 fi
 
 # ==========================================================================
@@ -83,12 +84,15 @@ fi
 export MAIA_NESTED_APP
 export MAIA_NESTED_STAGE=inside_kwin
 export MAIA_LOG_PORT="${MAIA_LOG_PORT:-50003}"
-export MAIA_QPA_PLATFORM="${MAIA_QPA_PLATFORM:-xcb}"
+export MAIA_QPA_PLATFORM="${MAIA_QPA_PLATFORM:-wayland}"
 
-# Środowisko sesji wewnątrz zagnieżdżonego KWina
+# Środowisko sesji wewnątrz zagnieżdżonego KWina (jak w run_maia_wayland.sh)
+export XDG_SESSION_TYPE=wayland
 export XDG_CURRENT_DESKTOP=KDE
 export KDE_FULL_SESSION=true
 export KDE_SESSION_VERSION=6
+export QT_QPA_PLATFORM="wayland;xcb"
+export GDK_BACKEND="wayland,x11"
 export GTK_USE_PORTAL=0
 export KWIN_WAYLAND_NO_PERMISSION_CHECKS=1
 

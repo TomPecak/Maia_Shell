@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.16)
 
 project(CutefishFrontend VERSION ${MAIA_VERSION} LANGUAGES CXX)
 
-set(REQUIRED_QT_VERSION 6.8)
 
 find_package(Qt6 ${REQUIRED_QT_VERSION} REQUIRED COMPONENTS Quick)
 

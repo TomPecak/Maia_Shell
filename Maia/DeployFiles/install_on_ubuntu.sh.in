@@ -15,13 +15,13 @@ if ! sudo apt update; then
     exit 1
 fi
 
-# Install kwin_wayland (compositor) and Xwayland (X11 compatibility, Maia itself still runs as an X11 client)
+# Install kwin_wayland (compositor) and Xwayland (compatibility with X11-only applications)
 # kwin (-y option automatically confirms the installation)
 sudo apt install -y --no-install-recommends --no-install-suggests kwin-wayland
 sudo apt install -y --no-install-recommends --no-install-suggests xwayland
-# Qt Wayland platform plugin with shell integrations (xdg-shell). Without it Qt applications
-# started in the session (QT_QPA_PLATFORM="wayland;xcb") cannot run natively on Wayland
-# and fall back to Xwayland. Required later when Maia itself switches to QT_QPA_PLATFORM=wayland.
+# Qt Wayland platform plugin with shell integrations (xdg-shell). Required by Maia itself
+# (it runs as a native Wayland client) and by Qt applications started in the session
+# (QT_QPA_PLATFORM="wayland;xcb"), which would otherwise fall back to Xwayland.
 sudo apt install -y --no-install-recommends --no-install-suggests qt6-wayland
 # kwin aurorae engine libraries
 sudo apt install -y --no-install-recommends --no-install-suggests kwin-common

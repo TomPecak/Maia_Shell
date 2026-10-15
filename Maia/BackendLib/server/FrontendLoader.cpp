@@ -159,8 +159,8 @@ bool verifyRunningUnderKwinWayland()
     // Since the X11 session was dropped, Maia no longer starts the window manager.
     // Maia is started by kwin_wayland (--exit-with-session in run_maia_wayland.sh
     // or run_maia_nested_wayland.sh), so KWin must already be running at this point.
-    // Maia itself may still run as an X11 client through Xwayland (QT_QPA_PLATFORM=xcb),
-    // but WAYLAND_DISPLAY is always inherited from kwin_wayland.
+    // Maia runs as a native Wayland client (-platform wayland), WAYLAND_DISPLAY
+    // is inherited from kwin_wayland.
     bool ok = true;
 
     if (qEnvironmentVariableIsEmpty("WAYLAND_DISPLAY")) {

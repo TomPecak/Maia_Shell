@@ -22,7 +22,7 @@ Maia Shell is an experimental proof-of-concept project. It supports basic functi
 
 Maia Shell v0.1.0 has been tested on Ubuntu 22.04, 24.04, 25.04, but it may work on other Linux distributions as well.
 
-Starting with v0.2.0, Maia Shell runs only as a Wayland session on top of `kwin_wayland` from KDE Plasma 6 (developed on Ubuntu 26.04). The X11 session (`kwin_x11`) is no longer supported. Maia itself still runs as an X11 client through Xwayland during the migration to Wayland.
+Starting with v0.2.0, Maia Shell runs only as a Wayland session on top of `kwin_wayland` from KDE Plasma 6 (developed on Ubuntu 26.04). The X11 session (`kwin_x11`) is no longer supported. Maia runs as a native Wayland client; X11-specific features (window types, panel struts, taskbar window list) are being ported to Wayland and may not work yet.
 
 ## Supported Platforms
 | Maia Shell | OS | Qt | KDE Framework
@@ -208,7 +208,7 @@ Maia is developed inside a nested `kwin_wayland` window with its own D-Bus sessi
 
 ```bash
 # compositor + Maia from the build directory
-Maia/DeployFiles/run_maia_nested_wayland.sh %{buildDir}/Maia/MaiaServerApp/appMaiaServer
+Maia/DeployFiles/run_maia_nested_wayland.sh %{buildDir}/bin/appMaiaServer
 
 # compositor only (e.g. to run or debug Maia from Qt Creator),
 # connection variables are written to $XDG_RUNTIME_DIR/maia-nested-wayland.env
@@ -223,7 +223,7 @@ Maia/DeployFiles/run_maia_nested_wayland.sh --compositor-only
 DISPLAY=:1
 WAYLAND_DISPLAY=wayland-maia-dev
 DBUS_SESSION_BUS_ADDRESS=unix:path=/tmp/dbus-XXXXXXXXXX,guid=...
-QT_QPA_PLATFORM=xcb
+QT_QPA_PLATFORM=wayland
 MAIA_LOG_PORT=50001
 MAIA_LOG_HOST=127.0.0.1
 MAIA_LOG_FILE=$HOME/maia.log

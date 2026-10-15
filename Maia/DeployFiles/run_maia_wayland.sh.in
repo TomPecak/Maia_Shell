@@ -86,13 +86,13 @@ export MAIA_LOG_FILE="$HOME/maia_server.log"
 export MAIA_LOG_PORT=50001
 export MAIA_LOG_HOST=127.0.0.1
 
-# ETAP 1 migracji: sama Maia działa jeszcze jako klient X11 przez Xwayland,
-# żeby KX11Extras, struty i typy okien działały bez zmian w kodzie.
-# Gdy kod będzie gotowy na Waylanda: MAIA_QPA_PLATFORM=wayland
-MAIA_QPA_PLATFORM="${MAIA_QPA_PLATFORM:-xcb}"
+# Maia działa natywnie jako klient Wayland. Platformę podajemy argumentem -platform
+# (a nie przez QT_QPA_PLATFORM), żeby aplikacje uruchamiane z Mai dziedziczyły
+# sesyjne QT_QPA_PLATFORM="wayland;xcb" z fallbackiem na Xwayland.
+# Do porównań ze starym zachowaniem: MAIA_QPA_PLATFORM=xcb (Maia przez Xwayland).
+MAIA_QPA_PLATFORM="${MAIA_QPA_PLATFORM:-wayland}"
 
-echo "Uruchamianie serwera Maia (QT_QPA_PLATFORM=${MAIA_QPA_PLATFORM}) z: ${MAIA_OPT_PATH}..."
+echo "Uruchamianie serwera Maia (-platform ${MAIA_QPA_PLATFORM}) z: ${MAIA_OPT_PATH}..."
 exec env -u QT_QPA_PLATFORMTHEME \
          -u QT_PLUGIN_PATH \
-         QT_QPA_PLATFORM="${MAIA_QPA_PLATFORM}" \
-         "${MAIA_OPT_PATH}/bin/appMaiaServer"
+         "${MAIA_OPT_PATH}/bin/appMaiaServer" -platform "${MAIA_QPA_PLATFORM}"
