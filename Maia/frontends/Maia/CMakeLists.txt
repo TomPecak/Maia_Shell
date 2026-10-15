@@ -11,7 +11,9 @@ qt_add_qml_module(MaiaFrontend
         VERSION ${MAIA_VERSION}
 
         QML_FILES Main.qml
-        QML_FILES BottomLayer.qml
+        QML_FILES LayerBottom.qml
+        QML_FILES AvailableFonts.qml
+        QML_FILES LayerTop.qml
 )
 
 

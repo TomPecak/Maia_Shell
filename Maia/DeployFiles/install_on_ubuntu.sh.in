@@ -54,6 +54,8 @@ sudo apt install -y libqt6svg6
 # Qt SVG image format and icon engine plugins (without them QML Image cannot load .svg files)
 sudo apt install -y qt6-svg-plugins
 sudo apt install -y qml6-module-qtquick-shapes
+# Wayland layer-shell QML module (org.kde.layershell): window layers and anchoring to screen edges
+sudo apt install -y --no-install-recommends --no-install-suggests qml6-module-org-kde-layershell
 
 sudo apt install -y libkf6pulseaudioqt5
 

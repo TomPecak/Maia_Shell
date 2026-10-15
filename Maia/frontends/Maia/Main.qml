@@ -7,24 +7,29 @@ Window{
 
     visible: true
 
-    width: Screen.width
-    height: Screen.height
-    flags: Qt.Window | Qt.FramelessWindowHint | Qt.WindowStaysOnBottomHint
-    visibility: Window.FullScreen
+    title: "root"
+
+    width: 500
+    height: 500
+    flags: Qt.Window// | Qt.FramelessWindowHint
+    //visibility: Window.FullScreen
+
+
+
+
 
     color: "yellow"
 
     MProxyWindow{
-        id: appLauncherWindow
-        source: "BottomLayer.qml"
-        //source: Qt.resolvedUrl("./windows/AppsLauncherWindow.qml")
+        id: topLayer
+        source: "LayerTop.qml"
+
         proxyVisible: true
         anchors.right: parent.right
         //anchors.left: parent.left
         anchors.top: parent.top
         //anchors.bottom: parent.bottom
-        // Rozmiar elementu = rozmiar okna proxy (nadpisuje width/height z BottomLayer.qml),
-        // bez niego okno ma 0x0 i nie jest wyświetlane
+
         width: 100
         height: 100
         swapInterval: 1
@@ -32,5 +37,29 @@ Window{
         onProxyVisibleChanged: {
             console.log("9999999999999999 PROXY VISIBLE CHANGED !! proxyVisible = " + appLauncherWindow.proxyVisible)
         }
+    }
+
+    MProxyWindow{
+        id: bottomLayer
+        source: "LayerBottom.qml"
+
+        proxyVisible: true
+        anchors.right: parent.right
+        //anchors.left: parent.left
+        anchors.top: parent.top
+        //anchors.bottom: parent.bottom
+
+        width: 100
+        height: 100
+        swapInterval: 1
+
+        onProxyVisibleChanged: {
+            console.log("9999999999999999 PROXY VISIBLE CHANGED !! proxyVisible = " + appLauncherWindow.proxyVisible)
+        }
+    }
+
+    AvailableFonts{
+        anchors.right: root.right
+        anchors.bottom: root.bottom
     }
 }

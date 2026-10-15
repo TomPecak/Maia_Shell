@@ -265,7 +265,7 @@ void getCmdLineOptions(const QCoreApplication &app,
     y = 100;
     width = 800;
     height = 600;
-    swapInterval = 0;
+    swapInterval = 1;
     proxyVisible = false;
 
     // Parse mode option
