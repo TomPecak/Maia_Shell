@@ -3,6 +3,7 @@
 #include <QDBusConnection>
 #include <QDBusError>
 #include <QDir>
+#include <QFileInfo>
 #include <QUuid>
 #include <qdbusmetatype.h>
 
@@ -120,46 +121,39 @@ void FrontendManagerService::loadFrontends()
     }
 
     // ========================================================================
-    // Ubuntu 24.04
+    // Skanowanie katalogu z frontendami
     // ========================================================================
-    FrontendInfo gnomeFrontend;
-    gnomeFrontend.name = QStringLiteral("Ubuntu 24.04");
-    gnomeFrontend.description = QStringLiteral("Ubuntu 24.04 like frontend");
-    gnomeFrontend.qmlFilePath = basePath + QStringLiteral("/Gnome/Main.qml");
-    gnomeFrontend.id = QString::fromUtf8(
-        QCryptographicHash::hash(gnomeFrontend.name.toUtf8(), QCryptographicHash::Sha1).toHex());
+    // Każdy podkatalog zawierający Main.qml jest traktowany jako frontend.
+    // Nazwa i opis to nazwa katalogu, id to hash SHA1 nazwy katalogu.
+    QDir baseDir(basePath);
+    if (!baseDir.exists()) {
+        qDebug() << "[ERROR] Frontends directory does not exist:" << basePath;
+    }
 
-    qDebug() << "[STARTUP INFO] Ubuntu 24.04 frontend id =" << gnomeFrontend.id;
-    m_frontends.insert(gnomeFrontend.id, gnomeFrontend);
+    const QStringList dirNames = baseDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name);
+    for (const QString &dirName : dirNames) {
+        const QString mainQmlPath = baseDir.filePath(dirName + QStringLiteral("/Main.qml"));
 
-    // ========================================================================
-    // XP Luna
-    // ========================================================================
-    FrontendInfo lunaFrontend;
-    lunaFrontend.name = QStringLiteral("XP Luna");
-    lunaFrontend.description = QStringLiteral("XP Luna like frontend");
-    lunaFrontend.qmlFilePath = basePath + QStringLiteral("/XPLuna/Main.qml");
-    lunaFrontend.id = QString::fromUtf8(
-        QCryptographicHash::hash(lunaFrontend.name.toUtf8(), QCryptographicHash::Sha1).toHex());
+        if (!QFileInfo::exists(mainQmlPath)) {
+            qDebug() << "[ INFO ] Skipping directory" << dirName << "- no Main.qml file";
+            continue;
+        }
 
-    qDebug() << "[STARTUP INFO] XP Luna frontend id =" << lunaFrontend.id;
-    m_frontends.insert(lunaFrontend.id, lunaFrontend);
+        FrontendInfo frontend;
+        frontend.name = dirName;
+        frontend.description = dirName;
+        frontend.qmlFilePath = mainQmlPath;
+        frontend.id = QString::fromUtf8(
+            QCryptographicHash::hash(dirName.toUtf8(), QCryptographicHash::Sha1).toHex());
 
-    // ========================================================================
-    // CutefishOS
-    // ========================================================================
-    FrontendInfo cutefishFrontend;
-    cutefishFrontend.name = QStringLiteral("CutefishOS");
-    cutefishFrontend.description = QStringLiteral("CutefishOS like frontend");
-    cutefishFrontend.qmlFilePath = basePath + QStringLiteral("/Cutefish/Main.qml");
+        qDebug() << "[STARTUP INFO] Found frontend" << frontend.name << "id =" << frontend.id
+                 << "qml =" << frontend.qmlFilePath;
+        m_frontends.insert(frontend.id, frontend);
+    }
 
-    qDebug() << "KKKKKKKKKKKKKKKUrwa cutefish qml path: " << cutefishFrontend.qmlFilePath;
-
-    cutefishFrontend.id = QString::fromUtf8(
-        QCryptographicHash::hash(cutefishFrontend.name.toUtf8(), QCryptographicHash::Sha1).toHex());
-
-    qDebug() << "[STARTUP INFO] CutefishOS frontend id =" << cutefishFrontend.id;
-    m_frontends.insert(cutefishFrontend.id, cutefishFrontend);
+    if (m_frontends.isEmpty()) {
+        qDebug() << "[ERROR] No frontends found in:" << basePath;
+    }
 
     // ========================================================================
     // Aktywacja zapisanego frontendu
@@ -171,7 +165,14 @@ void FrontendManagerService::loadFrontends()
     if (!savedFrontendId.isEmpty() && m_frontends.contains(savedFrontendId)) {
         m_activeFrontendId = savedFrontendId;
     } else {
-        m_activeFrontendId = m_frontends.isEmpty() ? QStringLiteral("") : gnomeFrontend.id; // Domyślny
+        // Domyślny: Gnome jeśli istnieje, w przeciwnym razie pierwszy znaleziony
+        const QString defaultFrontendId = QString::fromUtf8(
+            QCryptographicHash::hash(QByteArrayLiteral("Gnome"), QCryptographicHash::Sha1).toHex());
+        if (m_frontends.contains(defaultFrontendId)) {
+            m_activeFrontendId = defaultFrontendId;
+        } else {
+            m_activeFrontendId = m_frontends.isEmpty() ? QStringLiteral("") : m_frontends.firstKey();
+        }
     }
 
     // Wyślij sygnał o zmianie

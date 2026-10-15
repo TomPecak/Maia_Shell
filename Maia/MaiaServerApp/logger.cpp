@@ -160,7 +160,7 @@ void Logger::onSocketError(QAbstractSocket::SocketError socketError)
 
 void Logger::onSocketDisconnected()
 {
-    qInfo() << "[LOGGER NETWORK] Disconnected from Logger server. Retrying...";
+    //qInfo() << "[LOGGER NETWORK] Disconnected from Logger server. Retrying...";
     reconnect_time = qMin(reconnect_time + 1000, 5000);
     QTimer::singleShot(reconnect_time, this, [this]() { connectToServer(m_serverUrl); });
 }
