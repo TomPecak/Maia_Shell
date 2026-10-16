@@ -3,6 +3,8 @@ import org.kde.layershell 1.0 as LayerShell
 
 import Maia.Backend as Maia
 
+import "dock"
+
 Window{
     id: root
 
@@ -20,6 +22,23 @@ Window{
 
     color: "#AA112233"
 
+    // While the dock panel is open, the whole window receives input and a click
+    // outside of the panel closes it. Declared first, so it lies below everything else.
+    MouseArea {
+        anchors.fill: parent
+        visible: dock.panelOpen
+        onPressed: dock.panelOpen = false
+
+        Maia.MaskArea {
+            anchors.fill: parent
+        }
+    }
+
+    // While the dock is dragged, the whole window receives input
+    // Maia.MaskArea {
+    //     anchors.fill: parent
+    //     visible: dock.dragging
+    // }
 
     AvailableFonts{
         anchors.left: parent.left
@@ -30,4 +49,7 @@ Window{
         }
     }
 
+    Dock {
+        id: dock
+    }
 }
