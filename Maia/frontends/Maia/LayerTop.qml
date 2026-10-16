@@ -20,7 +20,8 @@ Window{
     LayerShell.Window.exclusionZone: 0
     LayerShell.Window.keyboardInteractivity: LayerShell.Window.KeyboardInteractivityNone
 
-    color: "#AA112233"
+    //color: "#AA112233"
+    color: "transparent"
 
     // While the dock panel is open, the whole window receives input and a click
     // outside of the panel closes it. Declared first, so it lies below everything else.

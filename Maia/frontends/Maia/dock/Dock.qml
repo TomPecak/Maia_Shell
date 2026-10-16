@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Layouts
 
 import Maia.Backend as Maia
 
@@ -13,9 +14,16 @@ Rectangle {
 
     // --- Public API ---
 
-    // Size along the edge the dock is attached to and across it
-    property real longSize: 700
-    property real shortSize: 100
+    // Size across the edge the dock is attached to
+    property real shortSize: 80
+    // Distance between the dock border and its buttons, and between the buttons
+    property real padding: 10
+    property real spacing: 10
+    // Size of the (square) buttons
+    readonly property real buttonSize: shortSize - 2 * padding
+    // Size along the edge, follows the number of buttons
+    property real longSize: (vertical ? buttonsLayout.implicitHeight : buttonsLayout.implicitWidth)
+                            + 2 * padding
     // Distance from the screen edge
     property real edgeMargin: 15
     // Edge the dock is attached to: Qt.TopEdge, Qt.BottomEdge, Qt.LeftEdge or Qt.RightEdge
@@ -32,10 +40,8 @@ Rectangle {
 
     // --- Appearance ---
 
-    radius: 20
-    color: "#CCFFFFFF"
-    border.color: "red"
-    border.width: 2
+    radius: 25
+    color: "#55000000"
 
     // "Pressed" effect while the dock is grabbed
     scale: dragArea.pressed ? 0.97 : 1.0
@@ -102,27 +108,82 @@ Rectangle {
         anchors.fill: parent
     }
 
-    DockButton {
-        id: launcherButton
+    // Buttons in a row (horizontal dock) or in a column (vertical dock)
+    GridLayout {
+        id: buttonsLayout
 
-        width: dock.shortSize
-        height: dock.shortSize
-        // At the beginning of the dock: left in a horizontal dock, top in a vertical one
-        x: dock.vertical ? (dock.width - width) / 2 : 0
-        y: dock.vertical ? 0 : (dock.height - height) / 2
+        anchors.centerIn: parent
+        flow: dock.vertical ? GridLayout.TopToBottom : GridLayout.LeftToRight
+        rowSpacing: dock.spacing
+        columnSpacing: dock.spacing
 
-        onClicked: dock.panelOpen = !dock.panelOpen
+        Repeater {
+            model: d.applications
 
-        DockPanel {
-            open: dock.panelOpen
-            edge: dock.edge
+            delegate: DockButton {
+                required property var modelData
+
+                Layout.preferredWidth: dock.buttonSize
+                Layout.preferredHeight: dock.buttonSize
+                iconName: modelData.iconName
+
+                onClicked: dock.launchApplication(modelData.command)
+            }
         }
+
+        DockSeparator {
+            Layout.preferredWidth: dock.vertical ? dock.buttonSize : 1
+            Layout.preferredHeight: dock.vertical ? 1 : dock.buttonSize
+        }
+
+        // Opens the dock panel
+        DockButton {
+            id: panelButton
+
+            Layout.preferredWidth: dock.buttonSize
+            Layout.preferredHeight: dock.buttonSize
+            iconSource: Qt.resolvedUrl("../assets/pngegg.png")
+
+            background: Rectangle {
+                color: "white"
+                radius: 10
+            }
+
+            onClicked: dock.panelOpen = !dock.panelOpen
+
+            DockPanel {
+                open: dock.panelOpen
+                edge: dock.edge
+            }
+        }
+    }
+
+    // TODO: Starting applications is not implemented yet (in the Quickshell dock it was done
+    // with Quickshell.Io.Process), it should be done by the Maia backend.
+    function launchApplication(command) {
+        console.log("[Dock] launchApplication() not implemented, command:", JSON.stringify(command))
     }
 
     // --- Private state ---
 
     QtObject {
         id: d
+
+        // Applications in the dock, taken from the Quickshell dock
+        readonly property var applications: [
+            { iconName: "camera-photo",
+              command: ["sh", "-c", "(PLIK=~/Obrazy/Screenshots/$(date +%F_%H-%M-%S).png && grim -g \"$(slurp)\" \"$PLIK\" && nautilus -s \"$PLIK\") &"] },
+            { iconName: "org.gnome.Calculator", command: ["gnome-calculator"] },
+            { iconName: "vscode", command: ["sh", "-c", "code &"] },
+            { iconName: "org.gnome.Terminal", command: ["sh", "-c", "gnome-terminal &"] },
+            { iconName: "qterminal", command: ["qterminal", "&"] },
+            { iconName: "google-chrome", command: ["sh", "-c", "google-chrome &"] },
+            { iconName: "org.gnome.Nautilus", command: ["sh", "-c", "nautilus &"] },
+            { iconName: "designer-qt5", command: ["sh", "-c", "/home/rafal/Qt/Qt_6_11_1/Tools/QtCreator/bin/qtcreator"] },
+            { iconName: "org.gnome.SystemMonitor", command: ["sh", "-c", "gnome-system-monitor &"] },
+            { iconName: "org.gnome.Settings", command: ["env", "XDG_CURRENT_DESKTOP=GNOME", "gnome-control-center"] },
+            { iconName: "org.gnome.gedit", command: ["sh", "-c", "gnome-text-editor /home/rafal/.config/quickshell/* &"] }
+        ]
 
         property bool dragging: false
         // Position animation duration, changed before 'dragging' so the release
