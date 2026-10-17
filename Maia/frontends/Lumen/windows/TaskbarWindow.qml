@@ -85,6 +85,7 @@ Window {
                 StartGlyph {
                     anchors.centerIn: parent
                     size: 22
+                    active: startButton.highlighted
                     scale: startButton.pressed ? 0.82 : 1.0
                     Behavior on scale { NumberAnimation { duration: Theme.durationFast; easing.type: Theme.easingEnter } }
                 }

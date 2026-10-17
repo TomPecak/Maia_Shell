@@ -1,39 +1,54 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 
 import ".."
 
 // Logo of the start button: four circles of light in tones of the accent color,
-// the top-left one is larger and brighter (the "source" of the light)
+// the top-left one is larger and brighter (the "source" of the light).
+//
+// When the start menu is open (active), the large circle shrinks to the size of the others
+// and all circles light up to the full accent tone.
 Item {
     id: glyph
 
     property int size: 22
+    // The start menu is open
+    property bool active: false
+
+    // Center and diameter of the top-left circle, relative to the size
+    property real leadCenter: active ? 0.25 : 0.27
+    property real leadDiameter: active ? 0.40 : 0.50
 
     implicitWidth: size
     implicitHeight: size
 
-    Repeater {
-        // Center (cx, cy) and diameter (d) relative to the size, opacity of the tone
-        model: [
-            { cx: 0.27, cy: 0.27, d: 0.50, tone: 1.0 },
-            { cx: 0.76, cy: 0.25, d: 0.40, tone: 0.8 },
-            { cx: 0.25, cy: 0.76, d: 0.40, tone: 0.8 },
-            { cx: 0.76, cy: 0.76, d: 0.40, tone: 0.6 }
-        ]
+    Behavior on leadCenter { NumberAnimation { duration: Theme.durationNormal; easing.type: Theme.easingEnter } }
+    Behavior on leadDiameter { NumberAnimation { duration: Theme.durationNormal; easing.type: Theme.easingEnter } }
 
-        delegate: Rectangle {
-            required property var modelData
+    Dot { cx: glyph.leadCenter; cy: glyph.leadCenter; diameter: glyph.leadDiameter; tone: 1.0 }
+    Dot { cx: 0.76; cy: 0.25; tone: 0.8 }
+    Dot { cx: 0.25; cy: 0.76; tone: 0.8 }
+    Dot { cx: 0.76; cy: 0.76; tone: 0.6 }
 
-            width: glyph.size * modelData.d
-            height: width
-            radius: width / 2
-            x: glyph.size * modelData.cx - width / 2
-            y: glyph.size * modelData.cy - height / 2
-            color: Theme.accent
-            opacity: modelData.tone
-            antialiasing: true
+    // Circle with the center (cx, cy) and diameter relative to the size, tone is the opacity
+    // of the accent color while the start menu is closed
+    component Dot: Rectangle {
+        property real cx
+        property real cy
+        property real diameter: 0.40
+        property real tone: 1.0
 
-            Behavior on color { ColorAnimation { duration: Theme.durationNormal } }
-        }
+        width: glyph.size * diameter
+        height: width
+        radius: width / 2
+        x: glyph.size * cx - width / 2
+        y: glyph.size * cy - height / 2
+        color: Theme.accent
+        opacity: glyph.active ? 1.0 : tone
+        antialiasing: true
+
+        Behavior on color { ColorAnimation { duration: Theme.durationNormal } }
+        Behavior on opacity { NumberAnimation { duration: Theme.durationNormal } }
     }
 }
