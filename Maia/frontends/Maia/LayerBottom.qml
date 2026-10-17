@@ -3,6 +3,8 @@ import org.kde.layershell 1.0 as LayerShell
 
 import Maia.Backend
 
+import "menu"
+
 Window{
     id: root
 
@@ -26,6 +28,17 @@ Window{
         source: Qt.resolvedUrl("./assets/waves-macos-big-sur.jpg")
 
 
+    }
+
+    // A right click on the wallpaper opens the context menu of the desktop
+    TapHandler {
+        acceptedButtons: Qt.RightButton
+        onTapped: eventPoint => desktopMenu.popup(eventPoint.position.x, eventPoint.position.y)
+    }
+
+    DesktopMenu {
+        id: desktopMenu
+        wallpaperSource: wallpaper.source
     }
 
 

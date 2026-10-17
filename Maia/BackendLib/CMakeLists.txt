@@ -58,6 +58,8 @@ qt_add_qml_module(${PROJECT_NAME}
     SOURCES private/Mask.cpp
     SOURCES MMaskedItem.hpp
     SOURCES MMaskedItem.cpp
+    SOURCES MKdeColorScheme.hpp
+    SOURCES MKdeColorScheme.cpp
     SOURCES MaskArea.hpp
     SOURCES MaskArea.cpp
     SOURCES private/MaskTracker.hpp

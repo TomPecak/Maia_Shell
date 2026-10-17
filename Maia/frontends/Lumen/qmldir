@@ -1,0 +1,5 @@
+module LumenFrontend
+
+singleton Theme 1.0 theme/Theme.qml
+singleton Shell 1.0 shell/Shell.qml
+Main 1.0 Main.qml

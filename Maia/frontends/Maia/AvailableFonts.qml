@@ -1,6 +1,9 @@
 import QtQuick
+import QtQuick.Controls
 
 Rectangle {
+    id: root
+
     width: 320
     height: 480
     color: "steelblue"
@@ -25,6 +28,14 @@ Rectangle {
                 font.pixelSize: 20
                 color: "white"
             }
+        }
+    }
+
+    Button{
+        anchors.right: root.right
+        anchors.top: root.top
+        onClicked: {
+            root.visible = false;
         }
     }
 }
