@@ -43,7 +43,7 @@ qt_add_qml_module(GnomeFrontend
 )
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/
-        DESTINATION "${CMAKE_INSTALL_PREFIX}/frontends/Gnome"
+        DESTINATION "${CMAKE_INSTALL_PREFIX}/frontends/Ubuntu 24.04"
 )
 
 

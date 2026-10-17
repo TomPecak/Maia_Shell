@@ -18,8 +18,6 @@ void QmlGui::initQmlEngine()
 {
     //READ ENVIROMENT VARIABLES
     QString homePath = QString::fromUtf8(qgetenv("HOME"));
-    QString gnomeModulePath = homePath + QStringLiteral("/opt/Maia/Maia_") + QStringLiteral(MAIA_VERSION_STRING) + QStringLiteral("/frontends/Gnome");
-
 
     //INIT SURFACE
     //QSurfaceFormat surfaceFormat = QQuick3D::idealSurfaceFormat();
@@ -27,8 +25,6 @@ void QmlGui::initQmlEngine()
     surfaceFormat.setSwapBehavior(QSurfaceFormat::DoubleBuffer);
     surfaceFormat.setSwapInterval(m_swapIntervalOption);
     QSurfaceFormat::setDefaultFormat(surfaceFormat);
-
-    engine.addImportPath(gnomeModulePath);
 
     //INIT QML ENGINE ICON PROVIDERS
     engine.addImageProvider(QLatin1String("backend_app_icon"), &appsIconProvider);

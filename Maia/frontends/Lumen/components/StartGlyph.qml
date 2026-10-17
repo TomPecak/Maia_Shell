@@ -2,7 +2,8 @@ import QtQuick
 
 import ".."
 
-// Logo of the start button: four rounded tiles in tones of the accent color
+// Logo of the start button: four circles of light in tones of the accent color,
+// the top-left one is larger and brighter (the "source" of the light)
 Item {
     id: glyph
 
@@ -11,25 +12,28 @@ Item {
     implicitWidth: size
     implicitHeight: size
 
-    Grid {
-        anchors.fill: parent
-        columns: 2
-        spacing: Math.round(glyph.size * 0.09)
+    Repeater {
+        // Center (cx, cy) and diameter (d) relative to the size, opacity of the tone
+        model: [
+            { cx: 0.27, cy: 0.27, d: 0.50, tone: 1.0 },
+            { cx: 0.76, cy: 0.25, d: 0.40, tone: 0.8 },
+            { cx: 0.25, cy: 0.76, d: 0.40, tone: 0.8 },
+            { cx: 0.76, cy: 0.76, d: 0.40, tone: 0.6 }
+        ]
 
-        Repeater {
-            model: [1.0, 0.82, 0.82, 0.64]
+        delegate: Rectangle {
+            required property var modelData
 
-            delegate: Rectangle {
-                required property real modelData
+            width: glyph.size * modelData.d
+            height: width
+            radius: width / 2
+            x: glyph.size * modelData.cx - width / 2
+            y: glyph.size * modelData.cy - height / 2
+            color: Theme.accent
+            opacity: modelData.tone
+            antialiasing: true
 
-                width: (glyph.size - parent.spacing) / 2
-                height: width
-                radius: width * 0.22
-                color: Theme.accent
-                opacity: modelData
-
-                Behavior on color { ColorAnimation { duration: Theme.durationNormal } }
-            }
+            Behavior on color { ColorAnimation { duration: Theme.durationNormal } }
         }
     }
 }
