@@ -30,8 +30,6 @@ private:
 
     QQmlApplicationEngine engine;
     Backend backend;
-    BackendAppsIconsProvider appsIconProvider;
-    TaskbarIconsProvider taskbarIconProvider;
     DesktopApplicationModel appsListModel;
     FilterProxyModel filterProxyModel;
     MAudioBackend audioBackend;

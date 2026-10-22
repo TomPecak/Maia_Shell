@@ -157,8 +157,8 @@ int main(int argc, char *argv[])
         Backend backend(homePath);
 
         //INIT QML ENGINE ICON PROVIDERS
-        BackendAppsIconsProvider appsIconProvider;
-        engine.addImageProvider(QLatin1String("backend_app_icon"), &appsIconProvider);
+        //the engine takes ownership of image providers and deletes them in its destructor
+        engine.addImageProvider(QLatin1String("backend_app_icon"), new BackendAppsIconsProvider);
         engine.addImageProvider(QLatin1String("backendTaskbarIcons"), new TaskbarIconsProvider);
         engine.addImageProvider(QStringLiteral("icontheme"), new IconThemeProvider());
 
