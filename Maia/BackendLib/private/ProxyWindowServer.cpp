@@ -12,7 +12,14 @@ ProxyWindowLocalServer::ProxyWindowLocalServer(QObject *parent)
             &ProxyWindowLocalServer::handleNewConnection);
 }
 
-ProxyWindowLocalServer::~ProxyWindowLocalServer() {}
+ProxyWindowLocalServer::~ProxyWindowLocalServer()
+{
+    //client sockets are children of m_server, which is destroyed after m_clients and m_clientBlockSizes;
+    //their disconnected() signal (emitted from ~QLocalSocket) must not reach handleClientDisconnected() then
+    for (QLocalSocket *client : std::as_const(m_clients)) {
+        client->disconnect(this);
+    }
+}
 
 void ProxyWindowLocalServer::installWindow(QQmlApplicationEngine &engine)
 {

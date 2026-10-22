@@ -27,8 +27,9 @@ void QmlGui::initQmlEngine()
     QSurfaceFormat::setDefaultFormat(surfaceFormat);
 
     //INIT QML ENGINE ICON PROVIDERS
-    engine.addImageProvider(QLatin1String("backend_app_icon"), &appsIconProvider);
-    engine.addImageProvider(QLatin1String("backendTaskbarIcons"), &taskbarIconProvider);
+    //the engine takes ownership of image providers and deletes them in its destructor
+    engine.addImageProvider(QLatin1String("backend_app_icon"), new BackendAppsIconsProvider);
+    engine.addImageProvider(QLatin1String("backendTaskbarIcons"), new TaskbarIconsProvider);
     engine.addImageProvider(QStringLiteral("icontheme"), new IconThemeProvider());
 
     //INIT QML ENGINE CONTEXT PROPERTIES
