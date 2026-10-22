@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Templates as T
 
-import ".."
+import LumenFrontend
 
 // Rounded search field with a search icon. While focused it shows an accent underline.
 T.TextField {

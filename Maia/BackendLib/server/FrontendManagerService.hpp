@@ -2,13 +2,14 @@
 
 #include <QObject>
 #include <QMap>
-#include <QVariantList>
+#include <QVariantMap>
 
 #include "FrontendInfo.hpp"
 
+// D-Bus service org.maia.FrontendManager. The contract is dbus/org.maia.FrontendManager.xml; the object is
+// exported through the adaptor generated from it, so only what the contract lists is visible on the bus.
 class FrontendManagerService : public QObject {
     Q_OBJECT
-    Q_CLASSINFO("D-Bus Interface", "org.maia.FrontendManager")
 
 public:
     explicit FrontendManagerService(QObject *parent = nullptr);
@@ -20,18 +21,15 @@ public:
 
 public Q_SLOTS:
     //D-Bus API
-    QVariantList getFrontendList();
+    QList<QVariantMap> getFrontendList();
     QString activeFrontend() const;
     void setActiveFrontend(const QString &frontendId);
 
 Q_SIGNALS:
     //D-Bus API
-    Q_SCRIPTABLE void frontendAdded(const QString &id,
-                                    const QString &name,
-                                    const QString &description,
-                                    const QString &path);
-    Q_SCRIPTABLE void frontendRemoved(const QString &id);
-    Q_SCRIPTABLE void activeFrontendChanged(const QString &frontendId);
+    void frontendAdded(const QVariantMap &frontend);
+    void frontendRemoved(const QString &frontendId);
+    void activeFrontendChanged(const QString &frontendId);
 
     //internal Server api
     void activeFrontendChangeRequest(const QString & forntendId);
@@ -42,6 +40,7 @@ private:
     QString m_activeFrontendId;
 
     void loadFrontends();
+    QVariantMap frontendMap(const FrontendInfo &frontend) const;
     void addFrontend(const FrontendInfo &frontend);
     void removeFrontend(const QString &frontendId);
 

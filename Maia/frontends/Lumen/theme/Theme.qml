@@ -76,6 +76,19 @@ QtObject {
     readonly property color divider: dark ? Qt.rgba(1, 1, 1, 0.08) : Qt.rgba(0, 0, 0, 0.07)
     readonly property color shadow: dark ? Qt.rgba(0, 0, 0, 0.45) : Qt.rgba(0, 0, 0, 0.18)
 
+    // Application windows (File Explorer): the frame with the tabs ("mica", slightly tinted
+    // by the accent), the active tab and the toolbars, the content area
+    readonly property color windowChrome: Qt.tint(dark ? "#1b1b1e" : "#e7ebf1",
+                                                  Qt.rgba(accent.r, accent.g, accent.b, dark ? 0.05 : 0.07))
+    readonly property color windowToolbar: dark ? "#2a2a2e" : "#f9fafb"
+    readonly property color windowContent: dark ? "#232326" : "#ffffff"
+    // Selected items in lists and grids
+    readonly property color selection: Qt.rgba(accent.r, accent.g, accent.b, dark ? 0.24 : 0.16)
+    readonly property color selectionHover: Qt.rgba(accent.r, accent.g, accent.b, dark ? 0.32 : 0.22)
+    // Close button of a window
+    readonly property color closeHover: "#c42b1c"
+    readonly property color closePressed: "#a3271b"
+
     // Wallpaper base gradient, the accent is blended into it by the wallpaper
     readonly property color wallpaperTop: dark ? "#0A0E1E" : "#E3ECF7"
     readonly property color wallpaperBottom: dark ? "#16112B" : "#F5F0FA"

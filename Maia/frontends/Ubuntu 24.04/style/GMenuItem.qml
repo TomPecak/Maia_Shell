@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Controls
-import "./"
-import "../"
+import GnomeFrontend
 
 MenuItem {
 
@@ -64,8 +63,8 @@ MenuItem {
             width: parent.width * 0.8
             anchors.centerIn: parent
 
-            icon.source: "../icons/right.svg"
-            //icon.source: "../icons/right-large.svg"
+            icon.source: "../assets/icons/right.svg"
+            //icon.source: "../assets/icons/right-large.svg"
             icon.color: UIStyle.colorButtonSystemSettingsIcon
             icon.width: iconBtn.width
             icon.height: iconBtn.height

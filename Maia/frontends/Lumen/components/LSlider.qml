@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Templates as T
 
-import ".."
+import LumenFrontend
 
 // Fluent style slider: thin track filled with the accent color, round thumb with an accent
 // dot which grows on hover and shrinks while dragged

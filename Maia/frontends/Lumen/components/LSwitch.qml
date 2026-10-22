@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Templates as T
 
-import ".."
+import LumenFrontend
 
 // Fluent style toggle switch: outlined track with a small knob when off,
 // accent track with a larger knob when on
@@ -32,7 +32,7 @@ T.Switch {
             radius: height / 2
             color: control.checked ? Theme.onAccent : Theme.textSecondary
 
-            Behavior on x { NumberAnimation { duration: Theme.durationNormal; easing.type: Theme.easingEnter } }
+            Behavior on x { XAnimator { duration: Theme.durationNormal; easing.type: Theme.easingEnter } }
             Behavior on width { NumberAnimation { duration: Theme.durationFast } }
             Behavior on height { NumberAnimation { duration: Theme.durationFast } }
         }

@@ -23,6 +23,7 @@
 #include <TaskbarIconProvider.hpp>
 #include <helper/Process.hpp>
 #include <private/ProxyWindowServer.hpp>
+#include <server/FrontendModules.hpp>
 #include <server/Server.hpp>
 
 #include <QtQml/qqmlextensionplugin.h>
@@ -72,6 +73,19 @@ int main(int argc, char *argv[])
 
     //READ ENVIROMENT VARIABLES
     QString homePath = QString::fromUtf8(qgetenv("HOME"));
+
+    // NA RAZIE WYŁĄCZONE: prostszy sterownik animacji Qt Quick.
+    // Gdy proces ma więcej niż jedno okno (np. Lumen: pulpit, pasek zadań, flyouty), animacje
+    // QML (NumberAnimation, Behavior) nie są zsynchronizowane z klatkami ekranu: zegar animacji
+    // tyka co ~16 ms (62,5 Hz), ekran odświeża się 60 Hz i co ~0,4 s animacja przeskakuje
+    // o podwójny krok (zmierzone we frontendzie Experimental). Ten sterownik liczy postęp
+    // animacji z rzeczywistego czasu przy każdej klatce, co usuwa te przeskoki.
+    // Na razie problem omijamy: jedno animowane okno na proces (MProxyWindow) i Animatory
+    // (OpacityAnimator, XAnimator...) w Lumen, które działają w wątku renderowania.
+    // Musi być ustawione przed utworzeniem QGuiApplication; procesy klientów MProxyWindow
+    // dziedziczą środowisko. Nie nadpisujemy wartości ustawionej przez użytkownika.
+    // if (!qEnvironmentVariableIsSet("QSG_USE_SIMPLE_ANIMATION_DRIVER"))
+    //     qputenv("QSG_USE_SIMPLE_ANIMATION_DRIVER", "1");
 
     //INIT APPLICATION
     QGuiApplication::setApplicationName(QStringLiteral("Maia_%1").arg(QStringLiteral(MAIA_VERSION_STRING)));
@@ -126,6 +140,9 @@ int main(int argc, char *argv[])
         surfaceFormat.setSwapInterval(swapInterwalOption);
         QSurfaceFormat::setDefaultFormat(surfaceFormat);
 
+        // The window file belongs to a frontend: its shared module (theme, components) must be importable here
+        // too. Declared before the engine so that the symlinks outlive it.
+        FrontendModules frontendModules;
         QQmlApplicationEngine engine;
 
 
@@ -192,7 +209,10 @@ int main(int argc, char *argv[])
             },
             Qt::QueuedConnection);
 
-        engine.load(QUrl(sourceOption));
+        const QUrl sourceUrl(sourceOption);
+        if (sourceUrl.isLocalFile())
+            frontendModules.registerForFile(engine, sourceUrl.toLocalFile());
+        engine.load(sourceUrl);
 
         //Make sure the main QML object is loaded.
         if (engine.rootObjects().isEmpty())

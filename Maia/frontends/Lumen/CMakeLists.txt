@@ -6,12 +6,12 @@ find_package(Qt6 ${REQUIRED_QT_VERSION} REQUIRED COMPONENTS Quick)
 
 qt_standard_project_setup(REQUIRES ${REQUIRED_QT_VERSION})
 
-# The frontend is loaded from disk (Main.qml) by the Maia backend, the module is built
+# The frontend is loaded from disk (shell/Main.qml) by the Maia backend, the module is built
 # for tooling (qmllint, qmlcachegen checks) and the files are installed as they are.
 
 set(LUMEN_QML_SINGLETONS
     theme/Theme.qml
-    shell/Shell.qml
+    shell/state/Shell.qml
 )
 
 set_source_files_properties(${LUMEN_QML_SINGLETONS}
@@ -23,8 +23,20 @@ qt_add_qml_module(LumenFrontend
     VERSION ${MAIA_VERSION}
 
     QML_FILES
-        Main.qml
+        shell/Main.qml
         ${LUMEN_QML_SINGLETONS}
+        apps/files/CommandBar.qml
+        apps/files/DetailsPane.qml
+        apps/files/ExplorerButton.qml
+        apps/files/ExplorerTab.qml
+        apps/files/ExplorerToolTip.qml
+        apps/files/FileExplorerWindow.qml
+        apps/files/FileView.qml
+        apps/files/MockFileSystem.js
+        apps/files/NavigationBar.qml
+        apps/files/Sidebar.qml
+        apps/files/StatusBar.qml
+        apps/files/TabStrip.qml
         components/AccentButton.qml
         components/AppTile.qml
         components/CalendarView.qml
@@ -38,20 +50,24 @@ qt_add_qml_module(LumenFrontend
         components/LSwitch.qml
         components/LText.qml
         components/NotificationCard.qml
+        components/ProgressRing.qml
         components/SearchBox.qml
         components/StartGlyph.qml
         components/SubtleButton.qml
         components/TaskbarButton.qml
         components/ToggleTile.qml
-        desktop/DesktopClock.qml
-        desktop/Wallpaper.qml
-        services/AppColorSync.qml
-        windows/CalendarWindow.qml
-        windows/DesktopMenuWindow.qml
-        windows/QuickSettingsWindow.qml
-        windows/StartMenuWindow.qml
-        windows/TaskbarWindow.qml
-        windows/WidgetsWindow.qml
+        shell/desktop/DesktopClock.qml
+        shell/desktop/Wallpaper.qml
+        shell/services/AppColorSync.qml
+        shell/services/CountdownTimer.qml
+        shell/services/TimerSound.qml
+        shell/windows/CalendarWindow.qml
+        shell/windows/DesktopMenuWindow.qml
+        shell/windows/QuickSettingsWindow.qml
+        shell/windows/StartMenuWindow.qml
+        shell/windows/TaskbarWindow.qml
+        shell/windows/TimerWindow.qml
+        shell/windows/WidgetsWindow.qml
 )
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/

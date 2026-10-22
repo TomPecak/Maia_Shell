@@ -2,7 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 
-import ".."
+import LumenFrontend
 
 // Logo of the start button: four circles of light in tones of the accent color,
 // the top-left one is larger and brighter (the "source" of the light).
@@ -49,6 +49,6 @@ Item {
         antialiasing: true
 
         Behavior on color { ColorAnimation { duration: Theme.durationNormal } }
-        Behavior on opacity { NumberAnimation { duration: Theme.durationNormal } }
+        Behavior on opacity { OpacityAnimator { duration: Theme.durationNormal } }
     }
 }

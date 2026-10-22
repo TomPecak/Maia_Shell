@@ -1,6 +1,6 @@
 import QtQuick
 
-import ".."
+import LumenFrontend
 
 // Text with the typography and colors of the theme
 Text {

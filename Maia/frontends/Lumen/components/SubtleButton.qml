@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Templates as T
 
-import ".."
+import LumenFrontend
 
 // Transparent button which shows a subtle fill on hover and press (Fluent "subtle"
 // button). It is the base of the taskbar, tray and list buttons; the content is set

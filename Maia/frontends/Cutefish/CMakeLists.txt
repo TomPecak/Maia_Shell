@@ -8,7 +8,7 @@ find_package(Qt6 ${REQUIRED_QT_VERSION} REQUIRED COMPONENTS Quick)
 qt_standard_project_setup(REQUIRES ${REQUIRED_QT_VERSION})
 
 set(CUTEFISH_QML_FILES
-    Main.qml
+    shell/Main.qml
 )
 
 set(CUTEFISH_QML_SINGLETONS
@@ -26,23 +26,23 @@ qt_add_qml_module(CutefishFrontend
 
         QML_FILES
         ${CUTEFISH_QML_FILES}
-        QML_FILES menu/ChangeFrontendMenu.qml
-        QML_FILES contents/WallpaperContent.qml
-        QML_FILES contents/DockContent.qml
-        QML_FILES items/AppItem.qml
-        QML_FILES items/DockItem.qml
-        QML_FILES windows/DockWindow.qml
-        QML_FILES popups/PopupTips.qml
+        QML_FILES shell/menu/ChangeFrontendMenu.qml
+        QML_FILES shell/contents/WallpaperContent.qml
+        QML_FILES shell/contents/DockContent.qml
+        QML_FILES shell/items/AppItem.qml
+        QML_FILES shell/items/DockItem.qml
+        QML_FILES shell/windows/DockWindow.qml
+        QML_FILES shell/popups/PopupTips.qml
         ${CUTEFISH_QML_SINGLETONS}
-        QML_FILES launcher/AppsLauncherWindow.qml
-        QML_FILES launcher/LauncherContent.qml
-        QML_FILES launcher/AllAppsView.qml
-        QML_FILES launcher/GridItemDelegate.qml
-        QML_FILES statusbar/StatusbarWindow.qml
-        QML_FILES statusbar/StatusbarContent.qml
-        QML_FILES statusbar/StandardItem.qml
-        QML_FILES FishUI/DesktopMenu.qml
-        QML_FILES control_center/ControlCenter.qml
+        QML_FILES shell/launcher/AppsLauncherWindow.qml
+        QML_FILES shell/launcher/LauncherContent.qml
+        QML_FILES shell/launcher/AllAppsView.qml
+        QML_FILES shell/launcher/GridItemDelegate.qml
+        QML_FILES shell/statusbar/StatusbarWindow.qml
+        QML_FILES shell/statusbar/StatusbarContent.qml
+        QML_FILES shell/statusbar/StandardItem.qml
+        QML_FILES shell/menu/DesktopMenu.qml
+        QML_FILES shell/control_center/ControlCenter.qml
 )
 
 

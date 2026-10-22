@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Templates as T
 
-import ".."
+import LumenFrontend
 
 // Item of LMenu: icon, text and an arrow when the item opens a submenu.
 // Disabled items are dimmed and do not react to the mouse.
@@ -11,6 +11,8 @@ T.AbstractButton {
     property string iconName
     property color iconColor: Theme.textPrimary
     property bool hasSubmenu: false
+    // Keyboard shortcut shown on the right, e.g. "Ctrl+C"
+    property string shortcut
     // Keeps the hover fill while the submenu of the item is open
     property bool highlighted: false
 
@@ -50,11 +52,22 @@ T.AbstractButton {
         LText {
             anchors.left: parent.left
             anchors.leftMargin: 16 + Theme.spacingM
-            anchors.right: arrow.left
+            anchors.right: shortcutLabel.left
             anchors.rightMargin: Theme.spacingS
             anchors.verticalCenter: parent.verticalCenter
             text: item.text
             color: item.enabled ? Theme.textPrimary : Theme.textTertiary
+        }
+
+        LText {
+            id: shortcutLabel
+
+            anchors.right: arrow.visible ? arrow.left : parent.right
+            anchors.rightMargin: arrow.visible ? Theme.spacingS : 0
+            anchors.verticalCenter: parent.verticalCenter
+            text: item.shortcut
+            font.pixelSize: Theme.fontCaption
+            color: Theme.textTertiary
         }
 
         LIcon {

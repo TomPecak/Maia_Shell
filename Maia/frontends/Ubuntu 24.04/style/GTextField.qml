@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 
-import "../style"
+import GnomeFrontend
 
 TextField {
     id :root
@@ -31,7 +31,7 @@ TextField {
                 height: width
                 anchors.centerIn: parent
 
-                source: "../icons/edit-find-symbolic.svg"
+                source: "../assets/icons/edit-find-symbolic.svg"
                 sourceSize: Qt.size(width,height)
             }
         }

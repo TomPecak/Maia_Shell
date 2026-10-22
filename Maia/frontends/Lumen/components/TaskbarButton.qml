@@ -1,6 +1,6 @@
 import QtQuick
 
-import ".."
+import LumenFrontend
 
 // Taskbar button with an icon and a state indicator under it:
 // a short gray pill for a running application, a longer accent pill for an active one
@@ -28,7 +28,7 @@ SubtleButton {
 
             // Icon "press" effect
             scale: control.pressed ? 0.82 : 1.0
-            Behavior on scale { NumberAnimation { duration: Theme.durationFast; easing.type: Theme.easingEnter } }
+            Behavior on scale { ScaleAnimator { duration: Theme.durationFast; easing.type: Theme.easingEnter } }
         }
     }
 
@@ -44,7 +44,7 @@ SubtleButton {
         color: control.active ? Theme.accent : Theme.textTertiary
 
         Behavior on width { NumberAnimation { duration: Theme.durationNormal; easing.type: Theme.easingEnter } }
-        Behavior on opacity { NumberAnimation { duration: Theme.durationFast } }
+        Behavior on opacity { OpacityAnimator { duration: Theme.durationFast } }
         Behavior on color { ColorAnimation { duration: Theme.durationFast } }
     }
 }

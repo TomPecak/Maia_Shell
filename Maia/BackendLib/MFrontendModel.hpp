@@ -1,26 +1,36 @@
 #pragma once
 
 #include <QAbstractListModel>
-#include <QDBusInterface>
+#include <QVariantMap>
 #include <qqml.h>
 
+class FrontendManagerInterface;
+class QDBusServiceWatcher;
+
+// List of the installed frontends and the active one, from org.maia.FrontendManager
+// (contract: dbus/org.maia.FrontendManager.xml). Works the same in every process: the shell, MProxyWindow
+// windows and apps, so it always goes through D-Bus, never calls the service directly.
+// All calls are asynchronous: creating the model never blocks the GUI thread.
 class MFrontendModel : public QAbstractListModel
 {
     Q_OBJECT
     QML_ELEMENT
 
     Q_PROPERTY(QString activeFrontend READ activeFrontend WRITE setActiveFrontend NOTIFY activeFrontendChanged)
+    // Directory of the active frontend (root of its QML module); apps find their face in <root>/apps/<app>/
+    Q_PROPERTY(QString activeFrontendRootPath READ activeFrontendRootPath NOTIFY activeFrontendChanged)
 
 public:
     explicit MFrontendModel(QObject *parent = nullptr);
-    ~MFrontendModel();
+    ~MFrontendModel() override;
 
     enum FrontendRoles {
         IdRole = Qt::UserRole + 1,
         NameRole,
         DescriptionRole,
         PathRole,
-        ActiveRole
+        ActiveRole,
+        RootPathRole
     };
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
@@ -28,17 +38,8 @@ public:
     QHash<int, QByteArray> roleNames() const override;
 
     QString activeFrontend() const;
+    QString activeFrontendRootPath() const;
     Q_INVOKABLE void setActiveFrontend(const QString &frontendId);
-
-private Q_SLOTS:
-    void handleFrontendListReply(QDBusPendingCallWatcher *watcher);
-    void handleFrontendAdded(const QString &id,
-                             const QString &name,
-                             const QString &description,
-                             const QString &path);
-    void handleFrontendRemoved(const QString &id);
-    void handleActiveFrontendChanged(const QString &frontendId);
-    void handleGetActiveFrontend(const QString &frontendId);
 
 Q_SIGNALS:
     void activeFrontendChanged();
@@ -49,13 +50,19 @@ private:
         QString name;
         QString description;
         QString path;
+        QString rootPath;
         bool active;
     };
 
-    QDBusInterface *m_dbusInterface;
+    FrontendManagerInterface *m_manager = nullptr;
+    QDBusServiceWatcher *m_serviceWatcher = nullptr;
     QList<Frontend> m_frontends;
     QString m_activeFrontendIdMirror;
 
-    void loadFrontends();
-    void loadActiveFrontend();
+    void loadState();
+    void applyFrontendList(const QList<QVariantMap> &frontends);
+    void applyActiveFrontend(const QString &frontendId);
+    void addFrontend(const QVariantMap &frontend);
+    void removeFrontend(const QString &frontendId);
+    static Frontend frontendFromMap(const QVariantMap &map);
 };

@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 
-import ".."
+import LumenFrontend
 
 // Notification in the notification center: application, time, title and text.
 // The close button appears on hover.

@@ -1,0 +1,8 @@
+module XPLunaFrontend
+
+TiledImage 1.0 style_items/TiledImage.qml
+TiledImageVertical 1.0 style_items/TiledImageVertical.qml
+XPMenu 1.0 style_items/XPMenu.qml
+XPMenuItem 1.0 style_items/XPMenuItem.qml
+XPMenuSeparator 1.0 style_items/XPMenuSeparator.qml
+LicenseWarning 1.0 components/LicenseWarning.qml

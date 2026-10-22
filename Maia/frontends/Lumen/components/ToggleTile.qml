@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Templates as T
 
-import ".."
+import LumenFrontend
 
 // Quick settings tile: a checkable tile with an icon and a label under it.
 // Checked tiles are filled with the accent color.
@@ -43,7 +43,7 @@ T.AbstractButton {
                 tint: control.checked ? Theme.onAccent : Theme.textPrimary
 
                 scale: control.pressed ? 0.85 : 1.0
-                Behavior on scale { NumberAnimation { duration: Theme.durationFast; easing.type: Theme.easingEnter } }
+                Behavior on scale { ScaleAnimator { duration: Theme.durationFast; easing.type: Theme.easingEnter } }
             }
         }
 

@@ -83,6 +83,7 @@ void QmlGui::loadFromModule(QAnyStringView uri, QAnyStringView typeName)
 void QmlGui::load(const QString &filePath)
 {
     qDebug() << "[ INFO ]" << __PRETTY_FUNCTION__ << " filePath=" << filePath;
+    frontendModules.registerForFile(engine, filePath);
     engine.load(filePath);
 
     //Make sure the main QML object is loaded.

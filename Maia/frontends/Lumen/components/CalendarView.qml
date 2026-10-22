@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 
-import ".."
+import LumenFrontend
 
 // Month calendar: header with the month name and navigation buttons, weekday names
 // and a 6 x 7 grid of days. Today is marked with an accent circle. Switching the month
@@ -81,52 +81,59 @@ Item {
         }
     }
 
-    Grid {
-        id: grid
+    // Holds the place of the grid, the grid itself slides inside (Animators need
+    // an item that is not positioned by anchors)
+    Item {
+        id: gridHolder
 
         anchors.top: weekdays.bottom
         anchors.topMargin: Theme.spacingS
-        columns: 7
+        width: grid.width
+        height: grid.height
 
-        // Offset of the first day of the month in the first row
-        readonly property int leadingDays: (calendar.shownMonth.getDay() - calendar.locale.firstDayOfWeek + 7) % 7
+        Grid {
+            id: grid
 
-        transform: Translate { id: gridShift }
+            columns: 7
 
-        Repeater {
-            model: 42
+            // Offset of the first day of the month in the first row
+            readonly property int leadingDays: (calendar.shownMonth.getDay() - calendar.locale.firstDayOfWeek + 7) % 7
 
-            delegate: SubtleButton {
-                id: day
+            Repeater {
+                model: 42
 
-                required property int index
+                delegate: SubtleButton {
+                    id: day
 
-                readonly property date date: new Date(calendar.shownMonth.getFullYear(), calendar.shownMonth.getMonth(),
-                                                      index - grid.leadingDays + 1)
-                readonly property bool inMonth: date.getMonth() === calendar.shownMonth.getMonth()
-                readonly property bool today: calendar.isSameDay(date, Shell.now)
+                    required property int index
 
-                width: calendar.width / 7
-                height: 40
-                radius: height / 2
-                padding: 0
-                Accessible.name: date.toLocaleDateString(calendar.locale)
+                    readonly property date date: new Date(calendar.shownMonth.getFullYear(), calendar.shownMonth.getMonth(),
+                                                          index - grid.leadingDays + 1)
+                    readonly property bool inMonth: date.getMonth() === calendar.shownMonth.getMonth()
+                    readonly property bool today: calendar.isSameDay(date, Shell.now)
 
-                contentItem: Item {
-                    Rectangle {
-                        anchors.centerIn: parent
-                        width: 34
-                        height: 34
-                        radius: 17
-                        color: Theme.accent
-                        visible: day.today
-                    }
+                    width: calendar.width / 7
+                    height: 40
+                    radius: height / 2
+                    padding: 0
+                    Accessible.name: date.toLocaleDateString(calendar.locale)
 
-                    LText {
-                        anchors.centerIn: parent
-                        text: day.date.getDate()
-                        color: day.today ? Theme.onAccent : day.inMonth ? Theme.textPrimary : Theme.textTertiary
-                        font.weight: day.today ? Font.DemiBold : Font.Normal
+                    contentItem: Item {
+                        Rectangle {
+                            anchors.centerIn: parent
+                            width: 34
+                            height: 34
+                            radius: 17
+                            color: Theme.accent
+                            visible: day.today
+                        }
+
+                        LText {
+                            anchors.centerIn: parent
+                            text: day.date.getDate()
+                            color: day.today ? Theme.onAccent : day.inMonth ? Theme.textPrimary : Theme.textTertiary
+                            font.weight: day.today ? Font.DemiBold : Font.Normal
+                        }
                     }
                 }
             }
@@ -139,13 +146,13 @@ Item {
 
         property int direction: 1
 
-        NumberAnimation {
-            target: gridShift; property: "y"
+        YAnimator {
+            target: grid
             from: slide.direction * 24; to: 0
             duration: Theme.durationNormal; easing.type: Theme.easingEnter
         }
-        NumberAnimation {
-            target: grid; property: "opacity"
+        OpacityAnimator {
+            target: grid
             from: 0; to: 1
             duration: Theme.durationNormal; easing.type: Theme.easingEnter
         }

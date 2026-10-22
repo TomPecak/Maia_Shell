@@ -11,17 +11,17 @@ qt_standard_project_setup(REQUIRES ${REQUIRED_QT_VERSION})
 qt_add_library(GnomeFrontend STATIC)
 
 set(GNOME_QML_FILES
-        Main.qml
+        shell/Main.qml
 
-        SidePanelContent.qml
+        shell/SidePanelContent.qml
 
         common_qml/ActionButton.qml
 
-        contents/AppLauncherContent.qml
-        contents/ControlBoardContent.qml
-        contents/TopPanelContent.qml
+        shell/contents/AppLauncherContent.qml
+        shell/contents/ControlBoardContent.qml
+        shell/contents/TopPanelContent.qml
 
-        popups/ControlBoardPopup.qml
+        shell/popups/ControlBoardPopup.qml
 
         style/UIStyle.qml
         style/GMenu.qml
@@ -29,8 +29,8 @@ set(GNOME_QML_FILES
         style/GMenuSeparator.qml
         style/GTextField.qml
 
-        windows/AppsLauncherWindow.qml
-        windows/ControlBoardWindow.qml
+        shell/windows/AppsLauncherWindow.qml
+        shell/windows/ControlBoardWindow.qml
 )
 
 qt_add_qml_module(GnomeFrontend
@@ -39,7 +39,7 @@ qt_add_qml_module(GnomeFrontend
 
         QML_FILES
         ${GNOME_QML_FILES}
-        QML_FILES hussars/TaskbarContent.qml
+        QML_FILES shell/hussars/TaskbarContent.qml
 )
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/

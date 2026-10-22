@@ -1,4 +1,5 @@
 #include "FrontendManagerService.hpp"
+#include "frontendmanager_adaptor.h"
 #include <QCryptographicHash>
 #include <QDBusConnection>
 #include <QDBusError>
@@ -18,7 +19,8 @@ FrontendManagerService::FrontendManagerService(QObject *parent) :
     QObject(parent)
 {
             qDebug() << "HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH UJ 222222222 !!!";
-    qDBusRegisterMetaType<QVariantList>();
+    qDBusRegisterMetaType<QList<QVariantMap>>();
+    new FrontendManagerAdaptor(this);
 
     QDBusConnection bus = QDBusConnection::sessionBus();
 
@@ -27,11 +29,7 @@ FrontendManagerService::FrontendManagerService(QObject *parent) :
     }
 
     //register FronendManager object
-    if (!bus.registerObject(QStringLiteral("/FrontendManager"),
-                            this,
-                            QDBusConnection::ExportAllSlots
-                                | QDBusConnection::ExportScriptableSignals
-                                | QDBusConnection::ExportAllProperties)) {
+    if (!bus.registerObject(QStringLiteral("/FrontendManager"), this, QDBusConnection::ExportAdaptors)) {
         qDebug("[ERROR] Failed to register D-Bus object: %s", qPrintable(bus.lastError().message()));
     }
 
@@ -60,19 +58,25 @@ FrontendInfo FrontendManagerService::getCurrentFrontent()
     return m_frontends[m_activeFrontendId];
 }
 
-QVariantList FrontendManagerService::getFrontendList()
+QList<QVariantMap> FrontendManagerService::getFrontendList()
 {
-    QVariantList frontends;
-    for(const FrontendInfo &frontend : m_frontends) {
-        QVariantMap map;
-        map[QStringLiteral("id")] = frontend.id;
-        map[QStringLiteral("name")] = frontend.name;
-        map[QStringLiteral("description")] = frontend.description;
-        map[QStringLiteral("path")] = frontend.qmlFilePath;
-        map[QStringLiteral("active")] = frontend.id == m_activeFrontendId;
-        frontends.append(map);
-    }
+    QList<QVariantMap> frontends;
+    for (const FrontendInfo &frontend : std::as_const(m_frontends))
+        frontends.append(frontendMap(frontend));
     return frontends;
+}
+
+// One frontend as described in the contract (dbus/org.maia.FrontendManager.xml)
+QVariantMap FrontendManagerService::frontendMap(const FrontendInfo &frontend) const
+{
+    return {
+        {QStringLiteral("id"), frontend.id},
+        {QStringLiteral("name"), frontend.name},
+        {QStringLiteral("description"), frontend.description},
+        {QStringLiteral("path"), frontend.qmlFilePath},
+        {QStringLiteral("rootPath"), frontend.rootPath},
+        {QStringLiteral("active"), frontend.id == m_activeFrontendId},
+    };
 }
 
 QString FrontendManagerService::activeFrontend() const
@@ -123,7 +127,7 @@ void FrontendManagerService::loadFrontends()
     // ========================================================================
     // Skanowanie katalogu z frontendami
     // ========================================================================
-    // Każdy podkatalog zawierający Main.qml jest traktowany jako frontend.
+    // Każdy podkatalog zawierający shell/Main.qml (punkt wejścia shella) jest traktowany jako frontend.
     // Nazwa i opis to nazwa katalogu, id to hash SHA1 nazwy katalogu.
     QDir baseDir(basePath);
     if (!baseDir.exists()) {
@@ -132,10 +136,10 @@ void FrontendManagerService::loadFrontends()
 
     const QStringList dirNames = baseDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name);
     for (const QString &dirName : dirNames) {
-        const QString mainQmlPath = baseDir.filePath(dirName + QStringLiteral("/Main.qml"));
+        const QString mainQmlPath = baseDir.filePath(dirName + QStringLiteral("/shell/Main.qml"));
 
         if (!QFileInfo::exists(mainQmlPath)) {
-            qDebug() << "[ INFO ] Skipping directory" << dirName << "- no Main.qml file";
+            qDebug() << "[ INFO ] Skipping directory" << dirName << "- no shell/Main.qml file";
             continue;
         }
 
@@ -143,6 +147,7 @@ void FrontendManagerService::loadFrontends()
         frontend.name = dirName;
         frontend.description = dirName;
         frontend.qmlFilePath = mainQmlPath;
+        frontend.rootPath = QFileInfo(baseDir.filePath(dirName)).absoluteFilePath();
         frontend.id = QString::fromUtf8(
             QCryptographicHash::hash(dirName.toUtf8(), QCryptographicHash::Sha1).toHex());
 
@@ -190,7 +195,7 @@ void FrontendManagerService::loadFrontends()
 void FrontendManagerService::addFrontend(const FrontendInfo &frontend)
 {
     m_frontends.insert(frontend.id, frontend);
-    Q_EMIT frontendAdded(frontend.id, frontend.name, frontend.description, frontend.qmlFilePath);
+    Q_EMIT frontendAdded(frontendMap(frontend));
 }
 
 void FrontendManagerService::removeFrontend(const QString &frontendId)

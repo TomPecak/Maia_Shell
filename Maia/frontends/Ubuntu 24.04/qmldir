@@ -1,6 +1,8 @@
 module GnomeFrontend
+
+GMenu 1.0 style/GMenu.qml
+GMenuItem 1.0 style/GMenuItem.qml
+GMenuSeparator 1.0 style/GMenuSeparator.qml
+GTextField 1.0 style/GTextField.qml
 singleton UIStyle 1.0 style/UIStyle.qml
-Main 1.0 Main.qml
-AppLauncher 1.0 AppLauncher.qml
-SidePanelContent 1.0 SidePanelContent.qml
 ActionButton 1.0 common_qml/ActionButton.qml

@@ -85,7 +85,7 @@ Button{
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 6
 
-        icon.source: "../images/go-next-symbolic.svg"
+        icon.source: "../assets/images/go-next-symbolic.svg"
         icon.width: 15
         icon.height: 15
         leftPadding: 0

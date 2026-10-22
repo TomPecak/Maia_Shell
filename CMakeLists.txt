@@ -82,6 +82,7 @@ add_subdirectory(Maia/frontends/XPLuna)
 add_subdirectory(Maia/frontends/Cutefish)
 add_subdirectory(Maia/frontends/Maia)
 add_subdirectory(Maia/frontends/Lumen)
+add_subdirectory(Maia/frontends/Experimental)
 
 # ==============================================================================
 # 5. DOKUMENTACJA I PODSUMOWANIE

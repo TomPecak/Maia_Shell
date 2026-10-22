@@ -1,6 +1,6 @@
 import QtQuick
 
-import ".."
+import LumenFrontend
 
 // Card placed on a flyout surface: a slightly lighter (or darker) area with a hairline border
 Rectangle {

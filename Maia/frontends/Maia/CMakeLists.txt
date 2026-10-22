@@ -10,18 +10,18 @@ qt_add_qml_module(MaiaFrontend
         URI MaiaFrontend
         VERSION ${MAIA_VERSION}
 
-        QML_FILES Main.qml
-        QML_FILES LayerBottom.qml
-        QML_FILES AvailableFonts.qml
-        QML_FILES LayerTop.qml
-        QML_FILES dock/Dock.qml
-        QML_FILES dock/DockButton.qml
-        QML_FILES dock/DockPanel.qml
-        QML_FILES dock/DockSeparator.qml
-        QML_FILES menu/DesktopMenu.qml
-        QML_FILES menu/MenuItem.qml
-        QML_FILES menu/MenuPanel.qml
-        QML_FILES menu/MenuSeparator.qml
+        QML_FILES shell/Main.qml
+        QML_FILES shell/LayerBottom.qml
+        QML_FILES shell/AvailableFonts.qml
+        QML_FILES shell/LayerTop.qml
+        QML_FILES shell/dock/Dock.qml
+        QML_FILES shell/dock/DockButton.qml
+        QML_FILES shell/dock/DockPanel.qml
+        QML_FILES shell/dock/DockSeparator.qml
+        QML_FILES shell/menu/DesktopMenu.qml
+        QML_FILES shell/menu/MenuItem.qml
+        QML_FILES shell/menu/MenuPanel.qml
+        QML_FILES shell/menu/MenuSeparator.qml
 )
 
 

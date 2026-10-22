@@ -4,7 +4,7 @@ import org.kde.layershell 1.0 as LayerShell
 
 import Maia.Backend as Maia
 
-import ".."
+import LumenFrontend
 
 // Base of the flyouts (start menu, calendar, quick settings, widgets).
 //
@@ -16,6 +16,10 @@ import ".."
 // The flyout is open while Shell.activeFlyout equals flyoutName. It opens with a slide and fade
 // (decelerating) and closes faster (accelerating); it closes on Escape and when it loses
 // the keyboard focus (click into another window).
+//
+// The slide and fade run as Animators on the render thread, in sync with the frames of the
+// window. While an Animator runs, the animated properties keep their old values on the GUI
+// side, so the visibility of the window is controlled explicitly at the end of the animations.
 //
 // The window keeps a fixed size (windowCardHeight), the card inside may be smaller and
 // change its height with an animation (cardHeight), without resizing the Wayland surface.
@@ -40,8 +44,6 @@ Window {
     property int shadowMargin: Theme.spacingM
 
     readonly property bool open: Shell.activeFlyout === flyoutName
-    // Opening progress 0..1, drives the animation of the card
-    property real progress: 0
 
     default property alias content: card.data
 
@@ -66,8 +68,12 @@ Window {
         if (open) {
             visible = true
             d.hadFocus = false
+            closeAnimation.stop()
+            openAnimation.restart()
+        } else {
+            openAnimation.stop()
+            closeAnimation.restart()
         }
-        progress = open ? 1 : 0
     }
 
     // Close when the flyout loses the keyboard focus, e.g. after a click into an application
@@ -80,18 +86,59 @@ Window {
         }
     }
 
-    Behavior on progress {
-        NumberAnimation {
-            duration: flyout.open ? Theme.durationSlow : Theme.durationFast
-            easing.type: flyout.open ? Theme.easingEnter : Theme.easingExit
-            onRunningChanged: {
-                if (running)
-                    return
-                if (flyout.open)
-                    flyout.opened()
-                else
-                    flyout.visible = false
-            }
+    ParallelAnimation {
+        id: openAnimation
+
+        OpacityAnimator {
+            target: motion
+            to: 1
+            duration: Theme.durationSlow
+            easing.type: Theme.easingEnter
+        }
+        XAnimator {
+            target: motion
+            to: 0
+            duration: Theme.durationSlow
+            easing.type: Theme.easingEnter
+        }
+        YAnimator {
+            target: motion
+            to: 0
+            duration: Theme.durationSlow
+            easing.type: Theme.easingEnter
+        }
+
+        onFinished: {
+            if (flyout.open)
+                flyout.opened()
+        }
+    }
+
+    ParallelAnimation {
+        id: closeAnimation
+
+        OpacityAnimator {
+            target: motion
+            to: 0
+            duration: Theme.durationFast
+            easing.type: Theme.easingExit
+        }
+        XAnimator {
+            target: motion
+            to: flyout.enterOffsetX
+            duration: Theme.durationFast
+            easing.type: Theme.easingExit
+        }
+        YAnimator {
+            target: motion
+            to: flyout.enterOffsetY
+            duration: Theme.durationFast
+            easing.type: Theme.easingExit
+        }
+
+        onFinished: {
+            if (!flyout.open)
+                flyout.visible = false
         }
     }
 
@@ -115,36 +162,42 @@ Window {
             NumberAnimation { duration: Theme.durationNormal; easing.type: Theme.easingStandard }
         }
 
-        opacity: flyout.progress
-        transform: Translate {
-            x: flyout.enterOffsetX * (1 - flyout.progress)
-            y: flyout.enterOffsetY * (1 - flyout.progress)
+        // Animated part of the card: offset and transparent while closed
+        Item {
+            id: motion
+
+            width: cardArea.width
+            height: cardArea.height
+            x: flyout.enterOffsetX
+            y: flyout.enterOffsetY
+            opacity: 0
+
+            RectangularShadow {
+                anchors.fill: card
+                radius: card.radius
+                offset.y: 8
+                blur: 24
+                spread: 0
+                color: Theme.shadow
+            }
+
+            Rectangle {
+                id: card
+
+                anchors.fill: parent
+                radius: Theme.radiusLarge
+                color: Theme.surface
+                border.width: 1
+                border.color: Theme.stroke
+
+                Behavior on color { ColorAnimation { duration: Theme.durationNormal } }
+            }
         }
 
-        RectangularShadow {
-            anchors.fill: card
-            radius: card.radius
-            offset.y: 8
-            blur: 24
-            spread: 0
-            color: Theme.shadow
-        }
-
-        Rectangle {
-            id: card
-
-            anchors.fill: parent
-            radius: Theme.radiusLarge
-            color: Theme.surface
-            border.width: 1
-            border.color: Theme.stroke
-
-            Behavior on color { ColorAnimation { duration: Theme.durationNormal } }
-        }
-
-        // Only the card receives input, the shadow margin lets it through
+        // Only the card receives input, the shadow margin lets it through. The mask covers
+        // the final place of the card, it does not follow the opening animation.
         Maia.MaskArea {
-            anchors.fill: card
+            anchors.fill: parent
         }
     }
 

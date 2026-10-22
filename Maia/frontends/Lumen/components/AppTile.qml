@@ -1,6 +1,6 @@
 import QtQuick
 
-import ".."
+import LumenFrontend
 
 // Application in the start menu grid: icon with the name under it
 SubtleButton {
@@ -27,7 +27,7 @@ SubtleButton {
             asynchronous: true
 
             scale: control.pressed ? 0.85 : 1.0
-            Behavior on scale { NumberAnimation { duration: Theme.durationFast; easing.type: Theme.easingEnter } }
+            Behavior on scale { ScaleAnimator { duration: Theme.durationFast; easing.type: Theme.easingEnter } }
         }
 
         LText {

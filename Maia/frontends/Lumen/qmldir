@@ -1,5 +1,23 @@
 module LumenFrontend
 
+singleton Shell 1.0 shell/state/Shell.qml
 singleton Theme 1.0 theme/Theme.qml
-singleton Shell 1.0 shell/Shell.qml
-Main 1.0 Main.qml
+AccentButton 1.0 components/AccentButton.qml
+AppTile 1.0 components/AppTile.qml
+CalendarView 1.0 components/CalendarView.qml
+Card 1.0 components/Card.qml
+FlyoutWindow 1.0 components/FlyoutWindow.qml
+LIcon 1.0 components/LIcon.qml
+LMenu 1.0 components/LMenu.qml
+LMenuItem 1.0 components/LMenuItem.qml
+LMenuSeparator 1.0 components/LMenuSeparator.qml
+LSlider 1.0 components/LSlider.qml
+LSwitch 1.0 components/LSwitch.qml
+LText 1.0 components/LText.qml
+NotificationCard 1.0 components/NotificationCard.qml
+ProgressRing 1.0 components/ProgressRing.qml
+SearchBox 1.0 components/SearchBox.qml
+StartGlyph 1.0 components/StartGlyph.qml
+SubtleButton 1.0 components/SubtleButton.qml
+TaskbarButton 1.0 components/TaskbarButton.qml
+ToggleTile 1.0 components/ToggleTile.qml

@@ -93,6 +93,8 @@ qt_add_qml_module(${PROJECT_NAME}
     SOURCES MWindowManagerX11.cpp
     SOURCES server/QmlGui.hpp
     SOURCES server/QmlGui.cpp
+    SOURCES server/FrontendModules.hpp
+    SOURCES server/FrontendModules.cpp
     SOURCES server/FrontendLoader.hpp
     SOURCES server/FrontendLoader.cpp
     SOURCES client/private/ProxyWindowController.hpp
@@ -169,6 +171,16 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 qt6_add_statecharts(${PROJECT_NAME}
     scxml/GuiManagerStateMachine.scxml
 )
+
+# D-Bus contract of the frontend manager: the adaptor for the service (FrontendManagerAdaptor) and the
+# proxy for the clients (FrontendManagerInterface) are both generated from the same XML
+set(FRONTEND_MANAGER_DBUS_XML ${CMAKE_CURRENT_SOURCE_DIR}/dbus/org.maia.FrontendManager.xml)
+set_source_files_properties(${FRONTEND_MANAGER_DBUS_XML} PROPERTIES CLASSNAME FrontendManagerInterface)
+qt_add_dbus_adaptor(FRONTEND_MANAGER_DBUS_SOURCES ${FRONTEND_MANAGER_DBUS_XML}
+    ${CMAKE_CURRENT_SOURCE_DIR}/server/FrontendManagerService.hpp FrontendManagerService
+    frontendmanager_adaptor FrontendManagerAdaptor)
+qt_add_dbus_interface(FRONTEND_MANAGER_DBUS_SOURCES ${FRONTEND_MANAGER_DBUS_XML} frontendmanager_interface)
+target_sources(${PROJECT_NAME} PRIVATE ${FRONTEND_MANAGER_DBUS_SOURCES})
 
 
 

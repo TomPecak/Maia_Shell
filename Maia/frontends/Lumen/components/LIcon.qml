@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls.impl
 
-import ".."
+import LumenFrontend
 
 // Icon of the Lumen UI.
 //

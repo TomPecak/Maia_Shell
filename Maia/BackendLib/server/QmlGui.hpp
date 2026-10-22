@@ -9,6 +9,7 @@
 #include "../BackendAppsIconsProvider.hpp"
 #include "../TaskbarIconProvider.hpp"
 #include "FavoriteAppsListModel.hpp"
+#include "FrontendModules.hpp"
 
 class QmlGui : public QObject
 {
@@ -28,6 +29,8 @@ private:
     QGuiApplication *m_app = nullptr;
     int m_swapIntervalOption = 0;
 
+    // Declared before the engine: destroyed after it, the symlinks stay until the engine is gone
+    FrontendModules frontendModules;
     QQmlApplicationEngine engine;
     Backend backend;
     BackendAppsIconsProvider appsIconProvider;

@@ -1,6 +1,6 @@
 import QtQuick
 
-import ".."
+import LumenFrontend
 
 // Divider between groups of LMenu items
 Item {

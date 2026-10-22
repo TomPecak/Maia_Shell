@@ -7,6 +7,9 @@ struct FrontendInfo{
     QString name;
     QString description;
 
+    // frontend directory: root of its QML module, apps look for their faces in <rootPath>/apps/<app>/
+    QString rootPath;
+
     //load by qml qmlFilePath
     QString qmlFilePath;
 
