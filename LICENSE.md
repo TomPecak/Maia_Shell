@@ -1,1 +1,1 @@
-Dual license
+
