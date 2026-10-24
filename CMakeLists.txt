@@ -84,6 +84,9 @@ add_subdirectory(Maia/frontends/Maia)
 add_subdirectory(Maia/frontends/Lumen)
 add_subdirectory(Maia/frontends/Experimental)
 
+# APPS
+add_subdirectory(apps/)
+
 # ==============================================================================
 # 5. DOKUMENTACJA I PODSUMOWANIE
 # ==============================================================================
