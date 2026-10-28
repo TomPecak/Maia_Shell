@@ -35,6 +35,15 @@ if [ "${MAIA_SESSION_STAGE}" != "inside_kwin" ]; then
     export KDE_FULL_SESSION=true
     export KDE_SESSION_VERSION=6
 
+    # Menu aplikacji KDE (KService): na Kubuntu to /etc/xdg/menus/plasma-applications.menu.
+    # Dlaczego: sesja Maia nie ustawiała tej zmiennej (Plasma robi to sama). Skutek: KService nie
+    # znajdował menu ("applications.menu not found"), więc adresy applications:<plik>.desktop się nie
+    # rozwiązywały - przypięte aplikacje w modelu zadań Plasmy były pustymi ikonami plików,
+    # a okna nie łączyły się z przypiętymi aplikacjami.
+    if [ -z "${XDG_MENU_PREFIX}" ] && [ -f /etc/xdg/menus/plasma-applications.menu ]; then
+        export XDG_MENU_PREFIX=plasma-
+    fi
+
     # 2. Backendy toolkitów dla aplikacji uruchamianych w sesji
     export QT_QPA_PLATFORM="wayland;xcb"
     export GDK_BACKEND="wayland,x11"
@@ -74,9 +83,72 @@ if command -v dbus-update-activation-environment >/dev/null 2>&1; then
     dbus-update-activation-environment --systemd \
         WAYLAND_DISPLAY DISPLAY XAUTHORITY \
         XDG_SESSION_TYPE XDG_CURRENT_DESKTOP XDG_SESSION_DESKTOP \
-        KDE_FULL_SESSION KDE_SESSION_VERSION \
+        KDE_FULL_SESSION KDE_SESSION_VERSION XDG_MENU_PREFIX \
         QT_QPA_PLATFORM GDK_BACKEND QT_WAYLAND_RECONNECT
 fi
+
+# USŁUGI KDE, KTÓRE PLASMA URUCHAMIA W SWOJEJ SESJI
+# Dlaczego: w sesji Maia Google Chrome startował, ale nie ładował żadnych stron (Firefox działał).
+# Przyczyna: Chrome w sesji KDE trzyma klucz szyfrowania ciasteczek i haseł w KWallet. Portfel był
+# zablokowany, bo nikt nie przekazał mu hasła z logowania, więc pojawiała się prośba o hasło,
+# a na niej kwalletd6 się zawieszał (błąd KDE: "received unexpected result type ao ... instead of
+# expected o") i Chrome czekał na niego bez końca. W Plasmie portfel jest odblokowany przy logowaniu,
+# więc prośba w ogóle się nie pojawia. Przy okazji wyszło, że w sesji Maia nie działały też agent
+# polkit (brak okien z hasłem administratora) i powerdevil (zarządzanie energią).
+#
+# Plasma nie uruchamia tych programów z autostartu XDG (wpisy w /etc/xdg/autostart mają
+# X-systemd-skip=true), tylko jako usługi systemd użytkownika (plasma-*.service). Uruchamiamy te,
+# których potrzebuje Maia:
+#   plasma-kwallet-pam   - przekazuje hasło z logowania (pam_kwallet5 w SDDM) do KWallet i odblokowuje
+#                          portfel. Musi ruszyć od razu: PAM czeka na nie tylko chwilę po zalogowaniu.
+#                          Działa tylko wtedy, gdy hasło portfela jest takie samo jak hasło logowania.
+#   plasma-polkit-agent  - okna z hasłem administratora (Discover, ustawienia systemowe, ...)
+#   plasma-powerdevil    - zarządzanie energią (uśpienie, jasność, bateria)
+#   plasma-kaccess       - ułatwienia dostępu (np. klawisze trwałe)
+# Gdy jednostki systemd nie ma (inna dystrybucja), uruchamiamy program z pliku autostartu.
+# Usługi zatrzymujemy po wyjściu z Mai (niżej), żeby nie zostały w menedżerze usług użytkownika
+# podłączone do nieistniejącego już ekranu.
+MAIA_KDE_SERVICES=""
+MAIA_KDE_FALLBACK_PIDS=""
+
+# Program z linii Exec= pliku .desktop autostartu (bez kodów pól %u, %f, ...)
+autostart_exec() {
+    sed -n 's/^Exec=//p' "/etc/xdg/autostart/$1.desktop" 2>/dev/null | head -n 1 | sed 's/ %[a-zA-Z]//g'
+}
+
+start_kde_service() {
+    local unit="$1" autostart="$2"
+    if systemctl --user cat "${unit}.service" >/dev/null 2>&1; then
+        echo "Uruchamianie usługi ${unit}.service"
+        systemctl --user start --no-block "${unit}.service"
+        MAIA_KDE_SERVICES="${MAIA_KDE_SERVICES} ${unit}.service"
+        return
+    fi
+    local command
+    command="$(autostart_exec "${autostart}")"
+    if [ -n "${command}" ]; then
+        echo "Brak ${unit}.service, uruchamianie z autostartu: ${command}"
+        ${command} &
+        MAIA_KDE_FALLBACK_PIDS="${MAIA_KDE_FALLBACK_PIDS} $!"
+    else
+        echo "Pomijam ${unit}: brak usługi systemd i pliku autostartu ${autostart}.desktop"
+    fi
+}
+
+stop_kde_services() {
+    if [ -n "${MAIA_KDE_SERVICES}" ]; then
+        echo "Zatrzymywanie usług:${MAIA_KDE_SERVICES}"
+        systemctl --user stop ${MAIA_KDE_SERVICES}
+    fi
+    if [ -n "${MAIA_KDE_FALLBACK_PIDS}" ]; then
+        kill ${MAIA_KDE_FALLBACK_PIDS} 2>/dev/null
+    fi
+}
+
+start_kde_service plasma-kwallet-pam  pam_kwallet_init
+start_kde_service plasma-polkit-agent polkit-kde-authentication-agent-1
+start_kde_service plasma-powerdevil   powerdevil
+start_kde_service plasma-kaccess      kaccess
 
 # UWAGA: NIE uruchamiamy plasma-kglobalaccel.service!
 # kwin_wayland ma kglobalacceld wbudowany (linkuje libKGlobalAccelD)
@@ -93,6 +165,23 @@ export MAIA_LOG_HOST=127.0.0.1
 MAIA_QPA_PLATFORM="${MAIA_QPA_PLATFORM:-wayland}"
 
 echo "Uruchamianie serwera Maia (-platform ${MAIA_QPA_PLATFORM}) z: ${MAIA_OPT_PATH}..."
-exec env -u QT_QPA_PLATFORMTHEME \
-         -u QT_PLUGIN_PATH \
-         "${MAIA_OPT_PATH}/bin/appMaiaServer" -platform "${MAIA_QPA_PLATFORM}"
+# Bez exec (wcześniej było "exec env ... appMaiaServer"): po wyjściu z Mai trzeba jeszcze zatrzymać
+# usługi KDE uruchomione wyżej, a po exec skrypt już by nie istniał. Skrypt czeka więc na Maię,
+# sygnały zakończenia (wylogowanie, zamknięcie KWina) przekazuje jej dalej i oddaje jej kod wyjścia.
+env -u QT_QPA_PLATFORMTHEME \
+    -u QT_PLUGIN_PATH \
+    "${MAIA_OPT_PATH}/bin/appMaiaServer" -platform "${MAIA_QPA_PLATFORM}" &
+MAIA_PID=$!
+MAIA_STATUS=0
+trap 'kill -TERM "${MAIA_PID}" 2>/dev/null' TERM INT HUP
+
+# wait wraca także po przechwyconym sygnale, dlatego czekamy, dopóki proces Mai istnieje
+# (zakończony, ale jeszcze nie odebrany proces też istnieje, więc pętla wykona się co najmniej raz)
+while kill -0 "${MAIA_PID}" 2>/dev/null; do
+    wait "${MAIA_PID}"
+    MAIA_STATUS=$?
+done
+echo "Serwer Maia zakończył się (kod ${MAIA_STATUS})"
+
+stop_kde_services
+exit "${MAIA_STATUS}"
