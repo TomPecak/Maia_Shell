@@ -1,0 +1,9 @@
+[package]
+name = "calculator-service"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+dirs = "7.0.0"
+serde = "1.0.229"
+tokio = { version = "1.54.1", features = ["full"] }

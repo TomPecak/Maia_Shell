@@ -96,3 +96,8 @@ scope).
 - Manual check in a nested session with a Flatpak app, a Snap, an AppImage, a Python/Electron app
   and a Wine program, if available: correct name, icon and grouping, or no match (never a wrong
   one).
+  
+  
+### Dorobić porawne zaimykanie aplikacji przed zakonczeniem sesji, teraz wszystko jest brutalnie zamykane
+
+### Wywalić unsafe z kodu Rust
