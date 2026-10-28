@@ -19,7 +19,7 @@ set(REQUIRED_PULSEAUDIOQT_VERSION 1.6.0)
 # To musi być zrobione jak najwcześniej, żeby mieć dostęp do modułów KDE.
 # ==============================================================================
 find_package(ECM ${REQUIRED_KF_VERSION} REQUIRED NO_MODULE)
-set(CMAKE_MODULE_PATH ${ECM_MODULE_PATH} ${CMAKE_MODULE_PATH})
+set(CMAKE_MODULE_PATH ${ECM_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 
 # ==============================================================================
 # 2. STANDARDOWE USTAWIENIA KDE (To naprawia ostrzeżenia)
@@ -62,10 +62,14 @@ endif()
 # 4. DODAWANIE PODKATALOGÓW Z KODEM
 # Wewnątrz tych folderów powinieneś teraz używać normalnie find_package(KF6... REQUIRED)
 # ==============================================================================
+# external dependencies built with Maia (3rdparty/README.md), before everything that uses them
+add_subdirectory(3rdparty)
+
 # libraries
 add_subdirectory(Maia/BackendLib)
 add_subdirectory(Maia/ClientLib)
 add_subdirectory(Maia/UILib)
+
 
 
 

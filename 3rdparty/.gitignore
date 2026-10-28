@@ -1,0 +1,4 @@
+# Upstream sources are kept complete and unchanged (see README.md). The repository-wide patterns
+# for build output (Makefile*, *build-*) would hide some of their files, so they do not apply here.
+!Makefile*
+!*build-*
