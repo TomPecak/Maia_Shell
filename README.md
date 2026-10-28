@@ -178,7 +178,13 @@ sudo apt install -y \
 sudo apt install -y \
     kwin-wayland \
     xwayland
+
+# Rust (Maia services, e.g. Maia/services/windows), 1.87 or newer
+sudo apt install -y cargo rustc
 ```
+
+Cap'n Proto (C++) is built from `3rdparty/` together with Maia, it needs no installation
+(see `3rdparty/README.md`).
 
 ```bash
 cd Maia_Shell

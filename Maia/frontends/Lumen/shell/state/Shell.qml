@@ -79,16 +79,6 @@ QtObject {
 
     // --- Applications ---
 
-    // Applications pinned to the taskbar
-    readonly property var taskbarApps: [
-        { name: qsTr("Files"), icon: "system-file-manager", exec: "lumen:files", running: false },
-        { name: qsTr("Firefox"), icon: "firefox", exec: "firefox", running: true },
-        { name: qsTr("Terminal"), icon: "utilities-terminal", exec: "konsole", running: false },
-        { name: qsTr("Kate"), icon: "kate", exec: "kate", running: false },
-        { name: qsTr("Discover"), icon: "plasmadiscover", exec: "plasma-discover", running: false },
-        { name: qsTr("Settings"), icon: "systemsettings", exec: "systemsettings", running: false }
-    ]
-
     // Starts an application through the Maia backend and closes the open flyout.
     // "lumen:files" is the built-in File Explorer of Lumen (apps/files).
     function launch(exec) {
@@ -103,7 +93,6 @@ QtObject {
 
     // The window exists while it is open (created by Main.qml)
     property bool fileExplorerOpen: false
-    property bool fileExplorerActive: false
 
     // Asks the open window to come to the front (or to minimize when it is active)
     signal fileExplorerActivationRequested()

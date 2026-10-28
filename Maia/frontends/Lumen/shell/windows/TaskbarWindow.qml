@@ -1,13 +1,18 @@
 import QtQuick
 import QtQuick.Layouts
 import org.kde.layershell 1.0 as LayerShell
+import Maia.Windows as Windows
 
 import LumenFrontend
 
 // Taskbar: a layer-shell strip at the bottom edge which reserves its area, so maximized
 // windows and the flyouts are placed above it.
-// Left: widgets (weather), center: start, search and pinned applications,
+// Left: widgets (weather), center: start, search and the open windows,
 // right: system tray (opens quick settings) and the clock (opens the calendar).
+//
+// The windows come from the Maia window service (Maia.Windows, Maia/services/windows): its
+// TasksModel has the API of the Plasma task manager (org.kde.taskmanager), the service talks to
+// KWin. Without the service (not started) the taskbar simply shows no windows.
 Window {
     id: taskbar
 
@@ -65,7 +70,15 @@ Window {
         }
     }
 
-    // --- Center: start, search, pinned applications ---
+    // One entry per window, in the order the windows were opened
+    Windows.TasksModel {
+        id: tasksModel
+
+        groupMode: Windows.TasksModel.GroupDisabled
+        sortMode: Windows.TasksModel.SortManual
+    }
+
+    // --- Center: start, search, open windows ---
 
     Row {
         anchors.centerIn: parent
@@ -108,17 +121,22 @@ Window {
         }
 
         Repeater {
-            model: Shell.taskbarApps
+            model: tasksModel
 
+            // A click activates the window; on the active window it minimizes it (like Windows)
             delegate: TaskbarButton {
-                required property var modelData
-                readonly property bool fileExplorer: modelData.exec === "lumen:files"
-
-                iconName: modelData.icon
-                running: fileExplorer ? Shell.fileExplorerOpen : modelData.running
-                active: fileExplorer && Shell.fileExplorerActive
-                Accessible.name: modelData.name
-                onClicked: Shell.launch(modelData.exec)
+                iconSource: model.decoration
+                running: true
+                active: model.IsActive === true
+                Accessible.name: model.display
+                onClicked: {
+                    const taskIndex = tasksModel.makeModelIndex(index)
+                    if (model.IsActive)
+                        tasksModel.requestToggleMinimized(taskIndex)
+                    else
+                        tasksModel.requestActivate(taskIndex)
+                    Shell.closeFlyouts()
+                }
             }
         }
     }

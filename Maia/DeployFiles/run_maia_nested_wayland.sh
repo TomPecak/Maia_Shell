@@ -17,6 +17,7 @@
 #   MAIA_QPA_PLATFORM                     - platforma Qt dla Mai (domyślnie wayland,
 #                                           xcb = Maia przez Xwayland, do porównań)
 #   MAIA_LOG_PORT                         - port Loggera (domyślnie 50003)
+#   MAIA_WINDOWS_SERVICE                  - program usługi okien (domyślnie szukany obok Mai)
 
 ENV_FILE="${XDG_RUNTIME_DIR:-/tmp}/maia-nested-wayland.env"
 
@@ -44,6 +45,19 @@ if [ "${MAIA_NESTED_STAGE}" = "inside_kwin" ]; then
         dbus-update-activation-environment WAYLAND_DISPLAY DISPLAY XAUTHORITY \
             XDG_SESSION_TYPE XDG_CURRENT_DESKTOP KDE_FULL_SESSION KDE_SESSION_VERSION
     fi
+
+    # Usługa okien Mai (pasek zadań, dok): w instalacji libexec/maia-windows, w katalogu budowania
+    # cargo/<profil>/maia-windows; MAIA_WINDOWS_SERVICE wskazuje ją jawnie. Kończy się razem z KWinem.
+    # Gniazdo zawiera nazwę WAYLAND_DISPLAY, więc nie koliduje z usługą głównej sesji.
+    BIN_DIR="$(dirname "${MAIA_NESTED_APP:-$(readlink -f "$0")}")"
+    for candidate in "${MAIA_WINDOWS_SERVICE}" "${BIN_DIR}/../libexec/maia-windows" \
+                     "${BIN_DIR}/../cargo/release/maia-windows" "${BIN_DIR}/../cargo/debug/maia-windows"; do
+        if [ -n "${candidate}" ] && [ -x "${candidate}" ]; then
+            echo "Uruchamianie usługi okien: ${candidate}"
+            "${candidate}" &
+            break
+        fi
+    done
 
     if [ -z "${MAIA_NESTED_APP}" ]; then
         # Tryb --compositor-only: utrzymujemy sesję przy życiu do zamknięcia okna KWina

@@ -1,0 +1,28 @@
+[package]
+name = "maia-windows"
+version = "0.1.0"
+edition = "2024"
+# std::io::pipe
+rust-version = "1.87"
+description = "Maia window service: the window list of the compositor, served over Cap'n Proto"
+publish = false
+
+[lib]
+name = "maia_windows"
+path = "src/lib.rs"
+
+[[bin]]
+name = "maia-windows"
+path = "src/main.rs"
+
+[dependencies]
+capnp = "0.27.2"
+capnp-rpc = "0.27.1"
+futures = "0.3.34"
+tokio = { version = "1.54", features = ["rt", "net", "io-util", "macros", "signal", "time", "process", "sync"] }
+tokio-util = { version = "0.7.20", features = ["compat"] }
+wayland-client = "0.31.15"
+wayland-protocols-plasma = { version = "0.3.12", features = ["client"] }
+
+[build-dependencies]
+capnpc = "0.27.0"

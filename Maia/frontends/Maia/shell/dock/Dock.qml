@@ -1,9 +1,14 @@
 import QtQuick
 import QtQuick.Layouts
+import Maia.Windows as Windows
 
 import Maia.Backend as Maia
 
 // Draggable dock which snaps to the nearest screen edge when it is released.
+//
+// The dock shows the running applications, one button per application (all its windows together),
+// like the macOS Dock. The data comes from the Maia window service (Maia.Windows: TasksModel with
+// the API of the Plasma task manager, the same model as the taskbar of Lumen).
 //
 // The dock has to be placed directly in a full-screen item (normally the window
 // content item), its parent defines the area in which the dock can be moved.
@@ -118,20 +123,23 @@ Rectangle {
         columnSpacing: dock.spacing
 
         Repeater {
-            model: d.applications
+            model: tasksModel
 
             delegate: DockButton {
-                required property var modelData
-
                 Layout.preferredWidth: dock.buttonSize
                 Layout.preferredHeight: dock.buttonSize
-                iconName: modelData.iconName
+                iconSource: model.decoration
+                running: true
+                active: model.IsActive === true
+                edge: dock.edge
+                Accessible.name: model.AppName || model.display
 
-                onClicked: dock.launchApplication(modelData.command)
+                onClicked: dock.activateApplication(index)
             }
         }
 
         DockSeparator {
+            visible: tasksModel.count > 0
             Layout.preferredWidth: dock.vertical ? dock.buttonSize : 1
             Layout.preferredHeight: dock.vertical ? 1 : dock.buttonSize
         }
@@ -158,32 +166,55 @@ Rectangle {
         }
     }
 
-    // TODO: Starting applications is not implemented yet (in the Quickshell dock it was done
-    // with Quickshell.Io.Process), it should be done by the Maia backend.
-    function launchApplication(command) {
-        console.log("[Dock] launchApplication() not implemented, command:", JSON.stringify(command))
+    // --- Running applications ---
+
+    // One row per application; an application with several windows is a group, its windows are
+    // the children of the row
+    Windows.TasksModel {
+        id: tasksModel
+
+        groupMode: Windows.TasksModel.GroupApplications
+        groupInline: false
+        sortMode: Windows.TasksModel.SortManual
+    }
+
+    // A click on an application:
+    // - one window: brings it to the front, or minimizes it when it is already active
+    // - several windows: the first click brings the last used window to the front,
+    //   the next clicks (while the application is active) switch to its next window
+    function activateApplication(row) {
+        const application = tasksModel.makeModelIndex(row)
+        const windows = tasksModel.rowCount(application)
+
+        if (windows === 0) {
+            if (tasksModel.data(application, Windows.AbstractTasksModel.IsActive))
+                tasksModel.requestToggleMinimized(application)
+            else
+                tasksModel.requestActivate(application)
+            return
+        }
+
+        let active = -1
+        let lastUsed = 0
+        let lastUsedTime = 0
+        for (let i = 0; i < windows; ++i) {
+            const window = tasksModel.index(i, 0, application)
+            if (tasksModel.data(window, Windows.AbstractTasksModel.IsActive))
+                active = i
+            const activated = tasksModel.data(window, Windows.AbstractTasksModel.LastActivated)
+            if (activated && activated.getTime() > lastUsedTime) {
+                lastUsedTime = activated.getTime()
+                lastUsed = i
+            }
+        }
+        const target = active >= 0 ? (active + 1) % windows : lastUsed
+        tasksModel.requestActivate(tasksModel.index(target, 0, application))
     }
 
     // --- Private state ---
 
     QtObject {
         id: d
-
-        // Applications in the dock, taken from the Quickshell dock
-        readonly property var applications: [
-            { iconName: "camera-photo",
-              command: ["sh", "-c", "(PLIK=~/Obrazy/Screenshots/$(date +%F_%H-%M-%S).png && grim -g \"$(slurp)\" \"$PLIK\" && nautilus -s \"$PLIK\") &"] },
-            { iconName: "org.gnome.Calculator", command: ["gnome-calculator"] },
-            { iconName: "vscode", command: ["sh", "-c", "code &"] },
-            { iconName: "org.gnome.Terminal", command: ["sh", "-c", "gnome-terminal &"] },
-            { iconName: "qterminal", command: ["qterminal", "&"] },
-            { iconName: "google-chrome", command: ["sh", "-c", "google-chrome &"] },
-            { iconName: "org.gnome.Nautilus", command: ["sh", "-c", "nautilus &"] },
-            { iconName: "designer-qt5", command: ["sh", "-c", "/home/rafal/Qt/Qt_6_11_1/Tools/QtCreator/bin/qtcreator"] },
-            { iconName: "org.gnome.SystemMonitor", command: ["sh", "-c", "gnome-system-monitor &"] },
-            { iconName: "org.gnome.Settings", command: ["env", "XDG_CURRENT_DESKTOP=GNOME", "gnome-control-center"] },
-            { iconName: "org.gnome.gedit", command: ["sh", "-c", "gnome-text-editor /home/rafal/.config/quickshell/* &"] }
-        ]
 
         property bool dragging: false
         // Position animation duration, changed before 'dragging' so the release

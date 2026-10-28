@@ -54,12 +54,10 @@ Window {
     // --- Shell integration (taskbar button) ---
 
     onActiveChanged: {
-        Shell.fileExplorerActive = active
         if (!active)
             menuLayer.hide()
     }
     onClosing: {
-        Shell.fileExplorerActive = false
         // The window is destroyed after the close has been handled
         Qt.callLater(() => Shell.fileExplorerOpen = false)
     }

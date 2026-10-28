@@ -154,6 +154,20 @@ start_kde_service plasma-kaccess      kaccess
 # kwin_wayland ma kglobalacceld wbudowany (linkuje libKGlobalAccelD)
 # i sam rejestruje org.kde.kglobalaccel.
 
+# USŁUGA OKIEN MAI (Maia/services/windows)
+# maia-windows rozmawia z KWinem o oknach innych aplikacji (protokół org_kde_plasma_window_management)
+# i podaje ich listę paskowi zadań i dokowi (moduł QML Maia.Windows, przez Cap'n Proto). Startuje
+# przed Maią, żeby pasek od razu miał okna; gdyby nie zdążyła, Maia łączy się z nią sama co sekundę.
+# Kończy się razem z KWinem; po wyjściu z Mai zatrzymujemy ją niżej.
+MAIA_WINDOWS_PID=""
+if [ -x "${MAIA_OPT_PATH}/libexec/maia-windows" ]; then
+    echo "Uruchamianie usługi okien maia-windows"
+    "${MAIA_OPT_PATH}/libexec/maia-windows" &
+    MAIA_WINDOWS_PID=$!
+else
+    echo "Brak ${MAIA_OPT_PATH}/libexec/maia-windows: pasek zadań nie pokaże okien"
+fi
+
 export MAIA_LOG_FILE="$HOME/maia_server.log"
 export MAIA_LOG_PORT=50001
 export MAIA_LOG_HOST=127.0.0.1
@@ -183,5 +197,6 @@ while kill -0 "${MAIA_PID}" 2>/dev/null; do
 done
 echo "Serwer Maia zakończył się (kod ${MAIA_STATUS})"
 
+[ -n "${MAIA_WINDOWS_PID}" ] && kill "${MAIA_WINDOWS_PID}" 2>/dev/null
 stop_kde_services
 exit "${MAIA_STATUS}"

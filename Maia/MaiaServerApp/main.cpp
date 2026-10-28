@@ -43,6 +43,7 @@
 // Q_IMPORT_QML_PLUGIN(XPFrontendPlugin)
 
 Q_IMPORT_QML_PLUGIN(Maia_BackendPlugin) // URI, '.' dots replaced with '_'
+Q_IMPORT_QML_PLUGIN(Maia_WindowsPlugin) // Maia.Windows, Maia/services/windows/qml
 
 void getCmdLineOptions(const QCoreApplication &app,
                        QString &modeOption,
