@@ -14,8 +14,9 @@ T.AbstractButton {
     // Reserves a column on the left for the check mark (choice lists)
     property bool checkColumn: false
 
-    readonly property color labelColor: Qt.rgba(0, 0, 0, 0.88)
-    readonly property color disabledColor: Qt.rgba(0.24, 0.24, 0.26, 0.32)
+    // The label colors of iPadOS: primary label (black) and tertiary label (60, 60, 67 at 30 %)
+    readonly property color labelColor: "black"
+    readonly property color disabledColor: Qt.rgba(60 / 255, 60 / 255, 67 / 255, 0.3)
 
     width: parent ? parent.width : implicitWidth
     implicitHeight: 42

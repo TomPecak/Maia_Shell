@@ -113,14 +113,15 @@ Item {
             color: Qt.rgba(0, 0, 0, 0.22)
         }
 
-        // The material: light like the menus of iPadOS, with a hairline edge that keeps the panel
-        // apart from a light wallpaper
+        // The material: the light cool grey of iPadOS 18 (#F2F2F7, its system grey for opaque
+        // surfaces). Menus of iPadOS have no visible edge, the shadow sets them apart; the faint
+        // hairline only keeps the outline crisp on a very light wallpaper.
         Rectangle {
             anchors.fill: parent
             radius: panel.radius
-            color: Qt.rgba(0.969, 0.969, 0.973, 1)
+            color: "#f2f2f7"
             border.width: 1
-            border.color: Qt.rgba(0, 0, 0, 0.08)
+            border.color: Qt.rgba(0, 0, 0, 0.05)
         }
 
         // Clicks on the padding and separators do not fall through the menu
