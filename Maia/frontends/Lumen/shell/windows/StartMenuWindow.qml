@@ -420,7 +420,7 @@ FlyoutWindow {
         }
     }
 
-    // Power menu (mock actions)
+    // Power menu: signing out, then the power actions (mock actions, see Shell.powerAction)
     component PowerMenu: T.Popup {
         id: menu
 
@@ -450,27 +450,46 @@ FlyoutWindow {
 
             Repeater {
                 model: [
+                    { text: qsTr("Sign out"), icon: "system-log-out-symbolic", action: "logout", separatorAfter: true },
                     { text: qsTr("Sleep"), icon: "system-suspend-symbolic", action: "suspend" },
                     { text: qsTr("Restart"), icon: "system-reboot-symbolic", action: "reboot" },
                     { text: qsTr("Shut down"), icon: "system-shutdown-symbolic", action: "shutdown" }
                 ]
 
-                delegate: SubtleButton {
+                delegate: Column {
                     required property var modelData
 
                     width: menu.availableWidth
-                    height: 36
-                    leftPadding: Theme.spacingM
-                    Accessible.name: modelData.text
-                    onClicked: {
-                        menu.close()
-                        Shell.powerAction(modelData.action)
+
+                    SubtleButton {
+                        width: parent.width
+                        height: 36
+                        leftPadding: Theme.spacingM
+                        Accessible.name: modelData.text
+                        onClicked: {
+                            menu.close()
+                            Shell.powerAction(modelData.action)
+                        }
+
+                        contentItem: Row {
+                            spacing: Theme.spacingM
+                            LIcon { anchors.verticalCenter: parent.verticalCenter; iconName: modelData.icon }
+                            LText { anchors.verticalCenter: parent.verticalCenter; text: modelData.text }
+                        }
                     }
 
-                    contentItem: Row {
-                        spacing: Theme.spacingM
-                        LIcon { anchors.verticalCenter: parent.verticalCenter; iconName: modelData.icon }
-                        LText { anchors.verticalCenter: parent.verticalCenter; text: modelData.text }
+                    // Separates ending the session from the power actions
+                    Item {
+                        visible: modelData.separatorAfter === true
+                        width: parent.width
+                        height: Theme.spacingS + 1
+
+                        Rectangle {
+                            anchors.centerIn: parent
+                            width: parent.width - 2 * Theme.spacingS
+                            height: 1
+                            color: Theme.stroke
+                        }
                     }
                 }
             }
