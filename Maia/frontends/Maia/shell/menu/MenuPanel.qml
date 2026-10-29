@@ -28,9 +28,14 @@ Item {
     width: implicitWidth
     height: implicitHeight
 
-    // Animators set the property only when they finish, so the visibility follows the state
-    // and the closing animation instead of the opacity
-    visible: open || closeAnimation.running
+    // Shown from opening until the closing animation has finished. Animators write opacity only
+    // when they finish, so the visibility cannot follow the opacity; it cannot follow
+    // closeAnimation.running either: when open turns false that binding is evaluated before the
+    // animation starts, the panel (and the menu window) would vanish at once and KWin would play
+    // its own closing effect of the window instead.
+    property bool shown: false
+
+    visible: shown
     opacity: 0
     scale: closedScale
 
@@ -47,6 +52,7 @@ Item {
     function replay() {
         if (!open)
             return
+        shown = true
         closeAnimation.stop()
         openAnimation.restart()
     }
@@ -74,6 +80,9 @@ Item {
 
     ParallelAnimation {
         id: closeAnimation
+
+        // Not when it was stopped because the panel opened again
+        onFinished: panel.shown = panel.open
 
         ScaleAnimator {
             target: panel
