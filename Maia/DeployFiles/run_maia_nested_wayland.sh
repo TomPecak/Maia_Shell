@@ -14,6 +14,7 @@
 # Zmienne konfiguracyjne (opcjonalne):
 #   MAIA_NESTED_WIDTH, MAIA_NESTED_HEIGHT - rozmiar okna (domyślnie 1280x720)
 #   MAIA_NESTED_SOCKET                    - nazwa gniazda Wayland (domyślnie wayland-maia-dev)
+#   MAIA_NESTED_SESSION                   - 1 (domyślnie): restart, wyłączenie i uśpienie tylko w logu
 #   MAIA_QPA_PLATFORM                     - platforma Qt dla Mai (domyślnie wayland,
 #                                           xcb = Maia przez Xwayland, do porównań)
 #   MAIA_LOG_PORT                         - port Loggera (domyślnie 50003)
@@ -99,6 +100,10 @@ export MAIA_NESTED_APP
 export MAIA_NESTED_STAGE=inside_kwin
 export MAIA_LOG_PORT="${MAIA_LOG_PORT:-50003}"
 export MAIA_QPA_PLATFORM="${MAIA_QPA_PLATFORM:-wayland}"
+# Restart, wyłączenie i uśpienie z Mai idą do systemd-logind, a ten działa na prawdziwej maszynie,
+# nie na zagnieżdżonej sesji. Z MAIA_NESTED_SESSION=1 SessionService tylko je loguje.
+# 0 wyłącza tę blokadę (np. do testu z atrapą magistrali systemowej w DBUS_SYSTEM_BUS_ADDRESS).
+export MAIA_NESTED_SESSION="${MAIA_NESTED_SESSION:-1}"
 
 # Środowisko sesji wewnątrz zagnieżdżonego KWina (jak w run_maia_wayland.sh)
 export XDG_SESSION_TYPE=wayland

@@ -2,6 +2,8 @@ pragma Singleton
 
 import QtQuick
 
+import Maia.Backend as Maia
+
 // Shared state of the Lumen shell: which flyout is open, the current time, the user
 // and the actions triggered from the UI. All windows of the frontend run in one process,
 // so they share this object directly.
@@ -104,11 +106,34 @@ QtObject {
             fileExplorerOpen = true
     }
 
-    // TODO: Power actions are not connected to the session manager yet. In a nested
-    // development session they would act on the host system (e.g. restart the real machine).
+    // --- Session and power ---
+
+    // Which power actions the system offers (systemd-logind); the power menu shows only these
+    readonly property bool canSuspend: Maia.MSessionManager.canSuspend
+    readonly property bool canReboot: Maia.MSessionManager.canReboot
+    readonly property bool canPowerOff: Maia.MSessionManager.canPowerOff
+
+    // action: "logout", "suspend", "reboot" or "shutdown". Maia carries it out (MSessionManager);
+    // in a nested development session the power actions are only logged, logind would act on the
+    // real machine.
     function powerAction(action) {
-        console.log("[Lumen] power action not implemented:", action)
         closeFlyouts()
+        switch (action) {
+        case "logout":
+            Maia.MSessionManager.logout()
+            break
+        case "suspend":
+            Maia.MSessionManager.suspend()
+            break
+        case "reboot":
+            Maia.MSessionManager.reboot()
+            break
+        case "shutdown":
+            Maia.MSessionManager.poweroff()
+            break
+        default:
+            console.warn("[Lumen] unknown power action:", action)
+        }
     }
 
     // --- Quick settings (mock state, not connected to the system yet) ---

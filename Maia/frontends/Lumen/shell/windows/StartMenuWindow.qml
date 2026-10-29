@@ -420,7 +420,7 @@ FlyoutWindow {
         }
     }
 
-    // Power menu: signing out, then the power actions (mock actions, see Shell.powerAction)
+    // Power menu: signing out, then the power actions the system offers (Shell.powerAction)
     component PowerMenu: T.Popup {
         id: menu
 
@@ -449,12 +449,13 @@ FlyoutWindow {
             id: menuColumn
 
             Repeater {
+                // Actions the system does not offer are left out, not shown disabled
                 model: [
-                    { text: qsTr("Sign out"), icon: "system-log-out-symbolic", action: "logout", separatorAfter: true },
-                    { text: qsTr("Sleep"), icon: "system-suspend-symbolic", action: "suspend" },
-                    { text: qsTr("Restart"), icon: "system-reboot-symbolic", action: "reboot" },
-                    { text: qsTr("Shut down"), icon: "system-shutdown-symbolic", action: "shutdown" }
-                ]
+                    { text: qsTr("Sign out"), icon: "system-log-out-symbolic", action: "logout", available: true, separatorAfter: true },
+                    { text: qsTr("Sleep"), icon: "system-suspend-symbolic", action: "suspend", available: Shell.canSuspend },
+                    { text: qsTr("Restart"), icon: "system-reboot-symbolic", action: "reboot", available: Shell.canReboot },
+                    { text: qsTr("Shut down"), icon: "system-shutdown-symbolic", action: "shutdown", available: Shell.canPowerOff }
+                ].filter(entry => entry.available)
 
                 delegate: Column {
                     required property var modelData

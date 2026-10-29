@@ -127,8 +127,8 @@ them (an application may refuse, e.g. "save changes?"), and only then end the se
   4. then end the session (exit) or call logind.
 - Respect logind inhibitors of type `shutdown` in block mode (`ListInhibitors`), and tell the user
   who blocks.
-- In a nested development session, restart and shut down must not reach the real logind (log them
-  instead); see the comment in Lumen's `Shell.powerAction`.
+- Keep the guard of nested development sessions: there `SessionService` only logs suspend,
+  restart and shut down (`MAIA_NESTED_SESSION=1`, set by `run_maia_nested_wayland.sh`).
 
 ### Done when
 

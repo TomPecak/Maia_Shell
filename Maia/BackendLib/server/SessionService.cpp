@@ -5,11 +5,13 @@
 #include <QDebug>
 #include <QCoreApplication>
 #include <QDBusMessage>
+#include <QDBusPendingCallWatcher>
 #include <QDBusPendingReply>
 #include <QStringLiteral>
 
 SessionService::SessionService(QObject *parent)
-    : QObject(parent) {
+    : QObject(parent)
+    , m_nestedSession(qEnvironmentVariable("MAIA_NESTED_SESSION") == QLatin1String("1")) {
     qDebug() << __PRETTY_FUNCTION__;
 
     QString dbusAddress = QString::fromUtf8(qgetenv("DBUS_SESSION_BUS_ADDRESS"));
@@ -47,60 +49,46 @@ void SessionService::logout() {
     Q_EMIT logoutRequest();
 }
 
+void SessionService::suspend() {
+    qDebug() << "[D-Bus] Suspend received";
+    Q_EMIT suspendRequest();
+    callLogind(QStringLiteral("Suspend"));
+}
+
 void SessionService::reboot() {
     qDebug() << "[D-Bus] Reboot received";
     Q_EMIT rebootRequest();
-    executeFreedesktopReboot();
+    callLogind(QStringLiteral("Reboot"));
 }
 
 void SessionService::poweroff() {
     qDebug() << "[D-Bus] Poweroff received";
     Q_EMIT poweroffRequest();
-    executeFreedesktopPoweroff();
+    callLogind(QStringLiteral("PowerOff"));
 }
 
-void SessionService::onCallFinished(QDBusPendingCallWatcher *watcher)
+void SessionService::callLogind(const QString &method)
 {
-    QString operation = watcher->property("operation").toString();
-    QDBusPendingReply<> reply = *watcher;
-    if (reply.isError()) {
-        qDebug() << "Failed to" << operation << ":" << reply.error().message();
-    } else {
-        qDebug() << operation << "command sent successfully.";
+    if (m_nestedSession) {
+        qDebug() << "[Session] nested session: logind" << method << "not called (it would act on the real machine)";
+        return;
     }
-    watcher->deleteLater();
-}
 
-void SessionService::executeFreedesktopReboot()
-{
-    qDebug() << __PRETTY_FUNCTION__;
     QDBusMessage message = QDBusMessage::createMethodCall(
         QStringLiteral("org.freedesktop.login1"),
         QStringLiteral("/org/freedesktop/login1"),
         QStringLiteral("org.freedesktop.login1.Manager"),
-        QStringLiteral("Reboot")
+        method
         );
-    message << true;
+    message << true; // interactive
 
-    QDBusPendingCall pendingCall = QDBusConnection::systemBus().asyncCall(message);
-    QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(pendingCall, this);
-    watcher->setProperty("operation", QStringLiteral("reboot"));
-    connect(watcher, &QDBusPendingCallWatcher::finished, this, &SessionService::onCallFinished);
-}
-
-void SessionService::executeFreedesktopPoweroff()
-{
-    qDebug() << __PRETTY_FUNCTION__;
-    QDBusMessage message = QDBusMessage::createMethodCall(
-        QStringLiteral("org.freedesktop.login1"),
-        QStringLiteral("/org/freedesktop/login1"),
-        QStringLiteral("org.freedesktop.login1.Manager"),
-        QStringLiteral("PowerOff")
-        );
-    message << true;
-
-    QDBusPendingCall pendingCall = QDBusConnection::systemBus().asyncCall(message);
-    QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(pendingCall, this);
-    watcher->setProperty("operation", QStringLiteral("power off"));
-    connect(watcher, &QDBusPendingCallWatcher::finished, this, &SessionService::onCallFinished);
+    auto *watcher = new QDBusPendingCallWatcher(QDBusConnection::systemBus().asyncCall(message), this);
+    connect(watcher, &QDBusPendingCallWatcher::finished, this, [method](QDBusPendingCallWatcher *call) {
+        const QDBusPendingReply<> reply = *call;
+        if (reply.isError())
+            qDebug() << "[ERROR] logind" << method << "failed:" << reply.error().message();
+        else
+            qDebug() << "logind" << method << "accepted";
+        call->deleteLater();
+    });
 }
