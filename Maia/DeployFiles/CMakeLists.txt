@@ -41,6 +41,10 @@ install(FILES ${RUN_SCRIPTS} ${CMAKE_CURRENT_BINARY_DIR}/run_maia_wayland.sh
         PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
 )
 
+# Domyślne ustawienia Mai dla komponentów KDE (np. wyłączony KDE Wallet); skrypty sesji dodają
+# <prefix>/etc/xdg na końcu XDG_CONFIG_DIRS
+install(DIRECTORY etc/ DESTINATION "${CMAKE_INSTALL_PREFIX}/etc")
+
 # Install WYZGENEROWANY plik install_on_ubuntu.sh jedno piętro wyżej
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/install_on_ubuntu.sh
         DESTINATION "${CMAKE_INSTALL_PREFIX}/.."

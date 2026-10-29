@@ -44,6 +44,24 @@ if [ "${MAIA_SESSION_STAGE}" != "inside_kwin" ]; then
         export XDG_MENU_PREFIX=plasma-
     fi
 
+    # Ustawienia dystrybucji dla sesji KDE i domyślne ustawienia Mai.
+    # Dlaczego: Plasma przy starcie uruchamia skrypty plasma-workspace/env/*.sh, w których dystrybucja
+    # ustawia środowisko sesji KDE. Na Kubuntu env.sh dodaje do XDG_CONFIG_DIRS katalog
+    # kubuntu-default-settings (m.in. wyłączony KDE Wallet, motyw, domyślne aplikacje). Sesja Maia tego
+    # nie robiła, więc działała na innej konfiguracji niż Plasma: KDE Wallet był włączony, choć portfel
+    # nie istniał, a Google Chrome przy starcie pokazywał kreator portfela albo wisiał razem
+    # z zawieszonym kwalletd6 (błąd Secret Service w KWallet 6.24).
+    # Kolejność jak w startplasma: najpierw katalogi systemowe, na końcu katalog użytkownika.
+    for dir in $(echo "${XDG_CONFIG_DIRS:-/etc/xdg}" | tr ':' '\n' | tac) "${XDG_CONFIG_HOME:-$HOME/.config}"; do
+        for script in "${dir}"/plasma-workspace/env/*.sh; do
+            [ -r "${script}" ] && . "${script}"
+        done
+    done
+    # Domyślne ustawienia Mai (etc/xdg w katalogu instalacji, np. wyłączony KDE Wallet) mają najniższy
+    # priorytet: dystrybucja (/etc/xdg) i użytkownik (~/.config) mogą je zmienić
+    export XDG_CONFIG_DIRS="${XDG_CONFIG_DIRS:-/etc/xdg}:${MAIA_OPT_PATH}/etc/xdg"
+    echo "XDG_CONFIG_DIRS=${XDG_CONFIG_DIRS}"
+
     # 2. Backendy toolkitów dla aplikacji uruchamianych w sesji
     export QT_QPA_PLATFORM="wayland;xcb"
     export GDK_BACKEND="wayland,x11"
@@ -84,6 +102,7 @@ if command -v dbus-update-activation-environment >/dev/null 2>&1; then
         WAYLAND_DISPLAY DISPLAY XAUTHORITY \
         XDG_SESSION_TYPE XDG_CURRENT_DESKTOP XDG_SESSION_DESKTOP \
         KDE_FULL_SESSION KDE_SESSION_VERSION XDG_MENU_PREFIX \
+        XDG_CONFIG_DIRS SSH_ASKPASS SSH_ASKPASS_REQUIRE \
         QT_QPA_PLATFORM GDK_BACKEND QT_WAYLAND_RECONNECT
 fi
 

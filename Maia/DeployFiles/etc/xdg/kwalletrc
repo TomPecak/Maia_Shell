@@ -1,0 +1,9 @@
+# Maia's defaults for KDE components. Installed to <prefix>/etc/xdg, which the session script adds
+# to XDG_CONFIG_DIRS last: the distribution (/etc/xdg) and the user (~/.config) override them.
+#
+# KDE Wallet off. Without an existing wallet (no login password, a fresh account) every application
+# that asks for it (Google Chrome, ...) gets the "create a wallet" dialog, and with KWallet 6.24
+# creating one through Secret Service can hang kwalletd6, and Chrome with it. Kubuntu turns it off
+# in Plasma as well (kubuntu-default-settings). Users who want it turn it on in System Settings.
+[Wallet]
+Enabled=false

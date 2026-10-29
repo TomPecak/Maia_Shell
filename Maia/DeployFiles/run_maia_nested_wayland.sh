@@ -44,7 +44,8 @@ if [ "${MAIA_NESTED_STAGE}" = "inside_kwin" ]; then
 
     if command -v dbus-update-activation-environment >/dev/null 2>&1; then
         dbus-update-activation-environment WAYLAND_DISPLAY DISPLAY XAUTHORITY \
-            XDG_SESSION_TYPE XDG_CURRENT_DESKTOP KDE_FULL_SESSION KDE_SESSION_VERSION
+            XDG_SESSION_TYPE XDG_CURRENT_DESKTOP KDE_FULL_SESSION KDE_SESSION_VERSION \
+            XDG_CONFIG_DIRS SSH_ASKPASS SSH_ASKPASS_REQUIRE
     fi
 
     # Usługa okien Mai (pasek zadań, dok): w instalacji libexec/maia-windows, w katalogu budowania
@@ -114,6 +115,18 @@ export QT_QPA_PLATFORM="wayland;xcb"
 export GDK_BACKEND="wayland,x11"
 export GTK_USE_PORTAL=0
 export KWIN_WAYLAND_NO_PERMISSION_CHECKS=1
+
+# Ustawienia dystrybucji dla sesji KDE (plasma-workspace/env/*.sh) i domyślne ustawienia Mai, jak
+# w run_maia_wayland.sh (tam opis, dlaczego). Domyślne ustawienia Mai leżą w etc/xdg: obok skryptu
+# w drzewie źródeł (Maia/DeployFiles/etc/xdg) albo w katalogu instalacji (bin/../etc/xdg).
+for dir in $(echo "${XDG_CONFIG_DIRS:-/etc/xdg}" | tr ':' '\n' | tac) "${XDG_CONFIG_HOME:-$HOME/.config}"; do
+    for script in "${dir}"/plasma-workspace/env/*.sh; do
+        [ -r "${script}" ] && . "${script}"
+    done
+done
+MAIA_DEFAULTS_DIR="${SCRIPT_DIR}/etc/xdg"
+[ -d "${MAIA_DEFAULTS_DIR}" ] || MAIA_DEFAULTS_DIR="$(readlink -f "${SCRIPT_DIR}/../etc/xdg")"
+export XDG_CONFIG_DIRS="${XDG_CONFIG_DIRS:-/etc/xdg}:${MAIA_DEFAULTS_DIR}"
 
 echo "Uruchamianie zagnieżdżonego kwin_wayland (${MAIA_NESTED_WIDTH:-1280}x${MAIA_NESTED_HEIGHT:-720})..."
 
