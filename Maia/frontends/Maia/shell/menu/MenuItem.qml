@@ -29,14 +29,17 @@ T.AbstractButton {
     Accessible.role: hasSubmenu ? Accessible.ButtonMenu : Accessible.MenuItem
     Accessible.name: text
 
+    // Highlight of the hovered / pressed row: one dark layer whose opacity changes, so the change
+    // can be an Animator (render thread); there is no animator for colors
     background: Rectangle {
         radius: 9
-        color: !item.enabled ? "transparent"
-             : item.pressed ? Qt.rgba(0, 0, 0, 0.14)
-             : item.hovered ? Qt.rgba(0, 0, 0, 0.07)
-             : "transparent"
+        color: "black"
+        opacity: !item.enabled ? 0
+               : item.pressed ? 0.14
+               : item.hovered ? 0.07
+               : 0
 
-        Behavior on color { ColorAnimation { duration: 90 } }
+        Behavior on opacity { OpacityAnimator { duration: 90 } }
     }
 
     contentItem: Item {

@@ -18,8 +18,6 @@ Window {
     property bool open: false
     // Position of the right click, in the coordinates of the screen
     property point position: Qt.point(0, 0)
-    // Wallpaper of the desktop, the menu is made of frosted glass over it
-    property url wallpaperSource
 
     readonly property int screenMargin: 12
 
@@ -83,18 +81,6 @@ Window {
         id: frontends
     }
 
-    // Source of the frosted glass: the same wallpaper as on the desktop, at a lower
-    // resolution (it is blurred anyway)
-    Image {
-        id: wallpaper
-
-        anchors.fill: parent
-        visible: false
-        source: window.wallpaperSource
-        sourceSize: Qt.size(Math.ceil(window.width / 2), Math.ceil(window.height / 2))
-        asynchronous: true
-    }
-
     // Outside of the menus: a click closes the menu, a right click moves it
     MouseArea {
         anchors.fill: parent
@@ -118,12 +104,11 @@ Window {
 
         open: window.open
         pushedBack: window.submenuOpen
-        backdropSource: wallpaper.status === Image.Ready ? wallpaper : null
         x: openLeft ? Math.max(window.screenMargin, window.position.x - width) : window.position.x
         y: openUp ? Math.max(window.screenMargin, window.position.y - height) : window.position.y
         // Grows out of the corner at the click point
-        originX: openLeft ? width : 0
-        originY: openUp ? height : 0
+        transformOrigin: openLeft ? (openUp ? Item.BottomRight : Item.TopRight)
+                                  : (openUp ? Item.BottomLeft : Item.TopLeft)
 
         MenuItem {
             text: qsTr("New Folder")
@@ -175,13 +160,11 @@ Window {
         id: frontendMenu
 
         open: window.open && window.submenuOpen
-        backdropSource: mainMenu.backdropSource
         closedScale: 0.92
         x: mainMenu.x + (mainMenu.width - width) / 2
         y: Math.max(window.screenMargin,
                     Math.min(mainMenu.y + frontendItem.y, window.height - window.screenMargin - height))
-        originX: width / 2
-        originY: 0
+        transformOrigin: Item.Top
 
         // Header: closes the submenu
         MenuItem {

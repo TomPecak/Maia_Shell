@@ -1,25 +1,19 @@
 import QtQuick
 import QtQuick.Effects
 
-// Menu surface in the style of iPadOS: frosted glass (the wallpaper below, blurred and
-// brightened), large corner radius and a soft wide shadow. The items (MenuItem,
-// MenuSeparator, MenuGroupSeparator) are stacked in a column.
+// Menu surface in the style of iPadOS: an opaque light material (no blur: blurring the wallpaper
+// behind the panel showed artefacts along the edges), large corner radius and a soft wide shadow.
+// The items (MenuItem, MenuSeparator) are stacked in a column.
 //
-// The panel has to be a direct child of the window content, its x / y are used to cut
-// the right part of the wallpaper out.
-//
-// It opens with a springy zoom out of originX / originY (the click point) and closes
-// with a short shrink and fade. While a submenu covers it, it is pushed back (dimmed).
+// It opens with a springy zoom out of transformOrigin (the corner at the click point) and closes
+// with a short shrink and fade. While a submenu covers it, it is pushed back (shrunk and dimmed).
+// All animations are Animators: they run in the render thread, so a busy GUI thread does not
+// make them stutter.
 Item {
     id: panel
 
     default property alias content: column.data
     property bool open: false
-    // Hidden full-screen copy of the wallpaper, the source of the frosted glass
-    property Item backdropSource: null
-    // Point the panel grows from, in the panel coordinates
-    property real originX: 0
-    property real originY: 0
     // Scale the panel grows from
     property real closedScale: 0.5
     // A submenu lies over the panel
@@ -29,35 +23,16 @@ Item {
     readonly property int padding: 6
     readonly property bool hovered: hoverHandler.hovered
 
-    property real openScale: closedScale
-    property real pushProgress: pushedBack ? 1 : 0
-
     implicitWidth: 260
     implicitHeight: column.implicitHeight + 2 * padding
     width: implicitWidth
     height: implicitHeight
 
+    // Animators set the property only when they finish, so the visibility follows the state
+    // and the closing animation instead of the opacity
+    visible: open || closeAnimation.running
     opacity: 0
-    visible: opacity > 0
-
-    transform: [
-        Scale {
-            origin.x: panel.originX
-            origin.y: panel.originY
-            xScale: panel.openScale
-            yScale: panel.openScale
-        },
-        Scale {
-            origin.x: panel.width / 2
-            origin.y: panel.height / 2
-            xScale: 1 - 0.04 * panel.pushProgress
-            yScale: 1 - 0.04 * panel.pushProgress
-        }
-    ]
-
-    Behavior on pushProgress {
-        NumberAnimation { duration: 260; easing.type: Easing.OutCubic }
-    }
+    scale: closedScale
 
     onOpenChanged: {
         if (open) {
@@ -73,8 +48,6 @@ Item {
         if (!open)
             return
         closeAnimation.stop()
-        openScale = closedScale
-        opacity = 0
         openAnimation.restart()
     }
 
@@ -82,17 +55,17 @@ Item {
         id: openAnimation
 
         // Spring like: a fast start with a small overshoot
-        NumberAnimation {
+        ScaleAnimator {
             target: panel
-            property: "openScale"
+            from: panel.closedScale
             to: 1
             duration: 420
             easing.type: Easing.OutBack
             easing.overshoot: 1.15
         }
-        NumberAnimation {
+        OpacityAnimator {
             target: panel
-            property: "opacity"
+            from: 0
             to: 1
             duration: 160
             easing.type: Easing.OutCubic
@@ -102,16 +75,14 @@ Item {
     ParallelAnimation {
         id: closeAnimation
 
-        NumberAnimation {
+        ScaleAnimator {
             target: panel
-            property: "openScale"
             to: 0.85
             duration: 180
             easing.type: Easing.InCubic
         }
-        NumberAnimation {
+        OpacityAnimator {
             target: panel
-            property: "opacity"
             to: 0
             duration: 180
             easing.type: Easing.InCubic
@@ -122,89 +93,59 @@ Item {
         id: hoverHandler
     }
 
-    RectangularShadow {
-        anchors.fill: parent
-        radius: panel.radius
-        offset.y: 12
-        blur: 48
-        spread: 0
-        color: Qt.rgba(0, 0, 0, 0.22)
-    }
-
-    // --- Frosted glass ---
-
-    // The wallpaper part below the panel, with a margin so the blur has no dark edges
-    ShaderEffectSource {
-        id: backdrop
-
-        readonly property int margin: 48
-
-        x: -margin
-        y: -margin
-        width: panel.width + 2 * margin
-        height: panel.height + 2 * margin
-        visible: false
-        sourceItem: panel.backdropSource
-        sourceRect: Qt.rect(panel.x - margin, panel.y - margin, width, height)
-    }
-
+    // Everything the panel shows; shrinks around its centre while a submenu covers the panel
     Item {
-        id: glassMask
+        id: body
 
-        anchors.fill: backdrop
-        visible: false
-        layer.enabled: true
+        anchors.fill: parent
+        scale: panel.pushedBack ? 0.96 : 1
 
-        Rectangle {
-            x: backdrop.margin
-            y: backdrop.margin
-            width: panel.width
-            height: panel.height
-            radius: panel.radius
+        Behavior on scale {
+            ScaleAnimator { duration: 260; easing.type: Easing.OutCubic }
         }
-    }
 
-    MultiEffect {
-        anchors.fill: backdrop
-        source: backdrop
-        visible: panel.backdropSource !== null
-        autoPaddingEnabled: false
-        blurEnabled: true
-        blur: 1.0
-        blurMax: 64
-        saturation: 0.35
-        maskEnabled: true
-        maskSource: glassMask
-    }
+        RectangularShadow {
+            anchors.fill: parent
+            radius: panel.radius
+            offset.y: 12
+            blur: 48
+            spread: 0
+            color: Qt.rgba(0, 0, 0, 0.22)
+        }
 
-    // Brightening layer of the material
-    Rectangle {
-        anchors.fill: parent
-        radius: panel.radius
-        color: Qt.rgba(0.97, 0.97, 0.98, panel.backdropSource ? 0.76 : 0.96)
-        border.width: 1
-        border.color: Qt.rgba(1, 1, 1, 0.45)
-    }
+        // The material: light like the menus of iPadOS, with a hairline edge that keeps the panel
+        // apart from a light wallpaper
+        Rectangle {
+            anchors.fill: parent
+            radius: panel.radius
+            color: Qt.rgba(0.969, 0.969, 0.973, 1)
+            border.width: 1
+            border.color: Qt.rgba(0, 0, 0, 0.08)
+        }
 
-    // Clicks on the padding and separators do not fall through the menu
-    MouseArea {
-        anchors.fill: parent
-        acceptedButtons: Qt.AllButtons
-    }
+        // Clicks on the padding and separators do not fall through the menu
+        MouseArea {
+            anchors.fill: parent
+            acceptedButtons: Qt.AllButtons
+        }
 
-    Column {
-        id: column
+        Column {
+            id: column
 
-        y: panel.padding
-        width: panel.width
-    }
+            y: panel.padding
+            width: panel.width
+        }
 
-    // Dimming while a submenu lies over the panel
-    Rectangle {
-        anchors.fill: parent
-        radius: panel.radius
-        color: Qt.rgba(0, 0, 0, 0.12)
-        opacity: panel.pushProgress
-        visible: opacity > 0
+        // Dimming while a submenu lies over the panel
+        Rectangle {
+            anchors.fill: parent
+            radius: panel.radius
+            color: Qt.rgba(0, 0, 0, 0.12)
+            opacity: panel.pushedBack ? 1 : 0
+
+            Behavior on opacity {
+                OpacityAnimator { duration: 260; easing.type: Easing.OutCubic }
+            }
+        }
     }
 }

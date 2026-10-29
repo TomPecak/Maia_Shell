@@ -38,7 +38,6 @@ Window{
 
     DesktopMenu {
         id: desktopMenu
-        wallpaperSource: wallpaper.source
     }
 
 
