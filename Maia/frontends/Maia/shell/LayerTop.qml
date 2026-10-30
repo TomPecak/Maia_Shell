@@ -12,7 +12,8 @@ Window{
 
     // Preview of the window: its whole area tinted and a red strip on every anchored edge,
     // like in the Experimental frontend
-    property bool showWindowArea: true
+    // Temporarily off; true shows the preview again
+    property bool showWindowArea: false
 
     // --- Docking (experiment) ---
     //
