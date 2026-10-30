@@ -29,8 +29,9 @@ Rectangle {
     // Size along the edge, follows the number of buttons
     property real longSize: (vertical ? buttonsLayout.implicitHeight : buttonsLayout.implicitWidth)
                             + 2 * padding
-    // Distance from the screen edge
-    property real edgeMargin: 15
+    // Distance from the screen edge; the window reserves the same gap on the other side of the
+    // dock as well (LayerTop.qml)
+    property real edgeMargin: 8
     // Edge the dock is attached to: Qt.TopEdge, Qt.BottomEdge, Qt.LeftEdge or Qt.RightEdge
     property int edge: Qt.TopEdge
     // Whether the launcher panel is open

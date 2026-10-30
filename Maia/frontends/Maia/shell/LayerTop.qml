@@ -19,8 +19,9 @@ Window{
     //
     // The window always covers the whole screen: the dock can be dragged anywhere, its panel has
     // room and a click anywhere closes it. It is anchored to the edge the dock rests at and to
-    // both perpendicular edges, and reserves a strip along that edge (exclusion zone), as thick as
-    // the dock with its margin: maximized windows end before it. The exclusion zone is the distance
+    // both perpendicular edges, and reserves a strip along that edge (exclusion zone): screen edge,
+    // margin, dock, the same margin again, and only then maximized windows, so the dock sits
+    // between two equal gaps. The exclusion zone is the distance
     // from the anchored edge, independent of the window size, so the window keeps its size.
     //
     // Anchors and exclusion zone change only once the dock rests at its new edge (released and
@@ -28,7 +29,7 @@ Window{
 
     // The edge the window is anchored to and reserves
     property int anchoredEdge: Qt.TopEdge
-    readonly property int stripThickness: dock.edgeMargin + dock.shortSize
+    readonly property int stripThickness: dock.edgeMargin + dock.shortSize + dock.edgeMargin
 
     // anchoredEdge and both perpendicular edges
     readonly property int layerAnchors: {
