@@ -17,7 +17,9 @@ Window{
     LayerShell.Window.scope: "maia-bottom-layer"
     LayerShell.Window.layer: LayerShell.Window.LayerBottom
     LayerShell.Window.anchors: LayerShell.Window.AnchorTop | LayerShell.Window.AnchorRight | LayerShell.Window.AnchorBottom | LayerShell.Window.AnchorLeft
-    LayerShell.Window.exclusionZone: 0
+    // -1: the wallpaper stays full screen below the dock. 0 would mean "move away from the exclusion
+    // zones of other surfaces", and the compositor would shrink it when the dock reserves its strip.
+    LayerShell.Window.exclusionZone: -1
     LayerShell.Window.keyboardInteractivity: LayerShell.Window.KeyboardInteractivityNone
 
     color: "orange"
