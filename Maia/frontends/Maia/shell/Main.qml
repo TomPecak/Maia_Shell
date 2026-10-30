@@ -30,8 +30,11 @@ Window{
         anchors.top: parent.top
         //anchors.bottom: parent.bottom
 
-        width: 100
-        height: 100
+        // The size the server gives the window of the dock at start. It is anchored to three
+        // edges only (LayerTop.qml), so the compositor uses this size along the fourth one:
+        // it has to be the whole screen.
+        width: Screen.width
+        height: Screen.height
         swapInterval: 1
 
         onProxyVisibleChanged: {
