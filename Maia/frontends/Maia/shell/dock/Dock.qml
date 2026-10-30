@@ -35,9 +35,6 @@ Rectangle {
     property int edge: Qt.TopEdge
     // Whether the launcher panel is open
     property bool panelOpen: false
-    // Moves happen at once, without the animations of x / y: set while the window of the dock
-    // changes its size and anchors, so the jump of the coordinates is not animated
-    property bool instant: false
 
     readonly property bool vertical: edge === Qt.LeftEdge || edge === Qt.RightEdge
     readonly property bool dragging: d.dragging
@@ -88,14 +85,8 @@ Rectangle {
 
     // While dragging the position follows the pointer quickly, after release the dock
     // slowly snaps to its edge. The size always changes slowly.
-    Behavior on x {
-        enabled: !dock.instant
-        NumberAnimation { duration: d.moveDuration; easing.type: Easing.OutQuart }
-    }
-    Behavior on y {
-        enabled: !dock.instant
-        NumberAnimation { duration: d.moveDuration; easing.type: Easing.OutQuart }
-    }
+    Behavior on x { NumberAnimation { duration: d.moveDuration; easing.type: Easing.OutQuart } }
+    Behavior on y { NumberAnimation { duration: d.moveDuration; easing.type: Easing.OutQuart } }
     Behavior on width { NumberAnimation { duration: 450; easing.type: Easing.OutQuart } }
     Behavior on height { NumberAnimation { duration: 450; easing.type: Easing.OutQuart } }
 
@@ -191,12 +182,6 @@ Rectangle {
     // - one window: brings it to the front, or minimizes it when it is already active
     // - several windows: the first click brings the last used window to the front,
     //   the next clicks (while the application is active) switch to its next window
-    // The window of the dock moved its origin by (dx, dy) on the screen while the dock is dragged:
-    // keeps the pointer position, which is in window coordinates, on the same screen point
-    function shiftPointer(dx, dy) {
-        d.pointer = Qt.point(d.pointer.x - dx, d.pointer.y - dy)
-    }
-
     function activateApplication(row) {
         const application = tasksModel.makeModelIndex(row)
         const windows = tasksModel.rowCount(application)
@@ -245,9 +230,7 @@ Rectangle {
             grabRatioX = ratioX
             grabRatioY = ratioY
             moveDuration = 50
-            // Only the position, the edge is chosen while moving: on a press the window of the dock
-            // may still be a strip along its edge, whose size says nothing about the screen
-            pointer = position
+            updatePointer(position)
             dragging = true
         }
 
