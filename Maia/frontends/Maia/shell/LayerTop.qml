@@ -172,15 +172,6 @@ Window{
     //     visible: dock.dragging
     // }
 
-    AvailableFonts{
-        anchors.left: parent.left
-        anchors.verticalCenter: parent.verticalCenter
-
-        Maia.MaskArea{
-            anchors.fill: parent
-        }
-    }
-
     Dock {
         id: dock
     }
