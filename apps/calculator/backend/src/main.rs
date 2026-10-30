@@ -1,11 +1,13 @@
 
 mod engine;
+mod number;
 mod store;
 
 use std::cell::RefCell;
 use std::path::PathBuf;
 use std::rc::{Rc, Weak};
 
+use number::{Num, NumberFormat};
 use store::{MemoryAction, Store};
 
 
