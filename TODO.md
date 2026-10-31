@@ -234,3 +234,101 @@ small module with `#[allow(unsafe_code)]` and a `// SAFETY:` comment for each bl
 
 `grep -rn unsafe` finds nothing in Maia's Rust sources (outside such a module), the crates build
 with `forbid(unsafe_code)`, `cargo test` passes and the task bar still updates in a nested session.
+
+---
+
+## 6. Settings: the configuration files have the version in their name
+
+Area: `Maia/MaiaServerApp/main.cpp` (`setApplicationName`, about line 92),
+`Maia/BackendLib/server/FrontendManagerService.cpp` (`readActiveFronted`, `saveActiveFronted`),
+`Maia/BackendLib/server/LocaleSettingsService.cpp` (`loadSettings`, `saveSettings`).
+
+### What happens
+
+Maia keeps its settings in two files in `~/.config/Maia/`, and both names contain the Maia version:
+- `Maia_<version>.conf`: everything QML stores with `Settings` from `QtCore` (Lumen's theme and
+  accent, Lumen's timer, the dock edge of the Maia frontend, XPLuna's notes and warnings), and the
+  favourite applications (`QSettings` in `server/FavoriteAppsListModel.hpp`). QSettings derives the
+  name from the application name, which `main.cpp` sets to `Maia_<version>`.
+- `maiarc_<version>`: what the C++ services store with KConfig (the active frontend, the 24-hour
+  clock).
+
+After an update to a new version, Maia reads new, empty files: every user setting falls back to
+its default, although the old files are still there (`Maia_0.1.0.conf` and `Maia_0.2.0.conf` exist
+side by side on a developer machine). The two mechanisms also write two different files for no
+reason. The Cutefish code (`BackendLib/cutefish/dock/docksettings.cpp`) writes yet another file
+under a foreign name (`cutefishos/dock`).
+
+### Fix
+
+- Fixed file names without the version, e.g. `~/.config/Maia/maia.conf` for QML and the services
+  (one file, or one per owner, but never per version). The application name used for the
+  configuration must not change with the version. If the version must stay in the application
+  name for other reasons, give the QML `Settings` an explicit `location` instead.
+- If the format ever changes incompatibly, a schema version as a key inside the file, with a
+  migration step, not a new file.
+- Migration of what exists: when the new file is missing, copy the values of the newest versioned
+  file once (`Maia_<x.y.z>.conf`, `maiarc_<x.y.z>`, highest version first), then leave the old files
+  alone.
+- Until item 7 replaces it, keep one convention for new code: the frontends use QML `Settings` with
+  their own `category` (e.g. `LumenFrontend`, `MaiaDock`), no new files.
+
+### Done when
+
+In a nested session with isolated XDG directories: settings made with version A survive a start
+with version B (change `MAIA_VERSION` in a test build), no new versioned file appears, and the
+values of an old `Maia_0.2.0.conf` / `maiarc_0.2.0` are taken over on the first start.
+
+---
+
+## 7. Settings: a settings service with a contract (under consideration)
+
+Area: a new service, e.g. `Maia/services/settings/` (same layout as `Maia/services/windows`).
+
+### Why
+
+Settings are stored today by whoever needs them: QML `Settings` inside each frontend, KConfig
+inside C++ services (item 6). That works for one value in one process, but:
+- no change notification between processes: each layer of a frontend is its own process with its
+  own QSettings cache, and a future Settings application could not change a value while the shell
+  runs;
+- no types, defaults or validation in one place, no migrations;
+- no permissions: every frontend can read and overwrite everything, which collides with the
+  sandboxed and AI-generated frontends of the roadmap (stage 7).
+
+### Architecture (proposal)
+
+The headless backend must not know what the settings of a frontend mean. Three kinds of settings,
+three owners:
+1. **Storage** (the settings service): a generic, typed key-value store in namespaces, with
+   snapshot + `Watch` + `set` over Cap'n Proto, atomic writes and per-namespace permissions
+   (capabilities: a frontend gets its own namespace only). It does not interpret values, like dconf
+   does not know the meaning of GSettings keys.
+2. **Environment settings with behaviour** stay with the service that acts on them and uses the
+   store internally: the active frontend (session), the 24-hour clock (locale), and later
+   appearance shared by all frontends and applications (dark mode, accent colour, fonts, icon
+   theme: these also have to reach Qt/GTK applications, e.g. through the `org.freedesktop.appearance`
+   settings of the desktop portal and the KDE colour scheme). These work headless and are the same
+   in every frontend.
+3. **Frontend state** (the dock edge, Lumen's accent choice, a collapsed widget): in the frontend's
+   own namespace (`frontend.<id>.*`). The frontend owns the schema and the defaults, e.g. declared
+   in its manifest, so a Settings application could show them without code; the service only
+   stores the values.
+
+On the QML side a module like `Maia.Windows`: an object with properties per key and a write method,
+so a frontend swaps its storage in one place (the Maia frontend's `shell/dock/DockState.qml` is
+written as that one place).
+
+### Open questions
+
+- One service or part of the shell service of stage 2 (one process, separate contract).
+- File format (TOML or JSON, one file per namespace?), and whether KConfig files of KDE
+  (`kdeglobals`, `kwinrc`) are ever written through it or only by their own tools.
+- Multiple screens: keys per output (the dock edge per screen), keyed by a stable output name.
+
+### Done when
+
+Decided whether to build it; if yes: the active frontend, the 24-hour clock, Lumen's settings and the
+dock edge go through the service, a change made by one process reaches the others at once, and a
+frontend cannot write outside its namespace (tests for the contract and the permissions, as for the
+window service).
