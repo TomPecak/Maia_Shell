@@ -25,10 +25,15 @@ Window{
     // from the anchored edge, independent of the window size, so the window keeps its size.
     //
     // Anchors and exclusion zone change only once the dock rests at its new edge (released and
-    // snapped); while it is dragged they stay at the old edge.
+    // snapped); while it is dragged they stay at the old edge. That edge is kept between sessions
+    // (DockState), so the dock and the window start where they were left.
+
+    DockState {
+        id: dockState
+    }
 
     // The edge the window is anchored to and reserves
-    property int anchoredEdge: Qt.TopEdge
+    readonly property int anchoredEdge: dockState.edge
     readonly property int stripThickness: dock.edgeMargin + dock.shortSize + dock.edgeMargin
 
     // anchoredEdge and both perpendicular edges
@@ -49,7 +54,7 @@ Window{
     width: Screen.width
     height: Screen.height
 
-    // Moves anchors and exclusion zone to the edge the dock rests at
+    // Moves anchors and exclusion zone to the edge the dock rests at, and keeps it
     Timer {
         id: settleTimer
 
@@ -61,7 +66,7 @@ Window{
             console.log("[LayerTop] anchored to the",
                         ["top", "left", "right", "bottom"][[Qt.TopEdge, Qt.LeftEdge, Qt.RightEdge, Qt.BottomEdge].indexOf(dock.edge)],
                         "edge, exclusion zone", root.stripThickness, "px")
-            root.anchoredEdge = dock.edge
+            dockState.setEdge(dock.edge)
         }
     }
 
@@ -73,8 +78,6 @@ Window{
                 settleTimer.restart()
         }
     }
-
-    Component.onCompleted: anchoredEdge = dock.edge
 
 
     // Na Waylandzie pozycji okna nie ustawia się przez x/y (kompozytor je ignoruje),
@@ -120,6 +123,9 @@ Window{
 
     Dock {
         id: dock
+
+        // Where it was left; dragging sets the edge itself afterwards
+        edge: dockState.edge
     }
 
     // Red strips on the edges the window is anchored to, above everything

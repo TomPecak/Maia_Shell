@@ -18,6 +18,7 @@ qt_add_qml_module(MaiaFrontend
         QML_FILES shell/dock/DockButton.qml
         QML_FILES shell/dock/DockPanel.qml
         QML_FILES shell/dock/DockSeparator.qml
+        QML_FILES shell/dock/DockState.qml
         QML_FILES shell/menu/DesktopMenu.qml
         QML_FILES shell/menu/MenuItem.qml
         QML_FILES shell/menu/MenuPanel.qml
