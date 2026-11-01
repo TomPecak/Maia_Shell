@@ -2,6 +2,8 @@ import QtQuick
 import QtQuick.Controls.Basic
 import org.kde.kirigami as Kirigami
 
+import MaiaFrontend
+
 // Button placed in the dock, look taken from the Quickshell dock (Launcher.qml).
 // Size and position are set by the dock layout.
 //
@@ -28,6 +30,10 @@ Button {
         NumberAnimation { duration: 150; easing.type: Easing.OutQuad }
     }
 
+    // Monochrome icons are drawn in the text color of the mode
+    Kirigami.Theme.inherit: false
+    Kirigami.Theme.textColor: Theme.label
+
     contentItem: Kirigami.Icon {
         source: control.iconSource
     }
@@ -35,8 +41,11 @@ Button {
     background: Rectangle {
         radius: control.width * 0.2
 
-        // Pressed -> darker gray, hovered -> light gray, default -> white
-        color: control.pressed ? "#d0d0d0" : (control.hovered ? "#f0f0f0" : "white")
+        // A plate (white, in the dark a dark grey), lighter or darker under the pointer and while
+        // pressed or checked (the App Library button while the library is open)
+        color: control.pressed || control.checked ? Theme.platePressed
+             : control.hovered ? Theme.plateHover
+             : Theme.plate
         Behavior on color {
             ColorAnimation { duration: 150; easing.type: Easing.OutQuad }
         }
@@ -54,7 +63,7 @@ Button {
         width: vertical ? 4 : length
         height: vertical ? length : 4
         radius: 2
-        color: control.active ? "white" : "#bbbbbb"
+        color: control.active ? Theme.label : Theme.secondaryLabel
 
         x: control.edge === Qt.LeftEdge ? -gap - width
          : control.edge === Qt.RightEdge ? control.width + gap

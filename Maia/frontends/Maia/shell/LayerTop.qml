@@ -4,6 +4,7 @@ import org.kde.layershell 1.0 as LayerShell
 import Maia.Backend as Maia
 
 import "dock"
+import "library"
 
 Window{
     id: root
@@ -87,7 +88,10 @@ Window{
     LayerShell.Window.layer: LayerShell.Window.LayerTop
     LayerShell.Window.anchors: layerAnchors
     LayerShell.Window.exclusionZone: stripThickness
-    LayerShell.Window.keyboardInteractivity: LayerShell.Window.KeyboardInteractivityNone
+    // The keyboard only while the App Library is open: its search field takes the typing at once.
+    // Otherwise the window never takes the keyboard from the applications.
+    LayerShell.Window.keyboardInteractivity: dock.libraryOpen ? LayerShell.Window.KeyboardInteractivityExclusive
+                                                              : LayerShell.Window.KeyboardInteractivityNone
 
     //color: "#AA112233"
     color: "transparent"
@@ -103,16 +107,35 @@ Window{
         color: Qt.rgba(0.15, 0.55, 1.0, 0.22)
     }
 
-    // While the dock panel is open, the whole window receives input and a click
-    // outside of the panel closes it. Declared first, so it lies below everything else.
-    MouseArea {
-        anchors.fill: parent
-        visible: dock.panelOpen
-        onPressed: dock.panelOpen = false
+    // Light / dark switch, for testing: in the strip the dock reserves, at its end, so it never
+    // covers a window (the corners outside the strip hold the buttons of maximized windows).
+    // Follows the anchored edge, i.e. moves once the dock rests at a new edge (it disappears and
+    // appears again, see AppearanceSwitch.qml). Below the App Library, which dims it.
+    AppearanceSwitch {
+        id: appearanceSwitch
 
-        Maia.MaskArea {
-            anchors.fill: parent
-        }
+        readonly property real endMargin: 2 * dock.edgeMargin
+
+        edge: root.anchoredEdge
+        x: placedEdge === Qt.LeftEdge ? dock.edgeMargin + (dock.shortSize - width) / 2
+         : placedEdge === Qt.RightEdge ? root.width - dock.edgeMargin - (dock.shortSize + width) / 2
+         : root.width - endMargin - width
+        y: placedEdge === Qt.TopEdge ? dock.edgeMargin + (dock.shortSize - height) / 2
+         : placedEdge === Qt.BottomEdge ? root.height - dock.edgeMargin - (dock.shortSize + height) / 2
+         : root.height - endMargin - height
+    }
+
+    AppLibrary {
+        id: library
+
+        anchors.fill: parent
+        open: dock.libraryOpen
+        originItem: dock.libraryButton
+        dockEdge: dock.edge
+        dockStrip: root.stripThickness
+
+        onCloseRequested: dock.libraryOpen = false
+        onDismissed: dock.returnFocus()
     }
 
     // While the dock is dragged, the whole window receives input
