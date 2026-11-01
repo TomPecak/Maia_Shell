@@ -13,9 +13,10 @@ import MaiaFrontend
 // App Library in the style of iPadOS 18, for the pointer and the keyboard (desktop variant; a
 // touch variant comes later).
 //
-// It opens from its button in the dock: the panel's shape grows out of the button and shrinks
-// back into exactly its shape (place, size, corner radius and color of the button's plate), so it
-// is clear where it came from and where to find it again. It lies next to the dock,
+// It opens from its button in the dock: the panel grows out of the button and shrinks back into
+// it, so it is clear where it came from and where to find it again. The panel's surface starts and
+// ends as exactly the button's plate (place, size, corner radius, color); the content scales with
+// it and is gone before it reaches the button. It lies next to the dock,
 // towards the middle of the screen: the pointer starts at the button, so the way to the icons is
 // short (Fitts's law). The search field has the keyboard focus at once: typing a few letters and
 // Enter is the fastest way to one of a hundred or more applications; the grid below is for
@@ -33,7 +34,7 @@ Item {
 
     property bool open: false
     // The dock button the panel grows out of and shrinks back into (its background is the plate
-    // the panel's shape starts and ends as)
+    // the panel's surface starts and ends as)
     property T.Control originItem: null
     // Edge of the dock and the strip it reserves there; the panel lies next to that strip
     property int dockEdge: Qt.BottomEdge
@@ -122,8 +123,8 @@ Item {
 
     // --- The panel ---
 
-    // Final place of the panel. Inside it the shape of the panel (card) morphs between the dock
-    // button and this place; the content stays at its final place and the card reveals it.
+    // Final place of the panel. Inside it the surface moves between the dock button and this place,
+    // and the content scales with it.
     Item {
         id: frame
 
@@ -145,133 +146,131 @@ Item {
             width: frame.width
             height: frame.height
 
-            // Grows with the card; at the button there is no shadow of the panel
+            // Grows with the surface; at the button there is no shadow of the panel
             RectangularShadow {
-                x: card.x
-                y: card.y
-                width: card.width
-                height: card.height
-                radius: background.radius
+                x: surface.x
+                y: surface.y
+                width: surface.width
+                height: surface.height
+                radius: surface.radius
                 offset.y: 18 * d.settled
                 blur: 64 * d.settled
                 color: Theme.shadow
-                opacity: Math.min(1, 2 * d.settled)
+                opacity: d.settled
             }
 
-            Item {
-                id: card
+            // The surface of the panel: at progress 0 exactly the button's plate as it looks on the
+            // screen, at 1 the open panel
+            Rectangle {
+                id: surface
 
                 x: d.mix(d.button.x, 0, d.progress)
                 y: d.mix(d.button.y, 0, d.progress)
                 width: d.mix(d.button.width, frame.width, d.progress)
                 height: d.mix(d.button.height, frame.height, d.progress)
-                // Fades in and out only right at the button, where the button's own plate covers it
-                opacity: Math.min(1, d.progress / 0.05)
-                clip: true
-
-                Rectangle {
-                    id: background
-
-                    anchors.fill: parent
-                    radius: d.mix(d.button.radius, 26, d.settled)
-                    // The plate of the button at the button, the surface of the panel when open
-                    color: Qt.tint(Theme.surface, Qt.alpha(d.buttonColor, 1 - d.settled))
-                    border.width: 1
-                    border.color: Qt.alpha(Theme.hairline, Theme.hairline.a * d.settled)
-                }
+                radius: d.mix(d.button.radius, 26, d.settled)
+                color: Qt.tint(Theme.surface, Qt.alpha(d.buttonColor, 1 - d.settled))
+                border.width: 1
+                border.color: Qt.alpha(Theme.hairline, Theme.hairline.a * d.settled)
 
                 // Clicks on the panel outside of the icons do not close it
                 MouseArea {
                     anchors.fill: parent
                     acceptedButtons: Qt.AllButtons
                 }
+            }
 
-                // Stays at the final place of the panel while the card grows over it
-                Item {
-                    id: content
+            // The content scales uniformly (its layout never changes), fitted into the surface and
+            // centered on it; it is visible only while the surface is large enough to hold it
+            // legibly, and is gone well before the surface reaches the button
+            Item {
+                id: content
 
-                    x: -card.x
-                    y: -card.y
-                    width: frame.width
-                    height: frame.height
-                    opacity: 0
+                readonly property real fit: Math.min(surface.width / frame.width, surface.height / frame.height)
 
-                    SearchField {
-                        id: searchField
+                width: frame.width
+                height: frame.height
+                transformOrigin: Item.TopLeft
+                scale: fit
+                x: surface.x + (surface.width - width * fit) / 2
+                y: surface.y + (surface.height - height * fit) / 2
+                opacity: Math.max(0, Math.min(1, (d.progress - 0.25) / 0.45))
 
-                        anchors.top: parent.top
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        anchors.margins: library.padding
-                        anchors.leftMargin: library.padding + 4
-                        anchors.rightMargin: library.padding + 4
-                        placeholderText: qsTr("App Library")
+                SearchField {
+                    id: searchField
 
-                        input.Keys.onPressed: function (event) { d.handleKey(event) }
+                    anchors.top: parent.top
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.margins: library.padding
+                    anchors.leftMargin: library.padding + 4
+                    anchors.rightMargin: library.padding + 4
+                    placeholderText: qsTr("App Library")
+
+                    input.Keys.onPressed: function (event) { d.handleKey(event) }
+                }
+
+                GridView {
+                    id: grid
+
+                    anchors.top: searchField.bottom
+                    anchors.topMargin: 12
+                    anchors.bottom: parent.bottom
+                    // The content is cut off inside the panel, clear of its rounded corners
+                    anchors.bottomMargin: 14
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    width: library.columns * library.cellWidth
+                    bottomMargin: 6
+
+                    cellWidth: library.cellWidth
+                    cellHeight: library.cellHeight
+                    model: library.results
+                    currentIndex: -1
+                    clip: true
+                    boundsBehavior: Flickable.StopAtBounds
+                    keyNavigationEnabled: false
+                    highlightFollowsCurrentItem: false
+
+                    delegate: AppLibraryItem {
+                        required property var modelData
+                        required property int index
+
+                        width: grid.cellWidth
+                        height: grid.cellHeight
+                        name: modelData.name
+                        iconName: modelData.icon
+                        selected: index === grid.currentIndex
+
+                        onClicked: library.launch(modelData)
                     }
 
-                    GridView {
-                        id: grid
-
-                        anchors.top: searchField.bottom
-                        anchors.topMargin: 12
-                        anchors.bottom: parent.bottom
-                        // The content is cut off inside the panel, clear of its rounded corners
-                        anchors.bottomMargin: 14
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        width: library.columns * library.cellWidth
-                        bottomMargin: 6
-
-                        cellWidth: library.cellWidth
-                        cellHeight: library.cellHeight
-                        model: library.results
-                        currentIndex: -1
-                        clip: true
-                        boundsBehavior: Flickable.StopAtBounds
-                        keyNavigationEnabled: false
-                        highlightFollowsCurrentItem: false
-
-                        delegate: AppLibraryItem {
-                            required property var modelData
-                            required property int index
-
-                            width: grid.cellWidth
-                            height: grid.cellHeight
-                            name: modelData.name
-                            iconName: modelData.icon
-                            selected: index === grid.currentIndex
-
-                            onClicked: library.launch(modelData)
-                        }
-
-                        Controls.ScrollBar.vertical: Controls.ScrollBar {
-                            policy: Controls.ScrollBar.AsNeeded
-                        }
+                    Controls.ScrollBar.vertical: Controls.ScrollBar {
+                        policy: Controls.ScrollBar.AsNeeded
                     }
+                }
 
-                    // Empty state of the search, worded like iPadOS
-                    Column {
-                        anchors.centerIn: grid
-                        width: grid.width - 2 * library.padding
-                        spacing: 6
-                        visible: library.searching && library.results.length === 0
+                // Empty state of the search, worded like iPadOS
+                Column {
+                    anchors.centerIn: grid
+                    width: grid.width - 2 * library.padding
+                    spacing: 6
+                    visible: library.searching && library.results.length === 0
 
-                        Text {
-                            width: parent.width
-                            horizontalAlignment: Text.AlignHCenter
-                            text: qsTr("No Results")
-                            color: Theme.label
-                            font.pixelSize: 20
-                            font.weight: Font.DemiBold
-                        }
-                        Text {
-                            width: parent.width
-                            horizontalAlignment: Text.AlignHCenter
-                            wrapMode: Text.Wrap
-                            text: qsTr("Check the spelling or try a new search.")
-                            color: Theme.secondaryLabel
-                            font.pixelSize: 15
-                        }
+                    Text {
+                        width: parent.width
+                        horizontalAlignment: Text.AlignHCenter
+                        text: qsTr("No Results")
+                        color: Theme.label
+                        font.pixelSize: 20
+                        font.weight: Font.DemiBold
+                    }
+                    Text {
+                        width: parent.width
+                        horizontalAlignment: Text.AlignHCenter
+                        wrapMode: Text.Wrap
+                        text: qsTr("Check the spelling or try a new search.")
+                        color: Theme.secondaryLabel
+                        font.pixelSize: 15
                     }
                 }
             }
@@ -280,14 +279,14 @@ Item {
 
     // --- Animations ---
     //
-    // The shape of the panel is one number, d.progress (0: the dock button, 1: the open panel),
-    // animated in the GUI thread: place, size, corner radius and color of the card follow it, so
-    // they always move together. Uniform scaling (an Animator) cannot do this: a scaled panel keeps
-    // its proportions and scales its corners, it can never become the square button. The content,
-    // the dimming and the dissolve after a launch are Animators (render thread).
+    // Opening and closing are one number, d.progress (0: the dock button, 1: the open panel):
+    // place, size, corner radius and color of the surface, the scale and opacity of the content
+    // and the shadow all follow it, so they always move together. It is a NumberAnimation (GUI
+    // thread): the size and corner radius of the surface are not properties Animators can drive,
+    // and a uniformly scaled panel keeps its proportions and scales its corners, so it could never
+    // end as the square button. The dimming and the dissolve after a launch are Animators.
 
-    // Opening: the shape grows out of the button with a soft spring, the content fades in once
-    // there is room for it, the desktop dims
+    // Opening: the panel grows out of the button with a soft spring, the desktop dims
     ParallelAnimation {
         id: openAnimation
 
@@ -295,33 +294,28 @@ Item {
             target: d
             property: "progress"
             to: 1
-            duration: 520
+            duration: 460
             easing.type: Easing.OutBack
-            easing.overshoot: 0.7
+            easing.overshoot: 0.9
         }
         OpacityAnimator { target: scrim; to: 1; duration: 250; easing.type: Easing.OutCubic }
-        SequentialAnimation {
-            PauseAnimation { duration: 90 }
-            OpacityAnimator { target: content; to: 1; duration: 220; easing.type: Easing.OutCubic }
-        }
     }
 
-    // Closing: the content fades out first, then the shape lands in the button, decelerating, and
-    // ends exactly as the button's plate
+    // Closing: the panel shrinks back into the button, the content fades out on the way and the
+    // surface ends as the button's plate
     ParallelAnimation {
         id: closeAnimation
 
         onFinished: library.shown = library.open
 
-        OpacityAnimator { target: content; to: 0; duration: 110; easing.type: Easing.OutCubic }
-        OpacityAnimator { target: scrim; to: 0; duration: 260; easing.type: Easing.OutCubic }
         NumberAnimation {
             target: d
             property: "progress"
             to: 0
-            duration: 420
-            easing.type: Easing.OutQuart
+            duration: 340
+            easing.type: Easing.InOutCubic
         }
+        OpacityAnimator { target: scrim; to: 0; duration: 240; easing.type: Easing.OutCubic }
     }
 
     // Closing after a launch: the panel does not go back to the dock (the application opens
@@ -341,8 +335,7 @@ Item {
     QtObject {
         id: d
 
-        // Shape of the panel: 0 at the dock button, 1 open (a little more while the spring
-        // overshoots)
+        // 0 at the dock button, 1 open (a little more while the spring overshoots)
         property real progress: 0
         // The same, at most 1: for what must not overshoot (corner radius, color, shadow)
         readonly property real settled: Math.max(0, Math.min(1, progress))
@@ -357,7 +350,7 @@ Item {
             return from + (to - from) * t
         }
 
-        // Where the button's plate is now, with the scale of the button (larger under the
+        // Where the button's plate is now, including the scale of the button (larger under the
         // pointer) and of the dock (smaller while pressed)
         function updateButton() {
             const item = library.originItem
@@ -383,7 +376,6 @@ Item {
                 // From the dock button; a panel still closing turns around where it is
                 progress = 0
                 scrim.opacity = 0
-                content.opacity = 0
                 sheet.opacity = 1
                 sheet.scale = 1
                 searchField.text = ""
