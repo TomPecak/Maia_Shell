@@ -3,7 +3,6 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Effects
 import QtQuick.Controls.Basic as Controls
-import QtQuick.Templates as T
 
 import org.kde.kirigami as Kirigami
 
@@ -13,9 +12,8 @@ import MaiaFrontend
 // App Library in the style of iPadOS 18, for the pointer and the keyboard (desktop variant; a
 // touch variant comes later).
 //
-// It opens from its button in the dock: the panel's shape grows out of the button and shrinks
-// back into exactly its shape (place, size, corner radius and color of the button's plate), so it
-// is clear where it came from and where to find it again. It lies next to the dock,
+// It opens from its button in the dock: the panel grows out of the button and shrinks back into
+// it, so it is clear where it came from and where to find it again. It lies next to the dock,
 // towards the middle of the screen: the pointer starts at the button, so the way to the icons is
 // short (Fitts's law). The search field has the keyboard focus at once: typing a few letters and
 // Enter is the fastest way to one of a hundred or more applications; the grid below is for
@@ -32,9 +30,8 @@ Item {
     // --- Public API ---
 
     property bool open: false
-    // The dock button the panel grows out of and shrinks back into (its background is the plate
-    // the panel's shape starts and ends as)
-    property T.Control originItem: null
+    // The dock button the panel grows out of and shrinks back into
+    property Item originItem: null
     // Edge of the dock and the strip it reserves there; the panel lies next to that strip
     property int dockEdge: Qt.BottomEdge
     property real dockStrip: 0
@@ -122,8 +119,7 @@ Item {
 
     // --- The panel ---
 
-    // Final place of the panel. Inside it the shape of the panel (card) morphs between the dock
-    // button and this place; the content stays at its final place and the card reveals it.
+    // Final place of the panel; the panel itself (sheet) moves inside it while it opens and closes
     Item {
         id: frame
 
@@ -138,189 +134,165 @@ Item {
          : library.dockEdge === Qt.BottomEdge ? library.height - library.dockStrip - library.dockGap - height
          : (library.height - height) / 2
 
-        // Dissolves as a whole after a launch
         Item {
             id: sheet
 
             width: frame.width
             height: frame.height
+            opacity: 0
 
-            // Grows with the card; at the button there is no shadow of the panel
             RectangularShadow {
-                x: card.x
-                y: card.y
-                width: card.width
-                height: card.height
+                anchors.fill: parent
                 radius: background.radius
-                offset.y: 18 * d.settled
-                blur: 64 * d.settled
+                offset.y: 18
+                blur: 64
                 color: Theme.shadow
-                opacity: Math.min(1, 2 * d.settled)
             }
 
-            Item {
-                id: card
+            Rectangle {
+                id: background
 
-                x: d.mix(d.button.x, 0, d.progress)
-                y: d.mix(d.button.y, 0, d.progress)
-                width: d.mix(d.button.width, frame.width, d.progress)
-                height: d.mix(d.button.height, frame.height, d.progress)
-                // Fades in and out only right at the button, where the button's own plate covers it
-                opacity: Math.min(1, d.progress / 0.05)
+                anchors.fill: parent
+                radius: 26
+                color: Theme.surface
+                border.width: 1
+                border.color: Theme.hairline
+
+                Behavior on color {
+                    ColorAnimation { duration: Theme.modeChangeDuration }
+                }
+            }
+
+            // Clicks on the panel outside of the icons do not close it
+            MouseArea {
+                anchors.fill: parent
+                acceptedButtons: Qt.AllButtons
+            }
+
+            SearchField {
+                id: searchField
+
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.margins: library.padding
+                anchors.leftMargin: library.padding + 4
+                anchors.rightMargin: library.padding + 4
+                placeholderText: qsTr("App Library")
+
+                input.Keys.onPressed: function (event) { d.handleKey(event) }
+            }
+
+            GridView {
+                id: grid
+
+                anchors.top: searchField.bottom
+                anchors.topMargin: 12
+                anchors.bottom: parent.bottom
+                // The content is cut off inside the panel, clear of its rounded corners
+                anchors.bottomMargin: 14
+                anchors.horizontalCenter: parent.horizontalCenter
+                width: library.columns * library.cellWidth
+                bottomMargin: 6
+
+                cellWidth: library.cellWidth
+                cellHeight: library.cellHeight
+                model: library.results
+                currentIndex: -1
                 clip: true
+                boundsBehavior: Flickable.StopAtBounds
+                keyNavigationEnabled: false
+                highlightFollowsCurrentItem: false
 
-                Rectangle {
-                    id: background
+                delegate: AppLibraryItem {
+                    required property var modelData
+                    required property int index
 
-                    anchors.fill: parent
-                    radius: d.mix(d.button.radius, 26, d.settled)
-                    // The plate of the button at the button, the surface of the panel when open
-                    color: Qt.tint(Theme.surface, Qt.alpha(d.buttonColor, 1 - d.settled))
-                    border.width: 1
-                    border.color: Qt.alpha(Theme.hairline, Theme.hairline.a * d.settled)
+                    width: grid.cellWidth
+                    height: grid.cellHeight
+                    name: modelData.name
+                    iconName: modelData.icon
+                    selected: index === grid.currentIndex
+
+                    onClicked: library.launch(modelData)
                 }
 
-                // Clicks on the panel outside of the icons do not close it
-                MouseArea {
-                    anchors.fill: parent
-                    acceptedButtons: Qt.AllButtons
+                Controls.ScrollBar.vertical: Controls.ScrollBar {
+                    policy: Controls.ScrollBar.AsNeeded
                 }
+            }
 
-                // Stays at the final place of the panel while the card grows over it
-                Item {
-                    id: content
+            // Empty state of the search, worded like iPadOS
+            Column {
+                anchors.centerIn: grid
+                width: grid.width - 2 * library.padding
+                spacing: 6
+                visible: library.searching && library.results.length === 0
 
-                    x: -card.x
-                    y: -card.y
-                    width: frame.width
-                    height: frame.height
-                    opacity: 0
-
-                    SearchField {
-                        id: searchField
-
-                        anchors.top: parent.top
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        anchors.margins: library.padding
-                        anchors.leftMargin: library.padding + 4
-                        anchors.rightMargin: library.padding + 4
-                        placeholderText: qsTr("App Library")
-
-                        input.Keys.onPressed: function (event) { d.handleKey(event) }
-                    }
-
-                    GridView {
-                        id: grid
-
-                        anchors.top: searchField.bottom
-                        anchors.topMargin: 12
-                        anchors.bottom: parent.bottom
-                        // The content is cut off inside the panel, clear of its rounded corners
-                        anchors.bottomMargin: 14
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        width: library.columns * library.cellWidth
-                        bottomMargin: 6
-
-                        cellWidth: library.cellWidth
-                        cellHeight: library.cellHeight
-                        model: library.results
-                        currentIndex: -1
-                        clip: true
-                        boundsBehavior: Flickable.StopAtBounds
-                        keyNavigationEnabled: false
-                        highlightFollowsCurrentItem: false
-
-                        delegate: AppLibraryItem {
-                            required property var modelData
-                            required property int index
-
-                            width: grid.cellWidth
-                            height: grid.cellHeight
-                            name: modelData.name
-                            iconName: modelData.icon
-                            selected: index === grid.currentIndex
-
-                            onClicked: library.launch(modelData)
-                        }
-
-                        Controls.ScrollBar.vertical: Controls.ScrollBar {
-                            policy: Controls.ScrollBar.AsNeeded
-                        }
-                    }
-
-                    // Empty state of the search, worded like iPadOS
-                    Column {
-                        anchors.centerIn: grid
-                        width: grid.width - 2 * library.padding
-                        spacing: 6
-                        visible: library.searching && library.results.length === 0
-
-                        Text {
-                            width: parent.width
-                            horizontalAlignment: Text.AlignHCenter
-                            text: qsTr("No Results")
-                            color: Theme.label
-                            font.pixelSize: 20
-                            font.weight: Font.DemiBold
-                        }
-                        Text {
-                            width: parent.width
-                            horizontalAlignment: Text.AlignHCenter
-                            wrapMode: Text.Wrap
-                            text: qsTr("Check the spelling or try a new search.")
-                            color: Theme.secondaryLabel
-                            font.pixelSize: 15
-                        }
-                    }
+                Text {
+                    width: parent.width
+                    horizontalAlignment: Text.AlignHCenter
+                    text: qsTr("No Results")
+                    color: Theme.label
+                    font.pixelSize: 20
+                    font.weight: Font.DemiBold
+                }
+                Text {
+                    width: parent.width
+                    horizontalAlignment: Text.AlignHCenter
+                    wrapMode: Text.Wrap
+                    text: qsTr("Check the spelling or try a new search.")
+                    color: Theme.secondaryLabel
+                    font.pixelSize: 15
                 }
             }
         }
     }
 
-    // --- Animations ---
-    //
-    // The shape of the panel is one number, d.progress (0: the dock button, 1: the open panel),
-    // animated in the GUI thread: place, size, corner radius and color of the card follow it, so
-    // they always move together. Uniform scaling (an Animator) cannot do this: a scaled panel keeps
-    // its proportions and scales its corners, it can never become the square button. The content,
-    // the dimming and the dissolve after a launch are Animators (render thread).
+    // --- Animations (Animators: they run in the render thread) ---
 
-    // Opening: the shape grows out of the button with a soft spring, the content fades in once
-    // there is room for it, the desktop dims
+    // Opening: the panel grows out of the dock button with a soft spring, the desktop dims
     ParallelAnimation {
         id: openAnimation
 
-        NumberAnimation {
-            target: d
-            property: "progress"
-            to: 1
-            duration: 520
-            easing.type: Easing.OutBack
-            easing.overshoot: 0.7
-        }
         OpacityAnimator { target: scrim; to: 1; duration: 250; easing.type: Easing.OutCubic }
-        SequentialAnimation {
-            PauseAnimation { duration: 90 }
-            OpacityAnimator { target: content; to: 1; duration: 220; easing.type: Easing.OutCubic }
+        OpacityAnimator { target: sheet; to: 1; duration: 140; easing.type: Easing.OutCubic }
+        ScaleAnimator {
+            target: sheet
+            to: 1
+            duration: 460
+            easing.type: Easing.OutBack
+            easing.overshoot: 0.9
+        }
+        XAnimator {
+            target: sheet
+            to: 0
+            duration: 460
+            easing.type: Easing.OutBack
+            easing.overshoot: 0.9
+        }
+        YAnimator {
+            target: sheet
+            to: 0
+            duration: 460
+            easing.type: Easing.OutBack
+            easing.overshoot: 0.9
         }
     }
 
-    // Closing: the content fades out first, then the shape lands in the button, decelerating, and
-    // ends exactly as the button's plate
+    // Closing: the panel shrinks back into the dock button, it fades out on the way
     ParallelAnimation {
         id: closeAnimation
 
         onFinished: library.shown = library.open
 
-        OpacityAnimator { target: content; to: 0; duration: 110; easing.type: Easing.OutCubic }
-        OpacityAnimator { target: scrim; to: 0; duration: 260; easing.type: Easing.OutCubic }
-        NumberAnimation {
-            target: d
-            property: "progress"
-            to: 0
-            duration: 420
-            easing.type: Easing.OutQuart
+        OpacityAnimator { target: scrim; to: 0; duration: 240; easing.type: Easing.OutCubic }
+        ScaleAnimator { target: sheet; to: d.closedScale; duration: 300; easing.type: Easing.InOutCubic }
+        XAnimator { target: sheet; to: d.origin.x; duration: 300; easing.type: Easing.InOutCubic }
+        YAnimator { target: sheet; to: d.origin.y; duration: 300; easing.type: Easing.InOutCubic }
+        SequentialAnimation {
+            PauseAnimation { duration: 100 }
+            OpacityAnimator { target: sheet; to: 0; duration: 200; easing.type: Easing.InCubic }
         }
     }
 
@@ -341,51 +313,35 @@ Item {
     QtObject {
         id: d
 
-        // Shape of the panel: 0 at the dock button, 1 open (a little more while the spring
-        // overshoots)
-        property real progress: 0
-        // The same, at most 1: for what must not overshoot (corner radius, color, shadow)
-        readonly property real settled: Math.max(0, Math.min(1, progress))
-        // The plate of the dock button as it looks on the screen, in the coordinates of frame
-        property var button: ({ x: 0, y: 0, width: 0, height: 0, radius: 0 })
-        readonly property color buttonColor: library.originItem && library.originItem.background
-                                             ? library.originItem.background.color : Theme.plate
+        // Scale of the panel at the dock button
+        readonly property real closedScale: 0.15
+        // Center of the dock button relative to the center of the panel's final place
+        property point origin: Qt.point(0, 0)
         // The panel closes because an application was launched
         property bool launching: false
 
-        function mix(from, to, t) {
-            return from + (to - from) * t
-        }
-
-        // Where the button's plate is now, with the scale of the button (larger under the
-        // pointer) and of the dock (smaller while pressed)
-        function updateButton() {
-            const item = library.originItem
-            if (!item) {
-                button = { x: frame.width / 2, y: frame.height / 2, width: 0, height: 0, radius: 0 }
+        function updateOrigin() {
+            if (!library.originItem) {
+                origin = Qt.point(0, 0)
                 return
             }
-            const topLeft = item.mapToItem(frame, 0, 0)
-            const bottomRight = item.mapToItem(frame, item.width, item.height)
-            const width = bottomRight.x - topLeft.x
-            const radius = item.background && item.background.radius !== undefined
-                           ? item.background.radius * width / item.width : 0
-            button = { x: topLeft.x, y: topLeft.y, width: width, height: bottomRight.y - topLeft.y,
-                       radius: radius }
+            const button = library.originItem.mapToItem(frame, library.originItem.width / 2,
+                                                        library.originItem.height / 2)
+            origin = Qt.point(button.x - frame.width / 2, button.y - frame.height / 2)
         }
 
         function show() {
             closeAnimation.stop()
             launchAnimation.stop()
             launching = false
-            updateButton()
+            updateOrigin()
             if (!library.shown) {
                 // From the dock button; a panel still closing turns around where it is
-                progress = 0
                 scrim.opacity = 0
-                content.opacity = 0
-                sheet.opacity = 1
-                sheet.scale = 1
+                sheet.opacity = 0
+                sheet.scale = closedScale
+                sheet.x = origin.x
+                sheet.y = origin.y
                 searchField.text = ""
                 grid.currentIndex = -1
                 grid.positionViewAtBeginning()
@@ -402,7 +358,7 @@ Item {
             if (launching) {
                 launchAnimation.restart()
             } else {
-                updateButton()
+                updateOrigin()
                 closeAnimation.restart()
                 library.dismissed()
             }
