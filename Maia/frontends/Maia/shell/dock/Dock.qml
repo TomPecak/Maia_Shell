@@ -1,8 +1,10 @@
 import QtQuick
+import QtQuick.Effects
 import QtQuick.Layouts
 import Maia.Windows as Windows
 
 import Maia.Backend as Maia
+import MaiaFrontend
 
 // Draggable dock which snaps to the nearest screen edge when it is released.
 //
@@ -10,10 +12,12 @@ import Maia.Backend as Maia
 // like the macOS Dock. The data comes from the Maia window service (Maia.Windows: TasksModel with
 // the API of the Plasma task manager, the same model as the taskbar of Lumen).
 //
+// The last button opens the App Library (shell/library/AppLibrary.qml), like the App Library
+// icon at the end of the dock of iPadOS.
+//
 // The dock has to be placed directly in a full-screen item (normally the window
 // content item), its parent defines the area in which the dock can be moved.
-// Window-wide input handling (closing the panel by clicking outside of it and
-// capturing the pointer while dragging) belongs to the window, see LayerTop.qml.
+// Window-wide parts (the App Library itself) belong to the window, see LayerTop.qml.
 Rectangle {
     id: dock
 
@@ -34,8 +38,24 @@ Rectangle {
     property real edgeMargin: 8
     // Edge the dock is attached to: Qt.TopEdge, Qt.BottomEdge, Qt.LeftEdge or Qt.RightEdge
     property int edge: Qt.TopEdge
-    // Whether the launcher panel is open
-    property bool panelOpen: false
+    // Whether the App Library is open
+    property bool libraryOpen: false
+    // The App Library button, the library grows out of it
+    readonly property Item libraryButton: libraryButton
+
+    // The App Library takes the keyboard while it is open; the window that was active before
+    // gets it back when the library closes without launching anything
+    onLibraryOpenChanged: {
+        if (libraryOpen)
+            d.windowBeforeLibrary = d.activeWindow()
+    }
+
+    function returnFocus() {
+        const window = d.windowBeforeLibrary
+        d.windowBeforeLibrary = null
+        if (window && window.valid)
+            tasksModel.requestActivate(window)
+    }
 
     readonly property bool vertical: edge === Qt.LeftEdge || edge === Qt.RightEdge
     readonly property bool dragging: d.dragging
@@ -47,7 +67,23 @@ Rectangle {
     // --- Appearance ---
 
     radius: 25
-    color: "#55000000"
+    color: Theme.dock
+    border.width: 1
+    border.color: Theme.hairline
+
+    Behavior on color {
+        ColorAnimation { duration: Theme.modeChangeDuration }
+    }
+
+    // Below the dock (a child with a negative z is drawn below its parent)
+    RectangularShadow {
+        z: -1
+        anchors.fill: parent
+        radius: dock.radius
+        offset.y: 6
+        blur: 28
+        color: Qt.rgba(0, 0, 0, Theme.dark ? 0.45 : 0.18)
+    }
 
     // "Pressed" effect while the dock is grabbed
     scale: dragArea.pressed ? 0.97 : 1.0
@@ -135,7 +171,10 @@ Rectangle {
                 edge: dock.edge
                 Accessible.name: model.AppName || model.display
 
-                onClicked: dock.activateApplication(index)
+                onClicked: {
+                    dock.libraryOpen = false
+                    dock.activateApplication(index)
+                }
             }
         }
 
@@ -145,25 +184,19 @@ Rectangle {
             Layout.preferredHeight: dock.vertical ? 1 : dock.buttonSize
         }
 
-        // Opens the dock panel
+        // Opens and closes the App Library
         DockButton {
-            id: panelButton
+            id: libraryButton
 
             Layout.preferredWidth: dock.buttonSize
             Layout.preferredHeight: dock.buttonSize
-            iconSource: Qt.resolvedUrl("../../assets/pngegg.png")
+            padding: 13
+            checked: dock.libraryOpen
+            Accessible.name: qsTr("App Library")
 
-            background: Rectangle {
-                color: "white"
-                radius: 10
-            }
+            contentItem: AppLibraryGlyph {}
 
-            onClicked: dock.panelOpen = !dock.panelOpen
-
-            DockPanel {
-                open: dock.panelOpen
-                edge: dock.edge
-            }
+            onClicked: dock.libraryOpen = !dock.libraryOpen
         }
     }
 
@@ -226,8 +259,29 @@ Rectangle {
         property real grabRatioY: 0.5
         // Pointer position in parent coordinates
         property point pointer: Qt.point(0, 0)
+        // The active window when the App Library opened (a persistent model index)
+        property var windowBeforeLibrary: null
+
+        function activeWindow() {
+            for (let row = 0; row < tasksModel.count; ++row) {
+                const application = tasksModel.makeModelIndex(row)
+                const windows = tasksModel.rowCount(application)
+                if (windows === 0) {
+                    if (tasksModel.data(application, Windows.AbstractTasksModel.IsActive))
+                        return tasksModel.makePersistentModelIndex(row)
+                    continue
+                }
+                for (let i = 0; i < windows; ++i) {
+                    if (tasksModel.data(tasksModel.index(i, 0, application), Windows.AbstractTasksModel.IsActive))
+                        return tasksModel.makePersistentModelIndex(row, i)
+                }
+            }
+            return null
+        }
 
         function beginDrag(ratioX, ratioY, position) {
+            // The library lies next to the dock, it does not follow it around
+            dock.libraryOpen = false
             grabRatioX = ratioX
             grabRatioY = ratioY
             moveDuration = 50
