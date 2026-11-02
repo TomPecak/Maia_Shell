@@ -5,6 +5,8 @@ import Maia.Backend as Maia
 
 import "dock"
 import "library"
+import "session"
+import "status"
 
 Window{
     id: root
@@ -90,8 +92,12 @@ Window{
     LayerShell.Window.exclusionZone: stripThickness
     // The keyboard only while the App Library is open: its search field takes the typing at once.
     // Otherwise the window never takes the keyboard from the applications.
-    LayerShell.Window.keyboardInteractivity: dock.libraryOpen ? LayerShell.Window.KeyboardInteractivityExclusive
-                                                              : LayerShell.Window.KeyboardInteractivityNone
+    LayerShell.Window.keyboardInteractivity: dock.libraryOpen || root.sessionOpen
+                                             ? LayerShell.Window.KeyboardInteractivityExclusive
+                                             : LayerShell.Window.KeyboardInteractivityNone
+
+    // The session screen (sleep, restart, shut down, log out) is open
+    property bool sessionOpen: false
 
     //color: "#AA112233"
     color: "transparent"
@@ -107,22 +113,28 @@ Window{
         color: Qt.rgba(0.15, 0.55, 1.0, 0.22)
     }
 
-    // Light / dark switch, for testing: in the strip the dock reserves, at its end, so it never
-    // covers a window (the corners outside the strip hold the buttons of maximized windows).
-    // Follows the anchored edge, i.e. moves once the dock rests at a new edge (it disappears and
-    // appears again, see AppearanceSwitch.qml). Below the App Library, which dims it.
-    AppearanceSwitch {
-        id: appearanceSwitch
+    // Light/dark switch and power button, at the end of the strip the dock reserves (see
+    // StatusArea.qml). Follows the anchored edge, i.e. moves once the dock rests at a new edge.
+    // Below the App Library, which dims it.
+    StatusArea {
+        id: statusArea
 
         readonly property real endMargin: 2 * dock.edgeMargin
 
         edge: root.anchoredEdge
+        sessionOpen: root.sessionOpen
         x: placedEdge === Qt.LeftEdge ? dock.edgeMargin + (dock.shortSize - width) / 2
          : placedEdge === Qt.RightEdge ? root.width - dock.edgeMargin - (dock.shortSize + width) / 2
          : root.width - endMargin - width
         y: placedEdge === Qt.TopEdge ? dock.edgeMargin + (dock.shortSize - height) / 2
          : placedEdge === Qt.BottomEdge ? root.height - dock.edgeMargin - (dock.shortSize + height) / 2
          : root.height - endMargin - height
+
+        onPowerClicked: {
+            dock.libraryOpen = false
+            dock.rememberFocus()
+            root.sessionOpen = true
+        }
     }
 
     AppLibrary {
@@ -149,6 +161,17 @@ Window{
 
         // Where it was left; dragging sets the edge itself afterwards
         edge: dockState.edge
+    }
+
+    // Above everything, the dock included: the session concerns the whole computer
+    SessionScreen {
+        id: sessionScreen
+
+        anchors.fill: parent
+        open: root.sessionOpen
+
+        onCloseRequested: root.sessionOpen = false
+        onDismissed: dock.returnFocus()
     }
 
     // Red strips on the edges the window is anchored to, above everything

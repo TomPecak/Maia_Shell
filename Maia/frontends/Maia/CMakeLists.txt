@@ -19,7 +19,6 @@ qt_add_qml_module(MaiaFrontend
         QML_FILES shell/LayerBottom.qml
         QML_FILES shell/AvailableFonts.qml
         QML_FILES shell/LayerTop.qml
-        QML_FILES shell/AppearanceSwitch.qml
         QML_FILES shell/dock/AppLibraryGlyph.qml
         QML_FILES shell/dock/Dock.qml
         QML_FILES shell/dock/DockButton.qml
@@ -28,6 +27,11 @@ qt_add_qml_module(MaiaFrontend
         QML_FILES shell/library/AppLibrary.qml
         QML_FILES shell/library/AppLibraryItem.qml
         QML_FILES shell/library/SearchField.qml
+        QML_FILES shell/session/SessionActionButton.qml
+        QML_FILES shell/session/SessionScreen.qml
+        QML_FILES shell/status/AppearanceSwitch.qml
+        QML_FILES shell/status/PowerButton.qml
+        QML_FILES shell/status/StatusArea.qml
         QML_FILES shell/menu/DesktopMenu.qml
         QML_FILES shell/menu/MenuItem.qml
         QML_FILES shell/menu/MenuPanel.qml
