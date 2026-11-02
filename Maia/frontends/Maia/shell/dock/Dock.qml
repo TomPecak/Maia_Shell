@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Effects
 import QtQuick.Layouts
+import QtQuick.Templates as T
 import Maia.Windows as Windows
 
 import Maia.Backend as Maia
@@ -41,18 +42,24 @@ Rectangle {
     // Whether the App Library is open
     property bool libraryOpen: false
     // The App Library button, the library grows out of it
-    readonly property Item libraryButton: libraryButton
+    readonly property T.Control libraryButton: libraryButton
 
-    // The App Library takes the keyboard while it is open; the window that was active before
-    // gets it back when the library closes without launching anything
+    // The App Library (and the session screen) take the keyboard while they are open; the window
+    // that was active before gets it back when they close without launching anything
     onLibraryOpenChanged: {
         if (libraryOpen)
-            d.windowBeforeLibrary = d.activeWindow()
+            rememberFocus()
     }
 
+    // Remembers the active window, before an overlay of the dock window takes the keyboard
+    function rememberFocus() {
+        d.windowBeforeOverlay = d.activeWindow()
+    }
+
+    // Gives the keyboard back to the window remembered by rememberFocus()
     function returnFocus() {
-        const window = d.windowBeforeLibrary
-        d.windowBeforeLibrary = null
+        const window = d.windowBeforeOverlay
+        d.windowBeforeOverlay = null
         if (window && window.valid)
             tasksModel.requestActivate(window)
     }
@@ -259,8 +266,8 @@ Rectangle {
         property real grabRatioY: 0.5
         // Pointer position in parent coordinates
         property point pointer: Qt.point(0, 0)
-        // The active window when the App Library opened (a persistent model index)
-        property var windowBeforeLibrary: null
+        // The active window when an overlay opened (a persistent model index)
+        property var windowBeforeOverlay: null
 
         function activeWindow() {
             for (let row = 0; row < tasksModel.count; ++row) {

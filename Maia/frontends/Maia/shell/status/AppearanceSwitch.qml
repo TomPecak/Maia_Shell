@@ -8,22 +8,11 @@ import MaiaFrontend
 
 // Light / dark switch for testing the appearance: a segmented control of iPadOS with a sun and a
 // moon. Both states are visible at once and the thumb shows the current one, so it reads as a
-// state, not as an action. Horizontal or vertical, following the dock.
-//
-// It belongs to the edge of the dock. When the dock moves to another edge, the switch does not
-// travel across the screen (a small control crossing the windows would pull the eye away from
-// the dock, which is the main movement): it quickly shrinks and fades out at its old place, and
-// after a short pause appears at the new one with a soft spring, already in its new orientation.
-// The parent positions it by placedEdge, which changes only while it is invisible.
+// state, not as an action. Horizontal or vertical, following the dock (StatusArea.qml).
 Item {
     id: control
 
-    // Edge of the dock the switch belongs to
-    property int edge: Qt.TopEdge
-    // Edge it is placed at now: follows edge while the switch is invisible
-    property int placedEdge: Qt.TopEdge
-
-    readonly property bool vertical: placedEdge === Qt.LeftEdge || placedEdge === Qt.RightEdge
+    property bool vertical: false
 
     readonly property real segment: 36
     readonly property real inset: 3
@@ -33,57 +22,6 @@ Item {
 
     Accessible.role: Accessible.Grouping
     Accessible.name: qsTr("Appearance")
-
-    // At start it simply is where it belongs
-    Component.onCompleted: {
-        placedEdge = edge
-        d.ready = true
-    }
-
-    onEdgeChanged: {
-        if (!d.ready) {
-            placedEdge = edge
-            return
-        }
-        // Started again when the edge changes once more while it moves: it disappears from
-        // wherever it is and comes up at the newest edge
-        moveAnimation.restart()
-    }
-
-    QtObject {
-        id: d
-
-        property bool ready: false
-        // Scale it shrinks to and grows from
-        readonly property real hiddenScale: 0.6
-    }
-
-    SequentialAnimation {
-        id: moveAnimation
-
-        // Leaving: short and accelerating, it is going away
-        ParallelAnimation {
-            ScaleAnimator { target: control; to: d.hiddenScale; duration: 150; easing.type: Easing.InCubic }
-            OpacityAnimator { target: control; to: 0; duration: 150; easing.type: Easing.InCubic }
-        }
-        ScriptAction {
-            script: control.placedEdge = control.edge
-        }
-        // A beat between leaving and arriving, so the appearance reads as one at the new place
-        PauseAnimation { duration: 90 }
-        // Arriving: a spring with a small overshoot, the opacity a little ahead of the size
-        ParallelAnimation {
-            ScaleAnimator {
-                target: control
-                from: d.hiddenScale
-                to: 1
-                duration: 420
-                easing.type: Easing.OutBack
-                easing.overshoot: 1.3
-            }
-            OpacityAnimator { target: control; from: 0; to: 1; duration: 200; easing.type: Easing.OutCubic }
-        }
-    }
 
     RectangularShadow {
         anchors.fill: track
