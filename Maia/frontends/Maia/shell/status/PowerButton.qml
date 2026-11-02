@@ -55,7 +55,8 @@ Item {
             anchors.centerIn: parent
             width: 20
             height: 20
-            source: "system-shutdown-symbolic"
+            // Shipped with the frontend (assets/icons/README.md)
+            source: Qt.resolvedUrl("../../assets/icons/system-shutdown-symbolic.svg")
             isMask: true
             color: Theme.label
         }

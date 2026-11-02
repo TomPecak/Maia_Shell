@@ -25,7 +25,8 @@ Rectangle {
         anchors.verticalCenter: parent.verticalCenter
         width: 18
         height: 18
-        source: "search"
+        // Shipped with the frontend (assets/icons/README.md)
+        source: Qt.resolvedUrl("../../assets/icons/search.svg")
         isMask: true
         color: Theme.secondaryLabel
     }
