@@ -49,16 +49,16 @@ Item {
     // --- Actions ---
 
     readonly property var powerActions: [
-        { id: "suspend", text: qsTr("Sleep"), icon: "system-suspend-symbolic",
+        { id: "suspend", text: qsTr("Sleep"), icon: d.icon("system-suspend-symbolic"),
           available: Maia.MSessionManager.canSuspend, destructive: false },
-        { id: "reboot", text: qsTr("Restart"), icon: "system-reboot-symbolic",
+        { id: "reboot", text: qsTr("Restart"), icon: d.icon("system-reboot-symbolic"),
           available: Maia.MSessionManager.canReboot, destructive: false },
-        { id: "shutdown", text: qsTr("Shut Down"), icon: "system-shutdown-symbolic",
+        { id: "shutdown", text: qsTr("Shut Down"), icon: d.icon("system-shutdown-symbolic"),
           available: Maia.MSessionManager.canPowerOff, destructive: true }
     ].filter(action => action.available)
 
     readonly property var sessionActions: [
-        { id: "logout", text: qsTr("Log Out"), icon: "system-log-out-symbolic", destructive: false }
+        { id: "logout", text: qsTr("Log Out"), icon: d.icon("system-log-out-symbolic"), destructive: false }
     ]
 
     // Keyboard order: the actions from left to right, then Cancel
@@ -426,6 +426,12 @@ Item {
 
     QtObject {
         id: d
+
+        // A symbolic icon shipped with the frontend (assets/icons/README.md), not one of the
+        // icon theme: a theme without it would give a filled square
+        function icon(name) {
+            return Qt.resolvedUrl("../../assets/icons/" + name + ".svg")
+        }
 
         // The action being carried out ("" when none)
         property string performing: ""

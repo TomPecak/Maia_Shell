@@ -35,7 +35,6 @@ Item {
 
         flow: area.vertical ? Grid.TopToBottom : Grid.LeftToRight
         columns: area.vertical ? 1 : 2
-        rows: area.vertical ? 2 : 1
         spacing: 10
         horizontalItemAlignment: Grid.AlignHCenter
         verticalItemAlignment: Grid.AlignVCenter
