@@ -10,11 +10,13 @@ import MaiaFrontend
 // area.
 //
 // A full-screen, modal screen, like the power-off screen and the Control Center of iPadOS: ending
-// the session is a decision about the whole computer, so it takes the whole screen, and it is
-// always dark (the screen is about to go dark). In the middle the user, so it is clear whose
-// session ends, and below the actions in two groups (common region): the power actions in the
-// order of macOS (Sleep, Restart, Shut Down; Shut Down red, it is the destructive one) and, apart
-// from them, Log Out. Cancel at the bottom; Escape and a click outside cancel too.
+// the session is a decision about the whole computer, so it takes the whole screen. The desktop
+// is always dimmed (modality: the rest waits), while the cards on it follow the light or dark
+// mode like every other surface of the frontend (internal consistency; the mode is the user's
+// choice). In the middle the user, so it is clear whose session ends, and below the actions in
+// two groups (common region): the power actions in the order of macOS (Sleep, Restart, Shut Down;
+// Shut Down red in both modes, it is the destructive one) and, apart from them, Log Out. Cancel
+// at the bottom; Escape and a click outside cancel too.
 //
 // Opening the screen is the confirmation step (a deliberate click on the power button), so the
 // actions act at once, without another dialog: the screen fades to black and the action is
@@ -78,8 +80,9 @@ Item {
         id: scrim
 
         anchors.fill: parent
-        // Dark enough that the windows below do not compete with the actions (there is no blur)
-        color: Qt.rgba(0, 0, 0, 0.72)
+        // Dark enough that the windows below step back behind the cards (there is no blur); in
+        // the dark mode darker, so the dark cards still stand apart
+        color: Qt.rgba(0, 0, 0, Theme.dark ? 0.6 : 0.32)
         opacity: 0
 
         MouseArea {
@@ -115,71 +118,86 @@ Item {
         anchors.verticalCenterOffset: -32
         spacing: 40
 
-        // Whose session it is
-        Column {
+        // Whose session it is, on a card of its own: text straight on the dimmed desktop would be
+        // hard to read on a light wallpaper
+        Rectangle {
             id: header
 
             anchors.horizontalCenter: parent.horizontalCenter
-            spacing: 12
+            width: Math.max(200, headerColumn.width + 2 * 32)
+            height: headerColumn.height + 2 * 22
+            radius: 30
+            color: Theme.card
+            border.width: 1
+            border.color: Theme.hairline
             opacity: 0
 
-            Rectangle {
-                id: avatar
+            CardShadow { radius: header.radius }
 
-                anchors.horizontalCenter: parent.horizontalCenter
-                width: 84
-                height: 84
-                radius: width / 2
-                // The placeholder of iPadOS contacts: a grey gradient with the initial
-                gradient: Gradient {
-                    GradientStop { position: 0; color: "#a5a5ab" }
-                    GradientStop { position: 1; color: "#6e6e73" }
+            Column {
+                id: headerColumn
+
+                anchors.centerIn: parent
+                spacing: 12
+
+                Rectangle {
+                    id: avatar
+
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    width: 84
+                    height: 84
+                    radius: width / 2
+                    // The placeholder of iPadOS contacts: a grey gradient with the initial
+                    gradient: Gradient {
+                        GradientStop { position: 0; color: "#a5a5ab" }
+                        GradientStop { position: 1; color: "#6e6e73" }
+                    }
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: screen.userName.length > 0 ? screen.userName.charAt(0).toUpperCase() : ""
+                        color: "white"
+                        font.pixelSize: 36
+                        font.weight: Font.DemiBold
+                    }
+
+                    // The KDE user picture, when there is one
+                    Image {
+                        id: picture
+
+                        anchors.fill: parent
+                        source: typeof HOME !== "undefined" && HOME ? "file://" + HOME + "/.face.icon" : ""
+                        sourceSize: Qt.size(168, 168)
+                        fillMode: Image.PreserveAspectCrop
+                        visible: false
+                        asynchronous: true
+                    }
+
+                    MultiEffect {
+                        anchors.fill: parent
+                        source: picture
+                        visible: picture.status === Image.Ready
+                        maskEnabled: true
+                        maskSource: avatarMask
+                    }
+
+                    Rectangle {
+                        id: avatarMask
+
+                        anchors.fill: parent
+                        radius: width / 2
+                        visible: false
+                        layer.enabled: true
+                    }
                 }
 
                 Text {
-                    anchors.centerIn: parent
-                    text: screen.userName.length > 0 ? screen.userName.charAt(0).toUpperCase() : ""
-                    color: "white"
-                    font.pixelSize: 36
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: screen.userName
+                    color: Theme.label
+                    font.pixelSize: 22
                     font.weight: Font.DemiBold
                 }
-
-                // The KDE user picture, when there is one
-                Image {
-                    id: picture
-
-                    anchors.fill: parent
-                    source: typeof HOME !== "undefined" && HOME ? "file://" + HOME + "/.face.icon" : ""
-                    sourceSize: Qt.size(168, 168)
-                    fillMode: Image.PreserveAspectCrop
-                    visible: false
-                    asynchronous: true
-                }
-
-                MultiEffect {
-                    anchors.fill: parent
-                    source: picture
-                    visible: picture.status === Image.Ready
-                    maskEnabled: true
-                    maskSource: avatarMask
-                }
-
-                Rectangle {
-                    id: avatarMask
-
-                    anchors.fill: parent
-                    radius: width / 2
-                    visible: false
-                    layer.enabled: true
-                }
-            }
-
-            Text {
-                anchors.horizontalCenter: parent.horizontalCenter
-                text: screen.userName
-                color: "white"
-                font.pixelSize: 22
-                font.weight: Font.DemiBold
             }
         }
 
@@ -202,7 +220,17 @@ Item {
         }
     }
 
-    // A platter of the Control Center holding one group of actions
+    // Shadow below a card (a child with a negative z is drawn below its parent); radius: the
+    // card's corner radius
+    component CardShadow: RectangularShadow {
+        z: -1
+        anchors.fill: parent
+        offset.y: 10
+        blur: 36
+        color: Qt.rgba(0, 0, 0, Theme.dark ? 0.5 : 0.16)
+    }
+
+    // A card holding one group of actions, like a platter of the Control Center
     component Platter: Rectangle {
         id: platter
 
@@ -211,12 +239,14 @@ Item {
         width: platterRow.width + 2 * 16
         height: platterRow.height + 2 * 18
         radius: 30
-        // Nearly opaque: without blur, a translucent platter would show the windows below
-        color: Qt.rgba(28 / 255, 28 / 255, 30 / 255, 0.94)
+        // Opaque: without blur, a translucent card would show the windows below
+        color: Theme.card
         border.width: 1
-        border.color: Qt.rgba(1, 1, 1, 0.08)
+        border.color: Theme.hairline
         visible: actions.length > 0
         opacity: 0
+
+        CardShadow { radius: platter.radius }
 
         Row {
             id: platterRow
@@ -232,8 +262,7 @@ Item {
 
                     text: modelData.text
                     iconName: modelData.icon
-                    tint: modelData.destructive ? "#ff453a" : Qt.rgba(1, 1, 1, 0.14)
-                    hoverTint: modelData.destructive ? "#ff6961" : Qt.rgba(1, 1, 1, 0.24)
+                    destructive: modelData.destructive
                     selected: d.selection === modelData.id
                     opacity: d.performing && d.performing !== modelData.id ? 0.35 : 1
 
@@ -257,11 +286,12 @@ Item {
         width: Math.max(140, cancelLabel.implicitWidth + 48)
         height: 44
         radius: height / 2
-        color: cancelArea.containsMouse || d.selection === "cancel" ? Qt.rgba(72 / 255, 72 / 255, 74 / 255, 0.96)
-                                                                  : Qt.rgba(44 / 255, 44 / 255, 46 / 255, 0.94)
-        border.width: d.selection === "cancel" ? 3 : 0
-        border.color: "#0a84ff"
+        color: cancelArea.containsMouse || d.selection === "cancel" ? Theme.plateHover : Theme.card
+        border.width: d.selection === "cancel" ? 3 : 1
+        border.color: d.selection === "cancel" ? Theme.accent : Theme.hairline
         opacity: 0
+
+        CardShadow { radius: cancelButton.radius }
 
         Accessible.role: Accessible.Button
         Accessible.name: cancelLabel.text
@@ -276,7 +306,8 @@ Item {
 
             anchors.centerIn: parent
             text: qsTr("Cancel")
-            color: "white"
+            // The non-destructive way out, in the accent color like Cancel in iPadOS
+            color: Theme.accent
             font.pixelSize: 17
             font.weight: Font.Medium
         }

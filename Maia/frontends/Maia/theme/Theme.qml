@@ -38,6 +38,9 @@ QtObject {
     // Large surfaces lying over the desktop (the App Library): systemGroupedBackground, in the dark
     // the elevated variant, so the surface stands apart from a dark wallpaper
     readonly property color surface: dark ? "#1c1c1e" : "#f2f2f7"
+    // Cards lying over the dimmed desktop (the session screen): systemBackground, in the dark the
+    // elevated variant
+    readonly property color card: dark ? "#1c1c1e" : "#ffffff"
     // Plates on a surface (icon plates in the dock, the thumb of a segmented control)
     readonly property color plate: dark ? "#2c2c2e" : "#ffffff"
     readonly property color segmentThumb: dark ? "#636366" : "#ffffff"
@@ -58,6 +61,11 @@ QtObject {
     // tertiarySystemFill: search field, segmented control track
     readonly property color fill: dark ? Qt.rgba(118 / 255, 118 / 255, 128 / 255, 0.24)
                                        : Qt.rgba(118 / 255, 118 / 255, 128 / 255, 0.12)
+    // secondarySystemFill: round buttons on a card, and the same under the pointer
+    readonly property color secondaryFill: dark ? Qt.rgba(120 / 255, 120 / 255, 128 / 255, 0.32)
+                                                : Qt.rgba(120 / 255, 120 / 255, 128 / 255, 0.16)
+    readonly property color secondaryFillHover: dark ? Qt.rgba(120 / 255, 120 / 255, 128 / 255, 0.46)
+                                                     : Qt.rgba(120 / 255, 120 / 255, 128 / 255, 0.28)
     // The pointer highlight of iPadOS (hover) and its pressed variant
     readonly property color hover: dark ? Qt.rgba(1, 1, 1, 0.10) : Qt.rgba(0, 0, 0, 0.06)
     readonly property color pressed: dark ? Qt.rgba(1, 1, 1, 0.16) : Qt.rgba(0, 0, 0, 0.12)
@@ -73,6 +81,9 @@ QtObject {
     readonly property color orange: dark ? "#ff9f0a" : "#ff9500"
     readonly property color pink: dark ? "#ff375f" : "#ff2d55"
     readonly property color yellow: dark ? "#ffd60a" : "#ffcc00"
+    // Destructive actions, and the same under the pointer
+    readonly property color red: dark ? "#ff453a" : "#ff3b30"
+    readonly property color redHover: dark ? "#ff6961" : "#ff5e55"
 
     // --- Motion ---
 
