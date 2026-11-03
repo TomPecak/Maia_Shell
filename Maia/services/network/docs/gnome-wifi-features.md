@@ -3,7 +3,8 @@
 Reference for the Maia network service (`maia-network`, Cap'n Proto contract, QML module) and for the
 Wi-Fi user interface of the Maia frontends. It describes what GNOME lets the user do with Wi-Fi, how the
 interface behaves, and what each feature needs from NetworkManager. The last column of the tables is a
-**proposal** for Maia (first version / later / skip), to be decided before the contract is written.
+plan for Maia: everything the current Maia infrastructure allows now, the rest later, with what it waits
+for.
 
 Scope: Wi-Fi only. Wired, VPN, mobile broadband and Bluetooth tethering appear in the same GNOME code,
 but are left out here.
@@ -279,37 +280,59 @@ more useful than "Secrets were required, but not provided").
 
 ## Summary: capabilities and what they need
 
-Legend for the Maia column: **1** = first version, **2** = later, **—** = skip (left to KDE System
-Settings or not needed).
+Maia takes over **everything GNOME offers for Wi-Fi that the current Maia infrastructure allows**. Legend for
+the Maia column:
+
+- **now**: can be built with what Maia has today (the window service as the pattern for a Rust service,
+  Cap'n Proto, a QML module, the frontends, the polkit agent of the session);
+- **later**: waits for a part of Maia that does not exist yet; the part is named, and the section
+  "Later" below lists them. Where only a piece of a capability waits, the row is split.
 
 | # | Capability | GNOME place | NetworkManager (D-Bus) | Also needs | Maia |
 |---|---|---|---|---|---|
-| 1 | Wi-Fi on/off | Quick settings, panel | `WirelessEnabled` (rw), `WirelessHardwareEnabled` | polkit `enable-disable-wifi` | **1** |
-| 2 | Status: connected network, signal, connecting, no internet, off, hardware switch | Icon, toggle subtitle, panel subtitle | `PrimaryConnection`, `Connectivity`, device `State`, `ActiveAccessPoint`, AP `Strength` | | **1** |
-| 3 | List of networks, merged by SSID, signal, secured, connected, saved | Menu (8), panel (all) | device `AccessPoints`, AP `Ssid`/`Strength`/`Flags`/`WpaFlags`/`RsnFlags`/`Mode`, device `AvailableConnections` | | **1** |
-| 4 | Scan while the list is open, scanning indicator | Menu, panel | device `RequestScan`, `LastScan` | | **1** |
-| 5 | Connect to a saved network | Menu, panel | `ActivateConnection` | | **1** |
-| 6 | Connect to a new Personal/open network, with password | Menu, panel | `AddAndActivateConnection` | secret agent (or the password in the new profile), polkit | **1** |
-| 7 | Password dialog with validation (8–63 / 64 hex) | Shell dialog | `SecretAgent.GetSecrets` / `CancelGetSecrets`, `AgentManager.Register` | | **1** |
-| 8 | Disconnect | (menu: by turning Wi-Fi off) | `DeactivateConnection` or device `Disconnect` | | **1** |
-| 9 | Failure message with a useful reason | Notification, panel subtitle | device `StateReason` | notifications (TODO.md item 3) | **1** |
-| 10 | Saved networks, ordered by last use | Dialog | `Settings.ListConnections`, `GetSettings` (`timestamp`) | | **1** |
-| 11 | Forget a network, with undo | Saved networks, details | `Connection.Delete` | | **1** |
-| 12 | Details: signal, speed, band, security, addresses, MAC, gateway, DNS, last used | Details tab | device `Bitrate`/`HwAddress`/`Ip4Config`/`Ip6Config`, AP `Frequency` | | **1** (read-only) |
-| 13 | Connect automatically | Details tab | `Connection.Update` (`autoconnect`) | | **1** |
-| 14 | Hidden network (SSID + security + password) | Dialog | `AddAndActivateConnection` with `hidden=true` | | **2** |
-| 15 | Share by QR code | Panel, saved networks | `Connection.GetSecrets` | QR code generator in the frontend | **2** |
-| 16 | Hotspot (name, generated password, shared IPv4, turn off) | Dialog, panel, toggle | `AddAndActivateConnection` (mode `ap`, `ipv4.method=shared`), `GetPermissions` (`wifi.share.*`), `WirelessCapabilities` | | **2** |
-| 17 | Metered connection | Details tab | `connection.metered` | | **2** |
-| 18 | Available to other users | Details tab | connection `permissions` | polkit `settings.modify.system` | **2** |
-| 19 | Captive portal: notice and sign-in | Notification | `Connectivity == PORTAL`, `ConnectivityCheckUri`, `CheckConnectivity` | browser or portal window, notifications | **2** |
-| 20 | Airplane mode | Panel, quick settings | (not NetworkManager) | rfkill, Bluetooth service | **2** |
-| 21 | Several Wi-Fi adapters | Submenus, device pages | devices of type Wi-Fi | | **2** (contract ready from the start) |
-| 22 | Enterprise (802.1X): EAP method, identities, certificates | Dialogs, Security tab | `802-1x` settings, secrets | certificate file picker | **2** |
-| 23 | Manual IPv4/IPv6, DNS, routes | IPv4/IPv6 tabs | `Connection.Update` (`ipv4`, `ipv6`) | | — (KDE System Settings) |
-| 24 | BSSID, MAC lock, cloned/random MAC | Identity tab | `802-11-wireless` settings | | — |
-| 25 | LEAP, WEP | Security tab, password dialog | | | — |
-| 26 | WPS push button hint | Password dialog | secret agent flag `WPS_PBC_ACTIVE` | | — |
+| 1 | Wi-Fi on/off | Quick settings, panel | `WirelessEnabled` (rw), `WirelessHardwareEnabled` | polkit `enable-disable-wifi` | **now** |
+| 2 | Status: connected network, signal, connecting, no internet, off, hardware switch | Icon, toggle subtitle, panel subtitle | `PrimaryConnection`, `Connectivity`, device `State`, `ActiveAccessPoint`, AP `Strength` | | **now** |
+| 3 | List of networks, merged by SSID, signal, secured, connected, saved | Menu (8), panel (all) | device `AccessPoints`, AP `Ssid`/`Strength`/`Flags`/`WpaFlags`/`RsnFlags`/`Mode`, device `AvailableConnections` | | **now** |
+| 4 | Scan while the list is open, scanning indicator | Menu, panel | device `RequestScan`, `LastScan` | | **now** |
+| 5 | Connect to a saved network | Menu, panel | `ActivateConnection` | | **now** |
+| 6 | Connect to a new Personal/open network, with password | Menu, panel | `AddAndActivateConnection` | polkit | **now** |
+| 7 | Password dialog with validation (8–63 / 64 hex), in the frontend | Shell dialog | `SecretAgent.GetSecrets` / `CancelGetSecrets` / `SaveSecrets` / `DeleteSecrets`, `AgentManager.Register` | the network service is the secret agent | **now** |
+| 7b | Password request while no frontend can show the dialog (lock screen, no frontend loaded) | Notification | same | notifications, lock screen | **later** |
+| 8 | Disconnect | (menu: by turning Wi-Fi off) | `DeactivateConnection` or device `Disconnect` | | **now** |
+| 9 | Failure message with a useful reason, in the Wi-Fi view | Panel subtitle | device `StateReason` | | **now** |
+| 9b | Failure as a notification | Notification | same | notifications | **later** |
+| 10 | Saved networks, ordered by last use | Dialog | `Settings.ListConnections`, `GetSettings` (`timestamp`) | | **now** |
+| 11 | Forget a network, with undo | Saved networks, details | `Connection.Delete` | | **now** |
+| 12 | Details: signal, speed, band, security, addresses, MAC, gateway, DNS, last used | Details tab | device `Bitrate`/`HwAddress`/`Ip4Config`/`Ip6Config`, AP `Frequency` | | **now** |
+| 13 | Connect automatically | Details tab | `Connection.Update` (`autoconnect`) | | **now** |
+| 14 | Hidden network: SSID, security type, password, or a saved hidden network | Dialog | `AddAndActivateConnection` with `802-11-wireless.hidden=true` | | **now** |
+| 15 | Share by QR code (name and password shown too) | Panel, saved networks | `Connection.GetSecrets` | QR code generation (e.g. the `qrcode` crate in the service, the module matrix over the contract) | **now** |
+| 16 | Hotspot: name, generated or own password, warning about the network it disconnects, QR code, turn off | Dialog, panel, toggle | `AddAndActivateConnection` (mode `ap`, `ipv4.method=shared`), `GetPermissions` (`wifi.share.open` / `protected`), device `WirelessCapabilities` | | **now** |
+| 17 | Metered connection | Details tab | `Connection.Update` (`connection.metered`) | | **now** |
+| 18 | Available to other users | Details tab | connection `permissions` | polkit `settings.modify.system` | **now** |
+| 19 | Captive portal: detected, shown in the Wi-Fi view and the status icon, "Sign in" opens the default browser on the check address, recheck | Notification | `Connectivity == PORTAL`, `ConnectivityCheckUri`, `CheckConnectivity` | `xdg-open` | **now** |
+| 19b | Captive portal as a notification, and a sign-in window of its own (GNOME's portal helper) | Notification, portal helper | same | notifications; a web view for the own window | **later** |
+| 20 | Airplane mode | Panel, quick settings | (not NetworkManager) | rfkill, Bluetooth service | **later** |
+| 21 | Several Wi-Fi adapters: per device list, switch and state | Submenus, device pages | devices of type Wi-Fi, device `Interface` / `Vendor` / `Product` (names told apart as libnm's `nm_device_disambiguate_names` does) | | **now** |
+| 22 | Enterprise (802.1X): EAP methods (TLS, PEAP, TTLS, PWD, FAST, LEAP), identities, CA and client certificates, private key and its password, inner authentication | Dialogs, Security tab | `802-1x` settings and secrets | file picker for certificates (QtQuick.Dialogs) | **now** (the largest single part) |
+| 23 | IPv4/IPv6: method, manual addresses, DNS, search domains, routes, "only for resources on its network" | IPv4/IPv6 tabs | `Connection.Update` (`ipv4`, `ipv6`) | | **now** |
+| 24 | Identity: SSID, BSSID, MAC address, cloned MAC (Preserve / Permanent / Random / Stable / Stable per SSID) | Identity tab | `802-11-wireless` settings, device `PermHwAddress`, AP `HwAddress` | | **now** |
+| 25 | LEAP and WEP: connect to such networks, edit existing profiles (GNOME no longer offers WEP for new settings) | Security tab, password dialog | `802-11-wireless-security` | | **now** |
+| 26 | WPS push button hint in the password dialog | Password dialog | secret agent flag `WPS_PBC_ACTIVE` | | **now** |
+| 27 | Networks on the lock screen (only saved and non-Enterprise ones) | Quick settings on the lock screen | | lock screen | **later** |
+
+## Later: what Maia is missing
+
+| Missing part of Maia | Where it is planned | Waiting capabilities |
+|---|---|---|
+| Notification service (`org.freedesktop.Notifications`) | TODO.md item 3, roadmap stage 3 | 7b, 9b, 19b (the notification) |
+| Lock screen (kscreenlocker integration) | roadmap stage 5 | 7b, 27 |
+| Bluetooth service and rfkill | roadmap stage 2 (Bluetooth) | 20 |
+| A web view for a sign-in window of its own (optional; the default browser does the job meanwhile) | not planned | 19b (the window) |
+
+Until the notification service exists, the frontend shows failures and the captive portal inside its
+Wi-Fi view and in the status icon; the contract carries the same events, so adding notifications later
+needs no contract change.
 
 ## Notes for Maia
 
@@ -329,15 +352,14 @@ Worth taking over:
 
 To decide for Maia:
 
-- **Who asks for passwords**. GNOME's shell is the secret agent. In a Maia session that would be the
-  network service, forwarding the request over the contract to whichever frontend is active (it shows the
-  dialog in its own style). KDE's kded module `networkmanagement` registers an agent as well when kded
-  runs; only one should answer. An alternative for the first version is to put the password into the new
-  profile directly (as `nmcli` does), stored by NetworkManager in a file only root can read; then no agent
-  is needed until a password is wrong or a saved one is missing. KWallet is disabled in Maia
-  (`Maia/DeployFiles/etc/xdg/kwalletrc`), so secrets owned by an agent would need another store.
-- **Notifications**: failures and captive portals need the notification service (TODO.md item 3), or a
-  message inside the Wi-Fi view until it exists.
+- **Who asks for passwords**. GNOME's shell is the secret agent. In a Maia session that is the network
+  service, forwarding the request over the contract to whichever frontend is active (it shows the dialog in
+  its own style) and the answer back. KDE's kded module `networkmanagement` registers an agent as well when
+  kded runs; only one should answer, so the session has to keep that module from loading (or Maia's agent
+  has to take precedence). KWallet is disabled in Maia (`Maia/DeployFiles/etc/xdg/kwalletrc`).
+- **Where secrets are kept**: as owner of the secrets the agent would need a store, and KWallet is off;
+  so the service saves new passwords into the profile (system-owned secrets, a file only root can read),
+  and the agent only asks when NetworkManager has none or a saved one was refused.
 - **Airplane mode** is not a NetworkManager feature; it belongs with Bluetooth (rfkill).
 - **Testing**: every action changes the real machine's network, also in a nested session. Actions are
   tested against a fake NetworkManager on a private bus; only reads may use the real one.
