@@ -1,4 +1,5 @@
 import QtQuick
+import org.kde.layershell 1.0 as LayerShell
 
 import Maia.Backend
 
@@ -10,6 +11,12 @@ import "statusbar"
 import CutefishFrontend
 
 
+// The desktop: this window shows the wallpaper. On Wayland it is a layer-shell surface in the
+// background layer, anchored to all edges of the screen, like the desktops of Lumen and Maia: the
+// compositor keeps it below every window, it never shows up as a window (no decoration, no task
+// bar entry, no focus) and it covers the whole screen. Its size, position and stacking come from
+// the layer surface, not from window flags (WindowStaysOnBottomHint and full screen visibility
+// were X11 window manager hints).
 Window{
 	id: root
 
@@ -17,8 +24,15 @@ Window{
 
 	width: Screen.width
 	height: Screen.height
-	flags: Qt.Window | Qt.FramelessWindowHint | Qt.WindowStaysOnBottomHint //| Qt.X11BypassWindowManagerHint
-	visibility: Window.FullScreen
+	flags: Qt.FramelessWindowHint
+
+	LayerShell.Window.scope: "cutefish-desktop"
+	LayerShell.Window.layer: LayerShell.Window.LayerBackground
+	LayerShell.Window.anchors: LayerShell.Window.AnchorTop | LayerShell.Window.AnchorBottom
+							   | LayerShell.Window.AnchorLeft | LayerShell.Window.AnchorRight
+	// The whole screen, also below panels that reserve an area
+	LayerShell.Window.exclusionZone: -1
+	LayerShell.Window.keyboardInteractivity: LayerShell.Window.KeyboardInteractivityNone
 
 	color: "yellow"
 
