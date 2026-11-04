@@ -87,9 +87,13 @@ target_link_libraries(appMaiaServer
     PRIVATE
         MaiaBackend   # Cel z Twoim kodem C++ (utworzony przez qt_add_library(MaiaBackend ...))
         MaiaBackendplugin    # Cel rejestrujący typy w QML (generowany aut. przez qt_add_qml_module: "NazwaModułu" + "plugin")
-        MaiaWindows          # Maia.Windows: TasksModel on the window service (Maia/services/windows)
-        MaiaWindowsplugin
 )
+
+# Installed QML modules (Maia.Windows, Maia.Network, ...) are not linked in: the engines load them
+# from MAIA_QML_INSTALL_DIR (cmake/MaiaQmlModule.cmake). Built with appMaiaServer all the same.
+include(MaiaQmlModule)
+maia_target_qml_import_dir(appMaiaServer)
+add_dependencies(appMaiaServer MaiaWindowsplugin)
 
 include(GNUInstallDirs)
 

@@ -26,7 +26,7 @@ Rule: **data and control go through the service; streams and everything tied to 
 | `service/src/rpc.rs` | The Cap'n Proto server: snapshot, then changes, to every listener; control; icons. |
 | `service/src/launch.rs` | Starting applications from `Exec=`. |
 | `service/tests/service.rs` | The service over a real Cap'n Proto connection with a fake backend. |
-| `qml/` | QML module `Maia.Windows` (static, linked into `appMaiaServer`). |
+| `qml/` | QML module `Maia.Windows`: the shared library `libMaiaWindows` and its plugin, installed to `<prefix>/<qml dir>/Maia/Windows` and loaded by every process that imports it (cmake/MaiaQmlModule.cmake). |
 | `qml/ServiceConnection.*` | The connection of a process (KJ thread, never blocks the GUI, reconnects every second). |
 | `qml/WindowSource.*` | The window list of the process; the models read it. |
 | `qml/TasksModel.*`, `qml/AbstractTasksModel.h` | The model with the API and role names of Plasma's `org.kde.taskmanager`. |

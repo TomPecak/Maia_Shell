@@ -72,6 +72,7 @@ add_subdirectory(Maia/UILib)
 
 # services: processes with a Cap'n Proto contract and a QML module for their clients
 add_subdirectory(Maia/services/windows)
+add_subdirectory(Maia/services/network)
 
 
 

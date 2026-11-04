@@ -172,8 +172,7 @@ Window {
 
                 LIcon {
                     anchors.verticalCenter: parent.verticalCenter
-                    iconName: Shell.wifiEnabled && !Shell.airplaneMode ? "network-wireless-signal-excellent-symbolic"
-                                                                   : "network-flightmode-on-symbolic"
+                    iconName: Shell.airplaneMode ? "network-flightmode-on-symbolic" : Shell.wifiIconName
                 }
                 LIcon {
                     anchors.verticalCenter: parent.verticalCenter

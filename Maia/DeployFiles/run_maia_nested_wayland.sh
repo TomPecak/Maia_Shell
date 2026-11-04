@@ -19,6 +19,10 @@
 #                                           xcb = Maia przez Xwayland, do porównań)
 #   MAIA_LOG_PORT                         - port Loggera (domyślnie 50003)
 #   MAIA_WINDOWS_SERVICE                  - program usługi okien (domyślnie szukany obok Mai)
+#   MAIA_NETWORK_SERVICE                  - program usługi sieci (domyślnie szukany obok Mai)
+#   MAIA_NETWORK_BACKEND                  - fake (domyślnie): symulowana sieć; networkmanager: prawdziwy
+#                                           NetworkManager - akcje zmieniają sieć tego komputera, a agent
+#                                           haseł konkuruje z agentem głównej sesji
 
 ENV_FILE="${XDG_RUNTIME_DIR:-/tmp}/maia-nested-wayland.env"
 
@@ -56,6 +60,19 @@ if [ "${MAIA_NESTED_STAGE}" = "inside_kwin" ]; then
                      "${BIN_DIR}/../cargo/release/maia-windows" "${BIN_DIR}/../cargo/debug/maia-windows"; do
         if [ -n "${candidate}" ] && [ -x "${candidate}" ]; then
             echo "Uruchamianie usługi okien: ${candidate}"
+            "${candidate}" &
+            break
+        fi
+    done
+
+    # Usługa sieci Mai (Wi-Fi). Domyślnie z symulowaną siecią (MAIA_NETWORK_BACKEND=fake): w sesji
+    # zagnieżdżonej prawdziwy NetworkManager to sieć tego komputera, a jego agent haseł należy do
+    # głównej sesji. Gniazdo zawiera nazwę WAYLAND_DISPLAY. Kończy się razem z sesją D-Bus KWina.
+    export MAIA_NETWORK_BACKEND="${MAIA_NETWORK_BACKEND:-fake}"
+    for candidate in "${MAIA_NETWORK_SERVICE}" "${BIN_DIR}/../libexec/maia-network-service" \
+                     "${BIN_DIR}/../cargo/release/maia-network-service" "${BIN_DIR}/../cargo/debug/maia-network-service"; do
+        if [ -n "${candidate}" ] && [ -x "${candidate}" ]; then
+            echo "Uruchamianie usługi sieci (${MAIA_NETWORK_BACKEND}): ${candidate}"
             "${candidate}" &
             break
         fi

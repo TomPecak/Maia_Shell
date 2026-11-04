@@ -15,6 +15,7 @@ LSlider 1.0 components/LSlider.qml
 LSwitch 1.0 components/LSwitch.qml
 LText 1.0 components/LText.qml
 NotificationCard 1.0 components/NotificationCard.qml
+PasswordField 1.0 components/PasswordField.qml
 ProgressRing 1.0 components/ProgressRing.qml
 SearchBox 1.0 components/SearchBox.qml
 StartGlyph 1.0 components/StartGlyph.qml

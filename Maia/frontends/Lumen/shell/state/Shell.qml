@@ -3,6 +3,7 @@ pragma Singleton
 import QtQuick
 
 import Maia.Backend as Maia
+import Maia.Network as Network
 
 // Shared state of the Lumen shell: which flyout is open, the current time, the user
 // and the actions triggered from the UI. All windows of the frontend run in one process,
@@ -136,9 +137,47 @@ QtObject {
         }
     }
 
-    // --- Quick settings (mock state, not connected to the system yet) ---
+    // --- Wi-Fi (the Maia network service) ---
 
-    property bool wifiEnabled: true
+    // One for the whole shell: the tile, the tray icon and the network list read it
+    readonly property Network.WifiStatus wifi: Network.WifiStatus {}
+
+    // Password requests of NetworkManager: Lumen asks inline, in the network list of quick
+    // settings (as Windows 11). A request that comes while quick settings are closed (e.g. a saved
+    // password was refused) opens them on the Wi-Fi page.
+    readonly property Network.SecretPrompt wifiPrompt: Network.SecretPrompt {
+        active: true
+        onPendingChanged: {
+            if (pending) {
+                shell.quickSettingsPage = "wifi"
+                if (shell.activeFlyout !== "quickSettings")
+                    shell.toggleFlyout("quickSettings")
+            }
+        }
+    }
+
+    // The page quick settings show: "main" or "wifi" (back to main when they close)
+    property string quickSettingsPage: "main"
+
+    onActiveFlyoutChanged: {
+        if (activeFlyout !== "quickSettings" && !wifiPrompt.pending)
+            quickSettingsPage = "main"
+    }
+
+    // The tray icon of Wi-Fi: off, connecting, hotspot, or the signal of the connected network
+    readonly property string wifiIconName: {
+        if (!wifi.available || !wifi.enabled || !wifi.hasDevice)
+            return "network-wireless-disconnected-symbolic"
+        if (wifi.connecting)
+            return "network-wireless-acquiring-symbolic"
+        if (wifi.hotspot)
+            return "network-wireless-hotspot-symbolic"
+        if (!wifi.connected)
+            return "network-wireless-signal-none-symbolic"
+        return "network-wireless-signal-" + ["none", "weak", "ok", "good", "excellent"][wifi.signalLevel] + "-symbolic"
+    }
+
+    // --- Quick settings (mock state, not connected to the system yet) ---
     property bool bluetoothEnabled: false
     property bool airplaneMode: false
     property bool nightLight: false

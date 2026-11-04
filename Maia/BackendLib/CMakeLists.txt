@@ -30,6 +30,10 @@ pkg_check_modules(XCB_ICCCM REQUIRED IMPORTED_TARGET xcb-icccm)
 
 qt_add_library(${PROJECT_NAME} STATIC)
 
+# QmlGui adds the directory of the installed QML modules (Maia.Windows, ...) to its engine
+include(MaiaQmlModule)
+maia_target_qml_import_dir(${PROJECT_NAME})
+
 # Generate cmake_config.h with CMAKE_INSTALL_PREFIX
 configure_file(
     ${CMAKE_CURRENT_SOURCE_DIR}/cmake_config.h.in
