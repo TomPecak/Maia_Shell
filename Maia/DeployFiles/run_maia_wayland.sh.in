@@ -187,6 +187,20 @@ else
     echo "Brak ${MAIA_OPT_PATH}/libexec/maia-windows: pasek zadań nie pokaże okien"
 fi
 
+# USŁUGA SIECI MAI (Maia/services/network)
+# maia-network-service rozmawia z NetworkManagerem (Wi-Fi) i podaje stan sieci shellom, Maia Settings
+# i aplikacjom (moduł QML Maia.Network, przez Cap'n Proto). Jest też agentem haseł sesji: okno hasła
+# pokazuje shell. Agent KDE (moduł kded networkmanagement) jest w sesji Mai wyłączony
+# (etc/xdg/kded6rc), żeby odpowiadał tylko jeden.
+MAIA_NETWORK_PID=""
+if [ -x "${MAIA_OPT_PATH}/libexec/maia-network-service" ]; then
+    echo "Uruchamianie usługi sieci maia-network-service"
+    "${MAIA_OPT_PATH}/libexec/maia-network-service" &
+    MAIA_NETWORK_PID=$!
+else
+    echo "Brak ${MAIA_OPT_PATH}/libexec/maia-network-service: Wi-Fi w Mai nie zadziała"
+fi
+
 export MAIA_LOG_FILE="$HOME/maia_server.log"
 export MAIA_LOG_PORT=50001
 export MAIA_LOG_HOST=127.0.0.1
@@ -217,5 +231,6 @@ done
 echo "Serwer Maia zakończył się (kod ${MAIA_STATUS})"
 
 [ -n "${MAIA_WINDOWS_PID}" ] && kill "${MAIA_WINDOWS_PID}" 2>/dev/null
+[ -n "${MAIA_NETWORK_PID}" ] && kill "${MAIA_NETWORK_PID}" 2>/dev/null
 stop_kde_services
 exit "${MAIA_STATUS}"

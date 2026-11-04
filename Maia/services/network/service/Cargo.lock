@@ -346,6 +346,8 @@ dependencies = [
  "capnp-rpc",
  "capnpc",
  "futures",
+ "libc",
+ "serde",
  "tokio",
  "tokio-util",
  "uuid",

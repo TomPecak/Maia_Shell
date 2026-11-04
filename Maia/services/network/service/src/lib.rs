@@ -14,6 +14,8 @@
 //! - `model`: the state as plain values, and how access points become networks.
 //! - `settings`: connection settings and secrets, password requests and their checks.
 //! - `backend`: the events and commands between a backend and the hub.
+//! - `nm`, `nmdefs`: the NetworkManager backend and NetworkManager's numbers.
+//! - `agent`: the secret agent NetworkManager asks for passwords.
 //! - `fake`: a simulated NetworkManager for tests and for interface work (MAIA_NETWORK_BACKEND=fake).
 //! - `rpc`: the Cap'n Proto side: state to every listener, control, the password prompter.
 //! - `prompt`: how a backend asks the user for secrets.
@@ -28,9 +30,12 @@ pub mod network_capnp {
     include!(concat!(env!("OUT_DIR"), "/network_capnp.rs"));
 }
 
+pub mod agent;
 pub mod backend;
 pub mod fake;
 pub mod model;
+pub mod nm;
+pub mod nmdefs;
 pub mod prompt;
 pub mod qr;
 pub mod rpc;

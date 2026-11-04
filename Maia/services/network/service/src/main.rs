@@ -10,7 +10,7 @@
 use std::os::unix::fs::{DirBuilderExt, MetadataExt};
 use std::path::PathBuf;
 
-use maia_network::fake;
+use maia_network::{fake, nm};
 use maia_network::prompt::Prompter;
 use maia_network::rpc::{Hub, NetworkService};
 use tokio::signal::unix::{SignalKind, signal};
@@ -82,6 +82,7 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
             };
             let backend_task = async {
                 match backend.as_str() {
+                    nm::NAME => nm::run(event_sender, commands, prompter).await,
                     fake::NAME => {
                         fake::run(event_sender, commands, prompter, fake::Timing::realistic()).await;
                         Ok(())

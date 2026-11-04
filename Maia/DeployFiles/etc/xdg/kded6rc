@@ -1,0 +1,8 @@
+# Maia's defaults for kded6, the KDE daemon (installed to <prefix>/etc/xdg like kwalletrc).
+#
+# The networkmanagement module (plasma-nm) is NetworkManager's secret agent in Plasma: it asks for
+# Wi-Fi passwords in its own dialogs and keeps them in KWallet. In a Maia session the network
+# service (maia-network-service) is the agent and the shell shows the dialog; two agents would
+# answer the same request in turn, and KWallet is off. Plasma does not read this file.
+[Module-networkmanagement]
+autoload=false
