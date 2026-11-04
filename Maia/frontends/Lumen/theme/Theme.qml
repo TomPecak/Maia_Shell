@@ -86,6 +86,8 @@ QtObject {
     readonly property color selection: Qt.rgba(accent.r, accent.g, accent.b, dark ? 0.24 : 0.16)
     readonly property color selectionHover: Qt.rgba(accent.r, accent.g, accent.b, dark ? 0.32 : 0.22)
     // Close button of a window
+    // Errors (Fluent "critical")
+    readonly property color critical: dark ? "#FF99A4" : "#C42B1C"
     readonly property color closeHover: "#c42b1c"
     readonly property color closePressed: "#a3271b"
 

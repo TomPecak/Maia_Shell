@@ -6,8 +6,13 @@ import org.kde.layershell 1.0 as LayerShell
 import LumenFrontend
 
 // Quick settings, in the bottom-right corner above the system tray.
-// Real: dark mode and accent color (persisted), volume (Maia audio backend).
-// Mock-ups: network, bluetooth, airplane mode, night light, brightness, battery.
+// Real: Wi-Fi (the Maia network service: the tile, and its page with the networks), dark mode and
+// accent color (persisted), volume (Maia audio backend).
+// Mock-ups: bluetooth, airplane mode, night light, brightness, battery.
+//
+// Two pages, as in Windows 11: the main one, and the Wi-Fi page opened by the chevron of the Wi-Fi
+// tile (Shell.quickSettingsPage). The page coming in slides from the side it belongs to and fades
+// in, the card follows its height.
 FlyoutWindow {
     id: quickSettings
 
@@ -15,10 +20,32 @@ FlyoutWindow {
     cardWidth: 380
     // The card follows its content
     windowCardHeight: 640
-    cardHeight: Math.min(windowCardHeight, layout.implicitHeight + 2 * Theme.spacingXL)
+    cardHeight: Math.min(windowCardHeight,
+                         (wifiPageShown ? wifiPage.implicitHeight : layout.implicitHeight) + 2 * Theme.spacingXL)
     edges: LayerShell.Window.AnchorBottom | LayerShell.Window.AnchorRight
 
     readonly property bool hasAudio: typeof audioBackend !== "undefined" && audioBackend !== null
+    readonly property bool wifiPageShown: Shell.quickSettingsPage === "wifi"
+
+    QuickSettingsWifiPage {
+        id: wifiPage
+
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.top: parent.top
+        anchors.margins: Theme.spacingXL
+        shown: quickSettings.open && quickSettings.wifiPageShown
+        onBackRequested: Shell.quickSettingsPage = "main"
+
+        // From the right, as a page further in
+        opacity: quickSettings.wifiPageShown ? 1 : 0
+        visible: opacity > 0
+        transform: Translate {
+            x: quickSettings.wifiPageShown ? 0 : Theme.spacingXL * 2
+            Behavior on x { NumberAnimation { duration: Theme.durationNormal; easing.type: Theme.easingEnter } }
+        }
+        Behavior on opacity { NumberAnimation { duration: Theme.durationNormal; easing.type: Theme.easingEnter } }
+    }
 
     ColumnLayout {
         id: layout
@@ -26,6 +53,15 @@ FlyoutWindow {
         anchors.fill: parent
         anchors.margins: Theme.spacingXL
         spacing: Theme.spacingL
+
+        // Back from the right page: this one comes from the left
+        opacity: quickSettings.wifiPageShown ? 0 : 1
+        visible: opacity > 0
+        transform: Translate {
+            x: quickSettings.wifiPageShown ? -Theme.spacingXL * 2 : 0
+            Behavior on x { NumberAnimation { duration: Theme.durationNormal; easing.type: Theme.easingEnter } }
+        }
+        Behavior on opacity { NumberAnimation { duration: Theme.durationNormal; easing.type: Theme.easingEnter } }
 
         // --- Toggles ---
 
@@ -35,12 +71,17 @@ FlyoutWindow {
             columnSpacing: Theme.spacingM
             rowSpacing: Theme.spacingL
 
+            // The tile toggles Wi-Fi, its chevron opens the list of networks; the label names the
+            // connected network
             ToggleTile {
                 Layout.fillWidth: true
-                text: qsTr("Wi-Fi")
-                iconName: "network-wireless-signal-excellent-symbolic"
-                checked: Shell.wifiEnabled
-                onToggled: Shell.wifiEnabled = checked
+                text: Shell.wifi.connected ? Shell.wifi.networkName : qsTr("Wi-Fi")
+                iconName: Shell.wifiIconName
+                hasMenu: true
+                enabled: Shell.wifi.available
+                checked: Shell.wifi.enabled
+                onToggled: Shell.wifi.setEnabled(checked)
+                onMenuClicked: Shell.quickSettingsPage = "wifi"
             }
             ToggleTile {
                 Layout.fillWidth: true

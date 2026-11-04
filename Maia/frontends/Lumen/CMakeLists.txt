@@ -50,6 +50,7 @@ qt_add_qml_module(LumenFrontend
         components/LSwitch.qml
         components/LText.qml
         components/NotificationCard.qml
+        components/PasswordField.qml
         components/ProgressRing.qml
         components/SearchBox.qml
         components/StartGlyph.qml
@@ -64,6 +65,7 @@ qt_add_qml_module(LumenFrontend
         shell/windows/CalendarWindow.qml
         shell/windows/DesktopMenuWindow.qml
         shell/windows/QuickSettingsWindow.qml
+        shell/windows/QuickSettingsWifiPage.qml
         shell/windows/StartMenuWindow.qml
         shell/windows/TaskbarWindow.qml
         shell/windows/TimerWindow.qml
