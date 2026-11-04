@@ -28,13 +28,15 @@ use zbus::zvariant::{ObjectPath, OwnedObjectPath, OwnedValue, Value};
 use zbus::{Connection, MatchRule, MessageStream, Proxy};
 
 use crate::agent::{self, Agent};
-use crate::backend::{BackendEvent, Command, ErrorCode, OpError, OpResult};
+use crate::backend::{BackendEvent, Command, ErrorCode, HotspotPassword, OpError, OpResult};
 use crate::model::{
     AccessPoint, ConnectionType, Event, IpAddress, IpInfo, Metered, Permission, Permissions, PrimaryConnection,
     SavedConnection, Status, WifiDevice,
 };
 use crate::nmdefs;
+use crate::nmsettings::{self, SettingsDict};
 use crate::prompt::Prompter;
+use crate::settings::{ConnectionSettings, Secret, SecretKey, Validation};
 
 pub const NAME: &str = "networkmanager";
 
@@ -58,7 +60,6 @@ const SETTLE: Duration = Duration::from_millis(30);
 const SCAN_TIMEOUT: Duration = Duration::from_secs(10);
 
 type Props = HashMap<String, OwnedValue>;
-type SettingsDict = HashMap<String, HashMap<String, OwnedValue>>;
 
 // --- Reading values ---
 
@@ -750,25 +751,202 @@ async fn execute(state: StateRef, command: Command) {
             let result = call::<_, u32>(&conn, NM_PATH, IFACE_NM, "CheckConnectivity", &()).await.map(|_| ());
             let _ = reply.send(result);
         }
-        Command::ConnectWithSettings { reply, .. } => {
-            let _ = reply.send(Err(not_yet()));
+        Command::ConnectWithSettings { device_id, settings, secrets, reply } => {
+            let _ = reply.send(connect_with_settings(&state, &conn, &device_id, settings, &secrets).await);
         }
-        Command::Settings { reply, .. } => {
-            let _ = reply.send(Err(not_yet()));
+        Command::Settings { uuid, reply } => {
+            let result = match state.borrow().connection_path(&uuid) {
+                Some(path) => Ok(path),
+                None => Err(not_found("connection")),
+            };
+            let result = match result {
+                Ok(path) => profile(&conn, &path).await.map(|dict| nmsettings::read_settings(&dict)),
+                Err(error) => Err(error),
+            };
+            let _ = reply.send(result);
         }
-        Command::UpdateSettings { reply, .. } => {
-            let _ = reply.send(Err(not_yet()));
+        Command::UpdateSettings { uuid, settings, secrets, reply } => {
+            let path = state.borrow().connection_path(&uuid);
+            let result = match path {
+                Some(path) => update_settings(&conn, &path, &settings, &secrets).await,
+                None => Err(not_found("connection")),
+            };
+            let _ = reply.send(result);
         }
-        Command::Secrets { reply, .. } => {
-            let _ = reply.send(Err(not_yet()));
+        Command::Secrets { uuid, reply } => {
+            let path = state.borrow().connection_path(&uuid);
+            let result = match path {
+                Some(path) => profile_with_secrets(&conn, &path).await.map(|dict| nmsettings::read_secrets(&dict)),
+                None => Err(not_found("connection")),
+            };
+            let _ = reply.send(result);
         }
-        Command::StartHotspot { reply, .. } => {
-            let _ = reply.send(Err(not_yet()));
+        Command::StartHotspot { device_id, ssid, password, reply } => {
+            let _ = reply.send(start_hotspot(&state, &conn, &device_id, ssid, password).await);
         }
-        Command::StopHotspot { reply, .. } => {
-            let _ = reply.send(Err(not_yet()));
+        Command::StopHotspot { device_id, reply } => {
+            let _ = reply.send(stop_hotspot(&state, &conn, &device_id).await);
         }
     }
+}
+
+/// The device a command names, or the first Wi-Fi device when it names none
+fn device_or_first(state: &StateRef, device_id: &str) -> OpResult<OwnedObjectPath> {
+    let s = state.borrow();
+    let found = if device_id.is_empty() {
+        let mut paths: Vec<&OwnedObjectPath> = s.devices.keys().collect();
+        paths.sort_by(|a, b| a.as_str().cmp(b.as_str()));
+        paths.first().map(|p| (*p).clone())
+    } else {
+        s.device_path(device_id)
+    };
+    found.ok_or_else(|| not_found("Wi-Fi device"))
+}
+
+fn user() -> String {
+    std::env::var("USER").unwrap_or_default()
+}
+
+/// A profile's settings without secrets
+async fn profile(conn: &Connection, path: &OwnedObjectPath) -> OpResult<SettingsDict> {
+    call::<_, SettingsDict>(conn, path.as_str(), IFACE_CONNECTION, "GetSettings", &()).await
+}
+
+/// A profile's settings with the secrets NetworkManager keeps for it (asks polkit when needed)
+async fn profile_with_secrets(conn: &Connection, path: &OwnedObjectPath) -> OpResult<SettingsDict> {
+    let mut dict = profile(conn, path).await?;
+    for name in ["802-11-wireless-security", "802-1x"] {
+        if !dict.contains_key(name) {
+            continue;
+        }
+        // Secrets only some profiles have (or kept by an agent) are not an error
+        let Ok(secrets) = call::<_, SettingsDict>(conn, path.as_str(), IFACE_CONNECTION, "GetSecrets", &(name,)).await else {
+            continue;
+        };
+        for (setting, props) in secrets {
+            dict.entry(setting).or_default().extend(props);
+        }
+    }
+    Ok(dict)
+}
+
+/// Changes a profile: the edited keys over what it has, its secrets kept unless new ones are given.
+/// Update replaces the whole profile, secrets included, so they are read first.
+async fn update_settings(conn: &Connection, path: &OwnedObjectPath, settings: &ConnectionSettings, secrets: &[Secret]) -> OpResult {
+    let mut dict = profile_with_secrets(conn, path).await?;
+    nmsettings::apply_settings(&mut dict, settings, &user());
+    nmsettings::write_secrets(&mut dict, secrets);
+    call::<_, ()>(conn, path.as_str(), IFACE_CONNECTION, "Update", &(dict,)).await
+}
+
+/// A hidden or Enterprise network: a whole new profile, activated right away
+async fn connect_with_settings(
+    state: &StateRef,
+    conn: &Connection,
+    device_id: &str,
+    settings: ConnectionSettings,
+    secrets: &[Secret],
+) -> OpResult<String> {
+    if settings.wifi.ssid.is_empty() || settings.wifi.ssid.len() > 32 {
+        return Err(OpError::new(ErrorCode::InvalidArgument, "an SSID has 1 to 32 bytes"));
+    }
+    let device = device_or_first(state, device_id)?;
+    let uuid = uuid::Uuid::new_v4().to_string();
+    let dict = nmsettings::new_profile(&uuid, &settings, secrets, &user());
+    call::<_, (OwnedObjectPath, OwnedObjectPath)>(conn, NM_PATH, IFACE_NM, "AddAndActivateConnection", &(dict, device, no_object()))
+        .await?;
+    Ok(uuid)
+}
+
+/// The host name, the hotspot's SSID when none is given (as GNOME does)
+fn host_name() -> String {
+    let name = std::fs::read_to_string("/proc/sys/kernel/hostname").unwrap_or_default();
+    let name = name.trim();
+    let mut ssid = String::new();
+    for c in (if name.is_empty() { "maia" } else { name }).chars() {
+        if ssid.len() + c.len_utf8() > 32 {
+            break;
+        }
+        ssid.push(c);
+    }
+    ssid
+}
+
+/// Makes or reuses the hotspot profile and starts it. Without a password from the user, the
+/// profile's own stays (the one people already typed into their phones), else 8 new characters.
+async fn start_hotspot(
+    state: &StateRef,
+    conn: &Connection,
+    device_id: &str,
+    ssid: String,
+    password: HotspotPassword,
+) -> OpResult<(String, String)> {
+    let device = device_or_first(state, device_id)?;
+    let (interface, can_hotspot, existing) = {
+        let s = state.borrow();
+        let entry = s.devices.get(&device).ok_or_else(|| not_found("Wi-Fi device"))?;
+        let existing = s.connections.iter().find(|(_, c)| c.hotspot).map(|(p, c)| (p.clone(), c.uuid.clone()));
+        (entry.device.id.clone(), entry.device.can_hotspot, existing)
+    };
+    if !can_hotspot {
+        return Err(OpError::new(ErrorCode::NotSupported, "the adapter cannot be an access point"));
+    }
+    if !state.borrow().status.wireless_enabled {
+        return Err(OpError::new(ErrorCode::Unavailable, "Wi-Fi is off"));
+    }
+    let ssid = if ssid.is_empty() { host_name() } else { ssid };
+    if ssid.len() > 32 {
+        return Err(OpError::new(ErrorCode::InvalidArgument, "an SSID has 1 to 32 bytes"));
+    }
+    let old = match &existing {
+        Some((path, _)) => Some(profile_with_secrets(conn, path).await?),
+        None => None,
+    };
+    let password = match password {
+        HotspotPassword::Given(password) => password,
+        HotspotPassword::Generate => old
+            .as_ref()
+            .and_then(|dict| nmsettings::read_secrets(dict).into_iter().find(|s| s.key == SecretKey::WifiPassword))
+            .map(|s| s.value)
+            .unwrap_or_else(nmsettings::generated_password),
+    };
+    if !Validation::WpaPassword.accepts(&password) {
+        return Err(OpError::new(ErrorCode::InvalidArgument, "a WPA password has 8 to 63 characters"));
+    }
+    let capabilities = get_all(conn, &device.as_ref(), IFACE_WIRELESS)
+        .await
+        .map(|props| u32_of(&props, "WirelessCapabilities"))
+        .unwrap_or(0);
+    let rsn = capabilities & nmdefs::WIFI_CAP_RSN != 0;
+    let device_path = device.clone();
+    match (existing, old) {
+        (Some((path, uuid)), Some(mut dict)) => {
+            for (setting, props) in nmsettings::hotspot_profile(&uuid, &interface, &ssid, &password, rsn) {
+                dict.entry(setting).or_default().extend(props);
+            }
+            call::<_, ()>(conn, path.as_str(), IFACE_CONNECTION, "Update", &(dict,)).await?;
+            call::<_, OwnedObjectPath>(conn, NM_PATH, IFACE_NM, "ActivateConnection", &(path, device_path, no_object())).await?;
+            Ok((uuid, password))
+        }
+        _ => {
+            let uuid = uuid::Uuid::new_v4().to_string();
+            let dict = nmsettings::hotspot_profile(&uuid, &interface, &ssid, &password, rsn);
+            call::<_, (OwnedObjectPath, OwnedObjectPath)>(conn, NM_PATH, IFACE_NM, "AddAndActivateConnection", &(dict, device_path, no_object()))
+                .await?;
+            Ok((uuid, password))
+        }
+    }
+}
+
+/// Deactivates the hotspot (not Device.Disconnect, which would keep the device from connecting by itself)
+async fn stop_hotspot(state: &StateRef, conn: &Connection, device_id: &str) -> OpResult {
+    let device = device_or_first(state, device_id)?;
+    if !state.borrow().devices.get(&device).is_some_and(|e| e.device.hotspot) {
+        return Err(OpError::new(ErrorCode::NotFound, "no hotspot runs"));
+    }
+    let props = get_all(conn, &device.as_ref(), IFACE_DEVICE).await.map_err(failed)?;
+    let active = path_of(&props, "ActiveConnection").ok_or_else(|| not_found("active connection"))?;
+    call::<_, ()>(conn, NM_PATH, IFACE_NM, "DeactivateConnection", &(active,)).await
 }
 
 /// Makes this process the secret agent of the user's session (again after NetworkManager restarted)
@@ -785,10 +963,6 @@ async fn register_agent(conn: &Connection) {
     if let Err(error) = result {
         eprintln!("maia-network-service: registering the secret agent: {error}");
     }
-}
-
-fn not_yet() -> OpError {
-    OpError::new(ErrorCode::NotSupported, "not implemented in the NetworkManager backend yet")
 }
 
 /// Runs the backend until NetworkManager's bus connection fails
