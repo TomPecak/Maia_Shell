@@ -1,14 +1,17 @@
 // The QML types of Maia.Network on a fake source (no service, no Cap'n Proto): the order of the
 // models, their row changes (QAbstractItemModelTester), WifiStatus, the password prompt.
 
+#include "NetworkControl.h"
 #include "NetworkSource.h"
 #include "SavedNetworksModel.h"
 #include "SecretPrompt.h"
+#include "SettingsMap.h"
 #include "WifiDevicesModel.h"
 #include "WifiNetworksModel.h"
 #include "WifiStatus.h"
 
 #include <QAbstractItemModelTester>
+#include <QJSEngine>
 #include <QSignalSpy>
 #include <QTest>
 
@@ -19,6 +22,7 @@ class FakeSource : public NetworkSource
 {
 public:
     QStringList commands;
+    ConnectionSettingsData stored;
     QList<QPair<QString, bool>> answers;
     bool prompterRegistered = false;
 
@@ -29,6 +33,39 @@ public:
     void disconnectDevice(const QString &id, Callback done) override { record(QStringLiteral("disconnect ") + id, done); }
     void forget(const QString &uuid, Callback done) override { record(QStringLiteral("forget ") + uuid, done); }
     void checkConnectivity(Callback done) override { record(QStringLiteral("check"), done); }
+    void connectWithSettings(const QString &, const ConnectionSettingsData &settings, const QList<SecretData> &, ValueCallback<QString> done) override
+    {
+        commands.append(QStringLiteral("connect settings ") + settings.name);
+        if (done)
+            done(Result{}, QStringLiteral("uuid-new"));
+    }
+    void settings(const QString &uuid, ValueCallback<ConnectionSettingsData> done) override
+    {
+        commands.append(QStringLiteral("settings ") + uuid);
+        done(Result{}, stored);
+    }
+    void updateSettings(const QString &uuid, const ConnectionSettingsData &settings, const QList<SecretData> &, Callback done) override
+    {
+        stored = settings;
+        record(QStringLiteral("update ") + uuid, done);
+    }
+    void secrets(const QString &uuid, ValueCallback<QList<SecretData>> done) override
+    {
+        commands.append(QStringLiteral("secrets ") + uuid);
+        done(Result{}, {SecretData{Network::SecretKey::WifiPassword, QStringLiteral("secret")}});
+    }
+    void qrCode(const QString &uuid, ValueCallback<QrCodeData> done) override
+    {
+        commands.append(QStringLiteral("qr ") + uuid);
+        done(Result{}, QrCodeData{QStringLiteral("WIFI:S:x;T:nopass;;"), 21, QByteArray(21 * 21, 1)});
+    }
+    void startHotspot(const QString &, const QString &ssid, const QString &password, ValueCallback<QString, QString> done) override
+    {
+        commands.append(QStringLiteral("hotspot ") + ssid);
+        if (done)
+            done(Result{}, QStringLiteral("uuid-hotspot"), password.isEmpty() ? QStringLiteral("abcd2345") : password);
+    }
+    void stopHotspot(const QString &, Callback done) override { record(QStringLiteral("stop hotspot"), done); }
     void setPrompterRegistered(bool registered) override { prompterRegistered = registered; }
     void answerSecrets(const QString &id, bool cancelled, const QList<SecretData> &secrets) override
     {
@@ -256,6 +293,63 @@ private Q_SLOTS:
         prompt.setActive(false);
         QCOMPARE(source->answers.last(), qMakePair(QStringLiteral("r1"), true));
         QVERIFY(!source->prompterRegistered);
+    }
+
+    void settingsSurviveJavaScript()
+    {
+        ConnectionSettingsData settings;
+        settings.name = QStringLiteral("Lab");
+        settings.wifi.ssid = QByteArray("Lab");
+        settings.wifi.clonedMac = Network::ClonedMac::Random;
+        settings.security.security = Network::Security::WpaEnterprise;
+        settings.security.eap.method = Network::EapMethod::Ttls;
+        settings.security.eap.innerAuth = Network::InnerAuth::Pap;
+        settings.ip4.method = Network::IpMethod::Manual;
+        settings.ip4.addresses = {IpAddressData{QStringLiteral("192.168.7.20"), 24}};
+        settings.ip4.routes = {RouteData{QStringLiteral("10.0.0.0"), 8, QStringLiteral("192.168.7.254"), 50}};
+        settings.ip4.dns = {QStringLiteral("1.1.1.1")};
+        QCOMPARE(settingsFromMap(settingsToMap(settings)), settings);
+
+        // Through a JavaScript object, as an editor changes it
+        QJSEngine engine;
+        QJSValue object = engine.toScriptValue(settingsToMap(settings));
+        object.property(QStringLiteral("ip4")).setProperty(QStringLiteral("method"), int(Network::IpMethod::Auto));
+        const auto edited = settingsFromMap(engine.fromScriptValue<QVariantMap>(object));
+        QCOMPARE(edited.ip4.method, Network::IpMethod::Auto);
+        QCOMPARE(edited.security.eap.innerAuth, Network::InnerAuth::Pap);
+    }
+
+    void ssidsThatAreNotUtf8AreKept()
+    {
+        ConnectionSettingsData settings;
+        settings.wifi.ssid = QByteArray("caf\xe9", 4);
+        QCOMPARE(settingsFromMap(settingsToMap(settings)).wifi.ssid, settings.wifi.ssid);
+        auto map = settingsToMap(settings);
+        auto wifi = map.value(QStringLiteral("wifi")).toMap();
+        wifi.insert(QStringLiteral("ssid"), QStringLiteral("Cafe"));
+        map.insert(QStringLiteral("wifi"), wifi);
+        QCOMPARE(settingsFromMap(map).wifi.ssid, QByteArray("Cafe"));
+    }
+
+    void controlCallsBackWithValues()
+    {
+        QJSEngine engine;
+        auto *control = new NetworkControl;
+        engine.newQObject(control); // owned by the engine, which calls the callbacks
+        QJSValue got = engine.newObject();
+        engine.globalObject().setProperty(QStringLiteral("got"), got);
+        control->startHotspot({}, QStringLiteral("maia"), {}, engine.evaluate(QStringLiteral("(function (r, v) { got.ok = r.ok; got.password = v.password })")));
+        QCOMPARE(got.property(QStringLiteral("ok")).toBool(), true);
+        QCOMPARE(got.property(QStringLiteral("password")).toString(), QStringLiteral("abcd2345"));
+        control->qrCode(QStringLiteral("uuid-Home"), engine.evaluate(QStringLiteral("(function (r, v) { got.size = v.size })")));
+        QCOMPARE(got.property(QStringLiteral("size")).toInt(), 21);
+        const QVariantList secrets = {QVariantMap{{QStringLiteral("key"), int(Network::SecretKey::WifiPassword)}, {QStringLiteral("value"), QStringLiteral("x")}}};
+        QCOMPARE(control->secretValue(secrets, int(Network::SecretKey::WifiPassword)), QStringLiteral("x"));
+        QVERIFY(control->isValidAddress(QStringLiteral("192.168.1.1"), false));
+        QVERIFY(!control->isValidAddress(QStringLiteral("192.168.1"), false));
+        QVERIFY(control->isValidAddress(QStringLiteral("fe80::1"), true));
+        QVERIFY(control->isValidMac(QStringLiteral("0a:00:00:00:00:01")));
+        QVERIFY(!control->isValidMac(QStringLiteral("0a:00:00:00:00")));
     }
 
     void passwordChecks()

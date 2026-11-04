@@ -75,5 +75,4 @@ interface work use the fake backend. Only reading (`watch`) is safe against the 
 
 ## Not done yet
 
-- `Maia.Network`: settings, secrets, QR code, hotspot, hidden and Enterprise networks for QML.
 - Maia Settings and its Wi-Fi page (`apps/settings/pages/network/`).

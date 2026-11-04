@@ -1,6 +1,6 @@
 # QML module Maia.Network: the state of Wi-Fi and its control, on top of the network service.
 #
-# Models and objects, no user interface: shells (quick settings, status icons), Maia Settings and
+# Models and objects, no user interface (but QrCodeView, which only draws squares): shells (quick settings, status icons), Maia Settings and
 # app faces draw them in their own style. An installed QML module (cmake/MaiaQmlModule.cmake): the
 # shared library libMaiaNetwork with the types, and its plugin in <prefix>/<qml dir>/Maia/Network.
 # Cap'n Proto (3rdparty/capnproto, static) is used only inside NetworkConnection.cpp.
@@ -8,7 +8,7 @@
 include(MaiaCapnProto)
 include(MaiaQmlModule)
 
-find_package(Qt6 ${REQUIRED_QT_VERSION} REQUIRED COMPONENTS Core Gui Qml)
+find_package(Qt6 ${REQUIRED_QT_VERSION} REQUIRED COMPONENTS Core Gui Qml Quick)
 
 qt_add_library(MaiaNetwork SHARED)
 
@@ -26,6 +26,9 @@ qt_add_qml_module(MaiaNetwork
         SavedNetworksModel.h SavedNetworksModel.cpp
         WifiDevicesModel.h WifiDevicesModel.cpp
         SecretPrompt.h SecretPrompt.cpp
+        SettingsMap.h SettingsMap.cpp
+        NetworkControl.h NetworkControl.cpp
+        QrCodeView.h QrCodeView.cpp
 )
 
 # C++ code of the contract (shared with the Rust service); also links Maia::CapnProto
@@ -34,7 +37,7 @@ maia_capnp_generate_cpp(MaiaNetwork
     SCHEMAS ${CMAKE_CURRENT_SOURCE_DIR}/../contract/network.capnp
 )
 target_include_directories(MaiaNetwork PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(MaiaNetwork PUBLIC Qt6::Core Qt6::Gui Qt6::Qml)
+target_link_libraries(MaiaNetwork PUBLIC Qt6::Core Qt6::Gui Qt6::Qml Qt6::Quick)
 # Cap'n Proto reports errors as exceptions (KDE settings turn them off by default)
 kde_target_enable_exceptions(MaiaNetwork PRIVATE)
 

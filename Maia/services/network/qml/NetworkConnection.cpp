@@ -13,6 +13,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <tuple>
 
 #include <sys/eventfd.h>
 #include <unistd.h>
@@ -176,6 +177,151 @@ SecretRequestData toRequest(C::SecretRequest::Reader r)
 Result toResult(C::Result::Reader r)
 {
     return Result{as<Network::ErrorCode>(r.getError()), text(r.getMessage())};
+}
+
+static_assert(int(C::IpMethod::DISABLED) == int(Network::IpMethod::Disabled));
+static_assert(int(C::ClonedMac::ADDRESS) == int(Network::ClonedMac::Address));
+static_assert(int(C::EapMethod::LEAP) == int(Network::EapMethod::Leap));
+static_assert(int(C::InnerAuth::MD5) == int(Network::InnerAuth::Md5));
+
+std::string utf8(const QString &text)
+{
+    return text.toStdString();
+}
+
+capnp::Data::Reader data(const QByteArray &bytes)
+{
+    return capnp::Data::Reader(reinterpret_cast<const kj::byte *>(bytes.constData()), size_t(bytes.size()));
+}
+
+void setTexts(capnp::List<capnp::Text>::Builder list, const QStringList &texts)
+{
+    for (int i = 0; i < texts.size(); ++i)
+        list.set(i, utf8(texts[i]).c_str());
+}
+
+IpSettingsData toIpSettings(C::IpSettings::Reader r)
+{
+    IpSettingsData ip;
+    ip.method = as<Network::IpMethod>(r.getMethod());
+    for (auto a : r.getAddresses())
+        ip.addresses.append(IpAddressData{text(a.getAddress()), a.getPrefix()});
+    ip.gateway = text(r.getGateway());
+    ip.autoDns = r.getAutoDns();
+    ip.dns = texts(r.getDns());
+    ip.dnsSearch = texts(r.getDnsSearch());
+    ip.autoRoutes = r.getAutoRoutes();
+    for (auto route : r.getRoutes())
+        ip.routes.append(RouteData{text(route.getDestination()), route.getPrefix(), text(route.getGateway()), route.getMetric()});
+    ip.neverDefault = r.getNeverDefault();
+    return ip;
+}
+
+void writeIpSettings(C::IpSettings::Builder b, const IpSettingsData &ip)
+{
+    b.setMethod(as<C::IpMethod>(ip.method));
+    auto addresses = b.initAddresses(unsigned(ip.addresses.size()));
+    for (int i = 0; i < ip.addresses.size(); ++i) {
+        addresses[i].setAddress(utf8(ip.addresses[i].address).c_str());
+        addresses[i].setPrefix(uint8_t(ip.addresses[i].prefix));
+    }
+    b.setGateway(utf8(ip.gateway).c_str());
+    b.setAutoDns(ip.autoDns);
+    setTexts(b.initDns(unsigned(ip.dns.size())), ip.dns);
+    setTexts(b.initDnsSearch(unsigned(ip.dnsSearch.size())), ip.dnsSearch);
+    b.setAutoRoutes(ip.autoRoutes);
+    auto routes = b.initRoutes(unsigned(ip.routes.size()));
+    for (int i = 0; i < ip.routes.size(); ++i) {
+        const auto &route = ip.routes[i];
+        routes[i].setDestination(utf8(route.destination).c_str());
+        routes[i].setPrefix(uint8_t(route.prefix));
+        routes[i].setGateway(utf8(route.gateway).c_str());
+        routes[i].setMetric(route.metric);
+    }
+    b.setNeverDefault(ip.neverDefault);
+}
+
+ConnectionSettingsData toSettings(C::ConnectionSettings::Reader r)
+{
+    ConnectionSettingsData settings;
+    settings.name = text(r.getName());
+    settings.autoconnect = r.getAutoconnect();
+    settings.metered = as<Network::Metered>(r.getMetered());
+    settings.availableToAll = r.getAvailableToAll();
+    auto w = r.getWifi();
+    settings.wifi = WifiSettingsData{bytes(w.getSsid()), w.getHidden(), text(w.getBssid()), text(w.getMacAddress()),
+                                     as<Network::ClonedMac>(w.getClonedMac()), text(w.getClonedMacAddress())};
+    auto sec = r.getSecurity();
+    settings.security.security = as<Network::Security>(sec.getSecurity());
+    settings.security.wepKeyIndex = sec.getWepKeyIndex();
+    settings.security.wepPassphrase = sec.getWepPassphrase();
+    settings.security.leapUsername = text(sec.getLeapUsername());
+    auto e = sec.getEap();
+    settings.security.eap = EapSettingsData{as<Network::EapMethod>(e.getMethod()),
+                                            text(e.getIdentity()),
+                                            text(e.getAnonymousIdentity()),
+                                            text(e.getCaCertificate()),
+                                            e.getNoCaCertificate(),
+                                            text(e.getDomain()),
+                                            text(e.getClientCertificate()),
+                                            text(e.getPrivateKey()),
+                                            as<Network::InnerAuth>(e.getInnerAuth()),
+                                            text(e.getPacFile()),
+                                            e.getPeapVersion()};
+    settings.ip4 = toIpSettings(r.getIp4());
+    settings.ip6 = toIpSettings(r.getIp6());
+    return settings;
+}
+
+void writeSettings(C::ConnectionSettings::Builder b, const ConnectionSettingsData &settings)
+{
+    b.setName(utf8(settings.name).c_str());
+    b.setAutoconnect(settings.autoconnect);
+    b.setMetered(as<C::Metered>(settings.metered));
+    b.setAvailableToAll(settings.availableToAll);
+    auto w = b.initWifi();
+    w.setSsid(data(settings.wifi.ssid));
+    w.setHidden(settings.wifi.hidden);
+    w.setBssid(utf8(settings.wifi.bssid).c_str());
+    w.setMacAddress(utf8(settings.wifi.macAddress).c_str());
+    w.setClonedMac(as<C::ClonedMac>(settings.wifi.clonedMac));
+    w.setClonedMacAddress(utf8(settings.wifi.clonedMacAddress).c_str());
+    auto sec = b.initSecurity();
+    sec.setSecurity(as<C::Security>(settings.security.security));
+    sec.setWepKeyIndex(uint8_t(settings.security.wepKeyIndex));
+    sec.setWepPassphrase(settings.security.wepPassphrase);
+    sec.setLeapUsername(utf8(settings.security.leapUsername).c_str());
+    const auto &eap = settings.security.eap;
+    auto e = sec.initEap();
+    e.setMethod(as<C::EapMethod>(eap.method));
+    e.setIdentity(utf8(eap.identity).c_str());
+    e.setAnonymousIdentity(utf8(eap.anonymousIdentity).c_str());
+    e.setCaCertificate(utf8(eap.caCertificate).c_str());
+    e.setNoCaCertificate(eap.noCaCertificate);
+    e.setDomain(utf8(eap.domain).c_str());
+    e.setClientCertificate(utf8(eap.clientCertificate).c_str());
+    e.setPrivateKey(utf8(eap.privateKey).c_str());
+    e.setInnerAuth(as<C::InnerAuth>(eap.innerAuth));
+    e.setPacFile(utf8(eap.pacFile).c_str());
+    e.setPeapVersion(int8_t(eap.peapVersion));
+    writeIpSettings(b.initIp4(), settings.ip4);
+    writeIpSettings(b.initIp6(), settings.ip6);
+}
+
+QList<SecretData> toSecrets(capnp::List<C::Secret>::Reader list)
+{
+    QList<SecretData> secrets;
+    for (auto secret : list)
+        secrets.append(SecretData{as<Network::SecretKey>(secret.getKey()), text(secret.getValue())});
+    return secrets;
+}
+
+void writeSecrets(capnp::List<C::Secret>::Builder list, const QList<SecretData> &secrets)
+{
+    for (int i = 0; i < secrets.size(); ++i) {
+        list[i].setKey(as<C::SecretKey>(secrets[i].key));
+        list[i].setValue(utf8(secrets[i].value).c_str());
+    }
 }
 
 class LogErrors final : public kj::TaskSet::ErrorHandler
@@ -443,6 +589,38 @@ void NetworkConnection::sendControl(KjContext &context, Request request, Callbac
         }));
 }
 
+template<typename... Values>
+void NetworkConnection::postWith(Task task, const ValueCallback<Values...> &done)
+{
+    if (!m_live) {
+        if (done)
+            done(unavailable(), Values{}...);
+        return;
+    }
+    {
+        std::lock_guard lock(m_mutex);
+        m_queue.push_back(std::move(task));
+    }
+    wake();
+}
+
+template<typename Request, typename Read, typename... Values>
+void NetworkConnection::sendControlWith(KjContext &context, Request request, Read read, ValueCallback<Values...> done)
+{
+    context.tasks.add(request.send().then(
+        [this, read, done](auto &&response) {
+            auto result = toResult(response.getResult());
+            std::tuple<Values...> values = result.error == Network::ErrorCode::None ? read(response) : std::tuple<Values...>{};
+            if (done)
+                toGui([done, result, values] { std::apply([&](const Values &...v) { done(result, v...); }, values); });
+        },
+        [this, done](kj::Exception &&exception) {
+            Result result{Network::ErrorCode::Unavailable, QString::fromUtf8(exception.getDescription().cStr())};
+            if (done)
+                toGui([done, result] { done(result, Values{}...); });
+        }));
+}
+
 void NetworkConnection::run()
 {
     kj::AsyncIoContext io = kj::setupAsyncIo();
@@ -603,6 +781,83 @@ void NetworkConnection::forget(const QString &uuid, Callback done)
 void NetworkConnection::checkConnectivity(Callback done)
 {
     post([this, done](KjContext &c) { sendControl(c, c.control.checkConnectivityRequest(), done); }, done);
+}
+
+void NetworkConnection::connectWithSettings(const QString &deviceId, const ConnectionSettingsData &settings,
+                                            const QList<SecretData> &secrets, ValueCallback<QString> done)
+{
+    postWith([this, device = utf8(deviceId), settings, secrets, done](KjContext &c) {
+        auto request = c.control.connectWithSettingsRequest();
+        request.setDeviceId(device.c_str());
+        writeSettings(request.initSettings(), settings);
+        writeSecrets(request.initSecrets(unsigned(secrets.size())), secrets);
+        sendControlWith(c, kj::mv(request), [](auto &response) { return std::tuple{text(response.getUuid())}; }, done);
+    }, done);
+}
+
+void NetworkConnection::settings(const QString &uuid, ValueCallback<ConnectionSettingsData> done)
+{
+    postWith([this, uuid = utf8(uuid), done](KjContext &c) {
+        auto request = c.control.settingsRequest();
+        request.setUuid(uuid.c_str());
+        sendControlWith(c, kj::mv(request), [](auto &response) { return std::tuple{toSettings(response.getSettings())}; }, done);
+    }, done);
+}
+
+void NetworkConnection::updateSettings(const QString &uuid, const ConnectionSettingsData &settings,
+                                       const QList<SecretData> &secrets, Callback done)
+{
+    post([this, uuid = utf8(uuid), settings, secrets, done](KjContext &c) {
+        auto request = c.control.updateSettingsRequest();
+        request.setUuid(uuid.c_str());
+        writeSettings(request.initSettings(), settings);
+        writeSecrets(request.initSecrets(unsigned(secrets.size())), secrets);
+        sendControl(c, kj::mv(request), done);
+    }, done);
+}
+
+void NetworkConnection::secrets(const QString &uuid, ValueCallback<QList<SecretData>> done)
+{
+    postWith([this, uuid = utf8(uuid), done](KjContext &c) {
+        auto request = c.control.secretsRequest();
+        request.setUuid(uuid.c_str());
+        sendControlWith(c, kj::mv(request), [](auto &response) { return std::tuple{toSecrets(response.getSecrets())}; }, done);
+    }, done);
+}
+
+void NetworkConnection::qrCode(const QString &uuid, ValueCallback<QrCodeData> done)
+{
+    postWith([this, uuid = utf8(uuid), done](KjContext &c) {
+        auto request = c.control.qrCodeRequest();
+        request.setUuid(uuid.c_str());
+        sendControlWith(c, kj::mv(request), [](auto &response) {
+            return std::tuple{QrCodeData{text(response.getText()), int(response.getSize()), bytes(response.getModules())}};
+        }, done);
+    }, done);
+}
+
+void NetworkConnection::startHotspot(const QString &deviceId, const QString &ssid, const QString &password,
+                                     ValueCallback<QString, QString> done)
+{
+    postWith([this, device = utf8(deviceId), ssid = utf8(ssid), password = utf8(password), done](KjContext &c) {
+        auto request = c.control.startHotspotRequest();
+        request.setDeviceId(device.c_str());
+        request.setSsid(ssid.c_str());
+        request.setPasswordKind(password.empty() ? C::HotspotPasswordKind::GENERATE : C::HotspotPasswordKind::GIVEN);
+        request.setPassword(password.c_str());
+        sendControlWith(c, kj::mv(request), [](auto &response) {
+            return std::tuple{text(response.getUuid()), text(response.getPassword())};
+        }, done);
+    }, done);
+}
+
+void NetworkConnection::stopHotspot(const QString &deviceId, Callback done)
+{
+    post([this, id = utf8(deviceId), done](KjContext &c) {
+        auto request = c.control.stopHotspotRequest();
+        request.setDeviceId(id.c_str());
+        sendControl(c, kj::mv(request), done);
+    }, done);
 }
 
 void NetworkConnection::setPrompterRegistered(bool registered)
