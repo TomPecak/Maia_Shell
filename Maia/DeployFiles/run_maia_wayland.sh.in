@@ -177,17 +177,17 @@ start_kde_service plasma-kaccess      kaccess
 # i sam rejestruje org.kde.kglobalaccel.
 
 # USŁUGA OKIEN MAI (Maia/services/windows)
-# maia-windows rozmawia z KWinem o oknach innych aplikacji (protokół org_kde_plasma_window_management)
+# maia-windows-service rozmawia z KWinem o oknach innych aplikacji (protokół org_kde_plasma_window_management)
 # i podaje ich listę paskowi zadań i dokowi (moduł QML Maia.Windows, przez Cap'n Proto). Startuje
 # przed Maią, żeby pasek od razu miał okna; gdyby nie zdążyła, Maia łączy się z nią sama co sekundę.
 # Kończy się razem z KWinem; po wyjściu z Mai zatrzymujemy ją niżej.
 MAIA_WINDOWS_PID=""
-if [ -x "${MAIA_OPT_PATH}/libexec/maia-windows" ]; then
-    echo "Uruchamianie usługi okien maia-windows"
-    "${MAIA_OPT_PATH}/libexec/maia-windows" &
+if [ -x "${MAIA_OPT_PATH}/libexec/maia-windows-service" ]; then
+    echo "Uruchamianie usługi okien maia-windows-service"
+    "${MAIA_OPT_PATH}/libexec/maia-windows-service" &
     MAIA_WINDOWS_PID=$!
 else
-    echo "Brak ${MAIA_OPT_PATH}/libexec/maia-windows: pasek zadań nie pokaże okien"
+    echo "Brak ${MAIA_OPT_PATH}/libexec/maia-windows-service: pasek zadań nie pokaże okien"
 fi
 
 # USŁUGA SIECI MAI (Maia/services/network)

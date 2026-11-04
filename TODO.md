@@ -153,7 +153,7 @@ all applications are lost.
 
 ### Fix
 
-- A notification service (Rust, like `maia-windows`): owns `org.freedesktop.Notifications` on the
+- A notification service (Rust, like `maia-windows-service`): owns `org.freedesktop.Notifications` on the
   session bus (`Notify`, `CloseNotification`, `GetCapabilities`, `GetServerInformation`, signals
   `NotificationClosed`, `ActionInvoked`), keeps the list and history, and serves it to the
   frontends over a Cap'n Proto contract (snapshot + changes, actions back).

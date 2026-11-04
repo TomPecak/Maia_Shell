@@ -460,7 +460,7 @@ pub fn serve(stream: tokio::net::UnixStream, service: window_service::Client) {
     let rpc_system = RpcSystem::new(Box::new(network), Some(service.client));
     tokio::task::spawn_local(async move {
         if let Err(error) = rpc_system.await {
-            eprintln!("maia-windows: connection ended: {error}");
+            eprintln!("maia-windows-service: connection ended: {error}");
         }
     });
 }

@@ -1,5 +1,5 @@
 [package]
-name = "maia-windows"
+name = "maia-windows-service"
 version = "0.1.0"
 edition = "2024"
 # std::io::pipe
@@ -12,7 +12,7 @@ name = "maia_windows"
 path = "src/lib.rs"
 
 [[bin]]
-name = "maia-windows"
+name = "maia-windows-service"
 path = "src/main.rs"
 
 [dependencies]

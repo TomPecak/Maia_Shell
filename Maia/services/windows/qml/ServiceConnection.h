@@ -1,6 +1,6 @@
 #pragma once
 
-// The connection of a process to the window service (maia-windows), over Cap'n Proto.
+// The connection of a process to the window service (maia-windows-service), over Cap'n Proto.
 //
 // One per process (instance()), shared by every model. Cap'n Proto runs in its own thread (KJ
 // event loop), so the GUI thread never waits for the service:

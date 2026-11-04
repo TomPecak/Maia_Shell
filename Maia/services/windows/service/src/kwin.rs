@@ -84,7 +84,7 @@ pub async fn run(
     // From here on an error means the compositor went away (normally: the session ends), which is
     // the regular end of the service, not a failure
     if let Err(error) = serve(&connection, &mut queue, &socket, events, commands).await {
-        eprintln!("maia-windows: the compositor connection ended: {error}");
+        eprintln!("maia-windows-service: the compositor connection ended: {error}");
     }
     Ok(())
 }
