@@ -8,5 +8,4 @@ Exec=maia-settings
 Icon=preferences-system
 Categories=Settings;System;
 Keywords=settings;preferences;wifi;network;hotspot;
-OnlyShowIn=Maia;
 StartupNotify=true

@@ -49,7 +49,7 @@ if [ "${MAIA_NESTED_STAGE}" = "inside_kwin" ]; then
     if command -v dbus-update-activation-environment >/dev/null 2>&1; then
         dbus-update-activation-environment WAYLAND_DISPLAY DISPLAY XAUTHORITY \
             XDG_SESSION_TYPE XDG_CURRENT_DESKTOP KDE_FULL_SESSION KDE_SESSION_VERSION \
-            XDG_CONFIG_DIRS SSH_ASKPASS SSH_ASKPASS_REQUIRE
+            XDG_CONFIG_DIRS XDG_DATA_DIRS SSH_ASKPASS SSH_ASKPASS_REQUIRE
     fi
 
     # Usługa okien Mai (pasek zadań, dok): w instalacji libexec/maia-windows, w katalogu budowania
@@ -144,6 +144,11 @@ done
 MAIA_DEFAULTS_DIR="${SCRIPT_DIR}/etc/xdg"
 [ -d "${MAIA_DEFAULTS_DIR}" ] || MAIA_DEFAULTS_DIR="$(readlink -f "${SCRIPT_DIR}/../etc/xdg")"
 export XDG_CONFIG_DIRS="${XDG_CONFIG_DIRS:-/etc/xdg}:${MAIA_DEFAULTS_DIR}"
+# Dane Mai (share obok bin programu Mai: plik .desktop Ustawień Maia, strony ustawień), jak w
+# run_maia_wayland.sh
+if [ -n "${MAIA_NESTED_APP}" ] && [ -d "$(dirname "${MAIA_NESTED_APP}")/../share" ]; then
+    export XDG_DATA_DIRS="${XDG_DATA_DIRS:-/usr/local/share:/usr/share}:$(readlink -f "$(dirname "${MAIA_NESTED_APP}")/../share")"
+fi
 
 echo "Uruchamianie zagnieżdżonego kwin_wayland (${MAIA_NESTED_WIDTH:-1280}x${MAIA_NESTED_HEIGHT:-720})..."
 
