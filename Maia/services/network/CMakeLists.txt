@@ -2,6 +2,7 @@
 #
 #   contract/   network.capnp, the Cap'n Proto contract between the service and its clients
 #   service/    maia-network-service (Rust): talks to NetworkManager, serves the contract
+#   qml/        Maia.Network, the QML module (C++): status, models and the password prompt
 #   docs/       what the user interface offers (from GNOME), the reference for the contract
 #
 # See README.md. Rust is built by cmake/MaiaRust.cmake (cargo), Cap'n Proto comes from
@@ -20,3 +21,5 @@ maia_add_cargo_executable(maia-network-service
     ENVIRONMENT ${capnp_environment}
     DEPENDS ${capnp_depends}
 )
+
+add_subdirectory(qml)
