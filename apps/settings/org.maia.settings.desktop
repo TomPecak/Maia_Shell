@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Maia Settings
+Name[pl]=Ustawienia Maia
+Comment=Wi-Fi and other settings of Maia
+Comment[pl]=Wi-Fi i inne ustawienia Mai
+Exec=maia-settings
+Icon=preferences-system
+Categories=Settings;System;
+Keywords=settings;preferences;wifi;network;hotspot;
+OnlyShowIn=Maia;
+StartupNotify=true

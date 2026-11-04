@@ -75,4 +75,6 @@ interface work use the fake backend. Only reading (`watch`) is safe against the 
 
 ## Not done yet
 
-- Maia Settings and its Wi-Fi page (`apps/settings/pages/network/`).
+- Translations (Polish) of Maia.Network's users: Lumen's quick settings, Maia Settings.
+- The Maia (tablet) frontend's Control Center.
+- What waits for other parts of Maia: docs/gnome-wifi-features.md, "Later".

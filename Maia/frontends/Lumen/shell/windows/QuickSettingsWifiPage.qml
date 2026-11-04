@@ -222,7 +222,7 @@ ColumnLayout {
     SubtleButton {
         Layout.fillWidth: true
         Accessible.name: qsTr("More Wi-Fi settings")
-        onClicked: Shell.launch("systemsettings kcm_networkmanagement")
+        onClicked: Shell.launch("maia-settings --page network")
         contentItem: LText { text: qsTr("More Wi-Fi settings") }
     }
 
