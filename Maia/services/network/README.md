@@ -24,14 +24,16 @@ What the interface offers, feature by feature, is in [docs/gnome-wifi-features.m
 | `service/src/settings.rs` | Connection settings, secrets, password requests and their checks. |
 | `service/src/backend.rs` | What a backend and the hub exchange (channels). |
 | `service/src/nm.rs`, `nmdefs.rs` | The NetworkManager backend; NetworkManager's numbers (states, reasons, flags). |
+| `service/src/nmsettings.rs` | NetworkManager profiles (`a{sa{sv}}`) to and from the contract's settings and secrets; new hidden, Enterprise and hotspot profiles. Edits keep the keys Maia does not know. |
 | `service/src/agent.rs` | The secret agent NetworkManager asks for passwords. |
 | `service/src/fake.rs` | A simulated NetworkManager for tests and interface work. |
 | `service/src/rpc.rs` | The Cap'n Proto server: snapshot, then changes, to every listener; control; the prompter. |
 | `service/src/prompt.rs` | How a backend asks the user for secrets (through the hub to the shell). |
 | `service/src/throttle.rs` | At most one change per object every 250 ms (signal strengths change all the time). |
-| `service/src/qr.rs` | The QR code of a network for sharing. |
+| `service/src/qr.rs` | The QR code of a network for sharing: its text and matrix (`qrcodegen`, error correction M). |
 | `service/tests/service.rs` | The service over a real Cap'n Proto connection with the fake backend. |
 | `service/examples/watch.rs` | Prints the served state and its changes; sends no command. |
+| `service/examples/profiles.rs` | Prints the Wi-Fi profiles of the real NetworkManager as the details editor reads them (GetSettings only: no secrets, no agent). |
 
 ## Running it
 
@@ -73,7 +75,6 @@ interface work use the fake backend. Only reading (`watch`) is safe against the 
 
 ## Not done yet
 
-- NetworkManager backend: connection settings (details editor), secrets for sharing, hidden and
-  Enterprise networks, hotspot (the fake backend has them all).
-- The QR matrix (the text is there; the encoder is not vendored yet).
-- The QML module `Maia.Network`, Lumen's quick settings, Maia Settings.
+- Translations (Polish) of Maia.Network's users: Lumen's quick settings, Maia Settings.
+- The Maia (tablet) frontend's Control Center.
+- What waits for other parts of Maia: docs/gnome-wifi-features.md, "Later".

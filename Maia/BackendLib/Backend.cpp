@@ -4,6 +4,7 @@
 #include <QDir>
 #include <QDirIterator>
 #include <QFile>
+#include <QFileInfo>
 #include <QGuiApplication>
 #include <QRegularExpression>
 #include <QStandardPaths>
@@ -286,7 +287,15 @@ void Backend::startProcess(const QString &proc)
 void Backend::runCommand(const QString &cmd)
 {
     QStringList parts = cmd.split(u' ', Qt::SkipEmptyParts);
+    if (parts.isEmpty())
+        return;
     QString program = parts.takeFirst();
+    // Maia's own programs (maia-settings) live next to the server, which is not in PATH
+    if (!program.contains(u'/')) {
+        const QString own = QCoreApplication::applicationDirPath() + u'/' + program;
+        if (QFileInfo(own).isExecutable())
+            program = own;
+    }
     QStringList filteredArgs;
     for (const QString &arg : parts) {
         if (!arg.startsWith(u'%')) {

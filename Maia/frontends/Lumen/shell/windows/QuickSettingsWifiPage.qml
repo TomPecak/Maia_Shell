@@ -33,14 +33,14 @@ ColumnLayout {
 
     function reasonText(reason) {
         switch (reason) {
-        case Network.Network.WrongSecrets:
+        case Network.Network.StateReason.WrongSecrets:
             return qsTr("The password was not accepted.")
-        case Network.Network.SupplicantTimeout:
+        case Network.Network.StateReason.SupplicantTimeout:
             return qsTr("The network did not answer in time.")
-        case Network.Network.IpConfigFailed:
-        case Network.Network.IpConfigExpired:
+        case Network.Network.StateReason.IpConfigFailed:
+        case Network.Network.StateReason.IpConfigExpired:
             return qsTr("The network did not give this computer an address.")
-        case Network.Network.SsidNotFound:
+        case Network.Network.StateReason.SsidNotFound:
             return qsTr("The network is out of reach.")
         default:
             return qsTr("The connection failed.")
@@ -222,7 +222,7 @@ ColumnLayout {
     SubtleButton {
         Layout.fillWidth: true
         Accessible.name: qsTr("More Wi-Fi settings")
-        onClicked: Shell.launch("systemsettings kcm_networkmanagement")
+        onClicked: Shell.launch("maia-settings --page network")
         contentItem: LText { text: qsTr("More Wi-Fi settings") }
     }
 
@@ -269,7 +269,7 @@ ColumnLayout {
                 Layout.fillWidth: true
                 hidden: modelData.hidden
                 text: modelData.value
-                placeholderText: modelData.key === Network.Network.EapIdentity ? qsTr("User name") : qsTr("Password")
+                placeholderText: modelData.key === Network.Network.SecretKey.EapIdentity ? qsTr("User name") : qsTr("Password")
                 Component.onCompleted: {
                     if (index === 0)
                         forceActiveFocus()
@@ -425,7 +425,7 @@ ColumnLayout {
                     onClicked: {
                         page.failure = ""
                         networks.connectNetwork(row.networkId, result => {
-                            if (result.error === Network.Network.InvalidArgument && row.enterprise)
+                            if (result.error === Network.Network.ErrorCode.InvalidArgument && row.enterprise)
                                 page.failure = qsTr("%1 needs sign-in details. Set it up in Wi-Fi settings.").arg(row.name)
                             else if (!result.ok)
                                 page.failure = qsTr("Can't connect to %1.").arg(row.name)

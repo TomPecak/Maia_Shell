@@ -1,5 +1,6 @@
 import QtQuick
 import org.kde.layershell 1.0 as LayerShell
+import Maia.Backend as Maia
 
 import "../apps/files"
 import "desktop"
@@ -34,6 +35,13 @@ Window {
     // Covers the whole screen, also under the taskbar
     LayerShell.Window.exclusionZone: -1
     LayerShell.Window.keyboardInteractivity: LayerShell.Window.KeyboardInteractivityNone
+
+    // The shared Shell state gets the session manager from here (see Shell.session)
+    Binding {
+        target: Shell
+        property: "session"
+        value: Maia.MSessionManager
+    }
 
     Wallpaper {
         anchors.fill: parent

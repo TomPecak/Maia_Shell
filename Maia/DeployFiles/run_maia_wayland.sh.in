@@ -61,6 +61,9 @@ if [ "${MAIA_SESSION_STAGE}" != "inside_kwin" ]; then
     # priorytet: dystrybucja (/etc/xdg) i użytkownik (~/.config) mogą je zmienić
     export XDG_CONFIG_DIRS="${XDG_CONFIG_DIRS:-/etc/xdg}:${MAIA_OPT_PATH}/etc/xdg"
     echo "XDG_CONFIG_DIRS=${XDG_CONFIG_DIRS}"
+    # Dane Mai (share: plik .desktop Ustawień Maia, strony ustawień) też na końcu: okna Mai mają wtedy
+    # swoją ikonę i nazwę, a dystrybucja ma pierwszeństwo
+    export XDG_DATA_DIRS="${XDG_DATA_DIRS:-/usr/local/share:/usr/share}:${MAIA_OPT_PATH}/share"
 
     # 2. Backendy toolkitów dla aplikacji uruchamianych w sesji
     export QT_QPA_PLATFORM="wayland;xcb"
@@ -102,7 +105,7 @@ if command -v dbus-update-activation-environment >/dev/null 2>&1; then
         WAYLAND_DISPLAY DISPLAY XAUTHORITY \
         XDG_SESSION_TYPE XDG_CURRENT_DESKTOP XDG_SESSION_DESKTOP \
         KDE_FULL_SESSION KDE_SESSION_VERSION XDG_MENU_PREFIX \
-        XDG_CONFIG_DIRS SSH_ASKPASS SSH_ASKPASS_REQUIRE \
+        XDG_CONFIG_DIRS XDG_DATA_DIRS SSH_ASKPASS SSH_ASKPASS_REQUIRE \
         QT_QPA_PLATFORM GDK_BACKEND QT_WAYLAND_RECONNECT
 fi
 

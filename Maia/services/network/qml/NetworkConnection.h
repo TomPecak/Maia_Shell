@@ -49,6 +49,16 @@ public:
     void disconnectDevice(const QString &deviceId, Callback done = {}) override;
     void forget(const QString &uuid, Callback done = {}) override;
     void checkConnectivity(Callback done = {}) override;
+    void connectWithSettings(const QString &deviceId, const ConnectionSettingsData &settings, const QList<SecretData> &secrets,
+                             ValueCallback<QString> done = {}) override;
+    void settings(const QString &uuid, ValueCallback<ConnectionSettingsData> done) override;
+    void updateSettings(const QString &uuid, const ConnectionSettingsData &settings, const QList<SecretData> &secrets,
+                        Callback done = {}) override;
+    void secrets(const QString &uuid, ValueCallback<QList<SecretData>> done) override;
+    void qrCode(const QString &uuid, ValueCallback<QrCodeData> done) override;
+    void startHotspot(const QString &deviceId, const QString &ssid, const QString &password,
+                      ValueCallback<QString, QString> done = {}) override;
+    void stopHotspot(const QString &deviceId, Callback done = {}) override;
     void setPrompterRegistered(bool registered) override;
     void answerSecrets(const QString &requestId, bool cancelled, const QList<SecretData> &secrets) override;
 
@@ -71,6 +81,13 @@ private:
     // Sends a control request and hands its Result to `done` in the GUI thread
     template<typename Request>
     void sendControl(KjContext &context, Request request, Callback done);
+    // Sends a control request; `read` turns its response into the values for `done`, in the KJ
+    // thread (the response is gone afterwards), then `done` runs in the GUI thread
+    template<typename Request, typename Read, typename... Values>
+    void sendControlWith(KjContext &context, Request request, Read read, ValueCallback<Values...> done);
+    // Without a connection: `done` gets Unavailable and empty values at once
+    template<typename... Values>
+    void postWith(Task task, const ValueCallback<Values...> &done);
 
     const QString m_socketPath;
     std::thread m_thread;

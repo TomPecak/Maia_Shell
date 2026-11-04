@@ -607,9 +607,11 @@ fn fail(s: &mut State, uuid: &str, reason: StateReason) {
 
 fn start_hotspot(state: &StateRef, ssid: String, password: HotspotPassword) -> (String, String) {
     let mut s = state.borrow_mut();
+    // As the NetworkManager backend: the hotspot profile keeps its password unless one is given
+    let kept = s.profiles.values().find(|p| p.connection.hotspot).and_then(|p| find_secret(&p.secrets, SecretKey::WifiPassword));
     let password = match password {
         HotspotPassword::Given(password) => password,
-        HotspotPassword::Generate => "fq7Rk2Mw".to_string(),
+        HotspotPassword::Generate => kept.map_or_else(|| "fq7Rk2Mw".to_string(), str::to_string),
     };
     let ssid = if ssid.is_empty() { "maia".to_string() } else { ssid };
     let uuid = s

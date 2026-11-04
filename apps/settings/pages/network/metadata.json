@@ -1,0 +1,12 @@
+{
+    "id": "network",
+    "name": "Wi-Fi",
+    "description": "Networks, hotspot and saved networks",
+    "description[pl]": "Sieci, hotspot i zapisane sieci",
+    "icon": "network-wireless-signal-excellent-symbolic",
+    "order": 10,
+    "main": "WifiPage.qml",
+    "formFactors": ["desktop"],
+    "keywords": ["wifi", "wi-fi", "wireless", "wlan", "network", "internet", "hotspot", "password", "hidden", "qr", "share", "ip", "dns", "proxy", "metered", "802.1x", "enterprise"],
+    "keywords[pl]": ["sieć", "sieci", "bezprzewodowa", "hasło", "ukryta", "udostępnij", "hotspot", "internet", "taryfowe"]
+}

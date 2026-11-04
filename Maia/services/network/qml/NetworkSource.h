@@ -23,6 +23,8 @@ class NetworkSource : public QObject
 
 public:
     using Callback = std::function<void(const Result &)>;
+    template<typename... Values>
+    using ValueCallback = std::function<void(const Result &, const Values &...)>;
 
     explicit NetworkSource(QObject *parent = nullptr);
 
@@ -67,6 +69,19 @@ public:
     virtual void disconnectDevice(const QString &deviceId, Callback done = {}) = 0;
     virtual void forget(const QString &uuid, Callback done = {}) = 0;
     virtual void checkConnectivity(Callback done = {}) = 0;
+    // A hidden or Enterprise network from settings; done gets the new profile's UUID
+    virtual void connectWithSettings(const QString &deviceId, const ConnectionSettingsData &settings,
+                                     const QList<SecretData> &secrets, ValueCallback<QString> done = {}) = 0;
+    virtual void settings(const QString &uuid, ValueCallback<ConnectionSettingsData> done) = 0;
+    // secrets: only those the user changed
+    virtual void updateSettings(const QString &uuid, const ConnectionSettingsData &settings, const QList<SecretData> &secrets,
+                                Callback done = {}) = 0;
+    virtual void secrets(const QString &uuid, ValueCallback<QList<SecretData>> done) = 0;
+    virtual void qrCode(const QString &uuid, ValueCallback<QrCodeData> done) = 0;
+    // password "" = keep the hotspot's or make one; done gets the profile UUID and the password
+    virtual void startHotspot(const QString &deviceId, const QString &ssid, const QString &password,
+                              ValueCallback<QString, QString> done = {}) = 0;
+    virtual void stopHotspot(const QString &deviceId, Callback done = {}) = 0;
 
     // The shell asks the user for passwords while registered (one per session)
     virtual void setPrompterRegistered(bool registered) = 0;

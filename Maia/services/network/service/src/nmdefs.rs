@@ -120,6 +120,8 @@ pub fn profile_security(key_mgmt: &str, auth_alg: &str, eap_suite_b: bool) -> Se
 }
 
 // Wi-Fi device capabilities (NMDeviceWifiCapabilities)
+/// WPA2/RSN (the hotspot uses CCMP with it)
+pub const WIFI_CAP_RSN: u32 = 0x20;
 const WIFI_CAP_AP: u32 = 0x40;
 const WIFI_CAP_FREQ_VALID: u32 = 0x100;
 const WIFI_CAP_FREQ_2GHZ: u32 = 0x200;

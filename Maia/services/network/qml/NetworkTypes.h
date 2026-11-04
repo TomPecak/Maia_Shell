@@ -13,24 +13,24 @@
 namespace MaiaNetwork {
 
 // Enumerations of the contract, for QML: Network.Security.WpaPersonal, ...
-class Network
+namespace Network
 {
-    Q_GADGET
-    QML_NAMED_ELEMENT(Network)
-    QML_UNCREATABLE("Network only holds enumerations")
+Q_NAMESPACE
+QML_NAMED_ELEMENT(Network)
+// Always Network.Security.None, never Network.None: several enumerations share value names
+Q_CLASSINFO("RegisterEnumClassesUnscoped", "false")
 
-public:
     enum class Connectivity { Unknown, None, Portal, Limited, Full };
-    Q_ENUM(Connectivity)
+    Q_ENUM_NS(Connectivity)
 
     enum class Permission { No, Auth, Yes };
-    Q_ENUM(Permission)
+    Q_ENUM_NS(Permission)
 
     enum class ConnectionType { None, Wifi, Ethernet, Vpn, Other };
-    Q_ENUM(ConnectionType)
+    Q_ENUM_NS(ConnectionType)
 
     enum class DeviceState { Unknown, Unmanaged, Unavailable, Disconnected, Connecting, NeedAuth, Connected, Disconnecting, Failed };
-    Q_ENUM(DeviceState)
+    Q_ENUM_NS(DeviceState)
 
     enum class StateReason {
         None,
@@ -48,43 +48,56 @@ public:
         UserRequested,
         CarrierLost
     };
-    Q_ENUM(StateReason)
+    Q_ENUM_NS(StateReason)
 
     enum class Security { None, EnhancedOpen, Wep, Leap, WpaPersonal, Wpa3Personal, WpaEnterprise, Wpa3Enterprise };
-    Q_ENUM(Security)
+    Q_ENUM_NS(Security)
 
     enum class Metered { Unknown, Yes, No };
-    Q_ENUM(Metered)
+    Q_ENUM_NS(Metered)
 
     enum class SecretKey { WifiPassword, WepKey, LeapPassword, EapPassword, EapPrivateKeyPassword, EapIdentity };
-    Q_ENUM(SecretKey)
+    Q_ENUM_NS(SecretKey)
 
     enum class Validation { NotEmpty, WpaPassword, WepKey, WepPassphrase };
-    Q_ENUM(Validation)
+    Q_ENUM_NS(Validation)
 
     enum class ErrorCode { None, NotFound, NotAllowed, InvalidArgument, NotSupported, Unavailable, Failed };
-    Q_ENUM(ErrorCode)
+    Q_ENUM_NS(ErrorCode)
+
+    // Connection settings (the details editor)
+    enum class IpMethod { Auto, DhcpOnly, Manual, LinkLocal, Shared, Disabled };
+    Q_ENUM_NS(IpMethod)
+
+    enum class ClonedMac { Default, Preserve, Permanent, Random, Stable, StableSsid, Address };
+    Q_ENUM_NS(ClonedMac)
+
+    enum class EapMethod { Tls, Peap, Ttls, Pwd, Fast, Leap };
+    Q_ENUM_NS(EapMethod)
+
+    enum class InnerAuth { Mschapv2, Mschap, Pap, Chap, Gtc, Md5 };
+    Q_ENUM_NS(InnerAuth)
 
     // Bits of `bands`
     enum Band { Band24GHz = 0x1, Band5GHz = 0x2, Band6GHz = 0x4 };
-    Q_ENUM(Band)
+    Q_ENUM_NS(Band)
 
     // Whether a network of this security asks for a password (Enhanced Open does not: no padlock)
-    static bool isSecure(Security security) { return security != Security::None && security != Security::EnhancedOpen; }
-    static bool isEnterprise(Security security)
+    inline bool isSecure(Security security) { return security != Security::None && security != Security::EnhancedOpen; }
+    inline bool isEnterprise(Security security)
     {
         return security == Security::WpaEnterprise || security == Security::Wpa3Enterprise;
     }
 
     // The signal level of a strength 0..100, as GNOME's icons: 0 none, 1 weak, 2 ok, 3 good, 4 excellent
-    static int signalLevel(int strength)
+    inline int signalLevel(int strength)
     {
         return strength < 20 ? 0 : strength < 40 ? 1 : strength < 50 ? 2 : strength < 80 ? 3 : 4;
     }
 
     // The checks of the password dialog (the same rules as the service and GNOME)
-    static bool accepts(Validation validation, const QString &value);
-};
+    bool accepts(Validation validation, const QString &value);
+} // namespace Network
 
 struct IpInfo {
     QStringList addresses;   // "192.168.1.23/24"
@@ -201,6 +214,89 @@ struct SecretRequestData {
 struct SecretData {
     Network::SecretKey key;
     QString value;
+    bool operator==(const SecretData &) const = default;
+};
+
+// --- Connection settings (contract: ConnectionSettings), defaults as a new profile has them ---
+
+struct IpAddressData {
+    QString address;
+    int prefix = 0;
+    bool operator==(const IpAddressData &) const = default;
+};
+
+struct RouteData {
+    QString destination;
+    int prefix = 0;
+    QString gateway;
+    qint64 metric = -1;      // -1 = default
+    bool operator==(const RouteData &) const = default;
+};
+
+struct IpSettingsData {
+    Network::IpMethod method = Network::IpMethod::Auto;
+    QList<IpAddressData> addresses;
+    QString gateway;
+    bool autoDns = true;
+    QStringList dns;
+    QStringList dnsSearch;
+    bool autoRoutes = true;
+    QList<RouteData> routes;
+    bool neverDefault = false;
+    bool operator==(const IpSettingsData &) const = default;
+};
+
+struct WifiSettingsData {
+    QByteArray ssid;
+    bool hidden = false;
+    QString bssid;
+    QString macAddress;
+    Network::ClonedMac clonedMac = Network::ClonedMac::Default;
+    QString clonedMacAddress;
+    bool operator==(const WifiSettingsData &) const = default;
+};
+
+struct EapSettingsData {
+    Network::EapMethod method = Network::EapMethod::Peap;
+    QString identity;
+    QString anonymousIdentity;
+    QString caCertificate;
+    bool noCaCertificate = false;
+    QString domain;
+    QString clientCertificate;
+    QString privateKey;
+    Network::InnerAuth innerAuth = Network::InnerAuth::Mschapv2;
+    QString pacFile;
+    int peapVersion = -1;    // -1 = automatic
+    bool operator==(const EapSettingsData &) const = default;
+};
+
+struct SecuritySettingsData {
+    Network::Security security = Network::Security::None;
+    int wepKeyIndex = 0;
+    bool wepPassphrase = false;
+    QString leapUsername;
+    EapSettingsData eap;
+    bool operator==(const SecuritySettingsData &) const = default;
+};
+
+struct ConnectionSettingsData {
+    QString name;
+    bool autoconnect = true;
+    Network::Metered metered = Network::Metered::Unknown;
+    bool availableToAll = false;
+    WifiSettingsData wifi;
+    SecuritySettingsData security;
+    IpSettingsData ip4;
+    IpSettingsData ip6;
+    bool operator==(const ConnectionSettingsData &) const = default;
+};
+
+// A QR code to share a network: its text and size x size modules, row by row, 1 = dark
+struct QrCodeData {
+    QString text;
+    int size = 0;
+    QByteArray modules;
 };
 
 // The answer of a control call
