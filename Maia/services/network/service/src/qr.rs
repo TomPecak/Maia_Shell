@@ -4,13 +4,15 @@
 //! `WIFI:S:<ssid>;T:<WPA|SAE|WEP|nopass>;P:<password>;H:true;;` (H only for hidden networks), with
 //! `\ ; , : "` escaped by a backslash.
 
+use qrcodegen::{QrCode as Encoder, QrCodeEcc};
+
 use crate::backend::{ErrorCode, OpError, OpResult};
 use crate::model::{SavedConnection, Security};
 use crate::settings::{Secret, SecretKey, find_secret};
 
 pub struct QrCode {
     pub text: String,
-    /// Modules per side, 0 while there is no matrix
+    /// Modules per side
     pub size: u32,
     /// size x size, row by row, 1 = dark
     pub modules: Vec<u8>,
@@ -47,11 +49,23 @@ pub fn wifi_text(connection: &SavedConnection, secrets: &[Secret]) -> OpResult<S
     Ok(text)
 }
 
-/// The QR text and its matrix
+/// The QR text and its matrix (error correction M, as phones read it well from a screen)
 pub fn wifi_code(connection: &SavedConnection, secrets: &[Secret]) -> OpResult<QrCode> {
     let text = wifi_text(connection, secrets)?;
-    // TODO(network): the matrix needs a QR encoder (the qrcodegen crate is not vendored yet)
-    Ok(QrCode { text, size: 0, modules: Vec::new() })
+    encode(text)
+}
+
+pub fn encode(text: String) -> OpResult<QrCode> {
+    let qr = Encoder::encode_text(&text, QrCodeEcc::Medium)
+        .map_err(|_| OpError::new(ErrorCode::InvalidArgument, "too long for a QR code"))?;
+    let size = qr.size();
+    let mut modules = Vec::with_capacity((size * size) as usize);
+    for y in 0..size {
+        for x in 0..size {
+            modules.push(u8::from(qr.get_module(x, y)));
+        }
+    }
+    Ok(QrCode { text, size: size as u32, modules })
 }
 
 #[cfg(test)]
@@ -77,6 +91,18 @@ mod tests {
             wifi_text(&connection("Lab", Security::Wpa3Personal, true), &secrets).unwrap(),
             "WIFI:S:Lab;T:SAE;P:12345678;H:true;;"
         );
+    }
+
+    #[test]
+    fn the_matrix_is_square_with_finder_patterns() {
+        let code = encode("WIFI:S:Cafe;T:nopass;;".into()).unwrap();
+        assert!(code.size >= 21);
+        assert_eq!(code.modules.len(), (code.size * code.size) as usize);
+        // The top left finder pattern: a dark 7x7 frame
+        let at = |x: u32, y: u32| code.modules[(y * code.size + x) as usize];
+        assert_eq!((0..7).map(|x| at(x, 0)).collect::<Vec<_>>(), vec![1; 7]);
+        assert_eq!(at(1, 1), 0);
+        assert_eq!(at(3, 3), 1);
     }
 
     #[test]
