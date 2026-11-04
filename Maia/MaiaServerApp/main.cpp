@@ -43,7 +43,6 @@
 // Q_IMPORT_QML_PLUGIN(XPFrontendPlugin)
 
 Q_IMPORT_QML_PLUGIN(Maia_BackendPlugin) // URI, '.' dots replaced with '_'
-Q_IMPORT_QML_PLUGIN(Maia_WindowsPlugin) // Maia.Windows, Maia/services/windows/qml
 
 void getCmdLineOptions(const QCoreApplication &app,
                        QString &modeOption,
@@ -145,6 +144,8 @@ int main(int argc, char *argv[])
         // too. Declared before the engine so that the symlinks outlive it.
         FrontendModules frontendModules;
         QQmlApplicationEngine engine;
+        // Installed QML modules of Maia (Maia.Windows, ...), loaded at run time
+        engine.addImportPath(QStringLiteral(MAIA_QML_INSTALL_DIR));
 
 
         // QString basePath;

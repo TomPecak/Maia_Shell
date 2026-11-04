@@ -26,6 +26,9 @@ void QmlGui::initQmlEngine()
     surfaceFormat.setSwapInterval(m_swapIntervalOption);
     QSurfaceFormat::setDefaultFormat(surfaceFormat);
 
+    // Installed QML modules of Maia (Maia.Windows, ...), loaded at run time
+    engine.addImportPath(QStringLiteral(MAIA_QML_INSTALL_DIR));
+
     //INIT QML ENGINE ICON PROVIDERS
     //the engine takes ownership of image providers and deletes them in its destructor
     engine.addImageProvider(QLatin1String("backend_app_icon"), new BackendAppsIconsProvider);

@@ -1,17 +1,21 @@
 # QML module Maia.Windows: TasksModel (the API of org.kde.taskmanager) on top of the window service.
 #
-# A static library with its QML plugin, linked into appMaiaServer (Q_IMPORT_QML_PLUGIN), like
-# Maia.Backend. Cap'n Proto (3rdparty/capnproto) is used only inside ServiceConnection.cpp.
+# An installed QML module, loaded at run time by every process that imports it (the shell, apps):
+# the shared library libMaiaWindows with the types, and its QML plugin in
+# <prefix>/<qml dir>/Maia/Windows (cmake/MaiaQmlModule.cmake). Only the QML API is public.
+# Cap'n Proto (3rdparty/capnproto, static) is used only inside ServiceConnection.cpp.
 
 include(MaiaCapnProto)
+include(MaiaQmlModule)
 
 find_package(Qt6 ${REQUIRED_QT_VERSION} REQUIRED COMPONENTS Core Gui Qml)
 
-qt_add_library(MaiaWindows STATIC)
+qt_add_library(MaiaWindows SHARED)
 
 qt_add_qml_module(MaiaWindows
     URI Maia.Windows
     VERSION 1.0
+    OUTPUT_DIRECTORY ${MAIA_QML_BUILD_DIR}/Maia/Windows
     SOURCES
         WindowInfo.h
         WindowSource.h WindowSource.cpp
@@ -29,6 +33,8 @@ target_include_directories(MaiaWindows PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(MaiaWindows PUBLIC Qt6::Core Qt6::Gui Qt6::Qml)
 # Cap'n Proto reports errors as exceptions (KDE settings turn them off by default)
 kde_target_enable_exceptions(MaiaWindows PRIVATE)
+
+maia_install_qml_module(MaiaWindows URI Maia.Windows)
 
 if(BUILD_TESTING)
     find_package(Qt6 ${REQUIRED_QT_VERSION} REQUIRED COMPONENTS Test)
