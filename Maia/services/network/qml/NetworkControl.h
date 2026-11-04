@@ -61,6 +61,8 @@ public:
     // Checks for the editor's fields
     Q_INVOKABLE bool isValidAddress(const QString &text, bool ip6) const;
     Q_INVOKABLE bool isValidMac(const QString &text) const;
+    // The computer's name, the hotspot's name when the user gives none
+    Q_INVOKABLE QString hostName() const;
     // The value of a key in a secrets list, "" when it is not there
     Q_INVOKABLE QString secretValue(const QVariantList &secrets, int key) const;
 

@@ -23,6 +23,15 @@ bool flagOf(const QVariantMap &map, const char *key, bool fallback)
     return value.isValid() ? value.toBool() : fallback;
 }
 
+// A JavaScript array (a QStringList would arrive as an array-like object without map/join)
+QVariantList jsList(const QStringList &list)
+{
+    QVariantList out;
+    for (const QString &item : list)
+        out.append(item);
+    return out;
+}
+
 QVariantMap ipToMap(const IpSettingsData &ip)
 {
     QVariantList addresses;
@@ -40,8 +49,8 @@ QVariantMap ipToMap(const IpSettingsData &ip)
         {QStringLiteral("addresses"), addresses},
         {QStringLiteral("gateway"), ip.gateway},
         {QStringLiteral("autoDns"), ip.autoDns},
-        {QStringLiteral("dns"), ip.dns},
-        {QStringLiteral("dnsSearch"), ip.dnsSearch},
+        {QStringLiteral("dns"), jsList(ip.dns)},
+        {QStringLiteral("dnsSearch"), jsList(ip.dnsSearch)},
         {QStringLiteral("autoRoutes"), ip.autoRoutes},
         {QStringLiteral("routes"), routes},
         {QStringLiteral("neverDefault"), ip.neverDefault},

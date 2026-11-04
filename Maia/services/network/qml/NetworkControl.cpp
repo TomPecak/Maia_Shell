@@ -5,6 +5,7 @@
 #include <QJSEngine>
 #include <QPointer>
 #include <QRegularExpression>
+#include <QSysInfo>
 
 #include <arpa/inet.h>
 
@@ -134,6 +135,11 @@ bool NetworkControl::isValidMac(const QString &text) const
 {
     static const QRegularExpression mac(QStringLiteral("^[0-9A-Fa-f]{2}(:[0-9A-Fa-f]{2}){5}$"));
     return mac.match(text.trimmed()).hasMatch();
+}
+
+QString NetworkControl::hostName() const
+{
+    return QSysInfo::machineHostName();
 }
 
 QString NetworkControl::secretValue(const QVariantList &secrets, int key) const
