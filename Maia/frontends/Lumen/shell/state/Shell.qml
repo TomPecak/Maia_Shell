@@ -2,7 +2,6 @@ pragma Singleton
 
 import QtQuick
 
-import Maia.Backend as Maia
 import Maia.Network as Network
 
 // Shared state of the Lumen shell: which flyout is open, the current time, the user
@@ -109,28 +108,35 @@ QtObject {
 
     // --- Session and power ---
 
+    // Maia's session manager (MSessionManager of Maia.Backend), set by shell/Main.qml. This module
+    // is imported by app faces too (Maia Settings), in processes without the shell's backend, and
+    // QML loads every singleton of an imported module: Shell must not import Maia.Backend itself.
+    property var session: null
+
     // Which power actions the system offers (systemd-logind); the power menu shows only these
-    readonly property bool canSuspend: Maia.MSessionManager.canSuspend
-    readonly property bool canReboot: Maia.MSessionManager.canReboot
-    readonly property bool canPowerOff: Maia.MSessionManager.canPowerOff
+    readonly property bool canSuspend: session ? session.canSuspend : false
+    readonly property bool canReboot: session ? session.canReboot : false
+    readonly property bool canPowerOff: session ? session.canPowerOff : false
 
     // action: "logout", "suspend", "reboot" or "shutdown". Maia carries it out (MSessionManager);
     // in a nested development session the power actions are only logged, logind would act on the
     // real machine.
     function powerAction(action) {
         closeFlyouts()
+        if (!session)
+            console.warn("[Lumen] no session manager for", action)
         switch (action) {
         case "logout":
-            Maia.MSessionManager.logout()
+            if (session) session.logout()
             break
         case "suspend":
-            Maia.MSessionManager.suspend()
+            if (session) session.suspend()
             break
         case "reboot":
-            Maia.MSessionManager.reboot()
+            if (session) session.reboot()
             break
         case "shutdown":
-            Maia.MSessionManager.poweroff()
+            if (session) session.poweroff()
             break
         default:
             console.warn("[Lumen] unknown power action:", action)
