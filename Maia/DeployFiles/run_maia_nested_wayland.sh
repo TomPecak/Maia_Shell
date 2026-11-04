@@ -52,12 +52,12 @@ if [ "${MAIA_NESTED_STAGE}" = "inside_kwin" ]; then
             XDG_CONFIG_DIRS XDG_DATA_DIRS SSH_ASKPASS SSH_ASKPASS_REQUIRE
     fi
 
-    # Usługa okien Mai (pasek zadań, dok): w instalacji libexec/maia-windows, w katalogu budowania
-    # cargo/<profil>/maia-windows; MAIA_WINDOWS_SERVICE wskazuje ją jawnie. Kończy się razem z KWinem.
+    # Usługa okien Mai (pasek zadań, dok): w instalacji libexec/maia-windows-service, w katalogu budowania
+    # cargo/<profil>/maia-windows-service; MAIA_WINDOWS_SERVICE wskazuje ją jawnie. Kończy się razem z KWinem.
     # Gniazdo zawiera nazwę WAYLAND_DISPLAY, więc nie koliduje z usługą głównej sesji.
     BIN_DIR="$(dirname "${MAIA_NESTED_APP:-$(readlink -f "$0")}")"
-    for candidate in "${MAIA_WINDOWS_SERVICE}" "${BIN_DIR}/../libexec/maia-windows" \
-                     "${BIN_DIR}/../cargo/release/maia-windows" "${BIN_DIR}/../cargo/debug/maia-windows"; do
+    for candidate in "${MAIA_WINDOWS_SERVICE}" "${BIN_DIR}/../libexec/maia-windows-service" \
+                     "${BIN_DIR}/../cargo/release/maia-windows-service" "${BIN_DIR}/../cargo/debug/maia-windows-service"; do
         if [ -n "${candidate}" ] && [ -x "${candidate}" ]; then
             echo "Uruchamianie usługi okien: ${candidate}"
             "${candidate}" &

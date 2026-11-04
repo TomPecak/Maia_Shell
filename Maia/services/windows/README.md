@@ -5,7 +5,7 @@ compositor; every shell process gets the list and controls the windows through a
 contract.
 
 ```text
- KWin ──org_kde_plasma_window_management──► maia-windows ──Cap'n Proto──► Maia.Windows (QML)
+ KWin ──org_kde_plasma_window_management──► maia-windows-service ──Cap'n Proto──► Maia.Windows (QML)
                                              (service/, Rust)              TasksModel in Lumen's
       ◄──────── set_state, close, ... ──────                ◄── control ── taskbar, Maia's dock
 ```
@@ -18,7 +18,7 @@ Rule: **data and control go through the service; streams and everything tied to 
 | Path | What |
 |---|---|
 | `contract/windows.capnp` | The contract: `WindowService` (info, watch, control, icon), `WindowListener`, `WindowControl`. Read it first. |
-| `service/` | `maia-windows` (Rust, tokio, one thread). |
+| `service/` | `maia-windows-service` (Rust, tokio, one thread). |
 | `service/src/kwin.rs` | KWin backend: the Wayland protocol → `BackendEvent`s, `Command`s → requests. |
 | `service/src/backend.rs` | What a backend and the service exchange (channels; a second compositor = a second backend). |
 | `service/src/model.rs` | The window store: order, changes, last activation (pure logic). |
@@ -67,7 +67,7 @@ The session scripts start the service (`Maia/DeployFiles/run_maia_wayland.sh.in`
 
 ```bash
 KWIN_WAYLAND_NO_PERMISSION_CHECKS=1 kwin_wayland ...   # KWin gives the protocol only to privileged clients
-libexec/maia-windows                                   # socket: $XDG_RUNTIME_DIR/maia/windows-$WAYLAND_DISPLAY.sock
+libexec/maia-windows-service                           # socket: $XDG_RUNTIME_DIR/maia/windows-$WAYLAND_DISPLAY.sock
 ```
 
 `MAIA_WINDOWS_SOCKET` overrides the socket path for both the service and the clients.

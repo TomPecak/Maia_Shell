@@ -1,4 +1,4 @@
-//! maia-windows: the window service of a Maia session.
+//! maia-windows-service: the window service of a Maia session.
 //!
 //! Started by the session script after the compositor; ends with the compositor connection, on
 //! SIGTERM or Ctrl+C. One instance per compositor: the socket name contains $WAYLAND_DISPLAY, so a
@@ -34,7 +34,7 @@ fn bind(path: &PathBuf) -> std::io::Result<tokio::net::UnixListener> {
     if std::os::unix::net::UnixStream::connect(path).is_ok() {
         return Err(std::io::Error::new(
             std::io::ErrorKind::AddrInUse,
-            format!("another maia-windows already serves {}", path.display()),
+            format!("another maia-windows-service already serves {}", path.display()),
         ));
     }
     let _ = std::fs::remove_file(path);
@@ -46,7 +46,7 @@ fn main() -> std::process::ExitCode {
     match runtime.map_err(Into::into).and_then(|runtime| runtime.block_on(run())) {
         Ok(()) => std::process::ExitCode::SUCCESS,
         Err(error) => {
-            eprintln!("maia-windows: {error}");
+            eprintln!("maia-windows-service: {error}");
             std::process::ExitCode::FAILURE
         }
     }
@@ -67,12 +67,12 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
             let service = WindowService::client(hub.clone(), command_sender, kwin::info());
             tokio::task::spawn_local(Hub::run(hub, events));
 
-            eprintln!("maia-windows {} serves {}", env!("CARGO_PKG_VERSION"), path.display());
+            eprintln!("maia-windows-service {} serves {}", env!("CARGO_PKG_VERSION"), path.display());
             let accept = async {
                 loop {
                     match listener.accept().await {
                         Ok((stream, _)) => maia_windows::rpc::serve(stream, service.clone()),
-                        Err(error) => eprintln!("maia-windows: accept: {error}"),
+                        Err(error) => eprintln!("maia-windows-service: accept: {error}"),
                     }
                 }
             };
