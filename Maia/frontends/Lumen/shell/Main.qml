@@ -37,10 +37,11 @@ Window {
     LayerShell.Window.exclusionZone: -1
     LayerShell.Window.keyboardInteractivity: LayerShell.Window.KeyboardInteractivityNone
 
-    // Lumen keeps the decoration the user has (no default of its own); what the user chooses
-    // while Lumen runs is remembered for Lumen (Maia.Appearance)
+    // Lumen's window decoration the first time (assets/decorations/Se7enAero); afterwards what
+    // the user chose while Lumen ran (Maia.Appearance)
     FrontendLook {
         frontend: "Lumen"
+        windowDecoration: "aurorae-svg:Se7enAero"
     }
 
     // The shared Shell state gets the session manager from here (see Shell.session)

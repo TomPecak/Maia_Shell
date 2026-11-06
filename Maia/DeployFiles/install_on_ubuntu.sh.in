@@ -29,6 +29,8 @@ sudo apt install -y --no-install-recommends --no-install-suggests kwin-common
 sudo apt install -y --no-install-recommends --no-install-suggests kwin-data
 # Aurorae (SVG window decorations, engine v2; the decorations of the frontends, e.g. XPLuna's XBoomer)
 sudo apt install -y --no-install-recommends --no-install-suggests kwin-style-aurorae
+# Oxygen window decoration (the Maia frontend's default)
+sudo apt install -y --no-install-recommends --no-install-suggests kwin-decoration-oxygen
 # kwriteconfig6: how the appearance service writes kwinrc
 sudo apt install -y --no-install-recommends --no-install-suggests libkf6config-bin
 sudo apt install -y --no-install-recommends --no-install-suggests kwin-addons

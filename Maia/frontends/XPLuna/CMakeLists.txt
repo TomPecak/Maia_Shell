@@ -46,6 +46,7 @@ qt_add_qml_module(XPLunaFrontend
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/
         DESTINATION "${CMAKE_INSTALL_PREFIX}/frontends/XPLuna"
+        REGEX "/assets/decorations(/|$)" EXCLUDE
 )
 
 # The window decoration of XPLuna (an Aurorae SVG theme) where the compositor finds it:

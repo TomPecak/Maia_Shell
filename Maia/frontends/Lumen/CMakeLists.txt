@@ -75,4 +75,12 @@ qt_add_qml_module(LumenFrontend
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/
     DESTINATION "${CMAKE_INSTALL_PREFIX}/frontends/Lumen"
     PATTERN "CMakeLists.txt" EXCLUDE
+    REGEX "/assets/decorations(/|$)" EXCLUDE
+)
+
+# Lumen's window decoration (Se7enAero, an Aurorae SVG theme by Infinality, GPL-2.0) where the
+# compositor finds it: <prefix>/share is in XDG_DATA_DIRS of a Maia session. FrontendLook in
+# shell/Main.qml makes it Lumen's default (Maia.Appearance).
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/assets/decorations/Se7enAero
+    DESTINATION ${KDE_INSTALL_DATADIR}/aurorae/themes
 )
