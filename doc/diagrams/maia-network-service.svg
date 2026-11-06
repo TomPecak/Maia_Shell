@@ -1,0 +1,419 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1900" height="1816" viewBox="0 0 1900 1816">
+<defs><marker id="end-call" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker><marker id="end-capnp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7c3aed"/></marker><marker id="end-dbus" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2563eb"/></marker><marker id="end-wayland" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#16a34a"/></marker><marker id="end-file" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#ea580c"/></marker><marker id="end-spawn" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#64748b"/></marker><marker id="end-import" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#0284c7"/></marker></defs>
+<rect width="1900" height="1816" fill="#ffffff"/>
+<text x="30.0" y="44.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="24" font-weight="bold" fill="#0f172a" text-anchor="start">maia-network-service: Wi-Fi for a Maia session</text>
+<text x="30.0" y="70.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="14" font-weight="normal" fill="#475569" text-anchor="start">The only Maia process that talks to NetworkManager: the state of Wi-Fi for shells and Maia Settings, their commands, and the session's password dialog (secret agent). Repository: Maia/services/network/</text>
+<text x="30.0" y="100.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="17" font-weight="bold" fill="#0f172a" text-anchor="start">What the service uses</text>
+<text x="30.0" y="119.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#475569" text-anchor="start">system processes, buses and files</text>
+<line x1="30" y1="128" x2="500" y2="128" stroke="#cbd5e1" stroke-width="1.5"/>
+<text x="600.0" y="100.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="17" font-weight="bold" fill="#0f172a" text-anchor="start">The service</text>
+<text x="600.0" y="119.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#475569" text-anchor="start">one process per session, one thread (tokio); nothing blocks</text>
+<line x1="600" y1="128" x2="1290" y2="128" stroke="#cbd5e1" stroke-width="1.5"/>
+<text x="1390.0" y="100.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="17" font-weight="bold" fill="#0f172a" text-anchor="start">The Maia side</text>
+<text x="1390.0" y="119.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#475569" text-anchor="start">the QML module and the processes that load it</text>
+<line x1="1390" y1="128" x2="1870" y2="128" stroke="#cbd5e1" stroke-width="1.5"/>
+<rect x="44" y="202" width="442" height="84" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<rect x="44" y="202" width="5" height="84" rx="2" fill="#0f766e"/>
+<text x="58.0" y="223.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13.5" font-weight="bold" fill="#0f172a" text-anchor="start">Devices and networks</text>
+<rect x="368.8" y="209" width="109.2" height="17" rx="8.5" fill="#0f766e"/>
+<text x="423.4" y="221.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">system component</text>
+<text x="58.0" y="240.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="10.5" font-weight="normal" fill="#64748b" text-anchor="start">org.freedesktop.NetworkManager</text>
+<text x="58.0" y="256.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">Device, Device.Wireless, AccessPoint, ActiveConnection,</text>
+<text x="58.0" y="271.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">IP4Config, IP6Config: properties and their signals</text>
+<rect x="44" y="300" width="442" height="84" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<rect x="44" y="300" width="5" height="84" rx="2" fill="#0f766e"/>
+<text x="58.0" y="321.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13.5" font-weight="bold" fill="#0f172a" text-anchor="start">Saved profiles</text>
+<rect x="368.8" y="307" width="109.2" height="17" rx="8.5" fill="#0f766e"/>
+<text x="423.4" y="319.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">system component</text>
+<text x="58.0" y="338.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="10.5" font-weight="normal" fill="#64748b" text-anchor="start">.../Settings, Settings.Connection</text>
+<text x="58.0" y="354.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">GetSettings, Update, GetSecrets, Delete;</text>
+<text x="58.0" y="369.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">AddAndActivateConnection, ActivateConnection</text>
+<rect x="44" y="398" width="442" height="69" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<rect x="44" y="398" width="5" height="69" rx="2" fill="#0f766e"/>
+<text x="58.0" y="419.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13.5" font-weight="bold" fill="#0f172a" text-anchor="start">Secret agents</text>
+<rect x="368.8" y="405" width="109.2" height="17" rx="8.5" fill="#0f766e"/>
+<text x="423.4" y="417.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">system component</text>
+<text x="58.0" y="436.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="10.5" font-weight="normal" fill="#64748b" text-anchor="start">.../AgentManager</text>
+<text x="58.0" y="452.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">asks the registered agent for passwords (GetSecrets)</text>
+<rect x="30" y="150" width="470" height="333" rx="16" fill="#0f766e" fill-opacity="0.05" stroke="#0f766e" stroke-width="3"/>
+<path d="M30,190 v-24 a16,16 0 0 1 16,-16 h438 a16,16 0 0 1 16,16 v24 z" fill="#0f766e"/>
+<text x="46.0" y="176.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="16" font-weight="bold" fill="#ffffff" text-anchor="start">NetworkManager</text>
+<text x="486.0" y="176.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#ffffff" text-anchor="end">system service (root)</text>
+<rect x="30" y="503" width="470" height="51" rx="25.5" fill="#2563eb" fill-opacity="0.08" stroke="#2563eb" stroke-width="2"/>
+<text x="265.0" y="523.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13" font-weight="bold" fill="#2563eb" text-anchor="middle">System D-Bus</text>
+<text x="265.0" y="539.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11" font-weight="normal" fill="#1e293b" text-anchor="middle">every call and signal above goes over it</text>
+<rect x="44" y="626" width="442" height="84" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<rect x="44" y="626" width="5" height="84" rx="2" fill="#0f766e"/>
+<text x="58.0" y="647.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13.5" font-weight="bold" fill="#0f172a" text-anchor="start">Authorization</text>
+<rect x="368.8" y="633" width="109.2" height="17" rx="8.5" fill="#0f766e"/>
+<text x="423.4" y="645.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">system component</text>
+<text x="58.0" y="664.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="10.5" font-weight="normal" fill="#64748b" text-anchor="start">org.freedesktop.PolicyKit1</text>
+<text x="58.0" y="680.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">NetworkManager asks it before a change (Wi-Fi on/off,</text>
+<text x="58.0" y="695.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">system profiles); it may ask the user (interactive)</text>
+<rect x="30" y="574" width="470" height="152" rx="16" fill="#0f766e" fill-opacity="0.05" stroke="#0f766e" stroke-width="3"/>
+<path d="M30,614 v-24 a16,16 0 0 1 16,-16 h438 a16,16 0 0 1 16,16 v24 z" fill="#0f766e"/>
+<text x="46.0" y="600.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="16" font-weight="bold" fill="#ffffff" text-anchor="start">polkit</text>
+<text x="486.0" y="600.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#ffffff" text-anchor="end">system service</text>
+<path d="M30,746 h452 l18,18 v35 h-470 z" fill="#fff7ed" stroke="#ea580c" stroke-width="1.8"/>
+<path d="M482,746 v18 h18" fill="none" stroke="#ea580c" stroke-width="1.8"/>
+<text x="42.0" y="766.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13" font-weight="bold" fill="#9a3412" text-anchor="start">/proc/sys/kernel/hostname</text>
+<text x="42.0" y="783.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#431407" text-anchor="start">the hotspot's network name when none is given</text>
+<path d="M30,815 h452 l18,18 v65 h-470 z" fill="#fff7ed" stroke="#ea580c" stroke-width="1.8"/>
+<path d="M482,815 v18 h18" fill="none" stroke="#ea580c" stroke-width="1.8"/>
+<text x="42.0" y="835.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13" font-weight="bold" fill="#9a3412" text-anchor="start">kded6rc (Maia's defaults)</text>
+<text x="42.0" y="852.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="10.5" font-weight="normal" fill="#7c2d12" text-anchor="start">&lt;prefix&gt;/etc/xdg/kded6rc</text>
+<text x="42.0" y="867.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#431407" text-anchor="start">turns KDE's networkmanagement agent off in a Maia</text>
+<text x="42.0" y="882.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#431407" text-anchor="start">session: one secret agent per session</text>
+<rect x="618" y="222" width="300" height="99" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<rect x="618" y="222" width="5" height="99" rx="2" fill="#c2410c"/>
+<text x="632.0" y="243.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13.5" font-weight="bold" fill="#0f172a" text-anchor="start">nm.rs</text>
+<rect x="831.8" y="229" width="78.2" height="17" rx="8.5" fill="#c2410c"/>
+<text x="870.9" y="241.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">Rust module</text>
+<text x="632.0" y="260.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="10.5" font-weight="normal" fill="#64748b" text-anchor="start">service/src/nm.rs</text>
+<text x="632.0" y="276.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">NetworkManager backend (zbus): signals mark</text>
+<text x="632.0" y="291.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">objects dirty, re-read 30 ms later; commands</text>
+<text x="632.0" y="306.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">as D-Bus calls (interactive polkit)</text>
+<rect x="618" y="335" width="300" height="99" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<rect x="618" y="335" width="5" height="99" rx="2" fill="#c2410c"/>
+<text x="632.0" y="356.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13.5" font-weight="bold" fill="#0f172a" text-anchor="start">nmsettings.rs</text>
+<rect x="831.8" y="342" width="78.2" height="17" rx="8.5" fill="#c2410c"/>
+<text x="870.9" y="354.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">Rust module</text>
+<text x="632.0" y="373.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="10.5" font-weight="normal" fill="#64748b" text-anchor="start">service/src/nmsettings.rs</text>
+<text x="632.0" y="389.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">profiles (a{sa{sv}}) &lt;-&gt; settings, secrets;</text>
+<text x="632.0" y="404.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">edits keep unknown keys; hotspot, hidden</text>
+<text x="632.0" y="419.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">and Enterprise profiles</text>
+<rect x="618" y="448" width="300" height="69" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<rect x="618" y="448" width="5" height="69" rx="2" fill="#c2410c"/>
+<text x="632.0" y="469.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13.5" font-weight="bold" fill="#0f172a" text-anchor="start">nmdefs.rs</text>
+<rect x="831.8" y="455" width="78.2" height="17" rx="8.5" fill="#c2410c"/>
+<text x="870.9" y="467.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">Rust module</text>
+<text x="632.0" y="486.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="10.5" font-weight="normal" fill="#64748b" text-anchor="start">service/src/nmdefs.rs</text>
+<text x="632.0" y="502.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">NetworkManager's numbers: states, reasons, flags</text>
+<rect x="618" y="531" width="300" height="99" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<rect x="618" y="531" width="5" height="99" rx="2" fill="#c2410c"/>
+<text x="632.0" y="552.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13.5" font-weight="bold" fill="#0f172a" text-anchor="start">agent.rs</text>
+<rect x="831.8" y="538" width="78.2" height="17" rx="8.5" fill="#c2410c"/>
+<text x="870.9" y="550.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">Rust module</text>
+<text x="632.0" y="569.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="10.5" font-weight="normal" fill="#64748b" text-anchor="start">service/src/agent.rs</text>
+<text x="632.0" y="585.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">the secret agent: a D-Bus object</text>
+<text x="632.0" y="600.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">(...NetworkManager.SecretAgent),</text>
+<text x="632.0" y="615.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">registered as org.maia.network</text>
+<rect x="618" y="644" width="300" height="84" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<rect x="618" y="644" width="5" height="84" rx="2" fill="#c2410c"/>
+<text x="632.0" y="665.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13.5" font-weight="bold" fill="#0f172a" text-anchor="start">settings.rs</text>
+<rect x="831.8" y="651" width="78.2" height="17" rx="8.5" fill="#c2410c"/>
+<text x="870.9" y="663.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">Rust module</text>
+<text x="632.0" y="682.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="10.5" font-weight="normal" fill="#64748b" text-anchor="start">service/src/settings.rs</text>
+<text x="632.0" y="698.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">connection settings, secrets, the rules of</text>
+<text x="632.0" y="713.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">passwords (8-63 characters, WEP keys)</text>
+<rect x="618" y="742" width="300" height="84" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<rect x="618" y="742" width="5" height="84" rx="2" fill="#c2410c"/>
+<text x="632.0" y="763.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13.5" font-weight="bold" fill="#0f172a" text-anchor="start">fake.rs</text>
+<rect x="831.8" y="749" width="78.2" height="17" rx="8.5" fill="#c2410c"/>
+<text x="870.9" y="761.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">Rust module</text>
+<text x="632.0" y="780.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="10.5" font-weight="normal" fill="#64748b" text-anchor="start">service/src/fake.rs</text>
+<text x="632.0" y="796.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">a simulated NetworkManager for tests</text>
+<text x="632.0" y="811.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">(MAIA_NETWORK_BACKEND=fake)</text>
+<rect x="972" y="222" width="300" height="69" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<rect x="972" y="222" width="5" height="69" rx="2" fill="#c2410c"/>
+<text x="986.0" y="243.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13.5" font-weight="bold" fill="#0f172a" text-anchor="start">backend.rs</text>
+<rect x="1185.8" y="229" width="78.2" height="17" rx="8.5" fill="#c2410c"/>
+<text x="1224.9" y="241.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">Rust module</text>
+<text x="986.0" y="260.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="10.5" font-weight="normal" fill="#64748b" text-anchor="start">service/src/backend.rs</text>
+<text x="986.0" y="276.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">BackendEvent, Command, Reply: backend &lt;-&gt; hub</text>
+<rect x="972" y="305" width="300" height="84" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<rect x="972" y="305" width="5" height="84" rx="2" fill="#c2410c"/>
+<text x="986.0" y="326.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13.5" font-weight="bold" fill="#0f172a" text-anchor="start">model.rs</text>
+<rect x="1185.8" y="312" width="78.2" height="17" rx="8.5" fill="#c2410c"/>
+<text x="1224.9" y="324.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">Rust module</text>
+<text x="986.0" y="343.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="10.5" font-weight="normal" fill="#64748b" text-anchor="start">service/src/model.rs</text>
+<text x="986.0" y="359.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">access points -&gt; networks (GNOME's order),</text>
+<text x="986.0" y="374.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">saved connections (pure logic)</text>
+<rect x="972" y="403" width="300" height="69" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<rect x="972" y="403" width="5" height="69" rx="2" fill="#c2410c"/>
+<text x="986.0" y="424.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13.5" font-weight="bold" fill="#0f172a" text-anchor="start">throttle.rs</text>
+<rect x="1185.8" y="410" width="78.2" height="17" rx="8.5" fill="#c2410c"/>
+<text x="1224.9" y="422.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">Rust module</text>
+<text x="986.0" y="441.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="10.5" font-weight="normal" fill="#64748b" text-anchor="start">service/src/throttle.rs</text>
+<text x="986.0" y="457.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">at most one change per object every 250 ms</text>
+<rect x="972" y="486" width="300" height="69" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<rect x="972" y="486" width="5" height="69" rx="2" fill="#c2410c"/>
+<text x="986.0" y="507.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13.5" font-weight="bold" fill="#0f172a" text-anchor="start">qr.rs</text>
+<rect x="1185.8" y="493" width="78.2" height="17" rx="8.5" fill="#c2410c"/>
+<text x="1224.9" y="505.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">Rust module</text>
+<text x="986.0" y="524.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="10.5" font-weight="normal" fill="#64748b" text-anchor="start">service/src/qr.rs</text>
+<text x="986.0" y="540.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">the Wi-Fi QR text and matrix (qrcodegen)</text>
+<rect x="972" y="569" width="300" height="69" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<rect x="972" y="569" width="5" height="69" rx="2" fill="#c2410c"/>
+<text x="986.0" y="590.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13.5" font-weight="bold" fill="#0f172a" text-anchor="start">prompt.rs</text>
+<rect x="1185.8" y="576" width="78.2" height="17" rx="8.5" fill="#c2410c"/>
+<text x="1224.9" y="588.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">Rust module</text>
+<text x="986.0" y="607.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="10.5" font-weight="normal" fill="#64748b" text-anchor="start">service/src/prompt.rs</text>
+<text x="986.0" y="623.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">password requests: agent -&gt; the shell</text>
+<rect x="972" y="652" width="300" height="84" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<rect x="972" y="652" width="5" height="84" rx="2" fill="#c2410c"/>
+<text x="986.0" y="673.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13.5" font-weight="bold" fill="#0f172a" text-anchor="start">rpc.rs</text>
+<rect x="1185.8" y="659" width="78.2" height="17" rx="8.5" fill="#c2410c"/>
+<text x="1224.9" y="671.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">Rust module</text>
+<text x="986.0" y="690.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="10.5" font-weight="normal" fill="#64748b" text-anchor="start">service/src/rpc.rs</text>
+<text x="986.0" y="706.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">the hub: snapshot + changes to listeners,</text>
+<text x="986.0" y="721.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">NetworkControl, the shell's SecretPrompter</text>
+<rect x="972" y="750" width="300" height="84" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<rect x="972" y="750" width="5" height="84" rx="2" fill="#c2410c"/>
+<text x="986.0" y="771.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13.5" font-weight="bold" fill="#0f172a" text-anchor="start">main.rs</text>
+<rect x="1185.8" y="757" width="78.2" height="17" rx="8.5" fill="#c2410c"/>
+<text x="1224.9" y="769.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">Rust module</text>
+<text x="986.0" y="788.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="10.5" font-weight="normal" fill="#64748b" text-anchor="start">service/src/main.rs</text>
+<text x="986.0" y="804.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">socket .../maia/network-$WAYLAND_DISPLAY.sock;</text>
+<text x="986.0" y="819.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">backend: networkmanager | fake</text>
+<rect x="600" y="150" width="690" height="700" rx="16" fill="#7c3aed" fill-opacity="0.05" stroke="#7c3aed" stroke-width="3"/>
+<path d="M600,190 v-24 a16,16 0 0 1 16,-16 h658 a16,16 0 0 1 16,16 v24 z" fill="#7c3aed"/>
+<text x="616.0" y="176.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="16" font-weight="bold" fill="#ffffff" text-anchor="start">maia-network-service</text>
+<text x="1276.0" y="176.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#ffffff" text-anchor="end">Maia service (Rust)</text>
+<text x="616.0" y="208.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11" font-weight="normal" fill="#334155" text-anchor="start">Maia/services/network/service/   -&gt;   &lt;prefix&gt;/libexec/maia-network-service</text>
+<rect x="600" y="870" width="690" height="84" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<rect x="600" y="870" width="5" height="84" rx="2" fill="#7c3aed"/>
+<text x="614.0" y="891.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13.5" font-weight="bold" fill="#0f172a" text-anchor="start">network.capnp</text>
+<rect x="1160.4" y="877" width="121.6" height="17" rx="8.5" fill="#7c3aed"/>
+<text x="1221.2" y="889.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">Cap'n Proto schema</text>
+<text x="614.0" y="908.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="10.5" font-weight="normal" fill="#64748b" text-anchor="start">Maia/services/network/contract/network.capnp</text>
+<text x="614.0" y="924.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">NetworkService, NetworkListener, NetworkControl, SecretPrompter; Status, WifiDevice, WifiNetwork,</text>
+<text x="614.0" y="939.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">SavedConnection, ConnectionSettings, Secret, SecretRequest</text>
+<rect x="1404" y="208" width="452" height="84" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<rect x="1404" y="208" width="5" height="84" rx="2" fill="#1d4ed8"/>
+<text x="1418.0" y="229.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13.5" font-weight="bold" fill="#0f172a" text-anchor="start">NetworkConnection</text>
+<rect x="1782.2" y="215" width="65.8" height="17" rx="8.5" fill="#1d4ed8"/>
+<text x="1815.1" y="227.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">C++ class</text>
+<text x="1418.0" y="246.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="10.5" font-weight="normal" fill="#64748b" text-anchor="start">qml/NetworkConnection.h/.cpp</text>
+<text x="1418.0" y="262.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">the Cap'n Proto client (KJ thread); renews the</text>
+<text x="1418.0" y="277.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">prompter registration after a reconnection</text>
+<rect x="1404" y="306" width="452" height="84" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<rect x="1404" y="306" width="5" height="84" rx="2" fill="#1d4ed8"/>
+<text x="1418.0" y="327.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13.5" font-weight="bold" fill="#0f172a" text-anchor="start">NetworkSource</text>
+<rect x="1782.2" y="313" width="65.8" height="17" rx="8.5" fill="#1d4ed8"/>
+<text x="1815.1" y="325.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">C++ class</text>
+<text x="1418.0" y="344.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="10.5" font-weight="normal" fill="#64748b" text-anchor="start">qml/NetworkSource.h/.cpp, NetworkTypes.h</text>
+<text x="1418.0" y="360.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">the network state of the process (GUI thread);</text>
+<text x="1418.0" y="375.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">abstract: the tests fill their own</text>
+<rect x="1404" y="404" width="452" height="84" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<rect x="1404" y="404" width="5" height="84" rx="2" fill="#047857"/>
+<text x="1418.0" y="425.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13.5" font-weight="bold" fill="#0f172a" text-anchor="start">WifiStatus, WifiDevicesModel</text>
+<rect x="1788.4" y="411" width="59.6" height="17" rx="8.5" fill="#047857"/>
+<text x="1818.2" y="423.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">QML type</text>
+<text x="1418.0" y="442.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="10.5" font-weight="normal" fill="#64748b" text-anchor="start">qml/WifiStatus.*, WifiDevicesModel.*</text>
+<text x="1418.0" y="458.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">the state at a glance (toggle, icon, captive portal);</text>
+<text x="1418.0" y="473.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">the adapters, their addresses and speed</text>
+<rect x="1404" y="502" width="452" height="84" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<rect x="1404" y="502" width="5" height="84" rx="2" fill="#047857"/>
+<text x="1418.0" y="523.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13.5" font-weight="bold" fill="#0f172a" text-anchor="start">WifiNetworksModel, SavedNetworksModel</text>
+<rect x="1788.4" y="509" width="59.6" height="17" rx="8.5" fill="#047857"/>
+<text x="1818.2" y="521.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">QML type</text>
+<text x="1418.0" y="540.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="10.5" font-weight="normal" fill="#64748b" text-anchor="start">qml/WifiNetworksModel.*, SavedNetworksModel.*</text>
+<text x="1418.0" y="556.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">networks in reach (GNOME's order), saved profiles;</text>
+<text x="1418.0" y="571.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">connectNetwork, activate, forget</text>
+<rect x="1404" y="600" width="452" height="84" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<rect x="1404" y="600" width="5" height="84" rx="2" fill="#047857"/>
+<text x="1418.0" y="621.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13.5" font-weight="bold" fill="#0f172a" text-anchor="start">SecretPrompt</text>
+<rect x="1788.4" y="607" width="59.6" height="17" rx="8.5" fill="#047857"/>
+<text x="1818.2" y="619.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">QML type</text>
+<text x="1418.0" y="638.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="10.5" font-weight="normal" fill="#64748b" text-anchor="start">qml/SecretPrompt.*</text>
+<text x="1418.0" y="654.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">the password dialog of the session: the shell</text>
+<text x="1418.0" y="669.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">answers NetworkManager's requests</text>
+<rect x="1404" y="698" width="452" height="84" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<rect x="1404" y="698" width="5" height="84" rx="2" fill="#047857"/>
+<text x="1418.0" y="719.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13.5" font-weight="bold" fill="#0f172a" text-anchor="start">NetworkControl, QrCodeView, Network</text>
+<rect x="1788.4" y="705" width="59.6" height="17" rx="8.5" fill="#047857"/>
+<text x="1818.2" y="717.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">QML type</text>
+<text x="1418.0" y="736.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="10.5" font-weight="normal" fill="#64748b" text-anchor="start">qml/NetworkControl.*, SettingsMap.*, QrCodeView.*</text>
+<text x="1418.0" y="752.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">settings and secrets as JavaScript objects, hidden</text>
+<text x="1418.0" y="767.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">and Enterprise networks, hotspot; the QR code; enums</text>
+<rect x="1390" y="150" width="480" height="648" rx="14" fill="#047857" fill-opacity="0.05" stroke="#047857" stroke-width="2.2" stroke-dasharray="9 5"/>
+<text x="1406.0" y="175.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="15" font-weight="bold" fill="#047857" text-anchor="start">Maia.Network</text>
+<text x="1856.0" y="175.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#047857" text-anchor="end">QML module (C++)</text>
+<text x="1406.0" y="194.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11" font-weight="normal" fill="#334155" text-anchor="start">Maia/services/network/qml/  -&gt;  &lt;qml dir&gt;/Maia/Network</text>
+<rect x="1404" y="890" width="452" height="69" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<rect x="1404" y="890" width="5" height="69" rx="2" fill="#0369a1"/>
+<text x="1418.0" y="911.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13.5" font-weight="bold" fill="#0f172a" text-anchor="start">Quick settings: Wi-Fi</text>
+<rect x="1751.2" y="897" width="96.8" height="17" rx="8.5" fill="#0369a1"/>
+<text x="1799.6" y="909.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">QML shell part</text>
+<text x="1418.0" y="928.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="10.5" font-weight="normal" fill="#64748b" text-anchor="start">frontends/Lumen/shell/windows/QuickSettingsWifiPage.qml</text>
+<text x="1418.0" y="944.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">networks, inline password, captive portal</text>
+<rect x="1404" y="973" width="452" height="69" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<rect x="1404" y="973" width="5" height="69" rx="2" fill="#0369a1"/>
+<text x="1418.0" y="994.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13.5" font-weight="bold" fill="#0f172a" text-anchor="start">Shell state, password prompt</text>
+<rect x="1751.2" y="980" width="96.8" height="17" rx="8.5" fill="#0369a1"/>
+<text x="1799.6" y="992.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">QML shell part</text>
+<text x="1418.0" y="1011.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="10.5" font-weight="normal" fill="#64748b" text-anchor="start">frontends/Lumen/shell/state/Shell.qml</text>
+<text x="1418.0" y="1027.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">WifiStatus for the tray icon; SecretPrompt</text>
+<rect x="1390" y="838" width="480" height="220" rx="16" fill="#0284c7" fill-opacity="0.05" stroke="#0284c7" stroke-width="3"/>
+<path d="M1390,878 v-24 a16,16 0 0 1 16,-16 h448 a16,16 0 0 1 16,16 v24 z" fill="#0284c7"/>
+<text x="1406.0" y="864.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="16" font-weight="bold" fill="#ffffff" text-anchor="start">appMaiaServer (Lumen)</text>
+<text x="1856.0" y="864.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#ffffff" text-anchor="end">the shell</text>
+<rect x="1404" y="1130" width="452" height="84" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<rect x="1404" y="1130" width="5" height="84" rx="2" fill="#0369a1"/>
+<text x="1418.0" y="1151.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13.5" font-weight="bold" fill="#0f172a" text-anchor="start">Wi-Fi page</text>
+<rect x="1751.2" y="1137" width="96.8" height="17" rx="8.5" fill="#0369a1"/>
+<text x="1799.6" y="1149.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">QML shell part</text>
+<text x="1418.0" y="1168.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="10.5" font-weight="normal" fill="#64748b" text-anchor="start">apps/settings/pages/network/</text>
+<text x="1418.0" y="1184.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">networks, saved, hidden, hotspot, QR code, the</text>
+<text x="1418.0" y="1199.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">details editor (IPv4/IPv6, security, 802.1X)</text>
+<rect x="1390" y="1078" width="480" height="152" rx="16" fill="#0284c7" fill-opacity="0.05" stroke="#0284c7" stroke-width="3"/>
+<path d="M1390,1118 v-24 a16,16 0 0 1 16,-16 h448 a16,16 0 0 1 16,16 v24 z" fill="#0284c7"/>
+<text x="1406.0" y="1104.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="16" font-weight="bold" fill="#ffffff" text-anchor="start">maia-settings</text>
+<text x="1856.0" y="1104.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#ffffff" text-anchor="end">Maia Settings (app)</text>
+<path d="M486.0,244.0 L512.0,244.0 L512.0,271.5 L618.0,271.5" fill="none" stroke="#2563eb" stroke-width="2.2" marker-end="url(#end-dbus)" marker-start="url(#end-dbus)" stroke-linejoin="round"/>
+<rect x="489.0" y="228.0" width="87.9" height="13" rx="3" fill="#ffffff" fill-opacity="0.92"/>
+<text x="492.0" y="238.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11" font-weight="bold" fill="#2563eb" text-anchor="start">D-Bus: calls,</text>
+<rect x="489.0" y="241.0" width="50.1" height="13" rx="3" fill="#ffffff" fill-opacity="0.92"/>
+<text x="492.0" y="251.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11" font-weight="bold" fill="#2563eb" text-anchor="start">signals</text>
+<path d="M486.0,342.0 L530.0,342.0 L530.0,285.5 L618.0,285.5" fill="none" stroke="#2563eb" stroke-width="2.2" marker-end="url(#end-dbus)" stroke-linejoin="round"/>
+<rect x="489.0" y="326.0" width="37.5" height="13" rx="3" fill="#ffffff" fill-opacity="0.92"/>
+<text x="492.0" y="336.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11" font-weight="bold" fill="#2563eb" text-anchor="start">D-Bus</text>
+<path d="M486.0,432.5 L548.0,432.5 L548.0,580.5 L618.0,580.5" fill="none" stroke="#2563eb" stroke-width="2.2" marker-end="url(#end-dbus)" marker-start="url(#end-dbus)" stroke-linejoin="round"/>
+<rect x="489.0" y="416.5" width="69.0" height="13" rx="3" fill="#ffffff" fill-opacity="0.92"/>
+<text x="492.0" y="426.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11" font-weight="bold" fill="#2563eb" text-anchor="start">GetSecrets</text>
+<path d="M500.0,772.5 L584.0,772.5 L584.0,295.5 L618.0,295.5" fill="none" stroke="#ea580c" stroke-width="2.2" marker-end="url(#end-file)" stroke-linejoin="round"/>
+<rect x="503.0" y="756.5" width="37.5" height="13" rx="3" fill="#ffffff" fill-opacity="0.92"/>
+<text x="506.0" y="766.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11" font-weight="bold" fill="#ea580c" text-anchor="start">reads</text>
+<path d="M265.0,483.0 L265.0,503.0" fill="none" stroke="#2563eb" stroke-width="2.2" marker-end="url(#end-dbus)" stroke-linejoin="round"/>
+<path d="M265.0,554.0 L265.0,574.0" fill="none" stroke="#2563eb" stroke-width="2.2" marker-end="url(#end-dbus)" stroke-linejoin="round"/>
+<rect x="270.0" y="558.0" width="119.4" height="13" rx="3" fill="#ffffff" fill-opacity="0.92"/>
+<text x="273.0" y="568.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11" font-weight="bold" fill="#2563eb" text-anchor="start">CheckAuthorization</text>
+<path d="M768.0,321.0 L768.0,335.0" fill="none" stroke="#334155" stroke-width="2.2" marker-end="url(#end-call)" stroke-linejoin="round"/>
+<path d="M918.0,271.5 L929.0,271.5 L929.0,256.5 L972.0,256.5" fill="none" stroke="#334155" stroke-width="2.2" marker-end="url(#end-call)" stroke-linejoin="round"/>
+<rect x="921.0" y="255.5" width="43.8" height="13" rx="3" fill="#ffffff" fill-opacity="0.92"/>
+<text x="924.0" y="265.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11" font-weight="bold" fill="#334155" text-anchor="start">events</text>
+<path d="M972.0,694.0 L939.0,694.0 L939.0,285.5 L918.0,285.5" fill="none" stroke="#334155" stroke-width="2.2" marker-end="url(#end-call)" stroke-linejoin="round"/>
+<rect x="918.9" y="678.0" width="50.1" height="13" rx="3" fill="#ffffff" fill-opacity="0.92"/>
+<text x="966.0" y="688.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11" font-weight="bold" fill="#334155" text-anchor="end">Command</text>
+<path d="M918.0,580.5 L949.0,580.5 L949.0,603.5 L972.0,603.5" fill="none" stroke="#334155" stroke-width="2.2" marker-end="url(#end-call)" stroke-linejoin="round"/>
+<rect x="921.0" y="564.5" width="50.1" height="13" rx="3" fill="#ffffff" fill-opacity="0.92"/>
+<text x="924.0" y="574.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11" font-weight="bold" fill="#334155" text-anchor="start">request</text>
+<path d="M1122.0,638.0 L1122.0,652.0" fill="none" stroke="#334155" stroke-width="2.2" marker-end="url(#end-call)" stroke-linejoin="round"/>
+<path d="M1272.0,694.0 L1322.0,694.0 L1322.0,250.0 L1404.0,250.0" fill="none" stroke="#7c3aed" stroke-width="2.2" marker-end="url(#end-capnp)" marker-start="url(#end-capnp)" stroke-linejoin="round"/>
+<rect x="1275.0" y="678.0" width="75.3" height="13" rx="3" fill="#ffffff" fill-opacity="0.92"/>
+<text x="1278.0" y="688.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11" font-weight="bold" fill="#7c3aed" text-anchor="start">Cap'n Proto</text>
+<rect x="1275.0" y="691.0" width="43.8" height="13" rx="3" fill="#ffffff" fill-opacity="0.92"/>
+<text x="1278.0" y="701.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11" font-weight="bold" fill="#7c3aed" text-anchor="start">socket</text>
+<path d="M1272.0,708.0 L1358.0,708.0 L1358.0,642.0 L1404.0,642.0" fill="none" stroke="#7c3aed" stroke-width="2.2" marker-end="url(#end-capnp)" stroke-linejoin="round"/>
+<rect x="1275.0" y="724.0" width="43.8" height="13" rx="3" fill="#ffffff" fill-opacity="0.92"/>
+<text x="1278.0" y="734.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11" font-weight="bold" fill="#7c3aed" text-anchor="start">ask(),</text>
+<rect x="1275.0" y="737.0" width="56.4" height="13" rx="3" fill="#ffffff" fill-opacity="0.92"/>
+<text x="1278.0" y="747.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11" font-weight="bold" fill="#7c3aed" text-anchor="start">cancel()</text>
+<path d="M1630.0,292.0 L1630.0,306.0" fill="none" stroke="#334155" stroke-width="2.2" marker-end="url(#end-call)" stroke-linejoin="round"/>
+<path d="M1630.0,390.0 L1630.0,404.0" fill="none" stroke="#334155" stroke-width="2.2" marker-end="url(#end-call)" stroke-linejoin="round"/>
+<path d="M1630.0,798.0 L1630.0,838.0" fill="none" stroke="#0284c7" stroke-width="2.2" stroke-dasharray="7 5" marker-end="url(#end-import)" stroke-linejoin="round"/>
+<rect x="1635.0" y="812.0" width="125.7" height="13" rx="3" fill="#ffffff" fill-opacity="0.92"/>
+<text x="1638.0" y="822.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11" font-weight="bold" fill="#0284c7" text-anchor="start">import Maia.Network</text>
+<rect x="30" y="1270" width="1240" height="260" rx="12" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+<text x="48.0" y="1298.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="17" font-weight="bold" fill="#0f172a" text-anchor="start">API: the functions the service offers (Cap'n Proto contract)</text>
+<text x="50.0" y="1328.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="14" font-weight="bold" fill="#5b21b6" text-anchor="start">NetworkService</text>
+<text x="174.8" y="1328.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11" font-weight="normal" fill="#64748b" text-anchor="start" font-style="italic">the service</text>
+<text x="58.0" y="1346.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11" font-weight="normal" fill="#0f172a" text-anchor="start">info() -&gt; (backend, version)</text>
+<text x="58.0" y="1362.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11" font-weight="normal" fill="#0f172a" text-anchor="start">watch(listener) -&gt; subscription</text>
+<text x="277.7" y="1362.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11" font-weight="normal" fill="#475569" text-anchor="start">a snapshot, then changes</text>
+<text x="58.0" y="1378.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11" font-weight="normal" fill="#0f172a" text-anchor="start">control() -&gt; NetworkControl</text>
+<text x="58.0" y="1394.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11" font-weight="normal" fill="#0f172a" text-anchor="start">registerPrompter(prompter) -&gt; registration</text>
+<text x="351.4" y="1394.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11" font-weight="normal" fill="#475569" text-anchor="start">the shell</text>
+<text x="50.0" y="1420.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="14" font-weight="bold" fill="#5b21b6" text-anchor="start">NetworkListener</text>
+<text x="183.0" y="1420.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11" font-weight="normal" fill="#64748b" text-anchor="start" font-style="italic">implemented by the client</text>
+<text x="58.0" y="1438.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11" font-weight="normal" fill="#0f172a" text-anchor="start">snapshot(snapshot) · statusChanged(status)</text>
+<text x="58.0" y="1454.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11" font-weight="normal" fill="#0f172a" text-anchor="start">deviceChanged / deviceRemoved</text>
+<text x="58.0" y="1470.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11" font-weight="normal" fill="#0f172a" text-anchor="start">networkChanged / networkRemoved</text>
+<text x="58.0" y="1486.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11" font-weight="normal" fill="#0f172a" text-anchor="start">connectionChanged / connectionRemoved</text>
+<text x="58.0" y="1502.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11" font-weight="normal" fill="#0f172a" text-anchor="start">event(activationFailed | connected)</text>
+<text x="463.3" y="1328.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="14" font-weight="bold" fill="#5b21b6" text-anchor="start">NetworkControl</text>
+<text x="588.1" y="1328.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11" font-weight="normal" fill="#64748b" text-anchor="start" font-style="italic">the service</text>
+<text x="471.3" y="1346.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11" font-weight="normal" fill="#0f172a" text-anchor="start">setWirelessEnabled(enabled)</text>
+<text x="471.3" y="1362.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11" font-weight="normal" fill="#0f172a" text-anchor="start">requestScan(deviceId)</text>
+<text x="471.3" y="1378.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11" font-weight="normal" fill="#0f172a" text-anchor="start">connect(networkId)</text>
+<text x="603.9" y="1378.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11" font-weight="normal" fill="#475569" text-anchor="start">saved or new; password via the prompter</text>
+<text x="471.3" y="1394.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11" font-weight="normal" fill="#0f172a" text-anchor="start">activate(uuid, deviceId)</text>
+<text x="471.3" y="1410.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11" font-weight="normal" fill="#0f172a" text-anchor="start">connectWithSettings(device, settings, secrets)</text>
+<text x="485.3" y="1424.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11" font-weight="normal" fill="#475569" text-anchor="start">hidden, Enterprise</text>
+<text x="471.3" y="1440.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11" font-weight="normal" fill="#0f172a" text-anchor="start">disconnect(deviceId) · forget(uuid)</text>
+<text x="471.3" y="1456.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11" font-weight="normal" fill="#0f172a" text-anchor="start">checkConnectivity()</text>
+<text x="610.6" y="1456.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11" font-weight="normal" fill="#475569" text-anchor="start">after a captive portal</text>
+<text x="876.7" y="1328.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="14" font-weight="bold" fill="#5b21b6" text-anchor="start">NetworkControl (continued)</text>
+<text x="1099.9" y="1328.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11" font-weight="normal" fill="#64748b" text-anchor="start" font-style="italic"></text>
+<text x="884.7" y="1346.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11" font-weight="normal" fill="#0f172a" text-anchor="start">settings(uuid) -&gt; settings</text>
+<text x="1070.9" y="1346.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11" font-weight="normal" fill="#475569" text-anchor="start">the details editor</text>
+<text x="884.7" y="1362.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11" font-weight="normal" fill="#0f172a" text-anchor="start">updateSettings(uuid, settings, secrets)</text>
+<text x="884.7" y="1378.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11" font-weight="normal" fill="#0f172a" text-anchor="start">secrets(uuid) -&gt; secrets</text>
+<text x="1057.5" y="1378.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11" font-weight="normal" fill="#475569" text-anchor="start">may ask polkit</text>
+<text x="884.7" y="1394.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11" font-weight="normal" fill="#0f172a" text-anchor="start">qrCode(uuid) -&gt; (text, size, modules)</text>
+<text x="884.7" y="1410.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11" font-weight="normal" fill="#0f172a" text-anchor="start">startHotspot(device, ssid, kind, password)</text>
+<text x="898.7" y="1424.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11" font-weight="normal" fill="#475569" text-anchor="start">-&gt; (uuid, password)</text>
+<text x="884.7" y="1440.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11" font-weight="normal" fill="#0f172a" text-anchor="start">stopHotspot(deviceId)</text>
+<text x="876.7" y="1466.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="14" font-weight="bold" fill="#5b21b6" text-anchor="start">SecretPrompter</text>
+<text x="1001.5" y="1466.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11" font-weight="normal" fill="#64748b" text-anchor="start" font-style="italic">implemented by the shell</text>
+<text x="884.7" y="1484.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11" font-weight="normal" fill="#0f172a" text-anchor="start">ask(request) -&gt; reply</text>
+<text x="1037.4" y="1484.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11" font-weight="normal" fill="#475569" text-anchor="start">cancelled, or the secrets</text>
+<text x="884.7" y="1500.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11" font-weight="normal" fill="#0f172a" text-anchor="start">cancel(id)</text>
+<text x="963.7" y="1500.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11" font-weight="normal" fill="#475569" text-anchor="start">NetworkManager gave up</text>
+<rect x="30" y="1550" width="1240" height="210" rx="12" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+<text x="48.0" y="1578.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="17" font-weight="bold" fill="#0f172a" text-anchor="start">Where the code is (repository)</text>
+<text x="50.0" y="1606.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11.5" font-weight="normal" fill="#0f172a" text-anchor="start">Maia/services/network/contract/network.capnp</text>
+<text x="610.0" y="1606.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">the contract (read it first)</text>
+<text x="50.0" y="1628.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11.5" font-weight="normal" fill="#0f172a" text-anchor="start">Maia/services/network/service/</text>
+<text x="610.0" y="1628.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">the service, Rust crate maia-network-service (tests/, examples/watch.rs, profiles.rs)</text>
+<text x="50.0" y="1650.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11.5" font-weight="normal" fill="#0f172a" text-anchor="start">Maia/services/network/qml/</text>
+<text x="610.0" y="1650.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">Maia.Network, the QML module (tests/tst_networkmodels.cpp)</text>
+<text x="50.0" y="1672.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11.5" font-weight="normal" fill="#0f172a" text-anchor="start">Maia/services/network/docs/gnome-wifi-features.md</text>
+<text x="610.0" y="1672.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">what the interface offers (from GNOME), now and later</text>
+<text x="50.0" y="1694.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11.5" font-weight="normal" fill="#0f172a" text-anchor="start">apps/settings/pages/network/</text>
+<text x="610.0" y="1694.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">the Wi-Fi page of Maia Settings</text>
+<text x="50.0" y="1716.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11.5" font-weight="normal" fill="#0f172a" text-anchor="start">Maia/frontends/Lumen/shell/windows/QuickSettingsWifiPage.qml</text>
+<text x="610.0" y="1716.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">Lumen's quick settings</text>
+<text x="50.0" y="1738.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11.5" font-weight="normal" fill="#0f172a" text-anchor="start">Maia/DeployFiles/etc/xdg/kded6rc</text>
+<text x="610.0" y="1738.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">KDE's secret agent off in Maia sessions</text>
+<rect x="1300" y="1270" width="570" height="516" rx="12" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+<text x="1318.0" y="1298.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="17" font-weight="bold" fill="#0f172a" text-anchor="start">Legend</text>
+<rect x="1320" y="1318" width="42" height="22" rx="7" fill="#7c3aed" fill-opacity="0.05" stroke="#7c3aed" stroke-width="3"/>
+<text x="1374.0" y="1334.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#0f172a" text-anchor="start">a process (its own address space)</text>
+<rect x="1320" y="1348" width="42" height="22" rx="7" fill="#047857" fill-opacity="0.05" stroke="#047857" stroke-width="2" stroke-dasharray="6 4"/>
+<text x="1374.0" y="1364.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#0f172a" text-anchor="start">library loaded into other processes (QML module)</text>
+<rect x="1320" y="1378" width="42" height="22" rx="5" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<rect x="1320" y="1378" width="5" height="22" rx="2" fill="#c2410c"/>
+<text x="1374.0" y="1394.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#0f172a" text-anchor="start">module or class; the tag says which</text>
+<path d="M1320,1408 h30 l12,12 v10 h-42 z" fill="#fff7ed" stroke="#ea580c" stroke-width="1.8"/>
+<text x="1374.0" y="1424.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#0f172a" text-anchor="start">file or directory on disk</text>
+<rect x="1320" y="1438" width="42" height="22" rx="11" fill="#2563eb" fill-opacity="0.08" stroke="#2563eb" stroke-width="2"/>
+<text x="1374.0" y="1454.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#0f172a" text-anchor="start">bus or socket</text>
+<rect x="1320" y="1471" width="42" height="14" rx="4" fill="#7c3aed"/>
+<text x="1374.0" y="1483.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#0f172a" text-anchor="start">Maia service</text>
+<rect x="1320" y="1493" width="42" height="14" rx="4" fill="#0f766e"/>
+<text x="1374.0" y="1505.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#0f172a" text-anchor="start">system process</text>
+<rect x="1320" y="1515" width="42" height="14" rx="4" fill="#0284c7"/>
+<text x="1374.0" y="1527.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#0f172a" text-anchor="start">Maia shell or app (client)</text>
+<rect x="1320" y="1537" width="42" height="14" rx="4" fill="#64748b"/>
+<text x="1374.0" y="1549.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#0f172a" text-anchor="start">child process</text>
+<rect x="1320.0" y="1562" width="78.2" height="17" rx="8.5" fill="#c2410c"/>
+<text x="1359.1" y="1574.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">Rust module</text>
+<rect x="1406.2" y="1562" width="65.8" height="17" rx="8.5" fill="#1d4ed8"/>
+<text x="1439.1" y="1574.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">C++ class</text>
+<rect x="1480.0" y="1562" width="59.6" height="17" rx="8.5" fill="#047857"/>
+<text x="1509.8" y="1574.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">QML type</text>
+<rect x="1547.6" y="1562" width="121.6" height="17" rx="8.5" fill="#7c3aed"/>
+<text x="1608.4" y="1574.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">Cap'n Proto schema</text>
+<rect x="1320.0" y="1586" width="109.2" height="17" rx="8.5" fill="#0f766e"/>
+<text x="1374.6" y="1598.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">system component</text>
+<rect x="1437.2" y="1586" width="47.2" height="17" rx="8.5" fill="#9a3412"/>
+<text x="1460.8" y="1598.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">config</text>
+<rect x="1492.4" y="1586" width="96.8" height="17" rx="8.5" fill="#0369a1"/>
+<text x="1540.8" y="1598.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">QML shell part</text>
+<path d="M1320.0,1626.0 L1362.0,1626.0" fill="none" stroke="#334155" stroke-width="2.2" marker-end="url(#end-call)" stroke-linejoin="round"/>
+<text x="1374.0" y="1630.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#0f172a" text-anchor="start">call inside a process</text>
+<path d="M1320.0,1648.0 L1362.0,1648.0" fill="none" stroke="#7c3aed" stroke-width="2.2" marker-end="url(#end-capnp)" stroke-linejoin="round"/>
+<text x="1374.0" y="1652.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#0f172a" text-anchor="start">Cap'n Proto RPC (Unix socket)</text>
+<path d="M1320.0,1670.0 L1362.0,1670.0" fill="none" stroke="#2563eb" stroke-width="2.2" marker-end="url(#end-dbus)" stroke-linejoin="round"/>
+<text x="1374.0" y="1674.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#0f172a" text-anchor="start">D-Bus</text>
+<path d="M1320.0,1692.0 L1362.0,1692.0" fill="none" stroke="#16a34a" stroke-width="2.2" marker-end="url(#end-wayland)" stroke-linejoin="round"/>
+<text x="1374.0" y="1696.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#0f172a" text-anchor="start">Wayland protocol</text>
+<path d="M1320.0,1714.0 L1362.0,1714.0" fill="none" stroke="#ea580c" stroke-width="2.2" marker-end="url(#end-file)" stroke-linejoin="round"/>
+<text x="1374.0" y="1718.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#0f172a" text-anchor="start">reads / writes a file</text>
+<path d="M1320.0,1736.0 L1362.0,1736.0" fill="none" stroke="#64748b" stroke-width="2.2" stroke-dasharray="7 5" marker-end="url(#end-spawn)" stroke-linejoin="round"/>
+<text x="1374.0" y="1740.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#0f172a" text-anchor="start">starts a process</text>
+<path d="M1320.0,1758.0 L1362.0,1758.0" fill="none" stroke="#0284c7" stroke-width="2.2" stroke-dasharray="7 5" marker-end="url(#end-import)" stroke-linejoin="round"/>
+<text x="1374.0" y="1762.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#0f172a" text-anchor="start">QML import (module loaded into the process)</text>
+</svg>
