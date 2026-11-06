@@ -1,10 +1,12 @@
 import QtQuick
+import org.kde.kirigami as Kirigami
 
 import XPLunaFrontend
 
 Item{
 
     property alias text: buttonText.text
+    // An icon name, URL or QIcon (the window's icon from Maia.Windows)
     property alias source: icon.source
     property int minimumWidth: normalButtonImage.minimumWidth
     property int minimumHeight: normalButtonImage.minimumHeight
@@ -106,7 +108,7 @@ Item{
         rightBottomSource: Qt.resolvedUrl("../../assets/images/taskbar/background_button_pressed_hover/right_bottom.bmp")
     }
 
-    Image{
+    Kirigami.Icon{
         id: icon
         width: 16
         height: 16
@@ -114,8 +116,6 @@ Item{
         anchors.topMargin: 4
         anchors.leftMargin: 10
         anchors.left: parent.left
-        fillMode: Image.PreserveAspectFit
-        sourceSize: Qt.size(width,height)
     }
 
     Text{

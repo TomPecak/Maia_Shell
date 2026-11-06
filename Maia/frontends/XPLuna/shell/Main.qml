@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick3D
 import QtQuick.Effects
 import QtCore
+import org.kde.layershell 1.0 as LayerShell
 
 import Maia.Appearance
 import Maia.Backend
@@ -16,6 +17,15 @@ import "volume"
 
 
 
+// XPLuna's shell on Wayland: this window is the desktop (wallpaper, notes, branding) in the
+// background layer of the compositor, under all windows. The taskbar, the start menu, the volume
+// slider and the session dialogs are layer-shell surfaces of their own (taskbar/, startmenu/,
+// volume/, session/), in the layers that keep them where they belong:
+//
+//   overlay     turn off / log off dialogs (above everything, keyboard to themselves)
+//   top         taskbar (reserves its height), start menu, volume slider (above the taskbar)
+//   windows     applications (maximized ones end at the taskbar)
+//   background  this desktop
 Window {
     id: root
     title: qsTr("Maia Wallpaper")
@@ -25,8 +35,16 @@ Window {
 
     width: Screen.width
     height: Screen.height
-    flags: Qt.Window | Qt.FramelessWindowHint | Qt.WindowStaysOnBottomHint //| Qt.X11BypassWindowManagerHint
-    visibility: Window.FullScreen
+    color: "black"
+    flags: Qt.FramelessWindowHint
+
+    LayerShell.Window.scope: "xpluna-desktop"
+    LayerShell.Window.layer: LayerShell.Window.LayerBackground
+    LayerShell.Window.anchors: LayerShell.Window.AnchorTop | LayerShell.Window.AnchorBottom
+                               | LayerShell.Window.AnchorLeft | LayerShell.Window.AnchorRight
+    // The whole screen, under the taskbar too
+    LayerShell.Window.exclusionZone: -1
+    LayerShell.Window.keyboardInteractivity: LayerShell.Window.KeyboardInteractivityNone
 
     // XPLuna's window decoration the first time; afterwards what the user chose for XPLuna
     FrontendLook {
@@ -39,7 +57,9 @@ Window {
         backend.installIconTheme(Qt.resolvedUrl("../assets/icons/hicolor"))
 
 
-        //unload unesesery kwin effects
+        // Windows XP did not animate windows: KWin's effects are unloaded (through KWin's D-Bus,
+        // also on Wayland). Layer-shell surfaces are in no task list, so nothing has to be hidden
+        // from the taskbar or the switcher any more.
         MWindowManagerX11.unloadEffect("kwin4_effect_fadingpopups")
         MWindowManagerX11.unloadEffect("kwin4_effect_scale")
         MWindowManagerX11.unloadEffect("fadingpopups")
@@ -47,13 +67,6 @@ Window {
         MWindowManagerX11.unloadEffect("cutefish_squash")
         MWindowManagerX11.unloadEffect("cutefish_scale")
         MWindowManagerX11.unloadEffect("cutefish_popups")
-
-
-        MWindowManagerX11.hideFromTaskbar(root, true);
-        MWindowManagerX11.hideFromSwitcher(root, true);
-        MWindowManagerX11.hideFromPager(root, true);
-
-        backend.setX11WindowTypeAsDesktop(root)
     }
 
 
@@ -86,36 +99,6 @@ Window {
         source: "../assets/fonts/NeverMindHandwriting-Medium.ttf"
     }
 
-    Timer {
-        interval:  128 * 5 //Wait 3 seconds to ensure KWin has started, initialize KWin effects.
-        //8ms - FAIL
-        //16ms - FAIL
-        //32ms - FAIL
-        //64ms - FAIL
-        //128ms - OK
-        //256ms - OK
-        //512ms - OK
-        running: false
-        repeat: false
-        onTriggered: {
-            //MWindowManagerX11.reconfigure()
-
-            MWindowManagerX11.unloadEffect("kwin4_effect_fadingpopups")
-            MWindowManagerX11.unloadEffect("kwin4_effect_scale")
-            MWindowManagerX11.unloadEffect("fadingpopups")
-            MWindowManagerX11.unloadEffect("scale")
-            MWindowManagerX11.unloadEffect("cutefish_squash")
-            MWindowManagerX11.unloadEffect("cutefish_scale")
-            MWindowManagerX11.unloadEffect("cutefish_popups")
-
-            MWindowManagerX11.hideFromTaskbar(root, true);
-            MWindowManagerX11.hideFromSwitcher(root, true);
-            MWindowManagerX11.hideFromPager(root, true);
-
-            backend.setX11WindowTypeAsDesktop(root)
-        }
-    }
-
     WallpaperContent {
         id: wallpaper
         anchors.fill: parent
@@ -125,9 +108,13 @@ Window {
                 systemVolumeSlider.visible = false
             if(appMenu.visible)
                 appMenu.visible = false
-            console.log("Wallpapre Left clicked 2")
         }
+        onRightMouseButtonClicked: (x, y) => desktopMenu.openAt(x, y)
 
+    }
+
+    DesktopMenuWindow {
+        id: desktopMenu
     }
 
 
@@ -187,14 +174,10 @@ Window {
 
     TurnOffDialog {
         id: turnOffDialog
-        x: root.x + (root.width - width) / 2
-        y: root.y + (root.height - height) / 2
     }
 
     LogoutDialog {
         id: logOffDialog
-        x: root.x + (root.width - width) / 2
-        y: root.y + (root.height - height) / 2
     }
 
 
@@ -259,19 +242,12 @@ Window {
     //AppMenuPopup{
     AppMenuWindow{
         id: appMenu
-        x: panel.x
-        y: panel.y-height
-
-        width: 380
-        height: 478
-
-        visible: false
 
         onLogoutClicked: {
-            logOffDialog.visibility = Window.FullScreen
+            logOffDialog.visible = true
         }
         onTurnoffClicked: {
-            turnOffDialog.visibility = Window.FullScreen
+            turnOffDialog.visible = true
         }
     }
 
@@ -298,35 +274,21 @@ Window {
     //     height: 200
     // }
 
-    TaskbarContent{
+    TaskbarWindow{
         id: panel
-        anchors.bottom: parent.bottom
-        //anchors.bottomMargin: 100
-        anchors.right: parent.right
-        anchors.left: parent.left
+
+        startMenuOpen: appMenu.visible
 
         onStartPressed: {
             appMenu.visible = !appMenu.visible
         }
-
-        onEndPressed: {
-
-        }
-
-        property size dimensions: Qt.size(width, height)
-        onDimensionsChanged: {
-            backend.reservePanelBottomArea(root, panel.x, panel.y, panel.width, panel.height)
+        onVolumeClicked: {
+            systemVolumeSlider.visible = !systemVolumeSlider.visible
         }
     }
 
-    //SystemVolumePopup{
     SystemVolumeWindow{
         id: systemVolumeSlider
-        x: panel.x + panel.width - width - 20
-        y: panel.y-height
-
-        visible: false
-
     }
 
 
@@ -341,10 +303,11 @@ Window {
         anchors.centerIn: wallpaper
     }
 
+    // Above the taskbar (the desktop reaches under it)
     BrandingLabel {
-        anchors.bottom: panel.top
-        anchors.right: panel.right
-        anchors.bottomMargin: 18
+        anchors.bottom: parent.bottom
+        anchors.right: parent.right
+        anchors.bottomMargin: panel.height + 18
         anchors.rightMargin: 20
     }
 

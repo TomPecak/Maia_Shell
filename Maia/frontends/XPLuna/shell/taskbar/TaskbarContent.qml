@@ -1,5 +1,5 @@
 import QtQuick
-import Maia.Backend
+import Maia.Windows as Windows
 
 Image {
     id: panel
@@ -11,6 +11,8 @@ Image {
 
     signal startPressed()
     signal endPressed()
+    // The speaker of the notification area was clicked (the volume slider)
+    signal volumeClicked()
 
     onInputMenuVisibleChanged: {
         if(inputMenuVisible === false){
@@ -101,11 +103,14 @@ Image {
         spacing: 0
         visible: true
 
-        MTaskbarModel{
+        // One button per window, in the order they were opened. The Maia window service talks
+        // to KWin; the X11 window list of the old model does not exist on Wayland.
+        Windows.TasksModel {
             id: taskbarModel
+
+            groupMode: Windows.TasksModel.GroupDisabled
+            sortMode: Windows.TasksModel.SortManual
         }
-
-
 
         Repeater {
             id: taskbarRepeater
@@ -118,13 +123,13 @@ Image {
                 minimumWidth: taskbarRow.elementMinimumWidth
                 minimumHeight: 25
 
-                text: model.windowName
-                source: model.windowIcon
+                text: model.display
+                source: model.decoration
 
                 width: taskbarRow.elementWidth
                 height: 25
 
-                property bool activeWindow : model.windowActive
+                property bool activeWindow : model.IsActive === true
 
                 //works good with onRelease
                 buttonState: activeWindow ? (buttonMouseArea.containsMouse ? (buttonMouseArea.pressed ? TaskbarButton.ButtonState.Pressed :  TaskbarButton.ButtonState.PressedHover) /* containsMouse = false */: (TaskbarButton.ButtonState.Pressed)) /*activeWindow = false*/: (buttonMouseArea.containsMouse ? (buttonMouseArea.pressed?  TaskbarButton.ButtonState.Pressed : TaskbarButton.ButtonState.NormalHover) /* containsMouse = false */ : (TaskbarButton.ButtonState.Normal))
@@ -134,12 +139,15 @@ Image {
                     anchors.fill: parent
                     hoverEnabled: true
 
-                    // TODO: Here, there is a difference in behavior compared to Windows XP.
-                    //       After pressing the button, the focus and active window are taken
-                    //       over by the panel, which doesn’t happen in Windows XP. I’m not sure
-                    //       how to fix this yet, so I’m leaving the implementation as it is for now.
+                    // As in Windows XP: the active window's button minimizes it, another one
+                    // activates its window. The taskbar takes no keyboard focus (layer shell,
+                    // no keyboard interactivity), so the active window stays active.
                     onReleased: {
-                        backend.activateWindow(model.windowId)
+                        const taskIndex = taskbarModel.makeModelIndex(index)
+                        if (taskButtonNormal.activeWindow)
+                            taskbarModel.requestToggleMinimized(taskIndex)
+                        else
+                            taskbarModel.requestActivate(taskIndex)
                     }
                 }
 
@@ -178,9 +186,7 @@ Image {
 
             MouseArea{
                 anchors.fill: parent
-                onClicked: {
-                    systemVolumeSlider.visible = true
-                }
+                onClicked: panel.volumeClicked()
             }
 
         }
