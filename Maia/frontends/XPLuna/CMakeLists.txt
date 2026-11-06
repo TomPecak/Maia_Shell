@@ -46,4 +46,12 @@ qt_add_qml_module(XPLunaFrontend
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/
         DESTINATION "${CMAKE_INSTALL_PREFIX}/frontends/XPLuna"
+        REGEX "/assets/decorations(/|$)" EXCLUDE
+)
+
+# The window decoration of XPLuna (an Aurorae SVG theme) where the compositor finds it:
+# <prefix>/share is in XDG_DATA_DIRS of a Maia session, so nothing is copied into the user's home.
+# FrontendLook in shell/Main.qml makes it XPLuna's default (Maia.Appearance).
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/assets/decorations/XBoomer
+    DESTINATION ${KDE_INSTALL_DATADIR}/aurorae/themes
 )

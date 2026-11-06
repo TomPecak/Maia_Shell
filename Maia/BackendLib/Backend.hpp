@@ -32,11 +32,8 @@ public:
     //qt version
     Q_PROPERTY(QString qtVersion READ qtVersion CONSTANT)
 
-    Q_INVOKABLE void installAuroraeTheme(const QUrl &themeUrl, bool forceReinstall = false);
     Q_INVOKABLE void installIconTheme(const QUrl &themeUrl, bool forceReinstall = false);
-    Q_INVOKABLE void setAuroraeTheme(const QString themeName);
     Q_INVOKABLE void setIconTheme(const QString themeName); // Added for icon theme application
-    Q_INVOKABLE void setDefaultWindowDecoration();
 
     //mask
     Q_INVOKABLE void addMaskedItem(QQuickItem *item);

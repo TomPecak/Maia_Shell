@@ -2,6 +2,7 @@ import QtCore
 import QtQuick
 import QtQuick.Controls
 
+import Maia.Appearance
 import Maia.Backend
 
 import "contents"
@@ -19,10 +20,15 @@ Window {
     flags: Qt.Window | Qt.FramelessWindowHint | Qt.WindowStaysOnBottomHint //| Qt.X11BypassWindowManagerHint
     visibility: Window.FullScreen
 
+    // Breeze the first time (as GNOME's look is closest to it); afterwards the user's choice
+    FrontendLook {
+        frontend: "Ubuntu 24.04"
+        windowDecoration: "kdecoration:org.kde.breeze"
+    }
+
     Component.onCompleted: {
         //backend.windowManager.reconfigure();
         backend.setX11WindowTypeAsDesktop(root)
-        backend.setDefaultWindowDecoration()
 
         MWindowManagerX11.hideFromTaskbar(root, true);
         MWindowManagerX11.hideFromSwitcher(root, true);

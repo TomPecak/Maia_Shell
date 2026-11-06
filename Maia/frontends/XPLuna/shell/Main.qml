@@ -4,6 +4,7 @@ import QtQuick3D
 import QtQuick.Effects
 import QtCore
 
+import Maia.Appearance
 import Maia.Backend
 
 import XPLunaFrontend
@@ -27,14 +28,16 @@ Window {
     flags: Qt.Window | Qt.FramelessWindowHint | Qt.WindowStaysOnBottomHint //| Qt.X11BypassWindowManagerHint
     visibility: Window.FullScreen
 
-    Component.onCompleted: {
-        backend.installAuroraeTheme(Qt.resolvedUrl("../assets/kwin_themes/XBoomer"))
+    // XPLuna's window decoration the first time; afterwards what the user chose for XPLuna
+    FrontendLook {
+        frontend: "XPLuna"
+        windowDecoration: "aurorae-svg:XBoomer"
+    }
 
+    Component.onCompleted: {
         backend.installIconTheme(Qt.resolvedUrl("../assets/icons/oxygen"))
         backend.installIconTheme(Qt.resolvedUrl("../assets/icons/hicolor"))
 
-        backend.setAuroraeTheme("XBoomer")
-        //backend.setDefaultWindowDecoration()
 
         //unload unesesery kwin effects
         MWindowManagerX11.unloadEffect("kwin4_effect_fadingpopups")

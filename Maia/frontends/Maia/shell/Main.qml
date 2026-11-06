@@ -1,5 +1,6 @@
 import QtQuick
 
+import Maia.Appearance
 import Maia.Backend
 
 Window{
@@ -19,6 +20,13 @@ Window{
 
 
     color: "yellow"
+
+    // Maia's window decoration the first time: Oxygen ("Tlen"); afterwards what the user chose
+    // while Maia ran (Maia.Appearance)
+    FrontendLook {
+        frontend: "Maia"
+        windowDecoration: "kdecoration:org.kde.oxygen"
+    }
 
     MProxyWindow{
         id: topLayer

@@ -21,6 +21,8 @@
 #   MAIA_WINDOWS_SERVICE                  - program usługi okien (domyślnie szukany obok Mai)
 #   MAIA_NETWORK_SERVICE                  - program usługi sieci (domyślnie szukany obok Mai)
 #   MAIA_NETWORK_BACKEND                  - fake (domyślnie): symulowana sieć; networkmanager: prawdziwy
+#   MAIA_APPEARANCE_SERVICE               - program usługi wyglądu (domyślnie szukany obok Mai)
+#   MAIA_APPEARANCE_BACKEND               - kwin (domyślnie): kwinrc z XDG_CONFIG_HOME tej sesji; fake: w pamięci
 #                                           NetworkManager - akcje zmieniają sieć tego komputera, a agent
 #                                           haseł konkuruje z agentem głównej sesji
 
@@ -73,6 +75,18 @@ if [ "${MAIA_NESTED_STAGE}" = "inside_kwin" ]; then
                      "${BIN_DIR}/../cargo/release/maia-network-service" "${BIN_DIR}/../cargo/debug/maia-network-service"; do
         if [ -n "${candidate}" ] && [ -x "${candidate}" ]; then
             echo "Uruchamianie usługi sieci (${MAIA_NETWORK_BACKEND}): ${candidate}"
+            "${candidate}" &
+            break
+        fi
+    done
+
+    # Usługa wyglądu Mai (dekoracje okien). Z backendem kwin zmienia kwinrc w XDG_CONFIG_HOME tej
+    # sesji: przy testach z odizolowanym XDG_CONFIG_HOME nie dotyka ustawień użytkownika, bez niego
+    # zmienia jego dekorację (MAIA_APPEARANCE_BACKEND=fake: nic się nie zmienia).
+    for candidate in "${MAIA_APPEARANCE_SERVICE}" "${BIN_DIR}/../libexec/maia-appearance-service" \
+                     "${BIN_DIR}/../cargo/release/maia-appearance-service" "${BIN_DIR}/../cargo/debug/maia-appearance-service"; do
+        if [ -n "${candidate}" ] && [ -x "${candidate}" ]; then
+            echo "Uruchamianie usługi wyglądu (${MAIA_APPEARANCE_BACKEND:-kwin}): ${candidate}"
             "${candidate}" &
             break
         fi

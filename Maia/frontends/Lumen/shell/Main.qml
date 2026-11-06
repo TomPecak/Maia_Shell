@@ -1,5 +1,6 @@
 import QtQuick
 import org.kde.layershell 1.0 as LayerShell
+import Maia.Appearance
 import Maia.Backend as Maia
 
 import "../apps/files"
@@ -35,6 +36,13 @@ Window {
     // Covers the whole screen, also under the taskbar
     LayerShell.Window.exclusionZone: -1
     LayerShell.Window.keyboardInteractivity: LayerShell.Window.KeyboardInteractivityNone
+
+    // Lumen's window decoration the first time (assets/decorations/Se7enAero); afterwards what
+    // the user chose while Lumen ran (Maia.Appearance)
+    FrontendLook {
+        frontend: "Lumen"
+        windowDecoration: "aurorae-svg:Se7enAero"
+    }
 
     // The shared Shell state gets the session manager from here (see Shell.session)
     Binding {
