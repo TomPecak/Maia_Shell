@@ -336,7 +336,7 @@
 <text x="50.0" y="1459.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11.5" font-weight="normal" fill="#0f172a" text-anchor="start">Maia/services/appearance/qml/</text>
 <text x="610.0" y="1459.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">Maia.Appearance, the QML module (tests/tst_appearance.cpp)</text>
 <text x="50.0" y="1481.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11.5" font-weight="normal" fill="#0f172a" text-anchor="start">Maia/services/appearance/docs/</text>
-<text x="610.0" y="1481.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">architecture.svg, adding-an-area.md, adding-a-compositor.md</text>
+<text x="610.0" y="1481.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">maia-appearance-service.svg (this diagram), adding-an-area.md, adding-a-compositor.md</text>
 <text x="50.0" y="1503.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11.5" font-weight="normal" fill="#0f172a" text-anchor="start">Maia/frontends/*/assets/decorations/</text>
 <text x="610.0" y="1503.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">themes the frontends ship (installed to &lt;prefix&gt;/share/aurorae/themes)</text>
 <text x="50.0" y="1525.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11.5" font-weight="normal" fill="#0f172a" text-anchor="start">Maia/frontends/*/shell/Main.qml</text>

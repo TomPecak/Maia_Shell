@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """The architecture diagrams of Maia's services, one SVG per service.
 
-    python3 doc/diagrams/service_diagrams.py        (from the repository root)
+    python3 <path>/service_diagrams.py              (from any directory)
 
-writes Maia/services/<service>/docs/architecture.svg for the window, network and appearance
-services. Every diagram has the same layout, so one explains the others:
+writes maia-windows-service.svg, maia-network-service.svg and maia-appearance-service.svg
+into the current directory (the repository keeps them in Maia/services/<service>/docs/). Every diagram has the same layout, so one explains the others:
 
     left: what the service uses        middle: the service process      right: the Maia side
     (system processes, buses, files)   (its modules, the contract)      (the QML module, its users)
@@ -20,7 +20,6 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from svgkit import (PROCESS_CHILD, PROCESS_CLIENT, PROCESS_MAIA, PROCESS_SYSTEM, Rect, Svg)  # noqa: E402
 
-ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
 W = 1900
 LX, LW = 30, 470            # left column
@@ -87,11 +86,10 @@ def finish(s, y, api_columns, repo_rows, out):
     s.legend(1320, y + 48)
 
     height = max(y + legend_h, ry + repo_h) + 30
-    path = os.path.join(ROOT, out)
-    os.makedirs(os.path.dirname(path), exist_ok=True)
+    path = os.path.join(os.getcwd(), out)
     with open(path, "w", encoding="utf-8") as f:
         f.write(s.render(height))
-    print("wrote", out)
+    print("wrote", path)
 
 
 # ---------------------------------------------------------------------------------------------
@@ -258,7 +256,7 @@ def windows():
         ("cmake/MaiaRust.cmake, MaiaCapnProto.cmake, MaiaQmlModule.cmake", "builds cargo, the contract and the QML module"),
         ("3rdparty/capnproto/", "Cap'n Proto for C++ (bundled)"),
     ]
-    finish(s, y, api, repo, "Maia/services/windows/docs/architecture.svg")
+    finish(s, y, api, repo, "maia-windows-service.svg")
 
 
 # ---------------------------------------------------------------------------------------------
@@ -459,7 +457,7 @@ def network():
         ("Maia/frontends/Lumen/shell/windows/QuickSettingsWifiPage.qml", "Lumen's quick settings"),
         ("Maia/DeployFiles/etc/xdg/kded6rc", "KDE's secret agent off in Maia sessions"),
     ]
-    finish(s, y, api, repo, "Maia/services/network/docs/architecture.svg")
+    finish(s, y, api, repo, "maia-network-service.svg")
 
 
 # ---------------------------------------------------------------------------------------------
@@ -644,12 +642,12 @@ def appearance():
         ("Maia/services/appearance/contract/", "the contract: common, decorations, appearance .capnp"),
         ("Maia/services/appearance/service/", "the service, Rust crate maia-appearance-service (src/lib.rs: map of the code)"),
         ("Maia/services/appearance/qml/", "Maia.Appearance, the QML module (tests/tst_appearance.cpp)"),
-        ("Maia/services/appearance/docs/", "architecture.svg, adding-an-area.md, adding-a-compositor.md"),
+        ("Maia/services/appearance/docs/", "maia-appearance-service.svg (this diagram), adding-an-area.md, adding-a-compositor.md"),
         ("Maia/frontends/*/assets/decorations/", "themes the frontends ship (installed to <prefix>/share/aurorae/themes)"),
         ("Maia/frontends/*/shell/Main.qml", "FrontendLook: each frontend's default decoration"),
         ("Maia/DeployFiles/run_maia_wayland.sh.in", "starts the service; Maia's share is in XDG_DATA_DIRS"),
     ]
-    finish(s, y, api, repo, "Maia/services/appearance/docs/architecture.svg")
+    finish(s, y, api, repo, "maia-appearance-service.svg")
 
 
 if __name__ == "__main__":
