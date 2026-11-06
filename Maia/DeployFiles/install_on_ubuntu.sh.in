@@ -27,6 +27,10 @@ sudo apt install -y --no-install-recommends --no-install-suggests qt6-wayland
 sudo apt install -y --no-install-recommends --no-install-suggests kwin-common
 # kwin aurorae qml-s data files
 sudo apt install -y --no-install-recommends --no-install-suggests kwin-data
+# Aurorae (SVG window decorations, engine v2; the decorations of the frontends, e.g. XPLuna's XBoomer)
+sudo apt install -y --no-install-recommends --no-install-suggests kwin-style-aurorae
+# kwriteconfig6: how the appearance service writes kwinrc
+sudo apt install -y --no-install-recommends --no-install-suggests libkf6config-bin
 sudo apt install -y --no-install-recommends --no-install-suggests kwin-addons
 
 # Ubuntu 24.10

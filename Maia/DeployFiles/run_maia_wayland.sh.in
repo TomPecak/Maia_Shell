@@ -204,6 +204,19 @@ else
     echo "Brak ${MAIA_OPT_PATH}/libexec/maia-network-service: Wi-Fi w Mai nie zadziała"
 fi
 
+# USŁUGA WYGLĄDU MAI (Maia/services/appearance)
+# maia-appearance-service jako jedyna zna sposób, w jaki KWin przechowuje wygląd (kwinrc, D-Bus):
+# dekoracje okien (wybór, instalacja motywów, wybór zapamiętany dla każdego frontendu), później
+# ikony, kursory i kolory. Shelle i Maia Settings korzystają z niej przez moduł QML Maia.Appearance.
+MAIA_APPEARANCE_PID=""
+if [ -x "${MAIA_OPT_PATH}/libexec/maia-appearance-service" ]; then
+    echo "Uruchamianie usługi wyglądu maia-appearance-service"
+    "${MAIA_OPT_PATH}/libexec/maia-appearance-service" &
+    MAIA_APPEARANCE_PID=$!
+else
+    echo "Brak ${MAIA_OPT_PATH}/libexec/maia-appearance-service: frontendy nie zmienią dekoracji okien"
+fi
+
 export MAIA_LOG_FILE="$HOME/maia_server.log"
 export MAIA_LOG_PORT=50001
 export MAIA_LOG_HOST=127.0.0.1
@@ -235,5 +248,6 @@ echo "Serwer Maia zakończył się (kod ${MAIA_STATUS})"
 
 [ -n "${MAIA_WINDOWS_PID}" ] && kill "${MAIA_WINDOWS_PID}" 2>/dev/null
 [ -n "${MAIA_NETWORK_PID}" ] && kill "${MAIA_NETWORK_PID}" 2>/dev/null
+[ -n "${MAIA_APPEARANCE_PID}" ] && kill "${MAIA_APPEARANCE_PID}" 2>/dev/null
 stop_kde_services
 exit "${MAIA_STATUS}"

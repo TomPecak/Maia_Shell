@@ -54,68 +54,6 @@ void Backend::installIconTheme(const QUrl &themeUrl, bool forceReinstall)
     installDirInternal(themeUrl, targetInstallDirPath, forceReinstall);
 }
 
-void Backend::installAuroraeTheme(const QUrl &themeUrl, bool forceReinstall)
-{
-    qDebug() << __PRETTY_FUNCTION__ << themeUrl;
-
-    // Docelowa lokalizacja: $HOME/.local/share/aurorae/themes
-    QString targetInstallDirPath = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + QStringLiteral("/aurorae/themes");
-    installDirInternal(themeUrl, targetInstallDirPath, forceReinstall);
-}
-
-void Backend::setAuroraeTheme(const QString themeName)
-{
-    qDebug() << "Attempting to set Aurorae theme to:" << themeName;
-
-#warning "This operation is not asynchronous"
-
-    // Step 1: Verify that the theme exists
-    QString themePath = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + QStringLiteral("/aurorae/themes/") + themeName;
-    QDir themeDir(themePath);
-    if (!themeDir.exists()) {
-        qDebug() << "Aurorae theme directory does not exist at:" << themePath;
-        // Attempt to reinstall from stored URL
-        QSettings settings;
-        settings.beginGroup("[Installed_themes_URLs]");
-        QString savedUrl = settings.value(themeName, QStringLiteral("")).toString();
-        settings.endGroup();
-        if (!savedUrl.isEmpty()) {
-            qDebug() << "Attempting to reinstall missing Aurorae theme:" << themeName << "from URL:" << savedUrl;
-            QUrl themeUrl(savedUrl);
-            installAuroraeTheme(themeUrl, true); // Force reinstall
-            if (!themeDir.exists()) {
-                qDebug() << "[ERROR] Failed to reinstall Aurorae theme:" << themeName;
-                Q_EMIT themeReinstallationFailed(themeName);
-                return;
-            }
-        } else {
-            qDebug() << "[ERROR] No URL found in settings for Aurorae theme:" << themeName;
-            Q_EMIT themeReinstallationFailed(themeName);
-            return;
-        }
-    }
-
-    // Step 2: Verify metadata
-    if (!themeDir.exists(QStringLiteral("metadata.desktop"))) {
-        qDebug() << "[ERROR] Invalid Aurorae theme: metadata.desktop not found in" << themePath;
-        Q_EMIT themeReinstallationFailed(themeName);
-        return;
-    }
-
-    // Step 3: Update kwinrc configuration using KSharedConfig
-    KSharedConfig::Ptr config = KSharedConfig::openConfig(QStringLiteral("kwinrc"), KConfig::SimpleConfig);
-    KConfigGroup decorationGroup(config, QStringLiteral("org.kde.kdecoration2"));
-    decorationGroup.writeEntry(QStringLiteral("theme"), QStringLiteral("__aurorae__svg__%1").arg(themeName));
-    decorationGroup.writeEntry(QStringLiteral("library"), QStringLiteral("org.kde.kwin.aurorae"));
-    if (!config->sync()) {
-        qDebug() << "[ERROR] Failed to save kwinrc configuration for theme:" << themeName;
-        Q_EMIT themeReinstallationFailed(themeName);
-        return;
-    }
-
-    qDebug() << "Successfully updated kwinrc with theme:" << themeName;
-}
-
 void Backend::setIconTheme(const QString themeName)
 {
     qDebug() << "Attempting to set icon theme to:" << themeName;
@@ -162,27 +100,6 @@ void Backend::setIconTheme(const QString themeName)
     }
 
     qDebug() << "Successfully set icon theme to:" << themeName;
-}
-
-void Backend::setDefaultWindowDecoration()
-{
-    qDebug() << "Attempting to set default window decoration";
-
-#warning "This operation is not asynchronous"
-
-    // Step 1: Update kwinrc configuration using KSharedConfig
-    KSharedConfig::Ptr config = KSharedConfig::openConfig(QStringLiteral("kwinrc"), KConfig::SimpleConfig);
-    KConfigGroup decorationGroup(config, QStringLiteral("org.kde.kdecoration2"));
-
-    // Delete the entire [org.kde.kdecoration2] group to reset to default
-    decorationGroup.deleteGroup();
-
-    if (!config->sync()) {
-        qDebug() << "[ERROR] Failed to save kwinrc configuration after removing [org.kde.kdecoration2]";
-        return;
-    }
-
-    qDebug() << "Successfully removed [org.kde.kdecoration2] group from kwinrc to use default window decoration";
 }
 
 bool Backend::copyLocalDirectory(const QString &sourcePath, const QString &targetPath)
