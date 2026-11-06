@@ -10,6 +10,8 @@ Image {
     source: Qt.resolvedUrl("../../assets/images/images/xp_fhd.jpg")
 
     signal leftMouseButtonClicked()
+    // The desktop menu opens at this point (desktop/DesktopMenuWindow.qml)
+    signal rightMouseButtonClicked(real x, real y)
 
     // Button{
     //     anchors.centerIn: parent
@@ -26,7 +28,7 @@ Image {
         onClicked: (mouse)=> {
                        if (mouse.button === Qt.RightButton) {
                            console.log("Wallpaper Right clicked 1 !!")
-                           recentAppsContextMenu.popup(mouse.x, mouse.y)
+                           wallpaper.rightMouseButtonClicked(mouse.x, mouse.y)
                        }
                        if (mouse.button === Qt.LeftButton) {
                            console.log("Wallpaper Left clicked 1 !!")
@@ -51,9 +53,6 @@ Image {
 
 
 
-    MFrontendModel{
-        id: frontendManager
-    }
 
     // ListView {
     //     id: frontendListView
@@ -106,88 +105,6 @@ Image {
     //     ScrollBar.vertical: ScrollBar {}
     // }
 
-    XPMenu {
-        id: recentAppsContextMenu
-        z: 1
-        x: 100
-        y: 100
-        //width: 127
-        //height: 135 + 17
-        visible: true
-        popupType: Popup.Window
-
-        XPMenuItem {
-            text: qsTr("Arrange Icons By")
-            active: false
-            onTriggered: {
-            }
-        }
-
-        XPMenuItem {
-            text: qsTr("Refresh")
-            active: false
-        }
-
-        XPMenu {
-            id: frontendSubmenu
-            title: qsTr("Change Frontend")
-            //height: 40
-            enabled: frontendsInstantiator.count > 0
-
-            Instantiator {
-                id: frontendsInstantiator
-                model: frontendManager
-                delegate: XPMenuItem {
-                    text: model.frontendName
-                    active: !model.frontendActive
-                    onTriggered: {
-                        console.log("1-- onTrigger() new frontend = " + model.frontendId)
-                        frontendManager.activeFrontend = model.frontendId
-                    }
-                }
-
-                onObjectAdded: (index, object) => frontendSubmenu.insertItem(index, object)
-                onObjectRemoved: (index, object) => frontendSubmenu.removeItem(object)
-            }
-        }
-
-        XPMenuSeparator{
-        }
-
-        XPMenuItem {
-            text: "Paste"
-            active: false
-        }
-
-        XPMenuItem {
-            text: "Paste Shortcut"
-            active: false
-        }
-
-        XPMenuSeparator{
-        }
-
-        XPMenuItem {
-            text: "New"
-            active: false
-        }
-
-        // XPMenu {
-        //     title: "New"
-        //     //active: false
-        //     //     Action { text: "Find Next" }
-        //     //     Action { text: "Find Previous" }
-        //     //     Action { text: "Replace" }
-        // }
-
-        XPMenuSeparator{
-        }
-
-        XPMenuItem {
-            text: "Properties"
-            active: false
-        }
-    }
 
     Column{
         anchors.left: parent.left

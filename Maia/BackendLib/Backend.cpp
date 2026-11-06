@@ -13,7 +13,6 @@
 #include <QIcon>
 #include <QStringLiteral>
 
-#include <KX11Extras>
 #include <KConfig>
 #include <KConfigGroup>
 #include <KSharedConfig>
@@ -28,7 +27,6 @@ Backend::Backend(QString homeEnv, QObject *parent)
     , m_measureCpuLoad(false)
     , HOME_ENV(homeEnv)
     , mask(this)
-    , strutManager(this)
 {
     m_platformName = QGuiApplication::platformName();
     if (m_platformName == QStringLiteral("xcb")) {
@@ -177,23 +175,6 @@ bool Backend::copyQrcDirectory(const QString &sourcePath, const QString &targetP
     return true;
 }
 
-void Backend::activateWindow(WId win)
-{
-    KX11Extras::activateWindow(win);
-}
-
-void Backend::minimalizeAllWindows()
-{
-    if (m_platformName == u"X11") {
-        const QList<WId> windows = KX11Extras::windows();
-        for (const WId &windowId : windows) {
-            KX11Extras::minimizeWindow(windowId);
-        }
-    } else {
-        qDebug() << "Minimize all windows is not supported on this platform.";
-    }
-}
-
 void Backend::startApplication(const QString &id) {}
 
 void Backend::startProcess(const QString &proc)
@@ -231,89 +212,6 @@ void Backend::runCommand(const QString &cmd)
     process.setArguments(filteredArgs);
     process.setProcessEnvironment(env);
     process.startDetached();
-}
-
-void Backend::reservePanelLeftArea(QQuickWindow *window, int x, int y, int width, int height)
-{
-    strutManager.reservePanelLeftArea(window, x, y, width, height);
-}
-
-void Backend::reservePanelRightArea(QQuickWindow *window, int x, int y, int width, int height)
-{
-    strutManager.reservePanelRightArea(window, x, y, width, height);
-}
-
-void Backend::reservePanelTopArea(QQuickWindow *window, int x, int y, int width, int height)
-{
-    strutManager.reservePanelTopArea(window, x, y, width, height);
-}
-
-void Backend::reservePanelBottomArea(QQuickWindow *window, int x, int y, int width, int height)
-{
-    strutManager.reservePanelBottomArea(window, x, y, width, height);
-}
-
-void Backend::setX11WindowTypeAsNormal(QQuickWindow *window)
-{
-    if (window) {
-        KX11Extras::setType(window->winId(), NET::WindowType::Normal);
-    }
-}
-
-void Backend::setX11WindowTypeAsDesktop(QQuickWindow *window)
-{
-    if (window) {
-        KX11Extras::setType(window->winId(), NET::WindowType::Desktop);
-    }
-}
-
-void Backend::setX11WindowTypeAsDock(QQuickWindow *window)
-{
-    if (window) {
-        KX11Extras::setType(window->winId(), NET::WindowType::Dock);
-    }
-}
-
-void Backend::setX11WindowTypeAsToolbar(QQuickWindow *window)
-{
-    if (window) {
-        KX11Extras::setType(window->winId(), NET::WindowType::Toolbar);
-    }
-}
-
-void Backend::setX11WindowTypeAsMenu(QQuickWindow *window)
-{
-    if (window) {
-        KX11Extras::setType(window->winId(), NET::WindowType::Menu);
-    }
-}
-
-void Backend::setX11WindowTypeAsOverride(QQuickWindow *window)
-{
-    if (window) {
-        KX11Extras::setType(window->winId(), NET::WindowType::Override);
-    }
-}
-
-void Backend::setX11WindowTypeAsTopMenu(QQuickWindow *window)
-{
-    if (window) {
-        KX11Extras::setType(window->winId(), NET::WindowType::TopMenu);
-    }
-}
-
-void Backend::setX11WindowTypeAsPopupMenu(QQuickWindow *window)
-{
-    if (window) {
-        KX11Extras::setType(window->winId(), NET::WindowType::PopupMenu);
-    }
-}
-
-void Backend::setX11WindowTypeAsNotification(QQuickWindow *window)
-{
-    if (window) {
-        KX11Extras::setType(window->winId(), NET::WindowType::Notification);
-    }
 }
 
 QString Backend::platformName() const

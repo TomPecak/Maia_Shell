@@ -16,9 +16,6 @@ Item {
 
     signal appsItemClicked(var mouse)
 
-    MTaskbarModel{
-        id: taskbarModel
-    }
 
     ApplicationModel{
         id: appModel

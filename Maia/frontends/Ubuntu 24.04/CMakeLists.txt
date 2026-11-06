@@ -11,17 +11,7 @@ qt_standard_project_setup(REQUIRES ${REQUIRED_QT_VERSION})
 qt_add_library(GnomeFrontend STATIC)
 
 set(GNOME_QML_FILES
-        shell/Main.qml
-
-        shell/SidePanelContent.qml
-
         common_qml/ActionButton.qml
-
-        shell/contents/AppLauncherContent.qml
-        shell/contents/ControlBoardContent.qml
-        shell/contents/TopPanelContent.qml
-
-        shell/popups/ControlBoardPopup.qml
 
         style/UIStyle.qml
         style/GMenu.qml
@@ -29,8 +19,17 @@ set(GNOME_QML_FILES
         style/GMenuSeparator.qml
         style/GTextField.qml
 
-        shell/windows/AppsLauncherWindow.qml
-        shell/windows/ControlBoardWindow.qml
+        # shell, one directory per part of the GUI; every part is a Wayland layer-shell surface
+        shell/Main.qml
+        shell/desktop/DesktopMenuWindow.qml
+        shell/toppanel/TopPanelWindow.qml
+        shell/toppanel/TopPanelContent.qml
+        shell/dock/SidePanelWindow.qml
+        shell/dock/SidePanelContent.qml
+        shell/controlboard/ControlBoardWindow.qml
+        shell/controlboard/ControlBoardContent.qml
+        shell/launcher/AppsLauncherWindow.qml
+        shell/launcher/AppLauncherContent.qml
 )
 
 qt_add_qml_module(GnomeFrontend

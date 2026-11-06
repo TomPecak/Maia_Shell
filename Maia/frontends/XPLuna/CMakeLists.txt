@@ -22,8 +22,10 @@ set(XPLUNA_QML_FILES
     # shell, one directory per part of the GUI
     shell/Main.qml
     shell/desktop/WallpaperContent.qml
+    shell/desktop/DesktopMenuWindow.qml
     shell/desktop/StickyNotes.qml
     shell/desktop/BrandingLabel.qml
+    shell/taskbar/TaskbarWindow.qml
     shell/taskbar/TaskbarContent.qml
     shell/taskbar/TaskbarButton.qml
     shell/startmenu/AppMenuWindow.qml

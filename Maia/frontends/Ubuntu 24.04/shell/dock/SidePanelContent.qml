@@ -1,6 +1,8 @@
 import QtQuick
 import QtQuick.Controls
+import org.kde.kirigami as Kirigami
 import Maia.Backend
+import Maia.Windows as Windows
 
 import GnomeFrontend
 
@@ -134,8 +136,13 @@ Rectangle{
             color: "#464646"
         }
 
-        MTaskbarModel{
+        // The open windows (the Maia window service; it talks to KWin, the old model was the
+        // list of X11 windows)
+        Windows.TasksModel {
             id: taskbarModel
+
+            groupMode: Windows.TasksModel.GroupDisabled
+            sortMode: Windows.TasksModel.SortManual
         }
 
         Repeater {
@@ -148,13 +155,21 @@ Rectangle{
                 height: width
                 hoverEnabled: true
 
-                icon.source: model.windowIcon
-                icon.width: 48
-                icon.height: 48
+                readonly property bool activeWindow: model.IsActive === true
+
+                // The window's icon is a QIcon: drawn by Kirigami.Icon
+                contentItem: Item {
+                    Kirigami.Icon {
+                        anchors.centerIn: parent
+                        width: 48
+                        height: 48
+                        source: model.decoration
+                    }
+                }
 
                 background: Rectangle{
                     anchors.fill: parent
-                    color: taskButton.hovered ? (taskButton.down ? "#3cffffff" : "#1cffffff") : ("#00000000")
+                    color: taskButton.activeWindow ? "#2cffffff" : taskButton.hovered ? (taskButton.down ? "#3cffffff" : "#1cffffff") : ("#00000000")
                     border.width: 0
                     radius: 12
 
@@ -167,8 +182,13 @@ Rectangle{
                     }
                 }
 
+                // As Ubuntu's dock: the active window minimizes, another one is activated
                 onClicked: {
-                    backend.activateWindow(model.windowId)
+                    const taskIndex = taskbarModel.makeModelIndex(index)
+                    if (taskButton.activeWindow)
+                        taskbarModel.requestToggleMinimized(taskIndex)
+                    else
+                        taskbarModel.requestActivate(taskIndex)
                 }
 
                 // Text{
@@ -192,7 +212,7 @@ Rectangle{
         anchors.leftMargin: 3
         height: allProgramsButton.width
 
-        icon.source: "../assets/images/launcher.svg"
+        icon.source: "../../assets/images/launcher.svg"
         icon.height: allProgramsButton.height - 30
         icon.width: allProgramsButton.height - 30
 

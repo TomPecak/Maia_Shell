@@ -5,7 +5,6 @@
 #include <QDBusPendingReply>
 #include <QElapsedTimer>
 
-#include <KX11Extras>
 
 WindowManagerX11Service::WindowManagerX11Service(QObject *parent)
     : QObject(parent)
@@ -117,30 +116,6 @@ void WindowManagerX11Service::reconfigure()
         Q_EMIT reconfigureFinished(success); // Emit signal with success information
         watcher->deleteLater();
     });
-}
-
-void WindowManagerX11Service::hideFromTaskbar(WId winId, bool hide)
-{
-    if (hide)
-        KX11Extras::setState(winId, NET::SkipTaskbar);
-    else
-        KX11Extras::clearState(winId, NET::SkipTaskbar);
-}
-
-void WindowManagerX11Service::hideFromPager(WId winId, bool hide)
-{
-    if (hide)
-        KX11Extras::setState(winId, NET::SkipPager);
-    else
-        KX11Extras::clearState(winId, NET::SkipPager);
-}
-
-void WindowManagerX11Service::hideFromSwitcher(WId winId, bool hide)
-{
-    if (hide)
-        KX11Extras::setState(winId, NET::SkipSwitcher);
-    else
-        KX11Extras::clearState(winId, NET::SkipSwitcher);
 }
 
 void WindowManagerX11Service::handleKwinConfigReloaded()

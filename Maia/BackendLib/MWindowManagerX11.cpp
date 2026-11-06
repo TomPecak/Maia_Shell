@@ -52,57 +52,6 @@ void MWindowManagerX11::unloadEffect(const QString &effectName)
     connect(watcher, &QDBusPendingCallWatcher::finished, this, &MWindowManagerX11::onCallFinished);
 }
 
-void MWindowManagerX11::hideFromTaskbar(const QWindow *window, const bool hide)
-{
-    //qDebug() << __PRETTY_FUNCTION__;
-
-    if (!window)
-        return;
-
-    if (!m_dbusInterface->isValid()) {
-        qDebug() << "[ERROR] D-Bus is not available for hideFromTaskbar!";
-        return;
-    }
-
-    QDBusPendingCall call = m_dbusInterface->asyncCall(QStringLiteral("hideFromTaskbar"), window->winId(), hide);
-    QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(call, this);
-    connect(watcher, &QDBusPendingCallWatcher::finished, this, &MWindowManagerX11::onCallFinished);
-}
-
-void MWindowManagerX11::hideFromPager(const QWindow *window, const bool hide)
-{
-    qDebug() << __PRETTY_FUNCTION__;
-
-    if (!window)
-        return;
-
-    if (!m_dbusInterface->isValid()) {
-        qDebug() << "D-Bus is not available for hideFromPager!";
-        return;
-    }
-
-    QDBusPendingCall call = m_dbusInterface->asyncCall(QStringLiteral("hideFromPager"), window->winId(), hide);
-    QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(call, this);
-    connect(watcher, &QDBusPendingCallWatcher::finished, this, &MWindowManagerX11::onCallFinished);
-}
-
-void MWindowManagerX11::hideFromSwitcher(const QWindow *window, const bool hide)
-{
-    qDebug() << __PRETTY_FUNCTION__;
-
-    if (!window)
-        return;
-
-    if (!m_dbusInterface->isValid()) {
-        qDebug() << "D-Bus is not available for hideFromSwitcher!";
-        return;
-    }
-
-    QDBusPendingCall call = m_dbusInterface->asyncCall(QStringLiteral("hideFromSwitcher"), window->winId(), hide);
-    QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(call, this);
-    connect(watcher, &QDBusPendingCallWatcher::finished, this, &MWindowManagerX11::onCallFinished);
-}
-
 void MWindowManagerX11::onCallFinished(QDBusPendingCallWatcher *watcher)
 {
     QDBusPendingReply<> reply = *watcher;

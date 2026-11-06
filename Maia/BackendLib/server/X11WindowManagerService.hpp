@@ -20,9 +20,6 @@ Q_SIGNALS:
 public Q_SLOTS:
     void unloadEffect(const QString &effectName);
     void reconfigure();
-    void hideFromTaskbar(WId winId, bool hide);
-    void hideFromPager(WId winId, bool hide);
-    void hideFromSwitcher(WId winId, bool hide);
 
 private Q_SLOTS:
     void handleKwinConfigReloaded();

@@ -1,15 +1,26 @@
 import QtCore
 import QtQuick
 import QtQuick.Controls
+import org.kde.layershell 1.0 as LayerShell
 
 import Maia.Appearance
 import Maia.Backend
 
-import "contents"
 import GnomeFrontend
-import "popups"
-import "windows"
+import "controlboard"
+import "desktop"
+import "dock"
+import "launcher"
+import "toppanel"
 
+// The Ubuntu 24.04 shell on Wayland: this window is the desktop (wallpaper) in the background
+// layer of the compositor, under all windows. The panels and popups are layer-shell surfaces of
+// their own, in the layers that keep them where they belong:
+//
+//   overlay     desktop menu and its dialog (desktop/)
+//   top         top bar (reserves 29 px), dock (reserves 66 px), control board, app grid
+//   windows     applications (maximized ones fill what the bars leave)
+//   background  this desktop
 Window {
     id: root
     title: qsTr("Maia")
@@ -17,22 +28,21 @@ Window {
 
     width: Screen.width
     height: Screen.height
-    flags: Qt.Window | Qt.FramelessWindowHint | Qt.WindowStaysOnBottomHint //| Qt.X11BypassWindowManagerHint
-    visibility: Window.FullScreen
+    color: "black"
+    flags: Qt.FramelessWindowHint
+
+    LayerShell.Window.scope: "ubuntu-desktop"
+    LayerShell.Window.layer: LayerShell.Window.LayerBackground
+    LayerShell.Window.anchors: LayerShell.Window.AnchorTop | LayerShell.Window.AnchorBottom
+                               | LayerShell.Window.AnchorLeft | LayerShell.Window.AnchorRight
+    // The whole screen, under the bars too
+    LayerShell.Window.exclusionZone: -1
+    LayerShell.Window.keyboardInteractivity: LayerShell.Window.KeyboardInteractivityNone
 
     // Breeze the first time (as GNOME's look is closest to it); afterwards the user's choice
     FrontendLook {
         frontend: "Ubuntu 24.04"
         windowDecoration: "kdecoration:org.kde.breeze"
-    }
-
-    Component.onCompleted: {
-        //backend.windowManager.reconfigure();
-        backend.setX11WindowTypeAsDesktop(root)
-
-        MWindowManagerX11.hideFromTaskbar(root, true);
-        MWindowManagerX11.hideFromSwitcher(root, true);
-        MWindowManagerX11.hideFromPager(root, true);
     }
 
     FontLoader {
@@ -45,149 +55,9 @@ Window {
         source: "../assets/fonts/NeverMindHandwriting-Medium.ttf"
     }
 
-    MFrontendModel{
-        id: frontendManager
+    DesktopMenuWindow {
+        id: desktopMenu
     }
-
-    Settings {
-        id: settings
-        category: "ThemeInstallationWarning"
-        property bool dontShowAgain: false // Default false – dialog will be visible on first switch
-    }
-
-    // Warning Dialog – shows only once, on first frontend switch
-    Dialog {
-        id: warningDialog
-        title: qsTr("First Frontend Switch")
-        standardButtons: Dialog.Ok | Dialog.Cancel
-        modal: true
-        parent: Overlay.overlay  // Uses Overlay for better positioning in fullscreen
-        width: 400
-        anchors.centerIn: parent
-        property string pendingFrontendId: ""
-
-        contentItem: Text {
-            //width: warningDialog.availableWidth
-            wrapMode: Text.WordWrap
-            color: "red"
-            font.bold: true
-            text: qsTr("Welcome to Maia Shell! The first switch to a new frontend may take up to 5 minutes, " +
-                       "as it installs icons, themes, and other resources. This is a one-time setup – " +
-                       "please be patient and don't interrupt. Ready to proceed?")
-        }
-
-        onAccepted: {
-            // Switch frontend and mark warning as shown
-            frontendManager.activeFrontend = warningDialog.pendingFrontendId
-            settings.dontShowAgain = true
-            warningDialog.pendingFrontendId = ""  // Clear
-        }
-
-        onRejected: {
-            // Cancel – do not switch, clear pending
-            warningDialog.pendingFrontendId = ""
-        }
-    }
-
-    GMenu {
-        id: contextMenu
-        //width: 209
-        popupType: Popup.Window
-
-        GMenuItem {
-            text: "New Folder"
-            active: false
-        }
-        GMenuSeparator{}
-        GMenuItem {
-            text: "Paste"
-            active: false
-        }
-        GMenuSeparator{}
-        GMenuItem {
-            text: "Select All"
-            active: false
-        }
-        GMenuSeparator{}
-        GMenu {
-            id: frontendSubmenu
-            title: "Change Frontend"
-            //height: 100
-
-            enabled: frontendsInstantiator.count > 0
-
-            Instantiator {
-                id: frontendsInstantiator
-                model: frontendManager
-                delegate: GMenuItem {
-                    text: model.frontendName
-                    active: !model.frontendActive
-                    onTriggered: {
-                        console.log("1-- onTrigger() new frontend = " + model.frontendId)
-
-                        // Check if this is the first switch – if so, show dialog
-                        if (!settings.dontShowAgain) {
-                            warningDialog.pendingFrontendId = model.frontendId
-                            warningDialog.open()
-                        } else {
-                            // If already seen, switch immediately
-                            frontendManager.activeFrontend = model.frontendId
-                        }
-                    }
-                }
-
-                onObjectAdded: (index, object) => frontendSubmenu.insertItem(index, object)
-                onObjectRemoved: (index, object) => frontendSubmenu.removeItem(object)
-            }
-        }
-        GMenuSeparator{}
-        GMenuItem {
-            text: "Arrange Icons"
-            active: false
-        }
-        GMenuItem {
-            text: "Arrange By..."
-            active: false
-        }
-        GMenuSeparator{}
-        GMenuItem {
-            text: "Show Desktop in Files"
-            active: false
-        }
-        GMenuItem {
-            text: "Open In Terminal"
-            active: false
-        }
-        GMenuSeparator{}
-        GMenuItem {
-            text: "Change Background..."
-            active: false
-        }
-        GMenuSeparator{}
-        GMenuItem {
-            text: "Desktop Icons Settings"
-            active: false
-        }
-        GMenuItem { text: "Display Settings"
-            active: false
-        }
-    }
-
-    Timer {
-        id: initTimer
-        interval: 1 //wait for 1000ms to ensure that kwin has started
-        running: true
-        repeat: false
-        onTriggered: {
-            // turn off kwin panel effects
-            backend.setX11WindowTypeAsDesktop(root);
-
-            MWindowManagerX11.hideFromTaskbar(root, true);
-            MWindowManagerX11.hideFromSwitcher(root, true);
-            MWindowManagerX11.hideFromPager(root, true);
-        }
-    }
-
 
     Image {
         id: wallpaper
@@ -209,7 +79,7 @@ Window {
                            }
 
                            if (mouse.button === Qt.RightButton){
-                               contextMenu.popup()
+                               desktopMenu.openAt(mouse.x, mouse.y)
                                //recentAppsContextMenu.popup()
                            }
                        }
@@ -221,72 +91,31 @@ Window {
     }
 
 
-    //ControlBoardPopup{
     ControlBoardWindow{
         id: controlBoard
-        x: Screen.width - width - 6
-        y: topPanel.height + 6
-        visible: false
-        //flags: Qt.FramelessWindowHint
     }
 
-    TopPanelContent{
+    TopPanelWindow{
         id: topPanel
 
-        x:0
-        y:0
-        width: root.width
-        height: 29
-        visible: true
-
         controlBoardVisible: controlBoard.visible
-
-
-        property size dimensions: Qt.size(width, height)
-        onDimensionsChanged: {
-            backend.reservePanelTopArea(root, topPanel.x, topPanel.y, topPanel.width, topPanel.height)
-        }
 
         onClicked: {
             controlBoard.visible = !controlBoard.visible
         }
     }
 
-    SidePanelContent{
+    SidePanelWindow{
         id: sidePanel
-        x:0
-        y: 29
-        width: 66
-        height: root.height - sidePanel.y
-        visible: true
-
-        property size dimensions: Qt.size(width, height)
-        onDimensionsChanged: {
-            backend.reservePanelLeftArea(root, sidePanel.x, sidePanel.y, sidePanel.width, sidePanel.height)
-        }
 
         onLauncherButtonClicked: {
-            appLauncherWindow.proxyVisible = ! appLauncherWindow.proxyVisible
+            appLauncherWindow.visible = !appLauncherWindow.visible
         }
     }
 
-    MProxyWindow{
+    AppsLauncherWindow{
         id: appLauncherWindow
-        source: "windows/AppsLauncherWindow.qml"
-        //source: Qt.resolvedUrl("windows/AppsLauncherWindow.qml")
-        proxyVisible: false
-        anchors.right: parent.right
-        anchors.left: parent.left
-        anchors.top: parent.top
-        anchors.bottom: parent.bottom
-        swapInterval: 1
-
-        onProxyVisibleChanged: {
-            console.log("9999999999999999 PROXY VISIBLE CHANGED !! proxyVisible = " + appLauncherWindow.proxyVisible)
-        }
     }
-
-
 
     // RemoteWindow{
     //     source: "../AppsLauncherWindow.qml"
@@ -313,7 +142,6 @@ Window {
     //     visible: false
     //     //flags: Qt.FramelessWindowHint
     //     Component.onCompleted: {
-    //         //backend.setX11WindowTypeAsDock(controlBoard);
     //     }
     // }
 
@@ -327,7 +155,6 @@ Window {
 
     //     property size dimensions: Qt.size(width, height)
     //     onDimensionsChanged: {
-    //         backend.reservePanelLeftArea(root, sidePanel.x, sidePanel.y, sidePanel.width, sidePanel.height)
     //     }
 
     //     onLauncherButtonClicked: {

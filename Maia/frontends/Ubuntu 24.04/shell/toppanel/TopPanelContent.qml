@@ -1,6 +1,5 @@
 import QtQuick
 import GnomeFrontend
-import ".."
 
 Rectangle{
     id: topPanel
