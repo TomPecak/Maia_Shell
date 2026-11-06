@@ -5,12 +5,14 @@ import QtQuick.Layouts
 import Maia.Backend
 
 import GnomeFrontend
-import ".."
 
 Rectangle {
     id: root
 
     implicitWidth: 370
+    // The height with the expanding row open (states "expanded"): the window reserves it, so the
+    // card can grow without the layer-shell surface being resized
+    readonly property int expandedHeight: height - expandRect_1.height + 297
     //height: 327
     height: row_1.height + expandRect_1.height + row_2.height + row_2.anchors.topMargin + row_3.height + row_3.anchors.topMargin + row_4.height + row_4.anchors.topMargin + row_5.height + row_5.anchors.topMargin + row_6.height + row_6.anchors.topMargin + 2*19
 

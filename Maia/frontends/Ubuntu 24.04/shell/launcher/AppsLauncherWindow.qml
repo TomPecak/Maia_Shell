@@ -1,34 +1,44 @@
 import QtQuick
-import Maia.Backend
-import "../contents"
+import org.kde.layershell 1.0 as LayerShell
 
+// The app grid ("Show Apps"): a layer-shell surface anchored to all edges without an exclusion
+// zone of its own, so the compositor fits it between the top bar and the dock, as GNOME's overview.
+// It takes the keyboard (the search field) and closes when an app is started, on Escape or when
+// it loses the focus.
+//
+// Open and close it with `visible`.
 Window {
     id: root
-    //flags:  Qt.Popup
-    flags: Qt.Window | Qt.FramelessWindowHint
-    color: "pink"
-    visible: true
-    height: 100
-    width: 100
 
-    modality: Qt.NonModal
+    width: Screen.width
+    height: Screen.height
+    color: "#222222"
+    flags: Qt.FramelessWindowHint
+    visible: false
 
-    // Component.onCompleted: {
-    //     MWindowManagerX11.hideFromTaskbar(root, true);
-    //     MWindowManagerX11.hideFromSwitcher(root, true);
-    //     MWindowManagerX11.hideFromPager(root, true);
-    // }
+    LayerShell.Window.scope: "ubuntu-app-launcher"
+    LayerShell.Window.layer: LayerShell.Window.LayerTop
+    LayerShell.Window.anchors: LayerShell.Window.AnchorTop | LayerShell.Window.AnchorBottom
+                               | LayerShell.Window.AnchorLeft | LayerShell.Window.AnchorRight
+    LayerShell.Window.exclusionZone: 0
+    LayerShell.Window.keyboardInteractivity: LayerShell.Window.KeyboardInteractivityOnDemand
+    LayerShell.Window.activateOnShow: true
 
-    Timer {
-        id: initTimer
-        interval: 3*128 //Wait 3 seconds to ensure KWin has started, initialize KWin effects.
-        running: true
-        repeat: false
-        onTriggered: {
-            MWindowManagerX11.hideFromTaskbar(root, true);
-            MWindowManagerX11.hideFromSwitcher(root, true);
-            MWindowManagerX11.hideFromPager(root, true);
-        }
+    property bool hadFocus: false
+
+    onVisibleChanged: hadFocus = false
+
+    onActiveChanged: {
+        if (active)
+            hadFocus = true
+        else if (hadFocus && visible)
+            visible = false
+    }
+
+    Shortcut {
+        sequence: "Escape"
+        enabled: root.visible
+        onActivated: root.visible = false
     }
 
     AppLauncherContent{
