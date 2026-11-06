@@ -44,11 +44,6 @@ Window {
             appMenuContent.visible = false
     }
 
-    Component.onCompleted: {
-        //backend.setX11WindowTypeAsTopMenu(root)
-        backend.setX11WindowTypeAsNotification(root)
-    }
-
     Rectangle{
         id: backgroundRect
         anchors.fill: parent

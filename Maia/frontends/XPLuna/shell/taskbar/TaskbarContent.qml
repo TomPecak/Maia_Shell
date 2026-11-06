@@ -61,7 +61,6 @@ Image {
                 panel.startPressed()
 
                 if(inputMenuVisible){
-                    //backend.minimalizeAllWindows()
                     startImage.source = "../../assets/images/images/start_pressed.bmp";
                 }else{
                     if (containsMouse) {

@@ -21,10 +21,6 @@ Window {
     color: "pink"
     flags: Qt.WindowStaysOnBottomHint
 
-    Component.onCompleted: {
-        backend.setX11WindowTypeAsDesktop(root)
-    }
-
     WindowOverlay{
 
     }

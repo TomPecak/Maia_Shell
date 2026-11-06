@@ -12,7 +12,6 @@
 #include <QProcess>
 
 #include "./private/Mask.hpp"
-#include "./strut/StrutManager.hpp"
 
 class Backend : public QObject {
     Q_OBJECT
@@ -40,8 +39,6 @@ public:
     Q_INVOKABLE void removeMaskedItem(QQuickItem *item);
 
     //window management
-    Q_INVOKABLE void activateWindow(WId win);
-    Q_INVOKABLE void minimalizeAllWindows();
 
     //process
     Q_INVOKABLE void startApplication(const QString &id);
@@ -49,20 +46,7 @@ public:
     Q_INVOKABLE void runCommand(const QString &cmd);
 
     //panel location
-    Q_INVOKABLE void reservePanelLeftArea(QQuickWindow *window, int x, int y, int width, int height);
-    Q_INVOKABLE void reservePanelRightArea(QQuickWindow *window, int x, int y, int width, int height);
-    Q_INVOKABLE void reservePanelTopArea(QQuickWindow *window, int x, int y, int width, int height);
-    Q_INVOKABLE void reservePanelBottomArea(QQuickWindow *window, int x, int y, int width, int height);
 
-    Q_INVOKABLE void setX11WindowTypeAsNormal(QQuickWindow *window);
-    Q_INVOKABLE void setX11WindowTypeAsDesktop(QQuickWindow *window);
-    Q_INVOKABLE void setX11WindowTypeAsDock(QQuickWindow *window);
-    Q_INVOKABLE void setX11WindowTypeAsToolbar(QQuickWindow *window);
-    Q_INVOKABLE void setX11WindowTypeAsMenu(QQuickWindow *window);
-    Q_INVOKABLE void setX11WindowTypeAsOverride(QQuickWindow *window);
-    Q_INVOKABLE void setX11WindowTypeAsTopMenu(QQuickWindow *window);
-    Q_INVOKABLE void setX11WindowTypeAsPopupMenu(QQuickWindow *window);
-    Q_INVOKABLE void setX11WindowTypeAsNotification(QQuickWindow *window);
 
     //platform info
     QString platformName() const;
@@ -98,7 +82,6 @@ private:
     QString HOME_ENV;
     QString m_platformName;
     Mask mask;
-    StrutManager strutManager;
 
     //cpu load variables
     float m_cpuLoad = 0.0f;

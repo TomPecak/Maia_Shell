@@ -142,7 +142,6 @@ Window {
     //     visible: false
     //     //flags: Qt.FramelessWindowHint
     //     Component.onCompleted: {
-    //         //backend.setX11WindowTypeAsDock(controlBoard);
     //     }
     // }
 
@@ -156,7 +155,6 @@ Window {
 
     //     property size dimensions: Qt.size(width, height)
     //     onDimensionsChanged: {
-    //         backend.reservePanelLeftArea(root, sidePanel.x, sidePanel.y, sidePanel.width, sidePanel.height)
     //     }
 
     //     onLauncherButtonClicked: {

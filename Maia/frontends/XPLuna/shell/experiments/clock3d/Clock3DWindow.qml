@@ -13,19 +13,6 @@ Window {
 
     color: "#00000000"
 
-    Timer {
-        interval: 1 //czekaj 3 sekund zeby upewnić sie ze kwin sie uruchomił, inicjuj efekty kwin
-        running: true
-        repeat: false
-        onTriggered: {
-            MWindowManagerX11.hideFromTaskbar(root, true);
-            MWindowManagerX11.hideFromSwitcher(root, true);
-            MWindowManagerX11.hideFromPager(root, true);
-
-            backend.setX11WindowTypeAsToolbar(root)
-        }
-    }
-
     Clock3DContent{
         anchors.fill: parent
     }

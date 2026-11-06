@@ -20,7 +20,6 @@
 #include <MSessionManager.hpp>
 #include <Backend.hpp>
 #include <BackendAppsIconsProvider.hpp>
-#include <TaskbarIconProvider.hpp>
 #include <helper/Process.hpp>
 #include <private/ProxyWindowServer.hpp>
 #include <server/FrontendModules.hpp>
@@ -178,7 +177,6 @@ int main(int argc, char *argv[])
         //INIT QML ENGINE ICON PROVIDERS
         //the engine takes ownership of image providers and deletes them in its destructor
         engine.addImageProvider(QLatin1String("backend_app_icon"), new BackendAppsIconsProvider);
-        engine.addImageProvider(QLatin1String("backendTaskbarIcons"), new TaskbarIconsProvider);
         engine.addImageProvider(QStringLiteral("icontheme"), new IconThemeProvider());
 
         //INIT QML ENGINE CONTEXT PROPERTIES

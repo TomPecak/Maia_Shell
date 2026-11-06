@@ -58,8 +58,6 @@ Window{
 	}
 
 	DockWindow{
-		x: root.width/2 - width/2
-		y: root.height - height - 6
 		visible: true
 
 		onAppsItemClicked: {
@@ -89,9 +87,6 @@ Window{
 	}
 
 	StatusbarWindow{
-		x: 0
-		y: 0
-		width: root.width
 		wallpaperUrl: wallpaper.source //pass wallpaper Url to Statusbar
 
 		visible: !appLauncherWindow.visible

@@ -7,7 +7,6 @@
 #include "../MAudioBackend.hpp"
 #include "../Backend.hpp"
 #include "../BackendAppsIconsProvider.hpp"
-#include "../TaskbarIconProvider.hpp"
 #include "FavoriteAppsListModel.hpp"
 #include "FrontendModules.hpp"
 

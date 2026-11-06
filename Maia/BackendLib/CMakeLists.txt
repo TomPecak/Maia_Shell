@@ -50,8 +50,6 @@ qt_add_qml_module(${PROJECT_NAME}
     AppsListModel.cpp
 
     SOURCES BackendAppsIconsProvider.hpp
-    SOURCES TaskbarIconProvider.hpp
-    SOURCES TaskbarIconProvider.cpp
     SOURCES MAudioBackend.hpp
     SOURCES MAudioBackend.cpp
     SOURCES ThemesModel.hpp
@@ -72,19 +70,12 @@ qt_add_qml_module(${PROJECT_NAME}
     SOURCES private/MaskAlgorithm.cpp
     SOURCES private/WindowInputMask.hpp
     SOURCES private/WindowInputMask.cpp
-    SOURCES strut/Strut.hpp
-    SOURCES strut/StrutManager.hpp
-    SOURCES strut/StrutManager.cpp
     SOURCES MSessionManager.hpp
     SOURCES MSessionManager.cpp
     SOURCES server/SessionService.hpp
     SOURCES server/SessionService.cpp
     SOURCES server/Server.hpp
     SOURCES server/Server.cpp
-    SOURCES MTaskbarModel.hpp
-    SOURCES MTaskbarModel.cpp
-    SOURCES MTaskbarBaseModel.hpp
-    SOURCES MTaskbarBaseModel.cpp
     SOURCES MFrontendModel.hpp
     SOURCES MFrontendModel.cpp
     SOURCES server/FrontendManagerService.hpp
