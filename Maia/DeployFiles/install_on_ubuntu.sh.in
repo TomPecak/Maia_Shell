@@ -34,6 +34,10 @@ sudo apt install -y --no-install-recommends --no-install-suggests kwin-decoratio
 # kwriteconfig6: how the appearance service writes kwinrc
 sudo apt install -y --no-install-recommends --no-install-suggests libkf6config-bin
 sudo apt install -y --no-install-recommends --no-install-suggests kwin-addons
+# The "Maia (Wayfire)" session: the Wayfire compositor, and wpctl for the volume keys of its
+# wayfire.ini (WirePlumber)
+sudo apt install -y --no-install-recommends --no-install-suggests wayfire
+sudo apt install -y --no-install-recommends --no-install-suggests wireplumber
 
 # Ubuntu 24.10
 # additional dependencies for kwin
@@ -42,7 +46,7 @@ sudo apt install -y --no-install-recommends --no-install-suggests kwin-addons
 # Ubuntu 26.04
 sudo apt install -y kglobalacceld breeze libkf6kcmutils-bin
 # Qt platform theme plugin for KDE sessions. With KDE_FULL_SESSION and KDE_SESSION_VERSION set
-# (run_maia_wayland.sh) Qt selects the KDE theme, and without this plugin kwin_wayland crashes
+# (run_maia_kwin.sh, run_maia_wayfire.sh) Qt selects the KDE theme, and without this plugin kwin_wayland crashes
 # at startup on Ubuntu (Kubuntu has it preinstalled)
 sudo apt install -y --no-install-recommends --no-install-suggests plasma-integration
 
@@ -79,7 +83,8 @@ sudo mkdir -p "/opt/Maia"
 sudo cp -v -r "$(dirname "$0")/${MAIA_DIR_NAME}" "${MAIA_OPT_PATH}"
 
 # Set executable permissions for specific scripts
-sudo chmod +x "${MAIA_OPT_PATH}/bin/run_maia_wayland.sh"
+sudo chmod +x "${MAIA_OPT_PATH}/bin/run_maia_kwin.sh"
+sudo chmod +x "${MAIA_OPT_PATH}/bin/run_maia_wayfire.sh"
 sudo chmod +x "${MAIA_OPT_PATH}/bin/run_logger.sh"
 sudo chmod +x "${MAIA_OPT_PATH}/bin/run_maia_nested_wayland.sh"
 
@@ -93,11 +98,24 @@ sudo chmod -R 777 "/opt/Maia"
 sudo rm -v -f "/usr/share/xsessions/maia_${VERSION}-desktop.desktop"
 sudo rm -v -f "/usr/share/xsessions/maia_${VERSION}-xsession.desktop"
 
-# COPY WAYLAND STARTUP DESKTOP FILE
+# THE SESSIONS OF SDDM: "Maia <version> (KWin)" and "Maia <version> (Wayfire)"
 sudo mkdir -p "/usr/share/wayland-sessions"
-# Używamy osobnego, wygenerowanego pliku dla Wayland!
-sudo cp -v "$(dirname "$0")/${MAIA_DIR_NAME}/bin/maia_${VERSION}-wayland.desktop" "/usr/share/wayland-sessions/"
-sudo chmod 777 "/usr/share/wayland-sessions/maia_${VERSION}-wayland.desktop"
+# The session of earlier builds ("Maia <version> (Wayland)", run_maia_wayland.sh) is the KWin one now
+sudo rm -v -f "/usr/share/wayland-sessions/maia_${VERSION}-wayland.desktop"
+for SESSION in kwin wayfire; do
+    sudo cp -v "$(dirname "$0")/${MAIA_DIR_NAME}/bin/maia_${VERSION}-${SESSION}.desktop" "/usr/share/wayland-sessions/"
+    sudo chmod 777 "/usr/share/wayland-sessions/maia_${VERSION}-${SESSION}.desktop"
+done
+
+# The Wayfire session needs two Wayfire plugins that are not part of Maia (yet): they are built and
+# installed from their own projects (wayfire-aurorae, wayfire-plasma-window-management)
+WAYFIRE_PLUGIN_DIR="$(pkg-config --variable=plugindir wayfire 2>/dev/null || echo /usr/lib/x86_64-linux-gnu/wayfire)"
+for PLUGIN in aurorae plasma-window-management; do
+    if [ ! -e "${WAYFIRE_PLUGIN_DIR}/lib${PLUGIN}.so" ]; then
+        echo "WARNING: the Wayfire plugin ${PLUGIN} is not installed (${WAYFIRE_PLUGIN_DIR}/lib${PLUGIN}.so):"
+        echo "         the Maia (Wayfire) session will lack it"
+    fi
+done
 
 
 ## Check for available updates (equivalent to apt update)

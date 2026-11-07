@@ -50,7 +50,7 @@ qt_add_qml_module(maia-settings
 target_include_directories(maia-settings PRIVATE src)
 # Maia::FrontendModules: the frontend module symlink, the same rule as the shell
 target_link_libraries(maia-settings PRIVATE Qt6::Core Qt6::Gui Qt6::Qml Qt6::Quick Qt6::QuickControls2 Qt6::Network
-    Maia::FrontendModules)
+    Maia::FrontendModules Maia::Paths)
 maia_target_qml_import_dir(maia-settings)
 target_compile_definitions(maia-settings PRIVATE
     MAIA_VERSION_STRING="${MAIA_VERSION}"

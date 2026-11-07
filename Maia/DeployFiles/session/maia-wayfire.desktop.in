@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=Maia @MAIA_VERSION@ (Wayfire)
+Comment=Maia desktop on the Wayfire compositor
+Exec=/opt/Maia/Maia_@MAIA_VERSION@/bin/run_maia_wayfire.sh
+TryExec=/opt/Maia/Maia_@MAIA_VERSION@/bin/run_maia_wayfire.sh
+Type=Application
+DesktopNames=Maia

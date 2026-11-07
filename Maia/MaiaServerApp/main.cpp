@@ -23,6 +23,7 @@
 #include <helper/Process.hpp>
 #include <private/ProxyWindowServer.hpp>
 #include <FrontendModules.hpp>
+#include <MaiaPaths.hpp>
 #include <server/Server.hpp>
 
 #include <QtQml/qqmlextensionplugin.h>
@@ -87,8 +88,8 @@ int main(int argc, char *argv[])
     //     qputenv("QSG_USE_SIMPLE_ANIMATION_DRIVER", "1");
 
     //INIT APPLICATION
-    QGuiApplication::setApplicationName(QStringLiteral("Maia_%1").arg(QStringLiteral(MAIA_VERSION_STRING)));
-    QGuiApplication::setOrganizationName(QStringLiteral("Maia"));
+    // QSettings and QML's Settings {} use ~/.config/maia/<version>/maia.conf
+    MaiaPaths::setupApplicationNames();
     QtWebEngineQuick::initialize();
 
     QGuiApplication app(argc, argv);

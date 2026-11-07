@@ -13,6 +13,7 @@
 
 #include <cmake_config.h>
 #include "../maia_version.h"
+#include <MaiaPaths.hpp>
 
 
 FrontendManagerService::FrontendManagerService(QObject *parent) :
@@ -213,8 +214,7 @@ QString FrontendManagerService::readActiveFronted()
 {
 #warning "this code is not asynchronous"
 
-    KSharedConfig::Ptr config = KSharedConfig::openConfig(QStringLiteral("./Maia/maiarc_")
-                                                          + QStringLiteral(MAIA_VERSION_STRING));
+    KSharedConfig::Ptr config = KSharedConfig::openConfig(MaiaPaths::configFile(QStringLiteral("maiarc")));
     KConfigGroup group = config->group(QStringLiteral("FrontendManagerService"));
     return group.readEntry("activeFrontendId", QString());
 }
@@ -225,8 +225,7 @@ void FrontendManagerService::saveActiveFronted(const QString &frontedId)
 
     // Save activeFrontendId to KSharedConfig
     KSharedConfig::Ptr config = KSharedConfig::openConfig(
-        QStringLiteral("./Maia/maiarc_")
-        + QStringLiteral(MAIA_VERSION_STRING)); // Configuration file name, e.g., ~/.config/Maia/maiarc_0.1.0
+        MaiaPaths::configFile(QStringLiteral("maiarc"))); // ~/.config/maia/<version>/maiarc
     KConfigGroup group = config->group(QStringLiteral("FrontendManagerService"));
     group.writeEntry("activeFrontendId", frontedId);
     config->sync(); // Ensure saving to the file

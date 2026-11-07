@@ -1,5 +1,6 @@
 //! The choice remembered per frontend: each Maia frontend (Lumen, XPLuna, ...) keeps its own window
-//! decoration. Stored in `$XDG_CONFIG_HOME/maia/appearance.json`:
+//! decoration. Stored in `$XDG_CONFIG_HOME/maia/<Maia version>/appearance.json` (every Maia version
+//! has its own configuration directory, see Maia/Paths/MaiaPaths.hpp):
 //!
 //! ```json
 //! { "version": 1, "decorations": { "frontends": { "XPLuna": "aurorae-svg:XBoomer" } } }
@@ -28,7 +29,7 @@ struct File {
 }
 
 pub fn file_path(config_home: &Path) -> PathBuf {
-    config_home.join("maia").join("appearance.json")
+    config_home.join("maia").join(crate::paths::MAIA_VERSION).join("appearance.json")
 }
 
 /// The remembered choices; none when the file is missing or broken (it is then rewritten)

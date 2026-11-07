@@ -189,6 +189,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 
 target_link_libraries(${PROJECT_NAME}
     PUBLIC Maia::FrontendModules  # QmlGui.hpp holds a FrontendModules
+    PUBLIC Maia::Paths            # ~/.config/maia/<version>/
     PRIVATE Qt6::Core
     PRIVATE Qt6::DBus
     PRIVATE Qt6::Gui

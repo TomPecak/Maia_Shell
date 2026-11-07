@@ -58,7 +58,7 @@
 <path d="M30,867 h452 l18,18 v50 h-470 z" fill="#fff7ed" stroke="#ea580c" stroke-width="1.8"/>
 <path d="M482,867 v18 h18" fill="none" stroke="#ea580c" stroke-width="1.8"/>
 <text x="42.0" y="887.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13" font-weight="bold" fill="#9a3412" text-anchor="start">appearance.json</text>
-<text x="42.0" y="904.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="10.5" font-weight="normal" fill="#7c2d12" text-anchor="start">$XDG_CONFIG_HOME/maia/appearance.json</text>
+<text x="42.0" y="904.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="10.5" font-weight="normal" fill="#7c2d12" text-anchor="start">$XDG_CONFIG_HOME/maia/&lt;version&gt;/appearance.json</text>
 <text x="42.0" y="919.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#431407" text-anchor="start">the decoration remembered for each frontend</text>
 <rect x="618" y="222" width="300" height="99" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
 <rect x="618" y="222" width="5" height="99" rx="2" fill="#c2410c"/>
@@ -341,8 +341,8 @@
 <text x="610.0" y="1503.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">themes the frontends ship (installed to &lt;prefix&gt;/share/aurorae/themes)</text>
 <text x="50.0" y="1525.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11.5" font-weight="normal" fill="#0f172a" text-anchor="start">Maia/frontends/*/shell/Main.qml</text>
 <text x="610.0" y="1525.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">FrontendLook: each frontend's default decoration</text>
-<text x="50.0" y="1547.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11.5" font-weight="normal" fill="#0f172a" text-anchor="start">Maia/DeployFiles/run_maia_wayland.sh.in</text>
-<text x="610.0" y="1547.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">starts the service; Maia's share is in XDG_DATA_DIRS</text>
+<text x="50.0" y="1547.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11.5" font-weight="normal" fill="#0f172a" text-anchor="start">Maia/DeployFiles/session/</text>
+<text x="610.0" y="1547.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">starts the service (KWin session); Maia's share is in XDG_DATA_DIRS</text>
 <rect x="1300" y="1083" width="570" height="516" rx="12" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
 <text x="1318.0" y="1111.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="17" font-weight="bold" fill="#0f172a" text-anchor="start">Legend</text>
 <rect x="1320" y="1131" width="42" height="22" rx="7" fill="#7c3aed" fill-opacity="0.05" stroke="#7c3aed" stroke-width="3"/>

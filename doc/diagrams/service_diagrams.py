@@ -252,7 +252,7 @@ def windows():
         ("Maia/services/windows/service/", "the service, Rust crate maia-windows-service (tests/service.rs: over a real connection)"),
         ("Maia/services/windows/qml/", "Maia.Windows, the QML module (tests/tst_tasksmodel.cpp)"),
         ("Maia/services/windows/README.md", "overview, running by hand, testing"),
-        ("Maia/DeployFiles/run_maia_wayland.sh.in", "starts the service with the session (and run_maia_nested_wayland.sh)"),
+        ("Maia/DeployFiles/session/", "the session scripts start the service (KWin and Wayfire)"),
         ("cmake/MaiaRust.cmake, MaiaCapnProto.cmake, MaiaQmlModule.cmake", "builds cargo, the contract and the QML module"),
         ("3rdparty/capnproto/", "Cap'n Proto for C++ (bundled)"),
     ]
@@ -501,7 +501,7 @@ def appearance():
     s.text(LX + 16, y + 62, "unpack theme archives into a private staging directory", size=12, fill="#334155")
     y = tar.bottom + 22
     choices = s.file(LX, y, LW, "appearance.json", ["the decoration remembered for each frontend"],
-                     ["$XDG_CONFIG_HOME/maia/appearance.json"])
+                     ["$XDG_CONFIG_HOME/maia/<version>/appearance.json"])
 
     # --- Middle ---
     svc = Rect(MX, y0, MW, 0)
@@ -645,7 +645,7 @@ def appearance():
         ("Maia/services/appearance/docs/", "maia-appearance-service.svg (this diagram), adding-an-area.md, adding-a-compositor.md"),
         ("Maia/frontends/*/assets/decorations/", "themes the frontends ship (installed to <prefix>/share/aurorae/themes)"),
         ("Maia/frontends/*/shell/Main.qml", "FrontendLook: each frontend's default decoration"),
-        ("Maia/DeployFiles/run_maia_wayland.sh.in", "starts the service; Maia's share is in XDG_DATA_DIRS"),
+        ("Maia/DeployFiles/session/", "starts the service (KWin session); Maia's share is in XDG_DATA_DIRS"),
     ]
     finish(s, y, api, repo, "maia-appearance-service.svg")
 

@@ -1,0 +1,263 @@
+# Wspólna część sesji Maia, dołączana (source) przez skrypty sesji kompozytorów:
+#   run_maia_kwin.sh     - sesja "Maia @MAIA_VERSION@ (KWin)"
+#   run_maia_wayfire.sh  - sesja "Maia @MAIA_VERSION@ (Wayfire)"
+#
+# Każda sesja działa w dwóch fazach:
+#   FAZA 1 (skrypt uruchomiony przez SDDM): maia_session_prepare ustawia środowisko, potem skrypt
+#          kompozytora uruchamia kompozytor (exec), który dziedziczy to środowisko razem ze
+#          wszystkim, co sam uruchomi (Xwayland, aplikacje).
+#   FAZA 2 (ten sam skrypt uruchomiony przez kompozytor): maia_session_run startuje usługi KDE,
+#          usługi Maia i serwer Maia, czeka na koniec Maia i sprząta.
+# Fazy rozróżnia zmienna MAIA_SESSION_STAGE.
+
+MAIA_VERSION="@MAIA_VERSION@"
+# Katalog instalacji (/opt/Maia/Maia_<wersja>): ten plik leży w jego bin/
+MAIA_OPT_PATH="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")/..")"
+
+# MAIA_SESSION_TEST=1: tylko do testów sesji obok prawdziwej (np. headless Wayfire): nie dotyka
+# menedżera usług systemd użytkownika, który należy do prawdziwej sesji (bez uruchamiania
+# i zatrzymywania usług KDE i bez dbus-update-activation-environment --systemd)
+MAIA_SESSION_TEST="${MAIA_SESSION_TEST:-0}"
+
+# Konfiguracja tej wersji Maia, niezależna od innych wersji (zob. Maia/Paths/MaiaPaths.hpp):
+# maia.conf, maiarc, appearance.json, wayfire.ini
+MAIA_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/maia/${MAIA_VERSION}"
+
+# Log serwera Maia (logger.cpp) w katalogu domowym, z wersją w nazwie
+MAIA_SERVER_LOG="$HOME/maia_${MAIA_VERSION}_server.log"
+
+# ==========================================================================
+# FAZA 1: środowisko sesji, przed kompozytorem
+# ==========================================================================
+# $1: ścieżka skryptu sesji (uruchamiany ponownie wewnątrz dbus-run-session)
+maia_session_prepare() {
+    local script_path="$1"
+
+    # Brak magistrali D-Bus sesji -> uruchamiamy się ponownie wewnątrz dbus-run-session
+    # (to samo robi Plasma przez plasma-dbus-run-session-if-needed)
+    if [ -z "${DBUS_SESSION_BUS_ADDRESS}" ]; then
+        echo "Brak DBUS_SESSION_BUS_ADDRESS, uruchamiam dbus-run-session..."
+        exec dbus-run-session "${script_path}"
+    fi
+
+    # 1. Typ sesji i tożsamość pulpitu. XDG_CURRENT_DESKTOP=KDE także pod Wayfire: dzięki temu Qt
+    #    bierze motyw, ikony i okna dialogowe KDE (plasma-integration), jak w sesji KWin.
+    export XDG_SESSION_TYPE=wayland
+    export XDG_CURRENT_DESKTOP=KDE
+    export XDG_SESSION_DESKTOP=Maia
+    export KDE_FULL_SESSION=true
+    export KDE_SESSION_VERSION=6
+
+    # Menu aplikacji KDE (KService): na Kubuntu to /etc/xdg/menus/plasma-applications.menu.
+    # Dlaczego: sesja Maia nie ustawiała tej zmiennej (Plasma robi to sama). Skutek: KService nie
+    # znajdował menu ("applications.menu not found"), więc adresy applications:<plik>.desktop się nie
+    # rozwiązywały - przypięte aplikacje w modelu zadań Plasmy były pustymi ikonami plików,
+    # a okna nie łączyły się z przypiętymi aplikacjami.
+    if [ -z "${XDG_MENU_PREFIX}" ] && [ -f /etc/xdg/menus/plasma-applications.menu ]; then
+        export XDG_MENU_PREFIX=plasma-
+    fi
+
+    # Ustawienia dystrybucji dla sesji KDE i domyślne ustawienia Mai.
+    # Dlaczego: Plasma przy starcie uruchamia skrypty plasma-workspace/env/*.sh, w których dystrybucja
+    # ustawia środowisko sesji KDE. Na Kubuntu env.sh dodaje do XDG_CONFIG_DIRS katalog
+    # kubuntu-default-settings (m.in. wyłączony KDE Wallet, motyw, domyślne aplikacje). Sesja Maia tego
+    # nie robiła, więc działała na innej konfiguracji niż Plasma: KDE Wallet był włączony, choć portfel
+    # nie istniał, a Google Chrome przy starcie pokazywał kreator portfela albo wisiał razem
+    # z zawieszonym kwalletd6 (błąd Secret Service w KWallet 6.24).
+    # Kolejność jak w startplasma: najpierw katalogi systemowe, na końcu katalog użytkownika.
+    local dir script
+    for dir in $(echo "${XDG_CONFIG_DIRS:-/etc/xdg}" | tr ':' '\n' | tac) "${XDG_CONFIG_HOME:-$HOME/.config}"; do
+        for script in "${dir}"/plasma-workspace/env/*.sh; do
+            [ -r "${script}" ] && . "${script}"
+        done
+    done
+    # Domyślne ustawienia Mai (etc/xdg w katalogu instalacji, np. wyłączony KDE Wallet) mają najniższy
+    # priorytet: dystrybucja (/etc/xdg) i użytkownik (~/.config) mogą je zmienić
+    export XDG_CONFIG_DIRS="${XDG_CONFIG_DIRS:-/etc/xdg}:${MAIA_OPT_PATH}/etc/xdg"
+    echo "XDG_CONFIG_DIRS=${XDG_CONFIG_DIRS}"
+    # Dane Mai (share: plik .desktop Ustawień Maia, strony ustawień, motywy) też na końcu: okna Mai mają
+    # wtedy swoją ikonę i nazwę, a dystrybucja ma pierwszeństwo
+    export XDG_DATA_DIRS="${XDG_DATA_DIRS:-/usr/local/share:/usr/share}:${MAIA_OPT_PATH}/share"
+
+    # 2. Backendy toolkitów dla aplikacji uruchamianych w sesji
+    export QT_QPA_PLATFORM="wayland;xcb"
+    export GDK_BACKEND="wayland,x11"
+    export ELECTRON_OZONE_PLATFORM_HINT=auto
+    export MOZ_ENABLE_WAYLAND=1
+    export _JAVA_AWT_WM_NONREPARENTING=1
+    export QT_WAYLAND_RECONNECT=1   # aplikacje Qt przeżyją restart kompozytora po crashu (KWin)
+    export GTK_USE_PORTAL=0
+
+    # 3. Pozostałości po X11 z ekranu logowania nie mogą przeciec do sesji
+    unset DISPLAY WAYLAND_DISPLAY XAUTHORITY
+
+    # Katalog konfiguracji tej wersji Maia
+    mkdir -p "${MAIA_CONFIG_DIR}"
+}
+
+# ==========================================================================
+# FAZA 2: usługi i serwer Maia, wewnątrz kompozytora
+# ==========================================================================
+
+# USŁUGI KDE, KTÓRE PLASMA URUCHAMIA W SWOJEJ SESJI
+# Dlaczego: w sesji Maia Google Chrome startował, ale nie ładował żadnych stron (Firefox działał).
+# Przyczyna: Chrome w sesji KDE trzyma klucz szyfrowania ciasteczek i haseł w KWallet. Portfel był
+# zablokowany, bo nikt nie przekazał mu hasła z logowania, więc pojawiała się prośba o hasło,
+# a na niej kwalletd6 się zawieszał (błąd KDE: "received unexpected result type ao ... instead of
+# expected o") i Chrome czekał na niego bez końca. W Plasmie portfel jest odblokowany przy logowaniu,
+# więc prośba w ogóle się nie pojawia. Przy okazji wyszło, że w sesji Maia nie działały też agent
+# polkit (brak okien z hasłem administratora) i powerdevil (zarządzanie energią).
+#
+# Plasma nie uruchamia tych programów z autostartu XDG (wpisy w /etc/xdg/autostart mają
+# X-systemd-skip=true), tylko jako usługi systemd użytkownika (plasma-*.service). Uruchamiamy te,
+# których potrzebuje Maia:
+#   plasma-kwallet-pam   - przekazuje hasło z logowania (pam_kwallet5 w SDDM) do KWallet i odblokowuje
+#                          portfel. Musi ruszyć od razu: PAM czeka na nie tylko chwilę po zalogowaniu.
+#                          Działa tylko wtedy, gdy hasło portfela jest takie samo jak hasło logowania.
+#   plasma-polkit-agent  - okna z hasłem administratora (Discover, ustawienia systemowe, ...)
+#   plasma-powerdevil    - zarządzanie energią (uśpienie, jasność, bateria)
+#   plasma-kaccess       - ułatwienia dostępu (np. klawisze trwałe)
+# Gdy jednostki systemd nie ma (inna dystrybucja), uruchamiamy program z pliku autostartu.
+# Usługi zatrzymujemy po wyjściu z Mai, żeby nie zostały w menedżerze usług użytkownika
+# podłączone do nieistniejącego już ekranu.
+MAIA_KDE_SERVICES=""
+MAIA_KDE_FALLBACK_PIDS=""
+
+# Program z linii Exec= pliku .desktop autostartu (bez kodów pól %u, %f, ...)
+maia_autostart_exec() {
+    sed -n 's/^Exec=//p' "/etc/xdg/autostart/$1.desktop" 2>/dev/null | head -n 1 | sed 's/ %[a-zA-Z]//g'
+}
+
+maia_start_kde_service() {
+    local unit="$1" autostart="$2"
+    if systemctl --user cat "${unit}.service" >/dev/null 2>&1; then
+        echo "Uruchamianie usługi ${unit}.service"
+        systemctl --user start --no-block "${unit}.service"
+        MAIA_KDE_SERVICES="${MAIA_KDE_SERVICES} ${unit}.service"
+        return
+    fi
+    local command
+    command="$(maia_autostart_exec "${autostart}")"
+    if [ -n "${command}" ]; then
+        echo "Brak ${unit}.service, uruchamianie z autostartu: ${command}"
+        ${command} &
+        MAIA_KDE_FALLBACK_PIDS="${MAIA_KDE_FALLBACK_PIDS} $!"
+    else
+        echo "Pomijam ${unit}: brak usługi systemd i pliku autostartu ${autostart}.desktop"
+    fi
+}
+
+maia_stop_kde_services() {
+    if [ -n "${MAIA_KDE_SERVICES}" ]; then
+        echo "Zatrzymywanie usług:${MAIA_KDE_SERVICES}"
+        systemctl --user stop ${MAIA_KDE_SERVICES}
+    fi
+    if [ -n "${MAIA_KDE_FALLBACK_PIDS}" ]; then
+        kill ${MAIA_KDE_FALLBACK_PIDS} 2>/dev/null
+    fi
+}
+
+# Usługa Maia z libexec; jej PID trafia do MAIA_SERVICE_PIDS (zatrzymywane po wyjściu z Mai)
+MAIA_SERVICE_PIDS=""
+maia_start_service() {
+    local name="$1" missing="$2"
+    if [ -x "${MAIA_OPT_PATH}/libexec/${name}" ]; then
+        echo "Uruchamianie usługi ${name}"
+        "${MAIA_OPT_PATH}/libexec/${name}" &
+        MAIA_SERVICE_PIDS="${MAIA_SERVICE_PIDS} $!"
+    else
+        echo "Brak ${MAIA_OPT_PATH}/libexec/${name}: ${missing}"
+    fi
+}
+
+# $1: kompozytor (kwin, wayfire). Wraca z kodem wyjścia serwera Maia.
+maia_session_run() {
+    local compositor="$1"
+    # Dla Mai i usług: pod którym kompozytorem działają
+    export MAIA_COMPOSITOR="${compositor}"
+    echo "WAYLAND_DISPLAY=${WAYLAND_DISPLAY} DISPLAY=${DISPLAY} XAUTHORITY=${XAUTHORITY}"
+    echo "Konfiguracja Maia: ${MAIA_CONFIG_DIR}"
+
+    # WSTRZYKNIĘCIE ZMIENNYCH DO D-BUS / systemd
+    # Usługi aktywowane przez D-Bus (portale, kded, aplikacje) muszą znać nasz ekran.
+    local systemd="--systemd"
+    [ "${MAIA_SESSION_TEST}" = "1" ] && systemd=""
+    if command -v dbus-update-activation-environment >/dev/null 2>&1; then
+        dbus-update-activation-environment ${systemd} \
+            WAYLAND_DISPLAY DISPLAY XAUTHORITY \
+            XDG_SESSION_TYPE XDG_CURRENT_DESKTOP XDG_SESSION_DESKTOP \
+            KDE_FULL_SESSION KDE_SESSION_VERSION XDG_MENU_PREFIX \
+            XDG_CONFIG_DIRS XDG_DATA_DIRS SSH_ASKPASS SSH_ASKPASS_REQUIRE \
+            QT_QPA_PLATFORM GDK_BACKEND QT_WAYLAND_RECONNECT
+    fi
+
+    if [ "${MAIA_SESSION_TEST}" = "1" ]; then
+        echo "MAIA_SESSION_TEST=1: pomijam usługi KDE"
+    else
+        maia_start_kde_service plasma-kwallet-pam  pam_kwallet_init
+        maia_start_kde_service plasma-polkit-agent polkit-kde-authentication-agent-1
+        maia_start_kde_service plasma-powerdevil   powerdevil
+        maia_start_kde_service plasma-kaccess      kaccess
+    fi
+    # UWAGA: NIE uruchamiamy plasma-kglobalaccel.service! Pod KWin kglobalacceld jest wbudowany
+    # w kwin_wayland (libKGlobalAccelD), a pod Wayfire samodzielny kglobalacceld i tak nie może
+    # przechwytywać klawiszy (na Waylandzie robi to kompozytor): skróty są w wayfire.ini.
+
+    # USŁUGA OKIEN MAI (Maia/services/windows)
+    # maia-windows-service rozmawia z kompozytorem o oknach innych aplikacji (protokół
+    # org_kde_plasma_window_management: w KWin wbudowany, w Wayfire plugin plasma-window-management)
+    # i podaje ich listę paskowi zadań i dokowi (moduł QML Maia.Windows, przez Cap'n Proto). Startuje
+    # przed Maią, żeby pasek od razu miał okna; gdyby nie zdążyła, Maia łączy się z nią sama co sekundę.
+    maia_start_service maia-windows-service "pasek zadań nie pokaże okien"
+
+    # USŁUGA SIECI MAI (Maia/services/network)
+    # maia-network-service rozmawia z NetworkManagerem (Wi-Fi) i podaje stan sieci shellom, Maia Settings
+    # i aplikacjom (moduł QML Maia.Network, przez Cap'n Proto). Jest też agentem haseł sesji: okno hasła
+    # pokazuje shell. Agent KDE (moduł kded networkmanagement) jest w sesji Mai wyłączony
+    # (etc/xdg/kded6rc), żeby odpowiadał tylko jeden. Nie zależy od kompozytora.
+    maia_start_service maia-network-service "Wi-Fi w Mai nie zadziała"
+
+    # USŁUGA WYGLĄDU MAI (Maia/services/appearance)
+    # maia-appearance-service jako jedyna zna sposób, w jaki kompozytor przechowuje wygląd: dekoracje
+    # okien (wybór, instalacja motywów, wybór zapamiętany dla każdego frontendu), później ikony,
+    # kursory i kolory. Ma na razie tylko backend KWin (kwinrc, D-Bus KWina): pod Wayfire zmieniałaby
+    # wygląd sesji KWin, więc tam nie startuje, dopóki nie powstanie backend Wayfire.
+    if [ "${compositor}" = "kwin" ]; then
+        maia_start_service maia-appearance-service "frontendy nie zmienią dekoracji okien"
+    else
+        echo "Pomijam maia-appearance-service: brak backendu dla kompozytora ${compositor}"
+    fi
+
+    export MAIA_LOG_FILE="${MAIA_SERVER_LOG}"
+    export MAIA_LOG_PORT=50001
+    export MAIA_LOG_HOST=127.0.0.1
+
+    # Maia działa natywnie jako klient Wayland. Platformę podajemy argumentem -platform
+    # (a nie przez QT_QPA_PLATFORM), żeby aplikacje uruchamiane z Mai dziedziczyły
+    # sesyjne QT_QPA_PLATFORM="wayland;xcb" z fallbackiem na Xwayland.
+    # Do porównań ze starym zachowaniem: MAIA_QPA_PLATFORM=xcb (Maia przez Xwayland).
+    local platform="${MAIA_QPA_PLATFORM:-wayland}"
+
+    echo "Uruchamianie serwera Maia (-platform ${platform}) z: ${MAIA_OPT_PATH}..."
+    # Bez exec: po wyjściu z Mai trzeba jeszcze zatrzymać usługi uruchomione wyżej. Skrypt czeka więc
+    # na Maię, sygnały zakończenia (wylogowanie, zamknięcie kompozytora) przekazuje jej dalej i oddaje
+    # jej kod wyjścia.
+    env -u QT_QPA_PLATFORMTHEME \
+        -u QT_PLUGIN_PATH \
+        "${MAIA_OPT_PATH}/bin/appMaiaServer" -platform "${platform}" &
+    MAIA_PID=$!
+    local status=0
+    trap 'kill -TERM "${MAIA_PID}" 2>/dev/null' TERM INT HUP
+
+    # wait wraca także po przechwyconym sygnale, dlatego czekamy, dopóki proces Mai istnieje
+    # (zakończony, ale jeszcze nie odebrany proces też istnieje, więc pętla wykona się co najmniej raz)
+    while kill -0 "${MAIA_PID}" 2>/dev/null; do
+        wait "${MAIA_PID}"
+        status=$?
+    done
+    echo "Serwer Maia zakończył się (kod ${status})"
+
+    [ -n "${MAIA_SERVICE_PIDS}" ] && kill ${MAIA_SERVICE_PIDS} 2>/dev/null
+    maia_stop_kde_services
+    return "${status}"
+}

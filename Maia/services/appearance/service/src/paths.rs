@@ -6,13 +6,20 @@ use std::path::{Path, PathBuf};
 
 use crate::decorations::theme::Origin;
 
+/// The Maia version the service belongs to (set by the CMake build; "dev" for a plain cargo build).
+/// Every Maia version keeps its settings in $XDG_CONFIG_HOME/maia/<version>/.
+pub const MAIA_VERSION: &str = match option_env!("MAIA_VERSION") {
+    Some(version) => version,
+    None => "dev",
+};
+
 #[derive(Clone, Debug)]
 pub struct Paths {
     /// $XDG_DATA_HOME (~/.local/share): user themes are installed here
     pub data_home: PathBuf,
     /// Searched in this order (the first one wins for a theme name): data_home, then $XDG_DATA_DIRS
     pub data_dirs: Vec<PathBuf>,
-    /// $XDG_CONFIG_HOME (~/.config): kwinrc, maia/appearance.json
+    /// $XDG_CONFIG_HOME (~/.config): kwinrc, maia/<version>/appearance.json
     pub config_home: PathBuf,
     /// Data directories of Maia itself (<prefix>/share): their themes have origin Maia
     pub maia_data_dirs: Vec<PathBuf>,

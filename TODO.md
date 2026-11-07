@@ -102,7 +102,7 @@ scope).
 ## 2. Session: close applications gracefully before the session ends
 
 Area: `Maia/BackendLib/server/SessionService.cpp`, `Server::sessionLogout` (`server/Server.cpp`),
-the session script `Maia/DeployFiles/run_maia_wayland.sh.in`.
+the session scripts `Maia/DeployFiles/session/` (`maia-session-common.sh.in`).
 
 ### What happens
 

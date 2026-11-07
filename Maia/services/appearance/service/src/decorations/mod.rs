@@ -7,7 +7,7 @@
 //! - `catalog.rs`   finds the themes on disk
 //! - `qtplugin.rs`  reads the names of native plugins (Breeze) from their files
 //! - `install.rs`   installs and removes the user's themes
-//! - `frontends.rs` remembers a choice per frontend (maia/appearance.json)
+//! - `frontends.rs` remembers a choice per frontend (maia/<version>/appearance.json)
 //!
 //! Rules:
 //! - One change at a time (`lock`): set, setBorderSize, install, remove, activateFrontend and the

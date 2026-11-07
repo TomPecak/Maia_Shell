@@ -66,12 +66,12 @@ The application supports a specific port range: **50000 to 50009**. Providing 10
 
 To configure the connection, you need to set two environment variables: `MAIA_LOG_HOST` and `MAIA_LOG_PORT`. 
 
-If you are running Maia Shell as your primary desktop environment, you can set these variables in the session startup script located at `/opt/Maia/Maia_X.Y.Z/bin/run_maia_wayland.sh` (the session `.desktop` file `/usr/share/wayland-sessions/maia_X.Y.Z-wayland.desktop` only runs this script).
+If you are running Maia Shell as your primary desktop environment, you can set these variables in the part of the session scripts both sessions share, `/opt/Maia/Maia_X.Y.Z/bin/maia-session-common.sh` (the session `.desktop` files `/usr/share/wayland-sessions/maia_X.Y.Z-kwin.desktop` and `maia_X.Y.Z-wayfire.desktop` only run `run_maia_kwin.sh` or `run_maia_wayfire.sh`, which include it).
 
-**Example fragment of `run_maia_wayland.sh`:**
+**Example fragment of `maia-session-common.sh`:**
 
 ```bash
-export MAIA_LOG_FILE="$HOME/maia_server.log"
+export MAIA_LOG_FILE="$HOME/maia_X.Y.Z_server.log"
 export MAIA_LOG_PORT=50001
 export MAIA_LOG_HOST=10.34.204.173
 ```
@@ -102,8 +102,10 @@ sudo ./install_on_ubuntu.sh
 
 3. **Start Maia Shell:**
 	- Log out of your current session.
-	- Select the "Maia X.Y.Z (Wayland)" session from your login manager and log in.
-	- Session logs are written to `~/maia_wayland_session.log` and `~/maia_server.log`.
+	- Select the "Maia X.Y.Z (KWin)" or "Maia X.Y.Z (Wayfire)" session from your login manager and log in.
+	- Session logs are written to `~/maia_X.Y.Z_kwin_session.log` (or `~/maia_X.Y.Z_wayfire_session.log`) and `~/maia_X.Y.Z_server.log`.
+	- Every Maia version keeps its settings in `~/.config/maia/X.Y.Z/` (`maia.conf`, `maiarc`, `appearance.json`, and `wayfire.ini` for the Wayfire session, made from `/opt/Maia/Maia_X.Y.Z/etc/maia/wayfire.ini` on the first start); a new version starts with clean settings.
+	- The Wayfire session needs the Wayfire plugins `aurorae` (window decorations) and `plasma-window-management` (the window list of the taskbars).
 	
 	
 	

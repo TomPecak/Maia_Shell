@@ -62,8 +62,9 @@ activities, filtering by screen or virtual desktop, `requestPublishDelegateGeome
 
 ## Running
 
-The session scripts start the service (`Maia/DeployFiles/run_maia_wayland.sh.in`,
-`run_maia_nested_wayland.sh`). By hand, inside a KWin session:
+The session scripts start the service (`Maia/DeployFiles/session/maia-session-common.sh.in`,
+`run_maia_nested_wayland.sh`); on Wayfire the protocol comes from the `plasma-window-management`
+plugin. By hand, inside a KWin session:
 
 ```bash
 KWIN_WAYLAND_NO_PERMISSION_CHECKS=1 kwin_wayland ...   # KWin gives the protocol only to privileged clients

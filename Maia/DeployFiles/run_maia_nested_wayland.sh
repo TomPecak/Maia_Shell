@@ -137,7 +137,7 @@ export MAIA_QPA_PLATFORM="${MAIA_QPA_PLATFORM:-wayland}"
 # 0 wyłącza tę blokadę (np. do testu z atrapą magistrali systemowej w DBUS_SYSTEM_BUS_ADDRESS).
 export MAIA_NESTED_SESSION="${MAIA_NESTED_SESSION:-1}"
 
-# Środowisko sesji wewnątrz zagnieżdżonego KWina (jak w run_maia_wayland.sh)
+# Środowisko sesji wewnątrz zagnieżdżonego KWina (jak w session/maia-session-common.sh.in)
 export XDG_SESSION_TYPE=wayland
 export XDG_CURRENT_DESKTOP=KDE
 export KDE_FULL_SESSION=true
@@ -148,7 +148,7 @@ export GTK_USE_PORTAL=0
 export KWIN_WAYLAND_NO_PERMISSION_CHECKS=1
 
 # Ustawienia dystrybucji dla sesji KDE (plasma-workspace/env/*.sh) i domyślne ustawienia Mai, jak
-# w run_maia_wayland.sh (tam opis, dlaczego). Domyślne ustawienia Mai leżą w etc/xdg: obok skryptu
+# w session/maia-session-common.sh.in (tam opis, dlaczego). Domyślne ustawienia Mai leżą w etc/xdg: obok skryptu
 # w drzewie źródeł (Maia/DeployFiles/etc/xdg) albo w katalogu instalacji (bin/../etc/xdg).
 for dir in $(echo "${XDG_CONFIG_DIRS:-/etc/xdg}" | tr ':' '\n' | tac) "${XDG_CONFIG_HOME:-$HOME/.config}"; do
     for script in "${dir}"/plasma-workspace/env/*.sh; do
@@ -159,7 +159,7 @@ MAIA_DEFAULTS_DIR="${SCRIPT_DIR}/etc/xdg"
 [ -d "${MAIA_DEFAULTS_DIR}" ] || MAIA_DEFAULTS_DIR="$(readlink -f "${SCRIPT_DIR}/../etc/xdg")"
 export XDG_CONFIG_DIRS="${XDG_CONFIG_DIRS:-/etc/xdg}:${MAIA_DEFAULTS_DIR}"
 # Dane Mai (share obok bin programu Mai: plik .desktop Ustawień Maia, strony ustawień), jak w
-# run_maia_wayland.sh
+# session/maia-session-common.sh.in
 if [ -n "${MAIA_NESTED_APP}" ] && [ -d "$(dirname "${MAIA_NESTED_APP}")/../share" ]; then
     export XDG_DATA_DIRS="${XDG_DATA_DIRS:-/usr/local/share:/usr/share}:$(readlink -f "$(dirname "${MAIA_NESTED_APP}")/../share")"
 fi

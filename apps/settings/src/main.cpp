@@ -4,6 +4,7 @@
 // offscreen); --dark / --light override the theme for that.
 
 #include "FrontendModules.hpp"
+#include "MaiaPaths.hpp"
 #include "SettingsPages.h"
 #include "SingleInstance.h"
 
@@ -43,10 +44,9 @@ QString frontendShell()
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
-    // The organization and application of the shell: the frontend's theme settings (light or dark,
-    // accent) are read from the same file
-    QGuiApplication::setOrganizationName(QStringLiteral("Maia"));
-    QGuiApplication::setApplicationName(QStringLiteral("Maia_") + QStringLiteral(MAIA_VERSION_STRING));
+    // The names of the shell: the frontend's theme settings (light or dark, accent) are read from
+    // the same file, ~/.config/maia/<version>/maia.conf
+    MaiaPaths::setupApplicationNames();
     QGuiApplication::setApplicationDisplayName(QStringLiteral("Maia Settings"));
     QGuiApplication::setDesktopFileName(QStringLiteral("org.maia.settings"));
 

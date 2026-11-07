@@ -5,7 +5,7 @@
 
 #include "GuiManagerStateMachine.h"
 
-static bool verifyRunningUnderKwinWayland();
+static bool verifyRunningUnderCompositor();
 
 FrontendLoader::FrontendLoader(QObject *parent, QGuiApplication *app, int swapIntervalOption)
     : QObject(parent)
@@ -25,7 +25,7 @@ void FrontendLoader::startGui(const FrontendInfo &frontend)
 {
     qDebug() << "[STARTUP INFO] " << __PRETTY_FUNCTION__ << " frontend.name=" << frontend.name;
     //Maia does not start KWin, kwin_wayland starts Maia, check that we are really running under it
-    verifyRunningUnderKwinWayland();
+    verifyRunningUnderCompositor();
 
     m_qmlGui.initQmlEngine();
     m_currentFrontend = frontend;
@@ -154,30 +154,31 @@ void FrontendLoader::loadFrontend()
     }
 }
 
-bool verifyRunningUnderKwinWayland()
+bool verifyRunningUnderCompositor()
 {
-    // Since the X11 session was dropped, Maia no longer starts the window manager.
-    // Maia is started by kwin_wayland (--exit-with-session in run_maia_wayland.sh
-    // or run_maia_nested_wayland.sh), so KWin must already be running at this point.
-    // Maia runs as a native Wayland client (-platform wayland), WAYLAND_DISPLAY
-    // is inherited from kwin_wayland.
+    // Maia does not start the compositor: the session script starts it, and the compositor starts
+    // Maia (run_maia_kwin.sh, run_maia_wayfire.sh, run_maia_nested_wayland.sh). Maia runs as a native
+    // Wayland client (-platform wayland), WAYLAND_DISPLAY is inherited from the compositor.
+    // MAIA_COMPOSITOR (set by the session scripts): kwin or wayfire; unset means KWin.
     bool ok = true;
+    const QString compositor = qEnvironmentVariable("MAIA_COMPOSITOR", QStringLiteral("kwin"));
 
     if (qEnvironmentVariableIsEmpty("WAYLAND_DISPLAY")) {
-        qDebug() << "[STARTUP ERROR] WAYLAND_DISPLAY is not set. Maia must be started by kwin_wayland "
-                    "(run_maia_wayland.sh or run_maia_nested_wayland.sh).";
+        qDebug() << "[STARTUP ERROR] WAYLAND_DISPLAY is not set. Maia must be started by the compositor "
+                    "(run_maia_kwin.sh, run_maia_wayfire.sh or run_maia_nested_wayland.sh).";
         ok = false;
     }
 
     QDBusConnectionInterface *busInterface = QDBusConnection::sessionBus().interface();
-    if (!busInterface || !busInterface->isServiceRegistered(QStringLiteral("org.kde.KWin"))) {
+    if (compositor == QLatin1String("kwin")
+        && (!busInterface || !busInterface->isServiceRegistered(QStringLiteral("org.kde.KWin")))) {
         qDebug() << "[STARTUP ERROR] KWin D-Bus service 'org.kde.KWin' is not registered on the session bus. "
                     "Window manager reconfiguration and KWin effects will not work.";
         ok = false;
     }
 
     if (ok) {
-        qDebug() << "[STARTUP INFO] Running under kwin_wayland, WAYLAND_DISPLAY="
+        qDebug() << "[STARTUP INFO] Running under" << compositor << ", WAYLAND_DISPLAY="
                  << qgetenv("WAYLAND_DISPLAY") << " platform=" << QGuiApplication::platformName();
     }
 

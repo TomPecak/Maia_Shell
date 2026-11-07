@@ -3,6 +3,7 @@
 #include <KSharedConfig>
 #include <KConfigGroup>
 #include "../maia_version.h"
+#include <MaiaPaths.hpp>
 
 LocaleSettingsService::LocaleSettingsService(QObject *parent)
     : QObject(parent)
@@ -66,7 +67,7 @@ void LocaleSettingsService::setTwentyFourTime(bool newTwentyFourTime)
 
 void LocaleSettingsService::loadSettings()
 {
-    QString configPath = QStringLiteral("./Maia/maiarc_") + QStringLiteral(MAIA_VERSION_STRING);
+    const QString configPath = MaiaPaths::configFile(QStringLiteral("maiarc"));
 
     KSharedConfig::Ptr config = KSharedConfig::openConfig(configPath);
     KConfigGroup group = config->group(QStringLiteral("LocaleSettingsService"));
@@ -79,7 +80,7 @@ void LocaleSettingsService::loadSettings()
 
 void LocaleSettingsService::saveSettings()
 {
-    QString configPath = QStringLiteral("./Maia/maiarc_%1").arg(QStringLiteral(MAIA_VERSION_STRING));
+    const QString configPath = MaiaPaths::configFile(QStringLiteral("maiarc"));
 
     KSharedConfig::Ptr config = KSharedConfig::openConfig(configPath);
     KConfigGroup group = config->group(QStringLiteral("LocaleSettingsService"));

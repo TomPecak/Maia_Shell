@@ -19,21 +19,7 @@ ecm_setup_version(${MAIA_VERSION}
 
 
 
-add_custom_target(DesktopFiles)
-
-target_sources(DesktopFiles
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/maia-wayland.desktop.in
-)
-
-# Definiujemy dynamiczną nazwę dla docelowego pliku (np. maia_0.2.0-wayland.desktop)
-set(WAYLAND_FILE_NAME "maia_${MAIA_VERSION}-wayland.desktop")
-
-# Generujemy plik WAYLAND na podstawie szablonu
-configure_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/maia-wayland.desktop.in
-    ${CMAKE_CURRENT_BINARY_DIR}/${WAYLAND_FILE_NAME}
-    @ONLY
-)
+# The session files of SDDM (Maia (KWin), Maia (Wayfire)) are made in Maia/DeployFiles
 
 qt_standard_project_setup(REQUIRES ${REQUIRED_QT_VERSION})
 
@@ -105,10 +91,5 @@ install(TARGETS appMaiaServer
 
 
 
-# Deploy maia_version-wayland.desktop file (wygenerowany dynamicznie)
-install(FILES
-        ${CMAKE_CURRENT_BINARY_DIR}/${WAYLAND_FILE_NAME}
-        DESTINATION "${CMAKE_INSTALL_PREFIX}/bin"
-        PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ
-)
+
 

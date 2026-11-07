@@ -274,8 +274,8 @@
 <text x="610.0" y="1305.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">Maia.Windows, the QML module (tests/tst_tasksmodel.cpp)</text>
 <text x="50.0" y="1327.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11.5" font-weight="normal" fill="#0f172a" text-anchor="start">Maia/services/windows/README.md</text>
 <text x="610.0" y="1327.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">overview, running by hand, testing</text>
-<text x="50.0" y="1349.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11.5" font-weight="normal" fill="#0f172a" text-anchor="start">Maia/DeployFiles/run_maia_wayland.sh.in</text>
-<text x="610.0" y="1349.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">starts the service with the session (and run_maia_nested_wayland.sh)</text>
+<text x="50.0" y="1349.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11.5" font-weight="normal" fill="#0f172a" text-anchor="start">Maia/DeployFiles/session/</text>
+<text x="610.0" y="1349.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">the session scripts start the service (KWin and Wayfire)</text>
 <text x="50.0" y="1371.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11.5" font-weight="normal" fill="#0f172a" text-anchor="start">cmake/MaiaRust.cmake, MaiaCapnProto.cmake, MaiaQmlModule.cmake</text>
 <text x="610.0" y="1371.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">builds cargo, the contract and the QML module</text>
 <text x="50.0" y="1393.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11.5" font-weight="normal" fill="#0f172a" text-anchor="start">3rdparty/capnproto/</text>

@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=Maia @MAIA_VERSION@ (KWin)
+Comment=Maia desktop on the KWin compositor
+Exec=/opt/Maia/Maia_@MAIA_VERSION@/bin/run_maia_kwin.sh
+TryExec=/opt/Maia/Maia_@MAIA_VERSION@/bin/run_maia_kwin.sh
+Type=Application
+DesktopNames=Maia
