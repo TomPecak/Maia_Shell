@@ -88,8 +88,6 @@ qt_add_qml_module(${PROJECT_NAME}
     SOURCES MWindowManagerX11.cpp
     SOURCES server/QmlGui.hpp
     SOURCES server/QmlGui.cpp
-    SOURCES server/FrontendModules.hpp
-    SOURCES server/FrontendModules.cpp
     SOURCES server/FrontendLoader.hpp
     SOURCES server/FrontendLoader.cpp
     SOURCES client/private/ProxyWindowController.hpp
@@ -190,6 +188,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 )
 
 target_link_libraries(${PROJECT_NAME}
+    PUBLIC Maia::FrontendModules  # QmlGui.hpp holds a FrontendModules
     PRIVATE Qt6::Core
     PRIVATE Qt6::DBus
     PRIVATE Qt6::Gui

@@ -15,6 +15,13 @@
 #   maia_target_qml_import_dir(<target>)
 #       Gives <target> the definition MAIA_QML_INSTALL_DIR, for engines to add it as import path
 #       (QQmlEngine::addImportPath). The directory is not one Qt searches by default.
+#
+#   maia_target_qml_imports(<target> <uri>...)
+#       <target>'s QML imports these modules (import Maia.Network) without linking them: they are
+#       built with <target>. Like ecm_find_qmlmodule, but for the modules of this build. The modules'
+#       directories must come before <target>'s in the top CMakeLists.txt.
+#
+# Code that uses a module's C++ classes (its tests) links its library: Maia::Windows, Maia::Network, ...
 
 # Included from several directories: the variables must be set in each of them (no include_guard)
 set(MAIA_QML_BUILD_DIR "${CMAKE_BINARY_DIR}/qml")
@@ -49,6 +56,9 @@ function(maia_install_qml_module target)
         INSTALL_RPATH "$ORIGIN/${up}${qml_to_lib}"
     )
 
+    # For maia_target_qml_imports()
+    set_property(GLOBAL PROPERTY "MAIA_QML_MODULE ${ARG_URI}" ${target})
+
     install(TARGETS ${target} LIBRARY DESTINATION "${KDE_INSTALL_FULL_LIBDIR}")
     install(TARGETS ${target}plugin LIBRARY DESTINATION "${install_dir}")
     install(FILES "${build_dir}/qmldir" "${build_dir}/${target}.qmltypes" DESTINATION "${install_dir}")
@@ -56,4 +66,15 @@ endfunction()
 
 function(maia_target_qml_import_dir target)
     target_compile_definitions(${target} PRIVATE MAIA_QML_INSTALL_DIR="${MAIA_QML_INSTALL_DIR}")
+endfunction()
+
+function(maia_target_qml_imports target)
+    foreach(uri IN LISTS ARGN)
+        get_property(module GLOBAL PROPERTY "MAIA_QML_MODULE ${uri}")
+        if(NOT module)
+            message(FATAL_ERROR "maia_target_qml_imports(${target}): no QML module ${uri} in this build "
+                "(made with maia_install_qml_module, in a directory added before ${target}'s)")
+        endif()
+        add_dependencies(${target} ${module}plugin)
+    endforeach()
 endfunction()

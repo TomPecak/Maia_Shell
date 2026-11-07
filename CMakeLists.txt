@@ -66,6 +66,7 @@ endif()
 add_subdirectory(3rdparty)
 
 # libraries
+add_subdirectory(Maia/FrontendModules)
 add_subdirectory(Maia/BackendLib)
 add_subdirectory(Maia/ClientLib)
 add_subdirectory(Maia/UILib)

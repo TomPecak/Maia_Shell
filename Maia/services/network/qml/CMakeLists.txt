@@ -11,6 +11,7 @@ include(MaiaQmlModule)
 find_package(Qt6 ${REQUIRED_QT_VERSION} REQUIRED COMPONENTS Core Gui Qml Quick)
 
 qt_add_library(MaiaNetwork SHARED)
+add_library(Maia::Network ALIAS MaiaNetwork)
 
 qt_add_qml_module(MaiaNetwork
     URI Maia.Network
@@ -46,7 +47,7 @@ maia_install_qml_module(MaiaNetwork URI Maia.Network)
 if(BUILD_TESTING)
     find_package(Qt6 ${REQUIRED_QT_VERSION} REQUIRED COMPONENTS Test)
     add_executable(tst_networkmodels tests/tst_networkmodels.cpp)
-    target_link_libraries(tst_networkmodels PRIVATE MaiaNetwork Qt6::Test)
+    target_link_libraries(tst_networkmodels PRIVATE Maia::Network Qt6::Test)
     add_test(NAME maia-network-models COMMAND tst_networkmodels)
     set_tests_properties(maia-network-models PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 endif()
