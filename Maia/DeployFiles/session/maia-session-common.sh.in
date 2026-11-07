@@ -157,6 +157,35 @@ maia_stop_kde_services() {
     fi
 }
 
+# SKRÓTY GLOBALNE KDE (kglobalacceld) POZA KWINEM
+# Dlaczego: pod Wayfire powerdevil nie startował - czekał na org.kde.kglobalaccel, aż systemd go ubił
+# (timeout), i tak w kółko. KWin ma kglobalacceld wbudowany, więc pod KWinem nazwa jest zajęta; pod
+# Wayfire uruchamia ją dopiero aktywacja D-Bus, a ta na Kubuntu się nie udaje: o nazwę ubiegają się
+# dwie usługi systemd (plasma-kglobalaccel z KF6 i plasma-kglobalaccel5 z KF5), więc systemd
+# odmawia obu. Uruchamiamy kglobalacceld (KF6) sami. Bez KWina nie przechwytuje klawiszy (na
+# Waylandzie robi to kompozytor; skróty sesji Wayfire są w jego wayfire.ini), ale odpowiada
+# programom KDE, które rejestrują skróty, więc nie czekają na niego bez końca.
+# Bez XDG_SESSION_TYPE: przy "wayland" kglobalacceld od razu się kończy (zakłada, że jest w KWinie).
+# Bez DISPLAY: nie przechwytuje klawiszy przez Xwayland (skróty KDE nie działałyby tylko wtedy,
+# gdy aktywne jest okno X11).
+maia_start_kglobalaccel() {
+    if dbus-send --session --print-reply --dest=org.freedesktop.DBus /org/freedesktop/DBus \
+            org.freedesktop.DBus.NameHasOwner string:org.kde.kglobalaccel 2>/dev/null | grep -q "boolean true"; then
+        return
+    fi
+    local daemon
+    for daemon in /usr/lib/x86_64-linux-gnu/libexec/kglobalacceld /usr/libexec/kglobalacceld \
+                  /usr/lib/libexec/kglobalacceld /usr/lib64/libexec/kglobalacceld; do
+        if [ -x "${daemon}" ]; then
+            echo "Uruchamianie ${daemon}"
+            env -u XDG_SESSION_TYPE -u DISPLAY "${daemon}" &
+            MAIA_KDE_FALLBACK_PIDS="${MAIA_KDE_FALLBACK_PIDS} $!"
+            return
+        fi
+    done
+    echo "Brak kglobalacceld: programy KDE mogą czekać na org.kde.kglobalaccel"
+}
+
 # Usługa Maia z libexec; jej PID trafia do MAIA_SERVICE_PIDS (zatrzymywane po wyjściu z Mai)
 MAIA_SERVICE_PIDS=""
 maia_start_service() {
@@ -191,6 +220,9 @@ maia_session_run() {
             QT_QPA_PLATFORM GDK_BACKEND QT_WAYLAND_RECONNECT
     fi
 
+    # Przed usługami KDE: powerdevil rejestruje skróty przy starcie
+    [ "${compositor}" != "kwin" ] && maia_start_kglobalaccel
+
     if [ "${MAIA_SESSION_TEST}" = "1" ]; then
         echo "MAIA_SESSION_TEST=1: pomijam usługi KDE"
     else
@@ -200,8 +232,7 @@ maia_session_run() {
         maia_start_kde_service plasma-kaccess      kaccess
     fi
     # UWAGA: NIE uruchamiamy plasma-kglobalaccel.service! Pod KWin kglobalacceld jest wbudowany
-    # w kwin_wayland (libKGlobalAccelD), a pod Wayfire samodzielny kglobalacceld i tak nie może
-    # przechwytywać klawiszy (na Waylandzie robi to kompozytor): skróty są w wayfire.ini.
+    # w kwin_wayland (libKGlobalAccelD); pod innym kompozytorem startuje go maia_start_kglobalaccel.
 
     # USŁUGA OKIEN MAI (Maia/services/windows)
     # maia-windows-service rozmawia z kompozytorem o oknach innych aplikacji (protokół
