@@ -11,6 +11,7 @@ include(MaiaQmlModule)
 find_package(Qt6 ${REQUIRED_QT_VERSION} REQUIRED COMPONENTS Core Gui Qml)
 
 qt_add_library(MaiaAppearance SHARED)
+add_library(Maia::Appearance ALIAS MaiaAppearance)
 
 qt_add_qml_module(MaiaAppearance
     URI Maia.Appearance
@@ -42,7 +43,7 @@ maia_install_qml_module(MaiaAppearance URI Maia.Appearance)
 if(BUILD_TESTING)
     find_package(Qt6 ${REQUIRED_QT_VERSION} REQUIRED COMPONENTS Test)
     add_executable(tst_appearance tests/tst_appearance.cpp)
-    target_link_libraries(tst_appearance PRIVATE MaiaAppearance Qt6::Test)
+    target_link_libraries(tst_appearance PRIVATE Maia::Appearance Qt6::Test)
     add_test(NAME maia-appearance-model COMMAND tst_appearance)
     set_tests_properties(maia-appearance-model PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 endif()

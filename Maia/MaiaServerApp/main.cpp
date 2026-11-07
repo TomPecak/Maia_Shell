@@ -22,7 +22,7 @@
 #include <BackendAppsIconsProvider.hpp>
 #include <helper/Process.hpp>
 #include <private/ProxyWindowServer.hpp>
-#include <server/FrontendModules.hpp>
+#include <FrontendModules.hpp>
 #include <server/Server.hpp>
 
 #include <QtQml/qqmlextensionplugin.h>

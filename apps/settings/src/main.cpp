@@ -86,7 +86,7 @@ int main(int argc, char *argv[])
         properties.insert(QStringLiteral("forceDark"), parser.isSet(darkOption) ? 1 : 0);
     engine.setInitialProperties(properties);
     QObject::connect(&engine, &QQmlApplicationEngine::objectCreationFailed, &app, [] { QCoreApplication::exit(1); }, Qt::QueuedConnection);
-    engine.loadFromModule("Maia.Settings", "Main");
+    engine.loadFromModule("Maia.SettingsKit", "Main");
     if (engine.rootObjects().isEmpty())
         return 1;
     auto *window = qobject_cast<QQuickWindow *>(engine.rootObjects().constFirst());

@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 
 import LumenFrontend
-import Maia.Settings
+import Maia.SettingsKit
 import Maia.Network
 
 import "Texts.js" as Texts

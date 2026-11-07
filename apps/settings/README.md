@@ -8,7 +8,7 @@ one window per session.
 
 | Part | What it is |
 |---|---|
-| `src/`, `qml/` | The frame: navigation with search, breadcrumb, sub-pages, dialogs, messages, and the components pages build on (QML module `Maia.Settings`, compiled into the program). |
+| `src/`, `qml/` | The frame: navigation with search, breadcrumb, sub-pages, dialogs, messages, and the components pages build on (QML module `Maia.SettingsKit`, compiled into the program). |
 | `pages/<id>/` | One page: `metadata.json` and its QML files, loaded from disk at run time. Installed to `<datadir>/maia-settings/pages/<id>/`. |
 | `Maia/services/<service>/qml` | The QML module of a service (`Maia.Network`), installed once and used by the pages, the shells and the apps. |
 

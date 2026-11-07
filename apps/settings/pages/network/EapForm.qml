@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 
 import LumenFrontend
-import Maia.Settings
+import Maia.SettingsKit
 import Maia.Network
 
 // The 802.1X details of an Enterprise network (docs #22): the EAP method and what it needs.

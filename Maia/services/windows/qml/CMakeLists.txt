@@ -11,6 +11,7 @@ include(MaiaQmlModule)
 find_package(Qt6 ${REQUIRED_QT_VERSION} REQUIRED COMPONENTS Core Gui Qml)
 
 qt_add_library(MaiaWindows SHARED)
+add_library(Maia::Windows ALIAS MaiaWindows)
 
 qt_add_qml_module(MaiaWindows
     URI Maia.Windows
@@ -39,7 +40,7 @@ maia_install_qml_module(MaiaWindows URI Maia.Windows)
 if(BUILD_TESTING)
     find_package(Qt6 ${REQUIRED_QT_VERSION} REQUIRED COMPONENTS Test)
     add_executable(tst_tasksmodel tests/tst_tasksmodel.cpp)
-    target_link_libraries(tst_tasksmodel PRIVATE MaiaWindows Qt6::Test)
+    target_link_libraries(tst_tasksmodel PRIVATE Maia::Windows Qt6::Test)
     add_test(NAME maia-windows-tasksmodel COMMAND tst_tasksmodel)
     set_tests_properties(maia-windows-tasksmodel PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 endif()
