@@ -52,8 +52,10 @@ QtObject {
     readonly property color hairline: dark ? Qt.rgba(1, 1, 1, 0.08) : Qt.rgba(0, 0, 0, 0.06)
     readonly property color separator: dark ? Qt.rgba(84 / 255, 84 / 255, 88 / 255, 0.6)
                                             : Qt.rgba(60 / 255, 60 / 255, 67 / 255, 0.29)
-    // Dims the desktop below a modal surface
-    readonly property color scrim: dark ? Qt.rgba(0, 0, 0, 0.4) : Qt.rgba(0, 0, 0, 0.18)
+    // Covers the desktop below a modal surface (the App Library): dims it in the dark, lightens it
+    // like frosted glass in the light. Alpha at least 0.25: Wayfire's blur weighs the blur by the
+    // window's alpha and is full only from 0.25 on (0.18 gave half blurred, half sharp windows).
+    readonly property color scrim: dark ? Qt.rgba(0, 0, 0, 0.4) : Qt.rgba(1, 1, 1, 0.3)
     readonly property color shadow: Qt.rgba(0, 0, 0, dark ? 0.5 : 0.22)
 
     // --- Fills (controls on a surface) ---
