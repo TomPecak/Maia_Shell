@@ -194,7 +194,7 @@ Item {
                 width: d.span(1); height: d.span(1)
                 appear: d.appear(1, 2, 1, 1)
                 transformOrigin: d.cornerOrigin
-                current: center.controlCenter.buttonLayout
+                current: center.controlCenter.buttonLayoutIndex
                 count: center.controlCenter.buttonLayoutNames.length
                 currentName: center.controlCenter.buttonLayoutNames[current] ?? ""
                 onLayoutRequested: function (layout) { center.controlCenter.setButtonLayout(layout) }

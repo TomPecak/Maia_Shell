@@ -94,18 +94,24 @@ QtObject {
 
     // --- The layout of the button in the dock strip (being tried out) ---
 
-    // ControlCenterButton.layout; kept between sessions (the [MaiaControlCenter] group of maia.conf)
-    readonly property int buttonLayout: settings.buttonLayout
-    readonly property var buttonLayoutNames: [qsTr("Column"), qsTr("Row"), qsTr("Grid"), qsTr("Analog")]
+    // The layouts of ControlCenterButton, the default first, and the chosen one. Kept between
+    // sessions by name (the [MaiaControlCenter] group of maia.conf), so a changed order never turns
+    // a saved choice into another layout; an unknown name means the default.
+    readonly property var buttonLayouts: ["grid", "column", "row", "analog"]
+    readonly property var buttonLayoutNames: [qsTr("Grid"), qsTr("Column"), qsTr("Row"), qsTr("Analog")]
+    readonly property int buttonLayoutIndex: Math.max(0, buttonLayouts.indexOf(settings.buttonLayout))
+    readonly property string buttonLayout: buttonLayouts[buttonLayoutIndex]
 
-    function setButtonLayout(layout) {
-        settings.buttonLayout = layout
+    function setButtonLayout(index) {
+        settings.buttonLayout = buttonLayouts[index]
+        // Written at once, not only when the process ends: the shell may be stopped any time
+        settings.sync()
     }
 
     property Settings settings: Settings {
         category: "MaiaControlCenter"
 
-        property int buttonLayout: 0
+        property string buttonLayout: "grid"
     }
 
     // --- Helpers ---

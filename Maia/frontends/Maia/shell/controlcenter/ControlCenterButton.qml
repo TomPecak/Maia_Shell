@@ -16,19 +16,19 @@ import ".."
 //
 // Layouts (being tried out, chosen with a module of the Control Center): each has a variant along a
 // vertical strip (dock at the left or right, as narrow as the dock) and along a horizontal one.
-//   0 Column   vertical: hours above minutes, the icons below one another; horizontal: one line
-//   1 Row      vertical: "14:37", the icons in a row below; horizontal: the time above the icons
-//   2 Grid     vertical: "14:37", Wi-Fi, Bluetooth, volume, battery in two rows below;
-//              horizontal: the time, the grid next to it
-//   3 Analog   a clock face, the icons in a row below it (vertical) or next to it (horizontal)
+//   grid     the default. Vertical: "14:37", Wi-Fi, Bluetooth, volume, battery in two rows below;
+//            horizontal: the time, the grid next to it
+//   column   vertical: hours above minutes, the icons below one another; horizontal: one line
+//   row      vertical: "14:37", the icons in a row below; horizontal: the time above the icons
+//   analog   a clock face, the icons in a row below it (vertical) or next to it (horizontal)
 StripItem {
     id: area
 
     property ControlCenterState controlCenter
     // The Control Center is open (the button looks pressed meanwhile)
     property bool checked: false
-    // One of the layouts above
-    property int layout: 0
+    // One of the layouts above, by name
+    property string layout: "grid"
 
     signal clicked()
 
@@ -52,9 +52,9 @@ StripItem {
         id: plate
 
         // The content and the padding around it; a column narrow enough for the dock strip
-        width: area.vertical ? (area.layout === 0 ? 56 : 72) : content.width + 2 * 16
-        height: area.vertical ? content.height + 2 * 12 : content.height + 2 * (area.layout === 0 ? 13 : 9)
-        radius: area.vertical ? 18 : (area.layout === 0 ? height / 2 : 18)
+        width: area.vertical ? (area.layout === "column" ? 56 : 72) : content.width + 2 * 16
+        height: area.vertical ? content.height + 2 * 12 : content.height + 2 * (area.layout === "column" ? 13 : 9)
+        radius: area.vertical ? 18 : (area.layout === "column" ? height / 2 : 18)
         color: mouseArea.pressed || area.checked ? Theme.platePressed
              : mouseArea.containsMouse ? Theme.plateHover
              : Theme.dock
@@ -79,10 +79,10 @@ StripItem {
             id: content
 
             anchors.centerIn: parent
-            sourceComponent: [area.vertical ? columnVertical : columnHorizontal,
-                              area.vertical ? rowVertical : rowHorizontal,
-                              area.vertical ? gridVertical : gridHorizontal,
-                              area.vertical ? analogVertical : analogHorizontal][area.layout] ?? columnVertical
+            sourceComponent: area.layout === "column" ? (area.vertical ? columnVertical : columnHorizontal)
+                           : area.layout === "row" ? (area.vertical ? rowVertical : rowHorizontal)
+                           : area.layout === "analog" ? (area.vertical ? analogVertical : analogHorizontal)
+                           : (area.vertical ? gridVertical : gridHorizontal)
 
             // A new layout fades in while the plate takes its size
             onLoaded: fadeIn.restart()
@@ -112,7 +112,7 @@ StripItem {
 
     // --- Layouts ---
 
-    // 0 Column, vertical: hours above minutes, the icons below one another
+    // Column, vertical: hours above minutes, the icons below one another
     Component {
         id: columnVertical
 
@@ -131,7 +131,7 @@ StripItem {
         }
     }
 
-    // 0 Column, horizontal: one line
+    // Column, horizontal: one line
     Component {
         id: columnHorizontal
 
@@ -143,7 +143,7 @@ StripItem {
         }
     }
 
-    // 1 Row, vertical: the time in one line, the icons in a row below
+    // Row, vertical: the time in one line, the icons in a row below
     Component {
         id: rowVertical
 
@@ -155,7 +155,7 @@ StripItem {
         }
     }
 
-    // 1 Row, horizontal: the time above the icons, narrower than one line
+    // Row, horizontal: the time above the icons, narrower than one line
     Component {
         id: rowHorizontal
 
@@ -167,7 +167,7 @@ StripItem {
         }
     }
 
-    // 2 Grid, vertical: the time, four icons in two rows below
+    // Grid, vertical: the time, four icons in two rows below
     Component {
         id: gridVertical
 
@@ -179,7 +179,7 @@ StripItem {
         }
     }
 
-    // 2 Grid, horizontal: the time, the grid next to it
+    // Grid, horizontal: the time, the grid next to it
     Component {
         id: gridHorizontal
 
@@ -191,7 +191,7 @@ StripItem {
         }
     }
 
-    // 3 Analog, vertical: the clock face, the icons in a row below
+    // Analog, vertical: the clock face, the icons in a row below
     Component {
         id: analogVertical
 
@@ -203,7 +203,7 @@ StripItem {
         }
     }
 
-    // 3 Analog, horizontal: the clock face, the icons next to it
+    // Analog, horizontal: the clock face, the icons next to it
     Component {
         id: analogHorizontal
 
