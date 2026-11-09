@@ -19,6 +19,19 @@ qt_add_qml_module(MaiaFrontend
         QML_FILES shell/LayerBottom.qml
         QML_FILES shell/AvailableFonts.qml
         QML_FILES shell/LayerTop.qml
+        QML_FILES shell/StripItem.qml
+        QML_FILES shell/controlcenter/ConnectivityModule.qml
+        QML_FILES shell/controlcenter/ControlCenter.qml
+        QML_FILES shell/controlcenter/ControlCenterButton.qml
+        QML_FILES shell/controlcenter/ControlCenterState.qml
+        QML_FILES shell/controlcenter/ModeGlyph.qml
+        QML_FILES shell/controlcenter/ModulePlatter.qml
+        QML_FILES shell/controlcenter/PasswordField.qml
+        QML_FILES shell/controlcenter/RoundToggle.qml
+        QML_FILES shell/controlcenter/SmallTile.qml
+        QML_FILES shell/controlcenter/VerticalSlider.qml
+        QML_FILES shell/controlcenter/WideTile.qml
+        QML_FILES shell/controlcenter/WifiModule.qml
         QML_FILES shell/dock/AppLibraryGlyph.qml
         QML_FILES shell/dock/Dock.qml
         QML_FILES shell/dock/DockButton.qml
@@ -29,7 +42,6 @@ qt_add_qml_module(MaiaFrontend
         QML_FILES shell/library/SearchField.qml
         QML_FILES shell/session/SessionActionButton.qml
         QML_FILES shell/session/SessionScreen.qml
-        QML_FILES shell/status/AppearanceSwitch.qml
         QML_FILES shell/status/PowerButton.qml
         QML_FILES shell/status/StatusArea.qml
         QML_FILES shell/menu/DesktopMenu.qml

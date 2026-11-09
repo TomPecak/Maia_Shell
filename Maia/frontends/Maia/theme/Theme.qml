@@ -7,7 +7,7 @@ import QtCore
 // backgrounds, separator, system colors) in a light and a dark variant. Opaque surfaces only, no
 // blur: a layer-shell surface cannot see the windows below it.
 //
-// The mode is kept between sessions (the [MaiaAppearance] group of ~/.config/Maia/Maia_<version>.conf).
+// The mode is kept between sessions (the [MaiaAppearance] group of ~/.config/maia/<version>/maia.conf).
 // Each layer of the frontend is its own process with its own copy of this singleton: a change made
 // in one layer reaches the others only at their next start (TODO.md, item 7).
 QtObject {
@@ -58,6 +58,24 @@ QtObject {
     readonly property color scrim: dark ? Qt.rgba(0, 0, 0, 0.4) : Qt.rgba(0, 0, 0, 0.32)
     readonly property color shadow: Qt.rgba(0, 0, 0, dark ? 0.5 : 0.22)
 
+    // --- Control Center ---
+
+    // Dims the desktop below the Control Center, as the session screen does (its modules lie on the
+    // desktop itself, without a panel around them); at least 0.25 for Wayfire's blur, see scrim
+    readonly property color controlCenterScrim: dark ? Qt.rgba(0, 0, 0, 0.5) : Qt.rgba(0, 0, 0, 0.32)
+    // The modules: the translucent material of the Control Center of iPadOS (over the blurred
+    // desktop where the compositor blurs, over the dimmed one where it does not)
+    readonly property color module: dark ? Qt.rgba(44 / 255, 44 / 255, 46 / 255, 0.84)
+                                         : Qt.rgba(1, 1, 1, 0.8)
+    readonly property color moduleHover: dark ? Qt.rgba(62 / 255, 62 / 255, 66 / 255, 0.9)
+                                              : Qt.rgba(1, 1, 1, 0.94)
+    // A round toggle that is off, and the track of a slider
+    readonly property color toggleOff: dark ? Qt.rgba(118 / 255, 118 / 255, 128 / 255, 0.36)
+                                            : Qt.rgba(120 / 255, 120 / 255, 128 / 255, 0.2)
+    // The level of a slider, white in both modes as in iPadOS, and the glyph drawn on it
+    readonly property color sliderFill: "#ffffff"
+    readonly property color sliderGlyph: "#8e8e93"
+
     // --- Fills (controls on a surface) ---
 
     // tertiarySystemFill: search field, segmented control track
@@ -83,6 +101,7 @@ QtObject {
     readonly property color orange: dark ? "#ff9f0a" : "#ff9500"
     readonly property color pink: dark ? "#ff375f" : "#ff2d55"
     readonly property color yellow: dark ? "#ffd60a" : "#ffcc00"
+    readonly property color indigo: dark ? "#5e5ce6" : "#5856d6"
     // Destructive actions, and the same under the pointer
     readonly property color red: dark ? "#ff453a" : "#ff3b30"
     readonly property color redHover: dark ? "#ff6961" : "#ff5e55"

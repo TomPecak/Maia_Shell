@@ -3,6 +3,7 @@ import org.kde.layershell 1.0 as LayerShell
 
 import Maia.Backend as Maia
 
+import "controlcenter"
 import "dock"
 import "library"
 import "session"
@@ -92,12 +93,56 @@ Window{
     LayerShell.Window.exclusionZone: stripThickness
     // The keyboard only while the App Library is open: its search field takes the typing at once.
     // Otherwise the window never takes the keyboard from the applications.
-    LayerShell.Window.keyboardInteractivity: dock.libraryOpen || root.sessionOpen
+    LayerShell.Window.keyboardInteractivity: dock.libraryOpen || root.sessionOpen || root.controlCenterOpen
                                              ? LayerShell.Window.KeyboardInteractivityExclusive
                                              : LayerShell.Window.KeyboardInteractivityNone
 
     // The session screen (sleep, restart, shut down, log out) is open
     property bool sessionOpen: false
+    // The Control Center is open
+    property bool controlCenterOpen: false
+
+    // One overlay at a time: the App Library, the Control Center, the session screen. The one that
+    // opens closes the others; the window that had the keyboard before the first one gets it back
+    // when the last closes.
+    onControlCenterOpenChanged: {
+        if (!controlCenterOpen)
+            return
+        if (!dock.libraryOpen && !sessionOpen)
+            dock.rememberFocus()
+        dock.libraryOpen = false
+        sessionOpen = false
+    }
+    onSessionOpenChanged: {
+        if (sessionOpen)
+            controlCenterOpen = false
+    }
+    Connections {
+        target: dock
+
+        function onLibraryOpenChanged() {
+            if (dock.libraryOpen)
+                root.controlCenterOpen = false
+        }
+    }
+
+    // Wi-Fi, the volume and the rest of the Control Center, shared by its button and the modules
+    ControlCenterState {
+        id: controlCenterState
+    }
+
+    // NetworkManager asks for a password (joining a network from the Wi-Fi settings, a saved
+    // password refused): the network list of the Control Center asks it
+    Connections {
+        target: controlCenterState.wifiPrompt
+
+        function onPendingChanged() {
+            if (!controlCenterState.wifiPrompt.pending)
+                return
+            controlCenter.page = "wifi"
+            root.controlCenterOpen = true
+        }
+    }
 
     //color: "#AA112233"
     color: "transparent"
@@ -113,9 +158,9 @@ Window{
         color: Qt.rgba(0.15, 0.55, 1.0, 0.22)
     }
 
-    // Light/dark switch and power button, at the end of the strip the dock reserves (see
-    // StatusArea.qml). Follows the anchored edge, i.e. moves once the dock rests at a new edge.
-    // Below the App Library, which dims it.
+    // The power button, at the end of the strip the dock reserves (see StatusArea.qml); the light /
+    // dark mode is in the Control Center. Follows the anchored edge, i.e. moves once the dock rests
+    // at a new edge. Below the App Library, which dims it.
     StatusArea {
         id: statusArea
 
@@ -135,6 +180,27 @@ Window{
             dock.rememberFocus()
             root.sessionOpen = true
         }
+    }
+
+    // The time and the state of Wi-Fi, volume and battery at the start of the strip the dock
+    // reserves (the power button is at its end): opens the Control Center. Moves with the dock
+    // like the power button. Below the App Library, which dims it.
+    ControlCenterButton {
+        id: controlCenterButton
+
+        readonly property real endMargin: 2 * dock.edgeMargin
+
+        controlCenter: controlCenterState
+        edge: root.anchoredEdge
+        checked: root.controlCenterOpen
+        x: placedEdge === Qt.LeftEdge ? dock.edgeMargin + (dock.shortSize - width) / 2
+         : placedEdge === Qt.RightEdge ? root.width - dock.edgeMargin - (dock.shortSize + width) / 2
+         : endMargin
+        y: placedEdge === Qt.TopEdge ? dock.edgeMargin + (dock.shortSize - height) / 2
+         : placedEdge === Qt.BottomEdge ? root.height - dock.edgeMargin - (dock.shortSize + height) / 2
+         : endMargin
+
+        onClicked: root.controlCenterOpen = !root.controlCenterOpen
     }
 
     AppLibrary {
@@ -161,6 +227,24 @@ Window{
 
         // Where it was left; dragging sets the edge itself afterwards
         edge: dockState.edge
+    }
+
+    // Above the dock: while it is open the screen belongs to it (modal, like the session screen).
+    // Its modules gather in the corner of its button.
+    ControlCenter {
+        id: controlCenter
+
+        anchors.fill: parent
+        open: root.controlCenterOpen
+        controlCenter: controlCenterState
+        dockEdge: controlCenterButton.placedEdge
+        dockStrip: root.stripThickness
+
+        onCloseRequested: root.controlCenterOpen = false
+        onDismissed: {
+            if (!dock.libraryOpen && !root.sessionOpen)
+                dock.returnFocus()
+        }
     }
 
     // Above everything, the dock included: the session concerns the whole computer
