@@ -188,16 +188,16 @@ Item {
                 onClicked: center.controlCenter.nightLight = !center.controlCenter.nightLight
             }
 
-            SmallTile {
+            // TEMPORARY: trying out the layouts of the Control Center button
+            LayoutTile {
                 x: d.cellX(1); y: d.cellY(2)
                 width: d.span(1); height: d.span(1)
                 appear: d.appear(1, 2, 1, 1)
                 transformOrigin: d.cornerOrigin
-                title: qsTr("Focus")
-                icon: center.controlCenter.icon("notifications-disabled-symbolic")
-                onColor: Theme.indigo
-                checked: center.controlCenter.focus
-                onClicked: center.controlCenter.focus = !center.controlCenter.focus
+                current: center.controlCenter.buttonLayout
+                count: center.controlCenter.buttonLayoutNames.length
+                currentName: center.controlCenter.buttonLayoutNames[current] ?? ""
+                onLayoutRequested: function (layout) { center.controlCenter.setButtonLayout(layout) }
             }
 
             WideTile {

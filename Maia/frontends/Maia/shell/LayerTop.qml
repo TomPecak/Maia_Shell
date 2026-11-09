@@ -230,12 +230,6 @@ Window{
 
         // Where it was left; dragging sets the edge itself afterwards
         edge: dockState.edge
-
-        // TEMPORARY: the switcher of the Control Center button layouts
-        controlCenterLayout: controlCenterState.buttonLayout
-        controlCenterLayoutCount: controlCenterButton.layoutCount
-        controlCenterLayoutName: controlCenterButton.layoutNames[controlCenterState.buttonLayout] ?? ""
-        onControlCenterLayoutRequested: function (layout) { controlCenterState.setButtonLayout(layout) }
     }
 
     // Above the dock: while it is open the screen belongs to it (modal, like the session screen).

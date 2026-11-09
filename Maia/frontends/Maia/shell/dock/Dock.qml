@@ -41,12 +41,6 @@ Rectangle {
     property int edge: Qt.TopEdge
     // Whether the App Library is open
     property bool libraryOpen: false
-
-    // TEMPORARY: the switcher of the Control Center button layouts (LayoutSwitcher.qml)
-    property int controlCenterLayout: 0
-    property int controlCenterLayoutCount: 1
-    property string controlCenterLayoutName
-    signal controlCenterLayoutRequested(int layout)
     // The App Library button, the library grows out of it
     readonly property T.Control libraryButton: libraryButton
 
@@ -210,23 +204,6 @@ Rectangle {
             contentItem: AppLibraryGlyph {}
 
             onClicked: dock.libraryOpen = !dock.libraryOpen
-        }
-
-        // TEMPORARY: trying out the layouts of the Control Center button
-        DockSeparator {
-            Layout.preferredWidth: dock.vertical ? dock.buttonSize : 1
-            Layout.preferredHeight: dock.vertical ? 1 : dock.buttonSize
-        }
-
-        LayoutSwitcher {
-            Layout.preferredWidth: dock.buttonSize
-            Layout.preferredHeight: dock.buttonSize
-            current: dock.controlCenterLayout
-            count: dock.controlCenterLayoutCount
-            currentName: dock.controlCenterLayoutName
-
-            onPreviousRequested: dock.controlCenterLayoutRequested((current + count - 1) % count)
-            onNextRequested: dock.controlCenterLayoutRequested((current + 1) % count)
         }
     }
 

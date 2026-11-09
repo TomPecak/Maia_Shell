@@ -10,7 +10,7 @@ import MaiaFrontend
 // Real: Wi-Fi (the Maia network service, Maia.Network), the volume (the audio backend of Maia),
 // the light / dark mode (Theme).
 // Mock-ups (no backend in Maia yet; they change only what is shown, like Lumen's quick settings):
-// Bluetooth, airplane mode, night light, focus, brightness, battery. Each is one property below,
+// Bluetooth, airplane mode, night light, brightness, battery. Each is one property below,
 // to be replaced by its backend.
 QtObject {
     id: state
@@ -82,7 +82,6 @@ QtObject {
     property bool bluetooth: true
     property bool airplaneMode: false
     property bool nightLight: false
-    property bool focus: false
     // 0..1
     property real brightness: 0.7
     // Percent, and whether the charger is plugged in
@@ -97,6 +96,7 @@ QtObject {
 
     // ControlCenterButton.layout; kept between sessions (the [MaiaControlCenter] group of maia.conf)
     readonly property int buttonLayout: settings.buttonLayout
+    readonly property var buttonLayoutNames: [qsTr("Column"), qsTr("Row"), qsTr("Grid"), qsTr("Analog")]
 
     function setButtonLayout(layout) {
         settings.buttonLayout = layout

@@ -25,6 +25,7 @@ qt_add_qml_module(MaiaFrontend
         QML_FILES shell/controlcenter/ControlCenter.qml
         QML_FILES shell/controlcenter/ControlCenterButton.qml
         QML_FILES shell/controlcenter/ControlCenterState.qml
+        QML_FILES shell/controlcenter/LayoutTile.qml
         QML_FILES shell/controlcenter/ModeGlyph.qml
         QML_FILES shell/controlcenter/ModulePlatter.qml
         QML_FILES shell/controlcenter/PasswordField.qml
@@ -38,7 +39,6 @@ qt_add_qml_module(MaiaFrontend
         QML_FILES shell/dock/DockButton.qml
         QML_FILES shell/dock/DockSeparator.qml
         QML_FILES shell/dock/DockState.qml
-        QML_FILES shell/dock/LayoutSwitcher.qml
         QML_FILES shell/library/AppLibrary.qml
         QML_FILES shell/library/AppLibraryItem.qml
         QML_FILES shell/library/SearchField.qml

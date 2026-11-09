@@ -14,7 +14,7 @@ import ".."
 // screen, as in the top right corner of iPadOS). Moves with the dock like the power button
 // (StripItem.qml).
 //
-// Layouts (being tried out, chosen with the switcher in the dock): each has a variant along a
+// Layouts (being tried out, chosen with a module of the Control Center): each has a variant along a
 // vertical strip (dock at the left or right, as narrow as the dock) and along a horizontal one.
 //   0 Column   vertical: hours above minutes, the icons below one another; horizontal: one line
 //   1 Row      vertical: "14:37", the icons in a row below; horizontal: the time above the icons
@@ -29,9 +29,6 @@ StripItem {
     property bool checked: false
     // One of the layouts above
     property int layout: 0
-
-    readonly property int layoutCount: 4
-    readonly property var layoutNames: [qsTr("Column"), qsTr("Row"), qsTr("Grid"), qsTr("Analog")]
 
     signal clicked()
 
