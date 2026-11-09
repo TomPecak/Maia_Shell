@@ -299,10 +299,6 @@ Window {
         anchors.rightMargin: 80
     }
 
-    LicenseWarning{
-        anchors.centerIn: wallpaper
-    }
-
     // Above the taskbar (the desktop reaches under it)
     BrandingLabel {
         anchors.bottom: parent.bottom

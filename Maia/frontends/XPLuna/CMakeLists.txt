@@ -17,7 +17,6 @@ set(XPLUNA_QML_FILES
     style_items/XPMenu.qml
     style_items/XPMenuItem.qml
     style_items/XPMenuSeparator.qml
-    components/LicenseWarning.qml
 
     # shell, one directory per part of the GUI
     shell/Main.qml
