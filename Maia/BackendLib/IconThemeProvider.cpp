@@ -1,4 +1,4 @@
-#include "iconthemeprovider.hpp"
+#include "IconThemeProvider.hpp"
 #include <QFile>
 #include <QIcon>
 

@@ -1,4 +1,0 @@
-module CutefishFrontend
-
-singleton Theme 1.0 FishUI/Theme.qml
-singleton Units 1.0 FishUI/Units.qml

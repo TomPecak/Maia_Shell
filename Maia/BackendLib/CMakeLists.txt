@@ -107,51 +107,10 @@ qt_add_qml_module(${PROJECT_NAME}
     SOURCES cmake_config.h.in
     SOURCES MIconItem.hpp
     SOURCES MIconItem.cpp
-    SOURCES cutefish/dock/applicationmodel.h
-    SOURCES cutefish/dock/applicationmodel.cpp
-    SOURCES cutefish/dock/applicationitem.h
-    SOURCES cutefish/dock/systemappmonitor.h
-    SOURCES cutefish/dock/systemappmonitor.cpp
-    SOURCES cutefish/dock/systemappitem.h
-    SOURCES cutefish/dock/systemappitem.cpp
-    SOURCES cutefish/dock/xwindowinterface.h
-    SOURCES cutefish/dock/xwindowinterface.cpp
-    SOURCES cutefish/dock/docksettings.h
-    SOURCES cutefish/dock/docksettings.cpp
-    SOURCES cutefish/dock/utils.h
-    SOURCES cutefish/dock/utils.cpp
-    SOURCES cutefish/dock/processprovider.h
-    SOURCES cutefish/dock/processprovider.cpp
+    SOURCES IconThemeProvider.hpp
+    SOURCES IconThemeProvider.cpp
     SOURCES MWindowBlur.hpp
     SOURCES MWindowBlur.cpp
-    SOURCES cutefish/launcher/launchermodel.h
-    SOURCES cutefish/launcher/launchermodel.cpp
-    SOURCES cutefish/launcher/appitem.h
-    SOURCES cutefish/launcher/appitem.cpp
-    SOURCES cutefish/launcher/desktopproperties.h
-    SOURCES cutefish/launcher/desktopproperties.cpp
-    SOURCES cutefish/launcher/processproviderlauncher.h
-    SOURCES cutefish/launcher/processproviderlauncher.cpp
-    SOURCES cutefish/launcher/pagemodel.h
-    SOURCES cutefish/launcher/pagemodel.cpp
-    SOURCES cutefish/launcher/iconitem.cpp
-    SOURCES cutefish/launcher/iconitem.h
-    SOURCES cutefish/statusbar/MMenuPopupWindow.h
-    SOURCES cutefish/statusbar/MMenuPopupWindow.cpp
-    SOURCES cutefish/fishui/MWindowShadow.h
-    SOURCES cutefish/fishui/MWindowShadow.cpp
-    SOURCES cutefish/fishui/tileset.h
-    SOURCES cutefish/fishui/tileset.cpp
-    SOURCES cutefish/fishui/boxshadowrenderer.h
-    SOURCES cutefish/fishui/boxshadowrenderer.cpp
-    SOURCES cutefish/statusbar/MActivity.hpp
-    SOURCES cutefish/statusbar/MActivity.cpp
-    SOURCES cutefish/statusbar/capplications.h
-    SOURCES cutefish/statusbar/capplications.cpp
-    SOURCES cutefish/fishui/iconthemeprovider.cpp
-    SOURCES cutefish/fishui/iconthemeprovider.hpp
-    SOURCES cutefish/statusbar/MBackgroundHelper.h
-    SOURCES cutefish/statusbar/MBackgroundHelper.cpp
     SOURCES
     SOURCES
     SOURCES server/LocaleSettingsService.hpp
@@ -181,10 +140,6 @@ target_sources(${PROJECT_NAME} PRIVATE ${FRONTEND_MANAGER_DBUS_SOURCES})
 #so that in the main application it would be possible to use headers, e.g., #include <Backend.hpp>
 target_include_directories(${PROJECT_NAME} PUBLIC
     ${CMAKE_CURRENT_BINARY_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/cutefish/dock
-    ${CMAKE_CURRENT_SOURCE_DIR}/cutefish/launcher
-    ${CMAKE_CURRENT_SOURCE_DIR}/cutefish/statusbar
-    ${CMAKE_CURRENT_SOURCE_DIR}/cutefish/fishui
 )
 
 target_link_libraries(${PROJECT_NAME}

@@ -28,7 +28,7 @@
 
 #include <QtQml/qqmlextensionplugin.h>
 
-#include <cutefish/fishui/iconthemeprovider.hpp>
+#include <IconThemeProvider.hpp>
 
 #include <cmake_config.h>
 
@@ -160,16 +160,13 @@ int main(int argc, char *argv[])
 
         // // Budowanie ostatecznych ścieżek
         // QString gnomeModulePath = basePath + QStringLiteral("/Gnome/");
-        // QString cutefishModulePath = basePath + QStringLiteral("/Cutefish/");
         // QString xplunaModulePath = basePath + QStringLiteral("/XPLuna/");
 
         // // Dodanie ścieżek importu do silnika QML
         // engine.addImportPath(gnomeModulePath);
-        // engine.addImportPath(cutefishModulePath);
         // engine.addImportPath(xplunaModulePath);
 
         // qDebug() << "[INFO] engine.addImportPath(gnomeModulePath) =" << gnomeModulePath;
-        // qDebug() << "[INFO] engine.addImportPath(cutefishModulePath) =" << cutefishModulePath;
         // qDebug() << "[INFO] engine.addImportPath(xplunaModulePath) =" << xplunaModulePath;
 
 

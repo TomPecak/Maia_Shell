@@ -3,7 +3,7 @@
 #include <QQmlContext>
 #include <QSurface>
 
-#include <iconthemeprovider.hpp>
+#include <IconThemeProvider.hpp>
 
 #include "../maia_version.h"
 

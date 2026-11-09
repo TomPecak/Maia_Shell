@@ -89,7 +89,6 @@ add_subdirectory(Maia/DeployFiles)
 # FRONTENDS
 add_subdirectory("Maia/frontends/Ubuntu 24.04/")
 add_subdirectory(Maia/frontends/XPLuna)
-add_subdirectory(Maia/frontends/Cutefish)
 add_subdirectory(Maia/frontends/Maia)
 add_subdirectory(Maia/frontends/Lumen)
 add_subdirectory(Maia/frontends/Experimental)

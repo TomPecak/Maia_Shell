@@ -256,8 +256,7 @@ Maia keeps its settings in two files in `~/.config/Maia/`, and both names contai
 After an update to a new version, Maia reads new, empty files: every user setting falls back to
 its default, although the old files are still there (`Maia_0.1.0.conf` and `Maia_0.2.0.conf` exist
 side by side on a developer machine). The two mechanisms also write two different files for no
-reason. The Cutefish code (`BackendLib/cutefish/dock/docksettings.cpp`) writes yet another file
-under a foreign name (`cutefishos/dock`).
+reason.
 
 ### Fix
 
