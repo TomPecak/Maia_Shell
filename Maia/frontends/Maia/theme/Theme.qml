@@ -72,9 +72,12 @@ QtObject {
     // A round toggle that is off, and the track of a slider
     readonly property color toggleOff: dark ? Qt.rgba(118 / 255, 118 / 255, 128 / 255, 0.36)
                                             : Qt.rgba(120 / 255, 120 / 255, 128 / 255, 0.2)
-    // The level of a slider, white in both modes as in iPadOS, and the glyph drawn on it
-    readonly property color sliderFill: "#ffffff"
+    // The level of a slider and its glyph, on the track and on the level. In the light mode the
+    // level is the accent: white (as in iPadOS) barely differs from the light module (about 1.15:1,
+    // under the 3:1 a control needs); in the dark mode white stands out well
+    readonly property color sliderFill: dark ? "#ffffff" : accent
     readonly property color sliderGlyph: "#8e8e93"
+    readonly property color sliderGlyphOnFill: dark ? "#8e8e93" : "#ffffff"
 
     // --- Fills (controls on a surface) ---
 

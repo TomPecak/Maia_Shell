@@ -64,7 +64,9 @@ ModulePlatter {
         height: 24
         source: slider.icon
         isMask: true
-        color: Theme.sliderGlyph
+        // Its own color on the level once the level covers its middle
+        color: level.height >= glyph.anchors.bottomMargin + glyph.height / 2 ? Theme.sliderGlyphOnFill
+                                                                             : Theme.sliderGlyph
     }
 
     MouseArea {
