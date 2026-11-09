@@ -1,4 +1,5 @@
 import QtQuick
+import QtCore
 
 import Maia.Network as Network
 import MaiaFrontend
@@ -90,6 +91,22 @@ QtObject {
 
     readonly property string batteryIcon: batteryCharging ? icon("battery-full-charging-symbolic")
                                                           : icon("battery-080-symbolic")
+    readonly property string bluetoothIcon: icon("network-bluetooth-symbolic")
+
+    // --- The layout of the button in the dock strip (being tried out) ---
+
+    // ControlCenterButton.layout; kept between sessions (the [MaiaControlCenter] group of maia.conf)
+    readonly property int buttonLayout: settings.buttonLayout
+
+    function setButtonLayout(layout) {
+        settings.buttonLayout = layout
+    }
+
+    property Settings settings: Settings {
+        category: "MaiaControlCenter"
+
+        property int buttonLayout: 0
+    }
 
     // --- Helpers ---
 

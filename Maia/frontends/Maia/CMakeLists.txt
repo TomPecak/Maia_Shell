@@ -20,6 +20,7 @@ qt_add_qml_module(MaiaFrontend
         QML_FILES shell/AvailableFonts.qml
         QML_FILES shell/LayerTop.qml
         QML_FILES shell/StripItem.qml
+        QML_FILES shell/controlcenter/AnalogClock.qml
         QML_FILES shell/controlcenter/ConnectivityModule.qml
         QML_FILES shell/controlcenter/ControlCenter.qml
         QML_FILES shell/controlcenter/ControlCenterButton.qml
@@ -37,6 +38,7 @@ qt_add_qml_module(MaiaFrontend
         QML_FILES shell/dock/DockButton.qml
         QML_FILES shell/dock/DockSeparator.qml
         QML_FILES shell/dock/DockState.qml
+        QML_FILES shell/dock/LayoutSwitcher.qml
         QML_FILES shell/library/AppLibrary.qml
         QML_FILES shell/library/AppLibraryItem.qml
         QML_FILES shell/library/SearchField.qml

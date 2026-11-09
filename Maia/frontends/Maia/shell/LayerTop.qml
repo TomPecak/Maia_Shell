@@ -194,6 +194,7 @@ Window{
         controlCenter: controlCenterState
         edge: root.anchoredEdge
         checked: root.controlCenterOpen
+        layout: controlCenterState.buttonLayout
         // Right end of a horizontal strip, top end of a vertical one
         x: placedEdge === Qt.LeftEdge ? dock.edgeMargin + (dock.shortSize - width) / 2
          : placedEdge === Qt.RightEdge ? root.width - dock.edgeMargin - (dock.shortSize + width) / 2
@@ -229,6 +230,12 @@ Window{
 
         // Where it was left; dragging sets the edge itself afterwards
         edge: dockState.edge
+
+        // TEMPORARY: the switcher of the Control Center button layouts
+        controlCenterLayout: controlCenterState.buttonLayout
+        controlCenterLayoutCount: controlCenterButton.layoutCount
+        controlCenterLayoutName: controlCenterButton.layoutNames[controlCenterState.buttonLayout] ?? ""
+        onControlCenterLayoutRequested: function (layout) { controlCenterState.setButtonLayout(layout) }
     }
 
     // Above the dock: while it is open the screen belongs to it (modal, like the session screen).
