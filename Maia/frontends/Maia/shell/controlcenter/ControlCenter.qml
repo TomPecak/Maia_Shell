@@ -28,8 +28,8 @@ Item {
 
     property bool open: false
     property ControlCenterState controlCenter
-    // Edge of the dock and the strip it reserves there: the button is at the start of the strip
-    // (left end of a horizontal one, top end of a vertical one) and the modules gather next to it
+    // Edge of the dock and the strip it reserves there: the button is at the right end of a
+    // horizontal strip and the top end of a vertical one, and the modules gather next to it
     property int dockEdge: Qt.BottomEdge
     property real dockStrip: 0
     // "main" (the modules) or "wifi" (the network list)
@@ -57,7 +57,7 @@ Item {
     readonly property real screenMargin: 16
 
     // The corner the modules gather in, next to the button
-    readonly property bool atRight: dockEdge === Qt.RightEdge
+    readonly property bool atRight: dockEdge !== Qt.LeftEdge
     readonly property bool atBottom: dockEdge === Qt.BottomEdge
 
     // --- Dimming ---
@@ -106,8 +106,8 @@ Item {
         height: Math.max(center.gridSize, wifiPage.height)
 
         x: center.dockEdge === Qt.LeftEdge ? center.dockStrip + center.dockGap
-         : center.atRight ? center.width - center.dockStrip - center.dockGap - width
-         : center.screenMargin
+         : center.dockEdge === Qt.RightEdge ? center.width - center.dockStrip - center.dockGap - width
+         : center.width - center.screenMargin - width
         y: center.dockEdge === Qt.TopEdge ? center.dockStrip + center.dockGap
          : center.atBottom ? center.height - center.dockStrip - center.dockGap - height
          : center.screenMargin

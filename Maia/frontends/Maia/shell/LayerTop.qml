@@ -158,7 +158,7 @@ Window{
         color: Qt.rgba(0.15, 0.55, 1.0, 0.22)
     }
 
-    // The power button, at the end of the strip the dock reserves (see StatusArea.qml); the light /
+    // The power button, at one end of the strip the dock reserves (see StatusArea.qml); the light /
     // dark mode is in the Control Center. Follows the anchored edge, i.e. moves once the dock rests
     // at a new edge. Below the App Library, which dims it.
     StatusArea {
@@ -168,9 +168,10 @@ Window{
 
         edge: root.anchoredEdge
         sessionOpen: root.sessionOpen
+        // Left end of a horizontal strip, bottom end of a vertical one
         x: placedEdge === Qt.LeftEdge ? dock.edgeMargin + (dock.shortSize - width) / 2
          : placedEdge === Qt.RightEdge ? root.width - dock.edgeMargin - (dock.shortSize + width) / 2
-         : root.width - endMargin - width
+         : endMargin
         y: placedEdge === Qt.TopEdge ? dock.edgeMargin + (dock.shortSize - height) / 2
          : placedEdge === Qt.BottomEdge ? root.height - dock.edgeMargin - (dock.shortSize + height) / 2
          : root.height - endMargin - height
@@ -182,8 +183,8 @@ Window{
         }
     }
 
-    // The time and the state of Wi-Fi, volume and battery at the start of the strip the dock
-    // reserves (the power button is at its end): opens the Control Center. Moves with the dock
+    // The time and the state of Wi-Fi, volume and battery at the other end of the strip the dock
+    // reserves than the power button: opens the Control Center. Moves with the dock
     // like the power button. Below the App Library, which dims it.
     ControlCenterButton {
         id: controlCenterButton
@@ -193,9 +194,10 @@ Window{
         controlCenter: controlCenterState
         edge: root.anchoredEdge
         checked: root.controlCenterOpen
+        // Right end of a horizontal strip, top end of a vertical one
         x: placedEdge === Qt.LeftEdge ? dock.edgeMargin + (dock.shortSize - width) / 2
          : placedEdge === Qt.RightEdge ? root.width - dock.edgeMargin - (dock.shortSize + width) / 2
-         : endMargin
+         : root.width - endMargin - width
         y: placedEdge === Qt.TopEdge ? dock.edgeMargin + (dock.shortSize - height) / 2
          : placedEdge === Qt.BottomEdge ? root.height - dock.edgeMargin - (dock.shortSize + height) / 2
          : endMargin

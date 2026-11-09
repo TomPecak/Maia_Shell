@@ -3,10 +3,11 @@ import QtQuick
 import MaiaFrontend
 import ".."
 
-// The power button at the end of the strip the dock reserves. It sits in the reserved strip, so
-// it never covers a window (the corners outside the strip hold the buttons of maximized windows);
-// it is last, in the corner, where system controls are on every desktop. The Control Center is at
-// the other end of the strip (shell/controlcenter/). Moves with the dock (StripItem.qml).
+// The power button at one end of the strip the dock reserves: the left end of a horizontal strip,
+// the bottom end of a vertical one. It sits in the reserved strip, so it never covers a window
+// (the corners outside the strip hold the buttons of maximized windows). The Control Center is at
+// the other end (shell/controlcenter/): top right, where it is on iPadOS. Moves with the dock
+// (StripItem.qml).
 StripItem {
     id: area
 
