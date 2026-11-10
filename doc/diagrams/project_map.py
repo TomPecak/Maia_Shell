@@ -463,8 +463,8 @@ class Step:
 
 def session_start(s, y):
     y = section_title(s, y, "1", "The start of a session: who starts whom, in which order",
-                      "Maia/DeployFiles/session/*.in → <prefix>/bin/ (the .desktop files: /usr/share/wayland-sessions/)")
-    y += 26
+                      "Maia/DeployFiles/session/*.in → <prefix>/bin/; what the session runs: <prefix>/etc/maia/session.toml")
+    y += 50
     cols = 8
     gap = 112
     w = (W - 80 - gap * (cols - 1)) / cols
@@ -480,47 +480,48 @@ def session_start(s, y):
                     "← session/maia-kwin.desktop.in"],
              lines=["Exec=<prefix>/bin/run_maia_kwin.sh (or run_maia_wayfire.sh).",
                     "install_on_ubuntu.sh copies the files there."]),
-        Step(3, "Session script, phase 1", "bash script · one process", SCRIPT, shape="script",
+        Step(3, "Session script", "bash script · becomes the session service", SCRIPT, shape="script",
              paths=["<prefix>/bin/run_maia_kwin.sh", "<prefix>/bin/run_maia_wayfire.sh",
                     "+ maia-session-common.sh"],
              lines=["No session bus yet: exec dbus-run-session <the script> (starts dbus-daemon --session, "
                     "runs the script again inside).",
                     "maia_session_prepare: XDG_SESSION_TYPE=wayland, XDG_CURRENT_DESKTOP=KDE, the distribution's "
                     "plasma-workspace/env/*.sh, <prefix>/etc/xdg last in XDG_CONFIG_DIRS, QT_QPA_PLATFORM=wayland;xcb.",
-                    "Output: ~/maia_<v>_kwin_session.log (or _wayfire_)."]),
+                    "Wayfire: makes ~/.config/maia/<v>/wayfire.ini on the first start.",
+                    "Output: ~/maia_<v>_kwin_session.log (or _wayfire_), for the whole session."]),
+        Step(4, "maia-session-service", "the main process of the session · Rust", PROCESS_MAIA,
+             paths=["<prefix>/libexec/maia-session-service", "  --compositor kwin | wayfire"],
+             lines=["Reads session.toml; starts the compositor and waits for its display (at most 20 s).",
+                    "Then the processes in their order; starts them again after a crash; ends the session in order.",
+                    "The only part of Maia that talks to systemd-logind."]),
         None,  # the compositors, drawn below
-        Step(5, "Session script, phase 2", "the same script, started by the compositor", SCRIPT, shape="script",
-             lines=["MAIA_SESSION_STAGE=inside_kwin / inside_wayfire tells the phases apart.",
-                    "dbus-update-activation-environment --systemd: D-Bus activated services know the display.",
-                    "Wayfire only: kglobalacceld.",
-                    "systemctl --user start plasma-kwallet-pam, plasma-polkit-agent, plasma-powerdevil, "
-                    "plasma-kaccess (or their autostart program)."]),
-        Step(6, "Maia services", "processes in the background (&)", PROCESS_MAIA,
-             paths=["<prefix>/libexec/maia-windows-service", "<prefix>/libexec/maia-network-service",
+        Step(6, "KDE's units, Maia services", "started in the order of session.toml", PROCESS_MAIA,
+             paths=["kglobalacceld (Wayfire only)", "systemctl --user start plasma-kwallet-pam,",
+                    "  plasma-polkit-agent, plasma-powerdevil, plasma-kaccess",
+                    "<prefix>/libexec/maia-windows-service", "<prefix>/libexec/maia-network-service",
                     "<prefix>/libexec/maia-appearance-service"],
-             lines=["Started before the server, so the dock has the windows at once (the shell reconnects "
-                    "every second anyway).",
+             lines=["Before the shell, so that the dock has the windows at once.",
                     "maia-appearance-service in the KWin session only (no Wayfire backend yet)."]),
-        Step(7, "appMaiaServer", "the Maia server · the script waits for it", PROCESS_MAIA,
+        Step(7, "appMaiaServer", "the Maia server · started again after a crash", PROCESS_MAIA,
              paths=["<prefix>/bin/appMaiaServer -platform wayland"],
              lines=["Server mode: its D-Bus services (org.maia.*), then the QML engine.",
                     "MAIA_LOG_FILE=~/maia_<v>_server.log, MAIA_LOG_PORT=50001.",
-                    "Applications started from Maia inherit QT_QPA_PLATFORM=wayland;xcb."]),
+                    "5 crashes in 2 minutes end the session."]),
         Step(8, "The shell", "QML of the active frontend", PROCESS_CLIENT,
              paths=["<prefix>/frontends/<name>/shell/Main.qml"],
              lines=["Loaded into appMaiaServer's QML engine (the active id is in maiarc).",
                     "MProxyWindow starts a window in its own process: appMaiaServer --mode client --source <qml> "
                     "--proxy-window-addr <socket> (the Maia frontend's LayerTop, LayerBottom)."]),
     ]
-    kwin = Step(4, "KWin", "compositor · system process", PROCESS_SYSTEM,
-                paths=["exec kwin_wayland_wrapper --xwayland", "  --exit-with-session=<script>"],
-                lines=["The wrapper restarts KWin after a crash; KWin runs the script again (phase 2) and ends "
-                       "with it.", "KWIN_WAYLAND_NO_PERMISSION_CHECKS=1 (development)."])
-    wayfire = Step(4, "Wayfire", "compositor · system process", PROCESS_SYSTEM,
-                   paths=["exec wayfire -c ~/.config/maia/<v>/wayfire.ini"],
-                   lines=["First start: the file is made from <prefix>/etc/maia/wayfire.ini (keyboard from kxkbrc).",
-                          "[autostart] runs $MAIA_SESSION_SCRIPT: phase 2. Wayfire has no --exit-with-session: "
-                          "phase 2 ends it."])
+    kwin = Step(5, "KWin", "compositor · system process", PROCESS_SYSTEM,
+                paths=["kwin_wayland_wrapper --xwayland", "  \"<the ready helper>\""],
+                lines=["The wrapper restarts KWin after a crash, on the same sockets.",
+                       "KWin starts the ready helper as an application: maia-session-service --compositor-ready "
+                       "reports WAYLAND_DISPLAY and DISPLAY."])
+    wayfire = Step(5, "Wayfire", "compositor · system process", PROCESS_SYSTEM,
+                   paths=["wayfire -c ~/.config/maia/<v>/wayfire.ini"],
+                   lines=["[autostart] runs $MAIA_SESSION_SCRIPT, which the service sets to the ready helper.",
+                          "When Wayfire ends, the session ends."])
     heights = [st.height(w) for st in steps if st]
     comp_h = kwin.height(w) + 22 + wayfire.height(w)
     band_h = max(max(heights), comp_h)
@@ -532,42 +533,45 @@ def session_start(s, y):
             rects["wayfire"] = wayfire.draw(s, xs[i], top + kwin.height(w) + 22, w)
             continue
         rects[i] = st.draw(s, xs[i], y + (band_h - st.height(w)) / 2, w)
-    # The order: arrows between the steps
+
     def label_before(b, y, text):
         s.text(b.x - 8, y - 9, text, size=11, weight="bold", fill="#475569", anchor="end")
 
     my = y + band_h / 2
-    for i, text in [(0, "reads"), (1, "runs Exec="), (4, "starts (&)"), (6, "loads")]:
+    for i, text in [(0, "reads"), (1, "runs Exec="), (2, "exec"), (6, "loads")]:
         a, b = rects[i], rects[i + 1]
         s.arrow([(a.right, my), (b.x, my)], "spawn", width=2.6)
         label_before(b, my, text)
-    a = rects[2]
-    for key, text in [("kwin", "exec (KWin)"), ("wayfire", "exec (Wayfire)")]:
+    # 1. The compositor
+    a = rects[3]
+    for key, text in [("kwin", "1. starts (KWin)"), ("wayfire", "1. starts (Wayfire)")]:
         b = rects[key]
         lx = a.right + 24
         s.arrow([(a.right, a.mid_y()), (lx, a.mid_y()), (lx, b.mid_y()), (b.x, b.mid_y())], "spawn", width=2.6)
         label_before(b, b.mid_y(), text)
-    b = rects[4]
-    for key, text in [("kwin", "runs phase 2"), ("wayfire", "[autostart]")]:
-        a = rects[key]
-        lx = b.x - 24
-        s.arrow([(a.right, a.mid_y()), (lx, a.mid_y()), (lx, b.mid_y()), (b.x, b.mid_y())], "spawn", width=2.6)
-        s.text(a.right + 8, a.mid_y() - 9, text, size=11, weight="bold", fill="#475569")
-    # Phase 2 starts the server after the services, and waits for it
-    a, b = rects[4], rects[6]
+    # The ready helper reports the display back
+    c, svc = rects["wayfire"], rects[3]
     under = y + band_h + 18
-    s.arrow([(a.mid_x(), a.bottom), (a.mid_x(), under), (b.mid_x(), under), (b.mid_x(), b.bottom)], "spawn", width=2.6)
-    s.text(rects[5].mid_x(), under - 8, "then starts appMaiaServer and waits for it", size=11, weight="bold",
-           fill="#475569", anchor="middle")
+    s.arrow([(c.mid_x(), c.bottom), (c.mid_x(), under), (svc.mid_x() + 40, under), (svc.mid_x() + 40, svc.bottom)],
+            "socket", width=2.4)
+    s.text((c.mid_x() + svc.mid_x()) / 2 + 20, under - 8, "the ready helper reports the display (session socket)",
+           size=11, weight="bold", fill="#0891b2", anchor="middle")
+    # 2. and 3.: the processes, after the display is known
+    over = y - 22
+    for target, text, dx in [(5, "2. then", -30), (6, "3. last", 30)]:
+        b = rects[target]
+        s.arrow([(svc.mid_x() + dx, svc.y), (svc.mid_x() + dx, over + (0 if dx < 0 else 10)),
+                 (b.mid_x(), over + (0 if dx < 0 else 10)), (b.mid_x(), b.y)], "spawn", width=2.6)
+        s.text(b.mid_x() + 8, over + (0 if dx < 0 else 10) + 16, text, size=11, weight="bold", fill="#475569")
     y += band_h + 44
     # The end of a session, and the development variant
     end = [
-        ("The end", "Sign out in the shell: MSessionManager.logout() → D-Bus org.maia.SessionService.logout → appMaiaServer "
-         "quits → phase 2 kills the Maia services and stops the KDE units → KWin ends with the script (--exit-with-session), "
-         "or the script sends TERM to Wayfire → dbus-run-session ends → SDDM shows the login screen again."),
-        ("Development", "<prefix>/bin/run_maia_nested_wayland.sh does the same inside a nested kwin_wayland window: its own "
-         "session bus, the simulated network (MAIA_NETWORK_BACKEND=fake), MAIA_FRONTENDS_PATH for frontends from the "
-         "sources; the connection data in $XDG_RUNTIME_DIR/maia-nested-wayland.env."),
+        ("The end", "Sign out in the shell: Session.logout() (Maia.Session) → session.capnp logout() → maia-session-service "
+         "stops the shell, then the other processes, KDE's units and the compositor → it exits → dbus-run-session ends → "
+         "SDDM shows the login screen. Power off and reboot ask logind first (maybe for the administrator's password)."),
+        ("Development", "<prefix>/bin/run_maia_nested_wayland.sh runs maia-session-service with the compositor kwin-nested "
+         "(a kwin_wayland window in the current session): its own session bus, the fake logind, the simulated network "
+         "(MAIA_NETWORK_BACKEND=fake); the connection data in $XDG_RUNTIME_DIR/maia-nested-wayland.env."),
     ]
     bw = (W - 80 - 30) / 2
     for i, (title, text) in enumerate(end):
@@ -805,16 +809,60 @@ def rows():
                     ]),
         ],
     )
-    server = dict(
+    session = dict(
         kernel=[Kernel("Power management", ["ACPI, /sys/power: suspend, reboot, power off for logind"],
                        name="k_power")],
         linux=[
             Process("systemd-logind", "system process · system D-Bus", PROCESS_SYSTEM, name="logind", children=[
                 Contract("org.freedesktop.login1", "dbusapi", None, [
-                    ("Manager", "", [("Suspend, Reboot, PowerOff", ""),
-                                     ("CanSuspend, CanReboot, CanPowerOff", "which buttons to show")])]),
+                    ("Manager", "", [("PowerOff, Reboot, Suspend, Hibernate, …", "interactive: polkit may ask"),
+                                     ("CanPowerOff, CanReboot, CanSuspend, …", "yes / no / challenge"),
+                                     ("PrepareForSleep, PrepareForShutdown", "signals")])]),
                 Card("The seat", "system", ["gives the compositor the GPU and the input devices"]),
             ]),
+        ],
+        service=[
+            Process("maia-session-service", "Maia service · Rust · the main process of the session", PROCESS_MAIA,
+                    path="Maia/services/session/service/ → <prefix>/libexec/", name="sessionsvc", children=[
+                        Card("session.rs, policy.rs, procs.rs", "rust", [
+                            "starts everything of session.toml in its order (section 1), each in its own process group",
+                            "a crashed child comes back after 1 s, 2 s, 4 s… (the shell: 5 crashes in 2 min end the session)",
+                            "ends the session in order: the shell, the others, KDE's units, the compositor",
+                            "children get SIGTERM if the service dies (PDEATHSIG); it reaps orphans (subreaper)"]),
+                        Card("power.rs: logind", "rust", [
+                            "the only part of Maia that talks to org.freedesktop.login1 (zbus)",
+                            "fake: MAIA_SESSION_BACKEND=fake (tests, nested sessions) logs, never acts"]),
+                        Contract("session.capnp", "capnp", "Maia/services/session/contract/session.capnp", [
+                            ("SessionService", "", [("watch(listener)", "state, ending, capabilities, children"),
+                                                    ("control()", "→ SessionControl"),
+                                                    ("compositorReady(environment)", "the ready helper")]),
+                            ("SessionControl", "", [("logout()", "end the session"),
+                                                    ("powerOff(), reboot()", "logind first, then the end"),
+                                                    ("suspend(), hibernate(), …", "sleep"),
+                                                    ("restartChild(name)", "start a child again by hand")])]),
+                        Socket("$MAIA_SESSION_SOCKET (session-$XDG_SESSION_ID.sock)", name="session_sock"),
+                    ]),
+            File("session.toml", ["<prefix>/etc/maia/session.toml"], [
+                "the compositors and the processes of a session: order, restarts, limits; one per Maia version"],
+                 name="session_toml"),
+        ],
+        module=[
+            Process("Maia.Session", "QML module · C++", "#047857", library=True,
+                    path="Maia/services/session/qml/ → <prefix>/lib/…/qml6/Maia/Session/", name="m_session", children=[
+                        Card("Session (singleton)", "qml", [
+                            "state, endingAction; canLogout, canPowerOff, canReboot, canSuspend, …",
+                            "logout(), powerOff(), reboot(), suspend(), …; actionFailed(action, error)"]),
+                        Card("SessionChildrenModel", "qml", ["the processes of the session, their state and restarts"]),
+                    ]),
+        ],
+        engine=Card("The session menu", "qmlfile", [
+            "Lumen's power menu, the Maia frontend's session screen, XPLuna's log off / turn off,",
+            "Ubuntu's control board: Session.canPowerOff, Session.logout(), …"], name="e_session"),
+        right=[],
+    )
+    server = dict(
+        kernel=[],
+        linux=[
             Process("dbus-daemon", "system processes · the two buses", PROCESS_SYSTEM, children=[
                 Card("System bus", "system", ["/run/dbus/system_bus_socket: NetworkManager, logind, polkit"]),
                 Card("Session bus", "system", ["started by dbus-run-session (session script, phase 1)",
@@ -831,9 +879,6 @@ def rows():
                                 ("activeFrontend(), setActiveFrontend(id)", "switch the shell"),
                                 ("activeFrontendChanged, frontendAdded, …", "signals")])]),
                         Contract("The other D-Bus services", "dbusapi", "Maia/BackendLib/server/*Service.cpp", [
-                            ("org.maia.SessionService /Session", "", [
-                                ("logout()", "ends Maia, and the session with it"),
-                                ("suspend(), reboot(), poweroff()", "→ logind")]),
                             ("org.maia.FavoriteApplications", "", [
                                 ("addFavorite(id), removeFavorite(id)", ""),
                                 ("getFavorites(); favoritesChanged", "pinned apps")]),
@@ -862,7 +907,6 @@ def rows():
                     path="Maia/BackendLib/, Maia/ClientLib/", name="m_backend", children=[
                         Card("Session and frontends", "qml", [
                             "MFrontendModel: the frontends, the switch (D-Bus FrontendManager)",
-                            "MSessionManager: logout, suspend, reboot, power off (D-Bus Session, login1 Can*)",
                             "MFavoritesAppsModel, MLocaleSettings: D-Bus FavoriteApplications, LocaleSettings"]),
                         Card("Windows of the shell", "qml", [
                             "MProxyWindow: a window in its own process (appMaiaServer --mode client)",
@@ -881,7 +925,7 @@ def rows():
         ],
         engine=[Card("shell/Main.qml of the active frontend", "qmlfile", [
             "layer windows: import org.kde.layershell (LayerShellQt)",
-            "the session menu: MSessionManager; the frontend switcher: MFrontendModel",
+            "the frontend switcher: MFrontendModel; the session menu: Session (Maia.Session)",
             "Maia frontend: LayerTop, LayerBottom in MProxyWindow processes",
             "import <URI>Frontend: its theme and components"], name="e_main"),
                 Card("The parts of every frontend's shell", "qmlfile", [
@@ -938,10 +982,12 @@ def rows():
                     ]),
         ],
     )
-    return [windows, appearance, network, server, rest]
+    return [windows, appearance, network, session, server, rest]
 
 
 ENGINE_HEAD = 76
+# The rows the QML engine frame covers end with this one (the server)
+SERVER_ROW = 4
 
 
 def running_session(s, y):
@@ -977,7 +1023,7 @@ def running_session(s, y):
         cards = row["engine"] if isinstance(row["engine"], list) else ([row["engine"]] if row["engine"] else [])
         if cards:
             eh = sum(c.height(EW - 2 * PAD) for c in cards) + GAP * (len(cards) - 1) + (ENGINE_HEAD if i == 0 else 0)
-            if i == 3:
+            if i == SERVER_ROW:
                 eh += PAD
         h = max(column_height(row["kernel"], KW), column_height(row["linux"], LW),
                 column_height(row["service"], SW), column_height(row["module"], QW),
@@ -996,7 +1042,7 @@ def running_session(s, y):
         y += h + 60
     # The QML engine: one process frame over the rows of its cards
     top = row_tops[0][0]
-    bottom = row_tops[3][0] + row_tops[3][1]
+    bottom = row_tops[SERVER_ROW][0] + row_tops[SERVER_ROW][1]
     engine = Process("appMaiaServer — the QML engine", "the shell · same process as the core ←", PROCESS_CLIENT,
                      path="<prefix>/frontends/<active>/shell/Main.qml, started by FrontendLoader")
     reg["engine"] = engine.draw_frame(s, EX, top, EW, bottom - top)
@@ -1063,11 +1109,16 @@ def connections(s, r, road_y, road_h, row_tops):
     nmp = r["nm_profiles"]
     s.arrow([(nmp.mid_x(), nm.bottom), (nmp.mid_x(), nmp.y)], "file", label="keeps the profiles",
             label_at=(nmp.mid_x() + 8, (nm.bottom + nmp.y) / 2 + 4))
-    # The server core: logind (system bus), PipeWire, its files, the logger
-    core, logind = r["core"], r["logind"]
+    # The session service and logind (system bus); session.toml
+    svc, logind = r["sessionsvc"], r["logind"]
     y = logind.mid_y(-20)
-    s.arrow([(core.x, y), (logind.right, y)], "dbussys", label="Suspend, Reboot,\nPowerOff",
+    s.arrow([(svc.x, y), (logind.right, y)], "dbussys", both=True, label="PowerOff, Reboot,\nPrepareForSleep",
             label_at=(logind.right + 12, y - 22))
+    toml = r["session_toml"]
+    s.arrow([(toml.mid_x(), svc.bottom), (toml.mid_x(), toml.y)], "file", label="reads at the start",
+            label_at=(toml.mid_x() + 8, (svc.bottom + toml.y) / 2 + 4))
+    # The server core: PipeWire, its files, the logger
+    core = r["core"]
     ctx, pw = r["core_context"], r["pipewire"]
     lane = 1000
     s.arrow([(core.x, ctx.mid_y()), (lane, ctx.mid_y()), (lane, pw.mid_y()), (pw.right, pw.mid_y())], "pulse",
@@ -1081,7 +1132,8 @@ def connections(s, r, road_y, road_h, row_tops):
             label="WebSocket\n:50001", label_at=(logger.x - 8, logger.mid_y() + 20), label_anchor="end")
     # Cap'n Proto: each QML module is a client of its service
     lane = 1742
-    for sock, mod in [("windows_sock", "m_windows"), ("appearance_sock", "m_appearance"), ("network_sock", "m_network")]:
+    for sock, mod in [("windows_sock", "m_windows"), ("appearance_sock", "m_appearance"), ("network_sock", "m_network"),
+                      ("session_sock", "m_session")]:
         a, b = r[sock], r[mod]
         y = b.y + 60
         s.arrow([(b.x, y), (lane, y), (lane, a.mid_y()), (a.right, a.mid_y())], "capnp", both=True, width=2.6)
@@ -1093,7 +1145,7 @@ def connections(s, r, road_y, road_h, row_tops):
     s.text(b.x - 6, y - 9, "org.maia.*", size=11, weight="bold", fill="#2563eb", anchor="end")
     # QML imports: the modules are loaded into the shell
     for mod, card in [("m_windows", "e_dock"), ("m_appearance", "e_look"), ("m_network", "e_wifi"),
-                      ("m_backend", "e_main")]:
+                      ("m_session", "e_session"), ("m_backend", "e_main")]:
         a, b = r[mod], r[card]
         y = b.mid_y()
         if a.y + 30 < y < a.bottom - 10:
@@ -1144,17 +1196,19 @@ def where(s, y):
         ("The installation  <prefix> = /opt/Maia/Maia_<v>", [
             ("bin/appMaiaServer", "the server and the shell"),
             ("bin/maia-settings, bin/appLogger", "Maia Settings, the log viewer"),
-            ("bin/run_maia_kwin.sh, run_maia_wayfire.sh", "the session scripts (phases 1 and 2)"),
+            ("bin/run_maia_kwin.sh, run_maia_wayfire.sh", "the session scripts (the environment)"),
             ("bin/maia-session-common.sh", "their common part"),
             ("bin/run_maia_nested_wayland.sh", "Maia in a nested KWin window (development)"),
             ("bin/maia_<v>-kwin.desktop, -wayfire.desktop", "copied to /usr/share/wayland-sessions"),
+            ("libexec/maia-session-service", "the main process of a session"),
             ("libexec/maia-*-service", "the services: windows, network, appearance"),
-            ("lib/x86_64-linux-gnu/qml6/Maia/", "the QML modules Windows, Network, Appearance"),
+            ("lib/x86_64-linux-gnu/qml6/Maia/", "the QML modules Windows, Network, Appearance, Session"),
             ("frontends/<name>/", "the frontends, as in the repository"),
             ("share/maia-settings/pages/", "the pages of Maia Settings"),
             ("share/aurorae/themes/", "decorations shipped with Maia (Se7enAero, XBoomer)"),
             ("share/applications/", "org.maia.settings.desktop"),
             ("etc/xdg/kded6rc, kwalletrc", "Maia's defaults for KDE (last in XDG_CONFIG_DIRS)"),
+            ("etc/maia/session.toml", "what a session runs, in which order, how restarted"),
             ("etc/maia/wayfire.ini", "the template of the Wayfire session's configuration"),
             ("../install_on_ubuntu.sh", "the installer"),
         ]),
@@ -1167,8 +1221,8 @@ def where(s, y):
             ("~/.config/kwinrc, kdeglobals, kxkbrc", "KDE's files Maia reads or writes"),
             ("~/.local/share/aurorae/themes/", "decorations the user installed"),
             ("~/maia_<v>_server.log", "the log of appMaiaServer"),
-            ("~/maia_<v>_kwin_session.log", "the session script and the compositor (or _wayfire_)"),
-            ("$XDG_RUNTIME_DIR/maia/*.sock", "the sockets of the services (per Wayland display)"),
+            ("~/maia_<v>_kwin_session.log", "the session: every process, line by line (or _wayfire_)"),
+            ("$XDG_RUNTIME_DIR/maia/*.sock", "the sockets of the services (per display / session)"),
             ("$XDG_RUNTIME_DIR/maia/qml-modules-<pid>/", "the frontends' module symlinks"),
             ("$XDG_RUNTIME_DIR/maia-nested-wayland.env", "connection data of a nested session"),
         ]),

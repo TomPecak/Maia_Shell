@@ -1,6 +1,9 @@
 # maia-session-service — analiza wykonalności
 
-Stan: projekt, bez implementacji (2026-11-10, Maia 0.2.0, gałąź main `7ec37dd`).
+Stan: etapy 1 i 2 zrealizowane (2026-11-10): `Maia/services/session/` (README.md tam opisuje, jak działa).
+Decyzje: koniec sesji po awarii Wayfire; lista procesów w pliku `<prefix>/etc/maia/session.toml` (osobny dla każdej
+wersji Maia); `org.maia.SessionService` i `MSessionManager` usunięte od razu. Etap 3 (blokady, ekran blokady,
+zamykanie programów przy wylogowaniu) jeszcze nie.
 
 ## W skrócie
 
