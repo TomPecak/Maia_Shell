@@ -79,7 +79,7 @@ target_link_libraries(appMaiaServer
 # from MAIA_QML_INSTALL_DIR (cmake/MaiaQmlModule.cmake). Built with appMaiaServer all the same.
 include(MaiaQmlModule)
 maia_target_qml_import_dir(appMaiaServer)
-maia_target_qml_imports(appMaiaServer Maia.Windows Maia.Network Maia.Appearance)
+maia_target_qml_imports(appMaiaServer Maia.Windows Maia.Network Maia.Appearance Maia.Session)
 
 include(GNUInstallDirs)
 

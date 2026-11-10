@@ -76,6 +76,7 @@ add_subdirectory(Maia/UILib)
 add_subdirectory(Maia/services/windows)
 add_subdirectory(Maia/services/network)
 add_subdirectory(Maia/services/appearance)
+add_subdirectory(Maia/services/session)
 
 
 

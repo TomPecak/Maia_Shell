@@ -1,0 +1,158 @@
+# The processes of a Maia session, read by maia-session-service at its start.
+#
+# Installed to <prefix>/etc/maia/session.toml: every Maia version (<prefix> = /opt/Maia/Maia_<v>)
+# has its own, so several versions installed side by side never share it. $MAIA_SESSION_MANIFEST
+# points the service at another file (development, tests).
+#
+# The service starts the compositor named on its command line (--compositor kwin), waits until
+# the compositor reports its display (the ready helper, see `ready`), and then starts the
+# processes below in their order, each with the display in its environment. When the session ends,
+# it stops them in the opposite order, the compositor last.
+#
+# Values may contain ${NAME} (an environment variable of the service, empty if unset) and
+# ${NAME:-default}. The session script sets MAIA_PREFIX, MAIA_VERSION and MAIA_CONFIG_DIR.
+#
+# [compositor.<name>]
+#   command          the program and its arguments
+#   ready            how the compositor runs the ready helper (maia-session-service --compositor-ready):
+#                    "argument": it is appended to the command (KWin starts it as an application)
+#                    "autostart": the compositor's own configuration runs $MAIA_SESSION_SCRIPT
+#   ready_timeout    seconds to wait for the helper (default 20)
+#   stop_timeout     seconds between SIGTERM and SIGKILL at the end (default 5)
+#   environment      variables for the compositor
+#
+# [[process]]
+#   name             as shown in logs and in the contract
+#   kind             "shell", "maia-service", "kde-service" or "helper"
+#   command          the program and its arguments; the first of `search` that is executable
+#                    replaces the program when given
+#   unit             kind "kde-service": a systemd user unit, started with systemctl --user and
+#                    stopped at the end; systemd watches it, not this service
+#   autostart        kind "kde-service": the file in /etc/xdg/autostart to start when the unit is missing
+#   compositors      only under these compositors (default: all)
+#   skip_if_bus_name not started when this D-Bus name already has an owner
+#   environment      variables to set; unset_environment: variables to remove
+#   restart          "always", "on-failure" (not after exit code 0) or "never"
+#   give_up          { crashes = N, within = seconds, then = "end-session" | "stop" }: after N ends in
+#                    that time no more restarts; without it, restarts go on, at most max_delay apart
+#   max_delay        seconds, the longest wait between restarts (default 30); the waits double from 1 s
+#   stop_timeout     seconds between SIGTERM and SIGKILL at the end (default 5)
+#   test_mode        false: skipped when MAIA_SESSION_TEST=1 (the real systemd user units belong to
+#                    the real session)
+
+version = 1
+
+[compositor.kwin]
+command = ["kwin_wayland_wrapper", "--xwayland"]
+ready = "argument"
+# Development only: KWin does not check access to privileged protocols (plasma_window_management)
+environment = { KWIN_WAYLAND_NO_PERMISSION_CHECKS = "1" }
+
+[compositor.wayfire]
+command = ["wayfire", "-c", "${MAIA_CONFIG_DIR}/wayfire.ini"]
+ready = "autostart"
+
+# A nested KWin in a window of the current session (run_maia_nested_wayland.sh)
+[compositor.kwin-nested]
+command = ["kwin_wayland", "--width", "${MAIA_NESTED_WIDTH:-1280}", "--height", "${MAIA_NESTED_HEIGHT:-720}",
+           "--socket", "${MAIA_NESTED_SOCKET:-wayland-maia-dev}", "--xwayland"]
+ready = "argument"
+environment = { KWIN_WAYLAND_NO_PERMISSION_CHECKS = "1" }
+
+# Before the KDE services: powerdevil registers its shortcuts when it starts. KWin has kglobalacceld
+# built in; elsewhere nobody starts it (on Kubuntu two units claim its D-Bus name, so D-Bus
+# activation fails). Without XDG_SESSION_TYPE (with "wayland" it ends at once, expecting KWin) and
+# without DISPLAY (no key grabs through Xwayland).
+[[process]]
+name = "kglobalacceld"
+kind = "helper"
+command = ["kglobalacceld"]
+search = ["/usr/lib/x86_64-linux-gnu/libexec/kglobalacceld", "/usr/libexec/kglobalacceld",
+          "/usr/lib/libexec/kglobalacceld", "/usr/lib64/libexec/kglobalacceld"]
+compositors = ["wayfire"]
+skip_if_bus_name = "org.kde.kglobalaccel"
+unset_environment = ["XDG_SESSION_TYPE", "DISPLAY"]
+restart = "on-failure"
+
+# KDE's services that Plasma runs in its session, as systemd user units (their /etc/xdg/autostart
+# entries have X-systemd-skip=true); the autostart file only when a unit is missing (another
+# distribution). Why each:
+#   plasma-kwallet-pam   hands the login password (pam_kwallet5 in SDDM) to KWallet. Without it Google
+#                        Chrome asks KWallet for its cookie key, the password dialog of a locked wallet
+#                        makes kwalletd6 hang (KWallet 6.24) and Chrome loads no page. It must start at
+#                        once: PAM waits for it only a moment after the login.
+#   plasma-polkit-agent  the administrator's password dialogs (Discover, power off with other users)
+#   plasma-powerdevil    power management: sleep, brightness, battery
+#   plasma-kaccess       accessibility (sticky keys, …)
+# They are stopped at the end, so that none stays in the user's service manager, attached to a
+# display that is gone. Never plasma-kglobalaccel.service: KWin has kglobalacceld built in.
+[[process]]
+name = "plasma-kwallet-pam"
+kind = "kde-service"
+unit = "plasma-kwallet-pam.service"
+autostart = "pam_kwallet_init"
+test_mode = false
+
+[[process]]
+name = "plasma-polkit-agent"
+kind = "kde-service"
+unit = "plasma-polkit-agent.service"
+autostart = "polkit-kde-authentication-agent-1"
+test_mode = false
+
+[[process]]
+name = "plasma-powerdevil"
+kind = "kde-service"
+unit = "plasma-powerdevil.service"
+autostart = "powerdevil"
+test_mode = false
+
+[[process]]
+name = "plasma-kaccess"
+kind = "kde-service"
+unit = "plasma-kaccess.service"
+autostart = "kaccess"
+test_mode = false
+
+# Maia's services, before the shell so that the dock has the windows at once
+[[process]]
+name = "maia-windows-service"
+kind = "maia-service"
+command = ["${MAIA_WINDOWS_SERVICE:-${MAIA_PREFIX}/libexec/maia-windows-service}"]
+restart = "always"
+
+[[process]]
+name = "maia-network-service"
+kind = "maia-service"
+command = ["${MAIA_NETWORK_SERVICE:-${MAIA_PREFIX}/libexec/maia-network-service}"]
+restart = "always"
+
+# Only the KWin backend exists so far: under Wayfire it would change the look of the KWin session
+[[process]]
+name = "maia-appearance-service"
+kind = "maia-service"
+command = ["${MAIA_APPEARANCE_SERVICE:-${MAIA_PREFIX}/libexec/maia-appearance-service}"]
+compositors = ["kwin", "kwin-nested"]
+restart = "always"
+
+# The shell. A native Wayland client; the platform as an argument, so that applications started
+# from Maia keep the session's QT_QPA_PLATFORM="wayland;xcb" (with Xwayland as a fallback).
+[[process]]
+name = "appMaiaServer"
+kind = "shell"
+command = ["${MAIA_SHELL:-${MAIA_PREFIX}/bin/appMaiaServer}", "-platform", "${MAIA_QPA_PLATFORM:-wayland}"]
+unset_environment = ["QT_QPA_PLATFORMTHEME", "QT_PLUGIN_PATH"]
+environment = { MAIA_LOG_FILE = "${MAIA_LOG_FILE:-${HOME}/maia_${MAIA_VERSION}_server.log}", MAIA_LOG_PORT = "${MAIA_LOG_PORT:-50001}", MAIA_LOG_HOST = "127.0.0.1" }
+restart = "always"
+give_up = { crashes = 5, within = 120, then = "end-session" }
+stop_timeout = 8
+
+# The nested development session (run_maia_nested_wayland.sh): the connection data for tools
+# (Qt Creator, scripts), written once the compositor is ready
+[[process]]
+name = "nested-env-file"
+kind = "helper"
+command = ["sh", "-c", """for v in WAYLAND_DISPLAY DISPLAY XAUTHORITY DBUS_SESSION_BUS_ADDRESS MAIA_SESSION_SOCKET MAIA_LOG_PORT; do \
+echo "$v=$(printenv $v)"; done > "$MAIA_NESTED_ENV_FILE" && echo "QT_QPA_PLATFORM=${MAIA_QPA_PLATFORM:-wayland}" >> "$MAIA_NESTED_ENV_FILE" \
+&& echo "--- the nested Maia session is ready, connection data in $MAIA_NESTED_ENV_FILE ---" && cat "$MAIA_NESTED_ENV_FILE""""]
+compositors = ["kwin-nested"]

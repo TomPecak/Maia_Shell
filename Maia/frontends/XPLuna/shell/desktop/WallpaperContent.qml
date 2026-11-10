@@ -18,7 +18,7 @@ Image {
     //     text: "Logout"
     //     onClicked: {
     //         console.log("logout clicked")
-    //         MSessionManager.logout()
+    //         Session.logout()
     //     }
     // }
 

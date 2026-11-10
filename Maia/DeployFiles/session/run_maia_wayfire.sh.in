@@ -1,12 +1,10 @@
 #!/bin/bash
 # Sesja "Maia @MAIA_VERSION@ (Wayfire)": Maia na kompozytorze Wayfire.
 #
-#  FAZA 1 - uruchomiony przez SDDM: środowisko sesji, konfiguracja Wayfire tej wersji Maia, potem
-#           exec wayfire (skrypt staje się procesem Wayfire)
-#  FAZA 2 - uruchomiony przez Wayfire ([autostart] w jego konfiguracji): usługi i serwer Maia;
-#           gdy Maia się kończy, skrypt kończy Wayfire, a z nim sesję (Wayfire nie ma
-#           odpowiednika --exit-with-session KWina)
-# Wspólne części obu sesji Maia: maia-session-common.sh.
+# Uruchamiany przez SDDM: środowisko sesji, konfiguracja Wayfire tej wersji Maia, potem
+# exec maia-session-service --compositor wayfire. Usługa sesji uruchamia Wayfire, czeka, aż jego
+# [autostart] uruchomi $MAIA_SESSION_SCRIPT (pomocnik gotowości usługi), potem usługi i serwer Maia;
+# gdy sesja się kończy, kończy Wayfire. Wspólne części obu sesji Maia: maia-session-common.sh.
 #
 # Konfiguracja Wayfire: ${MAIA_CONFIG_DIR}/wayfire.ini (~/.config/maia/<wersja>/wayfire.ini),
 # całkowicie niezależna od ~/.config/wayfire.ini zwykłej sesji Wayfire. Przy pierwszym starcie
@@ -51,53 +49,22 @@ create_wayfire_config() {
         "${WAYFIRE_TEMPLATE}" > "${WAYFIRE_CONFIG}.new" && mv "${WAYFIRE_CONFIG}.new" "${WAYFIRE_CONFIG}"
 }
 
-# ==========================================================================
-# FAZA 1: start z SDDM, przed kompozytorem
-# ==========================================================================
-if [ "${MAIA_SESSION_STAGE}" != "inside_wayfire" ]; then
-    # Logujemy wszystko z sesji do katalogu domowego aktualnego użytkownika. Plik jest czyszczony, a potem
-    # otwarty do dopisywania: kompozytor dziedziczy ten deskryptor, a faza 2 dopisuje do tego samego
-    # pliku; bez trybu dopisywania kompozytor nadpisywałby jej wpisy swoimi.
-    : > "${SESSION_LOG}"
-    exec >> "${SESSION_LOG}" 2>&1
-    echo "--- START Maia ${MAIA_VERSION} (Wayfire) - faza 1 ---"
-
-    maia_session_prepare "${SCRIPT_PATH}"
-
-    if [ ! -e "${WAYFIRE_CONFIG}" ]; then
-        create_wayfire_config || exit 1
-    fi
-    # [autostart] konfiguracji uruchamia fazę 2 przez $MAIA_SESSION_SCRIPT (sh rozwija zmienną), więc
-    # w pliku użytkownika nie ma ścieżki instalacji. Bez tego wpisu Wayfire wystartuje bez Maia.
-    export MAIA_SESSION_SCRIPT="${SCRIPT_PATH}"
-    if ! grep -q 'MAIA_SESSION_SCRIPT' "${WAYFIRE_CONFIG}"; then
-        echo "[WARNING] ${WAYFIRE_CONFIG} nie uruchamia Maia ([autostart] bez \$MAIA_SESSION_SCRIPT);"
-        echo "          przywróć wpis z ${WAYFIRE_TEMPLATE} albo usuń plik, żeby utworzyć go od nowa"
-    fi
-
-    # Faza 2 kończy Wayfire tym PID-em: po exec skrypt jest procesem Wayfire
-    export MAIA_COMPOSITOR_PID=$$
-    export MAIA_SESSION_STAGE=inside_wayfire
-    echo "Uruchamianie wayfire -c ${WAYFIRE_CONFIG}..."
-    exec wayfire -c "${WAYFIRE_CONFIG}"
-fi
-
-# ==========================================================================
-# FAZA 2: uruchomione przez Wayfire, WAYLAND_DISPLAY (i DISPLAY z Xwayland) już ustawione
-# ==========================================================================
+# Logujemy wszystko z sesji do katalogu domowego (jak w run_maia_kwin.sh)
+: > "${SESSION_LOG}"
 exec >> "${SESSION_LOG}" 2>&1
-echo "--- Maia ${MAIA_VERSION} (Wayfire) - faza 2 ---"
+echo "--- START Maia ${MAIA_VERSION} (Wayfire) ---"
 
-COMPOSITOR_PID="${MAIA_COMPOSITOR_PID}"
-# Nie dla Mai i jej aplikacji
-unset MAIA_SESSION_STAGE MAIA_COMPOSITOR_PID MAIA_SESSION_SCRIPT
+maia_session_prepare "${SCRIPT_PATH}"
 
-maia_session_run wayfire
-STATUS=$?
-
-# Koniec Mai (wylogowanie) kończy sesję: Wayfire, a po nim dbus-run-session i SDDM
-if [ -n "${COMPOSITOR_PID}" ] && kill -0 "${COMPOSITOR_PID}" 2>/dev/null; then
-    echo "Kończenie Wayfire (PID ${COMPOSITOR_PID})"
-    kill -TERM "${COMPOSITOR_PID}"
+if [ ! -e "${WAYFIRE_CONFIG}" ]; then
+    create_wayfire_config || exit 1
 fi
-exit "${STATUS}"
+# [autostart] konfiguracji uruchamia pomocnika gotowości usługi sesji przez $MAIA_SESSION_SCRIPT
+# (ustawia ją usługa; sh rozwija zmienną), więc w pliku użytkownika nie ma ścieżki instalacji. Bez tego
+# wpisu usługa sesji nie doczeka się Wayfire i zakończy sesję.
+if ! grep -q 'MAIA_SESSION_SCRIPT' "${WAYFIRE_CONFIG}"; then
+    echo "[WARNING] ${WAYFIRE_CONFIG} nie uruchamia Maia ([autostart] bez \$MAIA_SESSION_SCRIPT);"
+    echo "          przywróć wpis z ${WAYFIRE_TEMPLATE} albo usuń plik, żeby utworzyć go od nowa"
+fi
+
+maia_session_exec wayfire

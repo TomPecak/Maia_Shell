@@ -108,9 +108,8 @@ QtObject {
 
     // --- Session and power ---
 
-    // Maia's session manager (MSessionManager of Maia.Backend), set by shell/Main.qml. This module
-    // is imported by app faces too (Maia Settings), in processes without the shell's backend, and
-    // QML loads every singleton of an imported module: Shell must not import Maia.Backend itself.
+    // Maia's session (Session of Maia.Session, the session service), set by shell/Main.qml. This
+    // module is imported by app faces too (Maia Settings), and only the shell ends the session.
     property var session: null
 
     // Which power actions the system offers (systemd-logind); the power menu shows only these
@@ -118,9 +117,8 @@ QtObject {
     readonly property bool canReboot: session ? session.canReboot : false
     readonly property bool canPowerOff: session ? session.canPowerOff : false
 
-    // action: "logout", "suspend", "reboot" or "shutdown". Maia carries it out (MSessionManager);
-    // in a nested development session the power actions are only logged, logind would act on the
-    // real machine.
+    // action: "logout", "suspend", "reboot" or "shutdown". The session service carries it out; in
+    // a nested development session the power actions are only logged (its fake logind).
     function powerAction(action) {
         closeFlyouts()
         if (!session)
@@ -136,7 +134,7 @@ QtObject {
             if (session) session.reboot()
             break
         case "shutdown":
-            if (session) session.poweroff()
+            if (session) session.powerOff()
             break
         default:
             console.warn("[Lumen] unknown power action:", action)

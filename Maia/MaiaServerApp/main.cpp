@@ -17,7 +17,6 @@
 
 #include <AppsListModel.hpp>
 #include <MAudioBackend.hpp>
-#include <MSessionManager.hpp>
 #include <Backend.hpp>
 #include <BackendAppsIconsProvider.hpp>
 #include <helper/Process.hpp>

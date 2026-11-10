@@ -1,0 +1,29 @@
+[package]
+name = "maia-session-service"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.87"
+description = "Maia session service: starts, keeps and ends a Maia session, talks to systemd-logind, served over Cap'n Proto"
+publish = false
+
+[lib]
+name = "maia_session"
+path = "src/lib.rs"
+
+[[bin]]
+name = "maia-session-service"
+path = "src/main.rs"
+
+[dependencies]
+capnp = "0.27.2"
+capnp-rpc = "0.27.1"
+futures = "0.3.34"
+tokio = { version = "1.54", features = ["rt", "net", "io-util", "macros", "signal", "time", "sync"] }
+tokio-util = { version = "0.7.20", features = ["compat"] }
+zbus = { version = "5.19", default-features = false, features = ["tokio"] }
+libc = "0.2"
+serde = { version = "1", features = ["derive"] }
+toml = { version = "1.1", default-features = false, features = ["parse", "serde"] }
+
+[build-dependencies]
+capnpc = "0.27.0"

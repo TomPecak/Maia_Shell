@@ -1,7 +1,7 @@
 import QtQuick
 import org.kde.layershell 1.0 as LayerShell
 import Maia.Appearance
-import Maia.Backend as Maia
+import Maia.Session
 
 import "../apps/files"
 import "desktop"
@@ -48,7 +48,7 @@ Window {
     Binding {
         target: Shell
         property: "session"
-        value: Maia.MSessionManager
+        value: Session
     }
 
     Wallpaper {

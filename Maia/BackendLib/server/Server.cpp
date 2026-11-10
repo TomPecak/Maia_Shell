@@ -5,7 +5,6 @@
 
 Server::Server(QGuiApplication *app, int swapIntervalOption)
     : QObject(app)
-    , m_sessionService(this)
     , m_applicationModel(this)
     , m_favoriteAppsService(this, &m_applicationModel)
     , m_frontendManagerService(this)
@@ -15,7 +14,9 @@ Server::Server(QGuiApplication *app, int swapIntervalOption)
 {
     qDebug() << __PRETTY_FUNCTION__;
 
-    connect(&m_sessionService, &SessionService::logoutRequest, this, &Server::sessionLogout);
+    // The session service (maia-session-service) ends the shell with SIGTERM: the frontend is
+    // unloaded before the engine goes
+    connect(app, &QCoreApplication::aboutToQuit, this, [this] { m_guiManager.uninit(); });
 
     connect(&m_frontendManagerService,
             qOverload<const QString & >(&FrontendManagerService::activeFrontendChangeRequest),
@@ -53,11 +54,6 @@ void Server::handleFrontendChangeRequest(const FrontendInfo &forntend)
 }
 
 
-void Server::sessionLogout()
-{
-    m_guiManager.uninit();
-    QCoreApplication::exit(0);
-}
 
 void Server::handleGuiManagerFrontendChanged(const QString &frontendId)
 {

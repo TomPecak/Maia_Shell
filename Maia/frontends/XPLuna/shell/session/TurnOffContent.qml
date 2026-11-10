@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import Maia.Backend
+import Maia.Session
 
 Rectangle {
     id: root
@@ -48,7 +49,7 @@ Rectangle {
                 }
                 onReleased: {
                     if(containsMouse){
-                        MSessionManager.poweroff()
+                        Session.powerOff()
                     }
                     turnOffButton.source = "../../assets/images/dialog_turn_off_power_button_normal.png"
                 }
@@ -80,7 +81,7 @@ Rectangle {
                 onReleased: {
                     if(containsMouse){
                         restartButton.source = "../../assets/images/dialog_turn_off_restart_button_hover.png"
-                        MSessionManager.reboot()
+                        Session.reboot()
                     }else{
                         restartButton.source = "../../assets/images/dialog_turn_off_restart_button_normal.png"
                     }

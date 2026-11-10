@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import Maia.Backend
+import Maia.Session
 import QtQuick3D
 import XPLunaFrontend
 import "../content"
@@ -134,7 +135,7 @@ Window {
             Button{
                 text: "Logout"
                 onPressed: {
-                    MSessionManager.logout()
+                    Session.logout()
                 }
             }
 

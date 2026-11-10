@@ -1,7 +1,8 @@
 # What a Maia installation needs besides the programs: the sessions of SDDM, their scripts, the
 # default settings (etc/) and the installer (install_on_ubuntu.sh, one level above the prefix).
 #
-# Sessions (session/, see maia-session-common.sh.in):
+# Sessions (session/, see maia-session-common.sh.in; the scripts end with exec into maia-session-service,
+# which runs what etc/maia/session.toml lists):
 #   Maia <version> (KWin)     maia_<version>-kwin.desktop     bin/run_maia_kwin.sh
 #   Maia <version> (Wayfire)  maia_<version>-wayfire.desktop  bin/run_maia_wayfire.sh
 #                             etc/maia/wayfire.ini: the template of ~/.config/maia/<version>/wayfire.ini
@@ -44,6 +45,7 @@ target_sources(DeployScriptsTemplates
     PRIVATE session/maia-kwin.desktop.in
     PRIVATE session/maia-wayfire.desktop.in
     PRIVATE etc/maia/wayfire.ini
+    PRIVATE etc/maia/session.toml
 )
 
 install(FILES ${RUN_SCRIPTS} ${session_outputs}

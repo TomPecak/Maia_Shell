@@ -7,7 +7,6 @@
 #include "FavoriteAppsService.hpp"
 #include "FrontendManagerService.hpp"
 #include "FrontendLoader.hpp"
-#include "SessionService.hpp"
 #include "LocaleSettingsService.hpp"
 
 class Server : public QObject
@@ -22,11 +21,9 @@ public:
     void handleFrontendChangeRequest(const FrontendInfo & forntend);
 
 private Q_SLOTS:
-    void sessionLogout();
     void handleGuiManagerFrontendChanged(const QString &themeId);
 
 private:
-    SessionService m_sessionService;
     FrontendManagerService m_frontendManagerService;
 
     DesktopApplicationModel m_applicationModel;

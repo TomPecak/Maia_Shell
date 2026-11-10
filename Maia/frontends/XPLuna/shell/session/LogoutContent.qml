@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import Maia.Backend
+import Maia.Session
 
 
 Rectangle {
@@ -73,7 +74,7 @@ Rectangle {
                     anchors.fill: parent
                     hoverEnabled : true
                     onClicked: {
-                        MSessionManager.logout()
+                        Session.logout()
                     }
                 }
             }
@@ -127,7 +128,7 @@ Rectangle {
                     anchors.fill: parent
                     hoverEnabled : true
                     onClicked: {
-                        MSessionManager.logout()
+                        Session.logout()
                     }
                 }
             }

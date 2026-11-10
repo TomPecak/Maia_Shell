@@ -1,47 +1,20 @@
 #!/bin/bash
 # Sesja "Maia @MAIA_VERSION@ (KWin)": Maia na kompozytorze KWin.
 #
-#  FAZA 1 - uruchomiony przez SDDM: środowisko sesji, potem kwin_wayland_wrapper
-#  FAZA 2 - uruchomiony przez KWin (--exit-with-session): usługi i serwer Maia;
-#           gdy Maia się kończy, kończy się ten skrypt, a z nim KWin i sesja
-# Wspólne części obu sesji Maia: maia-session-common.sh.
+# Uruchamiany przez SDDM: środowisko sesji, potem exec maia-session-service --compositor kwin.
+# Usługa sesji uruchamia kwin_wayland_wrapper (restartuje KWina po awarii), usługi i serwer Maia,
+# a gdy sesja się kończy, kończy KWina. Wspólne części obu sesji Maia: maia-session-common.sh.
 
 SCRIPT_PATH="$(readlink -f "$0")"
 . "$(dirname "${SCRIPT_PATH}")/maia-session-common.sh"
 SESSION_LOG="$HOME/maia_${MAIA_VERSION}_kwin_session.log"
 
-# ==========================================================================
-# FAZA 1: start z SDDM, przed kompozytorem
-# ==========================================================================
-if [ "${MAIA_SESSION_STAGE}" != "inside_kwin" ]; then
-    # Logujemy wszystko z sesji do katalogu domowego aktualnego użytkownika. Plik jest czyszczony, a potem
-    # otwarty do dopisywania: kompozytor dziedziczy ten deskryptor, a faza 2 dopisuje do tego samego
-    # pliku; bez trybu dopisywania kompozytor nadpisywałby jej wpisy swoimi.
-    : > "${SESSION_LOG}"
-    exec >> "${SESSION_LOG}" 2>&1
-    echo "--- START Maia ${MAIA_VERSION} (KWin) - faza 1 ---"
-
-    maia_session_prepare "${SCRIPT_PATH}"
-
-    # TYLKO NA CZAS DEWELOPMENTU: KWin nie sprawdza uprawnień do protokołów
-    # uprzywilejowanych (plasma_window_management, plasma_shell, ...)
-    export KWIN_WAYLAND_NO_PERMISSION_CHECKS=1
-
-    # Wrapper restartuje KWina po crashu, --exit-with-session kończy sesję, gdy faza 2 (czyli Maia)
-    # się zakończy
-    export MAIA_SESSION_STAGE=inside_kwin
-    echo "Uruchamianie kwin_wayland_wrapper..."
-    exec kwin_wayland_wrapper --xwayland --exit-with-session="${SCRIPT_PATH}"
-fi
-
-# ==========================================================================
-# FAZA 2: uruchomione przez KWin, WAYLAND_DISPLAY i DISPLAY już ustawione
-# ==========================================================================
+# Logujemy wszystko z sesji do katalogu domowego aktualnego użytkownika: usługę sesji, a przez nią
+# kompozytor i wszystkie procesy sesji (każda linia z nazwą procesu na początku). Plik jest czyszczony,
+# a potem otwarty do dopisywania: procesy sesji dziedziczą ten deskryptor.
+: > "${SESSION_LOG}"
 exec >> "${SESSION_LOG}" 2>&1
-echo "--- Maia ${MAIA_VERSION} (KWin) - faza 2 ---"
+echo "--- START Maia ${MAIA_VERSION} (KWin) ---"
 
-unset MAIA_SESSION_STAGE
-unset KWIN_WAYLAND_NO_PERMISSION_CHECKS   # potrzebne tylko procesowi KWina
-
-maia_session_run kwin
-exit $?
+maia_session_prepare "${SCRIPT_PATH}"
+maia_session_exec kwin

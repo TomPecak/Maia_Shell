@@ -3,6 +3,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Maia.Backend
+import Maia.Session
 
 import GnomeFrontend
 
@@ -274,7 +275,7 @@ Rectangle {
                         Layout.preferredHeight: 37
                         text: "Restart..."
                         onTriggered: {
-                            MSessionManager.reboot()
+                            Session.reboot()
                         }
                     }
                     GMenuItem{
@@ -282,7 +283,7 @@ Rectangle {
                         Layout.preferredHeight: 37
                         text: qsTr("Power Off...")
                         onTriggered: {
-                            MSessionManager.poweroff()
+                            Session.powerOff()
                         }
                     }
                     GMenuSeparator{
@@ -293,7 +294,7 @@ Rectangle {
                         Layout.preferredHeight: 37
                         text: qsTr("Log out...")
                         onTriggered: {
-                            MSessionManager.logout()
+                            Session.logout()
                         }
                     }
                     GMenuItem{
@@ -301,7 +302,7 @@ Rectangle {
                         Layout.preferredHeight: 37
                         text: qsTr("Switch User...")
                         onTriggered: {
-                            MSessionManager.logout()
+                            Session.logout()
                         }
                     }
                 }

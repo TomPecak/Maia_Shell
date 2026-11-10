@@ -2,29 +2,22 @@
 #   run_maia_kwin.sh     - sesja "Maia @MAIA_VERSION@ (KWin)"
 #   run_maia_wayfire.sh  - sesja "Maia @MAIA_VERSION@ (Wayfire)"
 #
-# Każda sesja działa w dwóch fazach:
-#   FAZA 1 (skrypt uruchomiony przez SDDM): maia_session_prepare ustawia środowisko, potem skrypt
-#          kompozytora uruchamia kompozytor (exec), który dziedziczy to środowisko razem ze
-#          wszystkim, co sam uruchomi (Xwayland, aplikacje).
-#   FAZA 2 (ten sam skrypt uruchomiony przez kompozytor): maia_session_run startuje usługi KDE,
-#          usługi Maia i serwer Maia, czeka na koniec Maia i sprząta.
-# Fazy rozróżnia zmienna MAIA_SESSION_STAGE.
+# Skrypt sesji przygotowuje tylko środowisko (maia_session_prepare), a potem staje się usługą sesji
+# (maia_session_exec): maia-session-service uruchamia kompozytor, usługi KDE i Maia oraz serwer Maia,
+# pilnuje ich i kończy sesję (Maia/services/session; co uruchamia: <prefix>/etc/maia/session.toml).
 
 MAIA_VERSION="@MAIA_VERSION@"
 # Katalog instalacji (/opt/Maia/Maia_<wersja>): ten plik leży w jego bin/
 MAIA_OPT_PATH="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")/..")"
 
-# MAIA_SESSION_TEST=1: tylko do testów sesji obok prawdziwej (np. headless Wayfire): nie dotyka
-# menedżera usług systemd użytkownika, który należy do prawdziwej sesji (bez uruchamiania
-# i zatrzymywania usług KDE i bez dbus-update-activation-environment --systemd)
-MAIA_SESSION_TEST="${MAIA_SESSION_TEST:-0}"
+# MAIA_SESSION_TEST=1: tylko do testów sesji obok prawdziwej (np. headless Wayfire): usługa sesji nie
+# dotyka menedżera usług systemd użytkownika, który należy do prawdziwej sesji (bez uruchamiania
+# i zatrzymywania usług KDE i bez eksportu zmiennych do systemd)
+export MAIA_SESSION_TEST="${MAIA_SESSION_TEST:-0}"
 
 # Konfiguracja tej wersji Maia, niezależna od innych wersji (zob. Maia/Paths/MaiaPaths.hpp):
 # maia.conf, maiarc, appearance.json, wayfire.ini
 MAIA_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/maia/${MAIA_VERSION}"
-
-# Log serwera Maia (logger.cpp) w katalogu domowym, z wersją w nazwie
-MAIA_SERVER_LOG="$HOME/maia_${MAIA_VERSION}_server.log"
 
 # ==========================================================================
 # FAZA 1: środowisko sesji, przed kompozytorem
@@ -96,199 +89,16 @@ maia_session_prepare() {
 }
 
 # ==========================================================================
-# FAZA 2: usługi i serwer Maia, wewnątrz kompozytora
+# Usługa sesji
 # ==========================================================================
-
-# USŁUGI KDE, KTÓRE PLASMA URUCHAMIA W SWOJEJ SESJI
-# Dlaczego: w sesji Maia Google Chrome startował, ale nie ładował żadnych stron (Firefox działał).
-# Przyczyna: Chrome w sesji KDE trzyma klucz szyfrowania ciasteczek i haseł w KWallet. Portfel był
-# zablokowany, bo nikt nie przekazał mu hasła z logowania, więc pojawiała się prośba o hasło,
-# a na niej kwalletd6 się zawieszał (błąd KDE: "received unexpected result type ao ... instead of
-# expected o") i Chrome czekał na niego bez końca. W Plasmie portfel jest odblokowany przy logowaniu,
-# więc prośba w ogóle się nie pojawia. Przy okazji wyszło, że w sesji Maia nie działały też agent
-# polkit (brak okien z hasłem administratora) i powerdevil (zarządzanie energią).
-#
-# Plasma nie uruchamia tych programów z autostartu XDG (wpisy w /etc/xdg/autostart mają
-# X-systemd-skip=true), tylko jako usługi systemd użytkownika (plasma-*.service). Uruchamiamy te,
-# których potrzebuje Maia:
-#   plasma-kwallet-pam   - przekazuje hasło z logowania (pam_kwallet5 w SDDM) do KWallet i odblokowuje
-#                          portfel. Musi ruszyć od razu: PAM czeka na nie tylko chwilę po zalogowaniu.
-#                          Działa tylko wtedy, gdy hasło portfela jest takie samo jak hasło logowania.
-#   plasma-polkit-agent  - okna z hasłem administratora (Discover, ustawienia systemowe, ...)
-#   plasma-powerdevil    - zarządzanie energią (uśpienie, jasność, bateria)
-#   plasma-kaccess       - ułatwienia dostępu (np. klawisze trwałe)
-# Gdy jednostki systemd nie ma (inna dystrybucja), uruchamiamy program z pliku autostartu.
-# Usługi zatrzymujemy po wyjściu z Mai, żeby nie zostały w menedżerze usług użytkownika
-# podłączone do nieistniejącego już ekranu.
-MAIA_KDE_SERVICES=""
-MAIA_KDE_FALLBACK_PIDS=""
-
-# Program z linii Exec= pliku .desktop autostartu (bez kodów pól %u, %f, ...)
-maia_autostart_exec() {
-    sed -n 's/^Exec=//p' "/etc/xdg/autostart/$1.desktop" 2>/dev/null | head -n 1 | sed 's/ %[a-zA-Z]//g'
-}
-
-maia_start_kde_service() {
-    local unit="$1" autostart="$2"
-    if systemctl --user cat "${unit}.service" >/dev/null 2>&1; then
-        echo "Uruchamianie usługi ${unit}.service"
-        systemctl --user start --no-block "${unit}.service"
-        MAIA_KDE_SERVICES="${MAIA_KDE_SERVICES} ${unit}.service"
-        return
-    fi
-    local command
-    command="$(maia_autostart_exec "${autostart}")"
-    if [ -n "${command}" ]; then
-        echo "Brak ${unit}.service, uruchamianie z autostartu: ${command}"
-        ${command} &
-        MAIA_KDE_FALLBACK_PIDS="${MAIA_KDE_FALLBACK_PIDS} $!"
-    else
-        echo "Pomijam ${unit}: brak usługi systemd i pliku autostartu ${autostart}.desktop"
-    fi
-}
-
-maia_stop_kde_services() {
-    if [ -n "${MAIA_KDE_SERVICES}" ]; then
-        echo "Zatrzymywanie usług:${MAIA_KDE_SERVICES}"
-        systemctl --user stop ${MAIA_KDE_SERVICES}
-    fi
-    if [ -n "${MAIA_KDE_FALLBACK_PIDS}" ]; then
-        kill ${MAIA_KDE_FALLBACK_PIDS} 2>/dev/null
-    fi
-}
-
-# SKRÓTY GLOBALNE KDE (kglobalacceld) POZA KWINEM
-# Dlaczego: pod Wayfire powerdevil nie startował - czekał na org.kde.kglobalaccel, aż systemd go ubił
-# (timeout), i tak w kółko. KWin ma kglobalacceld wbudowany, więc pod KWinem nazwa jest zajęta; pod
-# Wayfire uruchamia ją dopiero aktywacja D-Bus, a ta na Kubuntu się nie udaje: o nazwę ubiegają się
-# dwie usługi systemd (plasma-kglobalaccel z KF6 i plasma-kglobalaccel5 z KF5), więc systemd
-# odmawia obu. Uruchamiamy kglobalacceld (KF6) sami. Bez KWina nie przechwytuje klawiszy (na
-# Waylandzie robi to kompozytor; skróty sesji Wayfire są w jego wayfire.ini), ale odpowiada
-# programom KDE, które rejestrują skróty, więc nie czekają na niego bez końca.
-# Bez XDG_SESSION_TYPE: przy "wayland" kglobalacceld od razu się kończy (zakłada, że jest w KWinie).
-# Bez DISPLAY: nie przechwytuje klawiszy przez Xwayland (skróty KDE nie działałyby tylko wtedy,
-# gdy aktywne jest okno X11).
-maia_start_kglobalaccel() {
-    if dbus-send --session --print-reply --dest=org.freedesktop.DBus /org/freedesktop/DBus \
-            org.freedesktop.DBus.NameHasOwner string:org.kde.kglobalaccel 2>/dev/null | grep -q "boolean true"; then
-        return
-    fi
-    local daemon
-    for daemon in /usr/lib/x86_64-linux-gnu/libexec/kglobalacceld /usr/libexec/kglobalacceld \
-                  /usr/lib/libexec/kglobalacceld /usr/lib64/libexec/kglobalacceld; do
-        if [ -x "${daemon}" ]; then
-            echo "Uruchamianie ${daemon}"
-            env -u XDG_SESSION_TYPE -u DISPLAY "${daemon}" &
-            MAIA_KDE_FALLBACK_PIDS="${MAIA_KDE_FALLBACK_PIDS} $!"
-            return
-        fi
-    done
-    echo "Brak kglobalacceld: programy KDE mogą czekać na org.kde.kglobalaccel"
-}
-
-# Usługa Maia z libexec; jej PID trafia do MAIA_SERVICE_PIDS (zatrzymywane po wyjściu z Mai)
-MAIA_SERVICE_PIDS=""
-maia_start_service() {
-    local name="$1" missing="$2"
-    if [ -x "${MAIA_OPT_PATH}/libexec/${name}" ]; then
-        echo "Uruchamianie usługi ${name}"
-        "${MAIA_OPT_PATH}/libexec/${name}" &
-        MAIA_SERVICE_PIDS="${MAIA_SERVICE_PIDS} $!"
-    else
-        echo "Brak ${MAIA_OPT_PATH}/libexec/${name}: ${missing}"
-    fi
-}
-
-# $1: kompozytor (kwin, wayfire). Wraca z kodem wyjścia serwera Maia.
-maia_session_run() {
+# $1: kompozytor, wpis [compositor.<nazwa>] w session.toml (kwin, wayfire). Nie wraca: skrypt staje się
+# usługą sesji, a ta kończy się razem z sesją (wylogowanie, wyłączenie, koniec kompozytora).
+maia_session_exec() {
     local compositor="$1"
-    # Dla Mai i usług: pod którym kompozytorem działają
-    export MAIA_COMPOSITOR="${compositor}"
-    echo "WAYLAND_DISPLAY=${WAYLAND_DISPLAY} DISPLAY=${DISPLAY} XAUTHORITY=${XAUTHORITY}"
+    # Dla session.toml i procesów sesji
+    export MAIA_VERSION MAIA_CONFIG_DIR
+    export MAIA_PREFIX="${MAIA_OPT_PATH}"
     echo "Konfiguracja Maia: ${MAIA_CONFIG_DIR}"
-
-    # WSTRZYKNIĘCIE ZMIENNYCH DO D-BUS / systemd
-    # Usługi aktywowane przez D-Bus (portale, kded, aplikacje) muszą znać nasz ekran.
-    local systemd="--systemd"
-    [ "${MAIA_SESSION_TEST}" = "1" ] && systemd=""
-    if command -v dbus-update-activation-environment >/dev/null 2>&1; then
-        dbus-update-activation-environment ${systemd} \
-            WAYLAND_DISPLAY DISPLAY XAUTHORITY \
-            XDG_SESSION_TYPE XDG_CURRENT_DESKTOP XDG_SESSION_DESKTOP \
-            KDE_FULL_SESSION KDE_SESSION_VERSION XDG_MENU_PREFIX \
-            XDG_CONFIG_DIRS XDG_DATA_DIRS SSH_ASKPASS SSH_ASKPASS_REQUIRE \
-            QT_QPA_PLATFORM GDK_BACKEND QT_WAYLAND_RECONNECT
-    fi
-
-    # Przed usługami KDE: powerdevil rejestruje skróty przy starcie
-    [ "${compositor}" != "kwin" ] && maia_start_kglobalaccel
-
-    if [ "${MAIA_SESSION_TEST}" = "1" ]; then
-        echo "MAIA_SESSION_TEST=1: pomijam usługi KDE"
-    else
-        maia_start_kde_service plasma-kwallet-pam  pam_kwallet_init
-        maia_start_kde_service plasma-polkit-agent polkit-kde-authentication-agent-1
-        maia_start_kde_service plasma-powerdevil   powerdevil
-        maia_start_kde_service plasma-kaccess      kaccess
-    fi
-    # UWAGA: NIE uruchamiamy plasma-kglobalaccel.service! Pod KWin kglobalacceld jest wbudowany
-    # w kwin_wayland (libKGlobalAccelD); pod innym kompozytorem startuje go maia_start_kglobalaccel.
-
-    # USŁUGA OKIEN MAI (Maia/services/windows)
-    # maia-windows-service rozmawia z kompozytorem o oknach innych aplikacji (protokół
-    # org_kde_plasma_window_management: w KWin wbudowany, w Wayfire plugin plasma-window-management)
-    # i podaje ich listę paskowi zadań i dokowi (moduł QML Maia.Windows, przez Cap'n Proto). Startuje
-    # przed Maią, żeby pasek od razu miał okna; gdyby nie zdążyła, Maia łączy się z nią sama co sekundę.
-    maia_start_service maia-windows-service "pasek zadań nie pokaże okien"
-
-    # USŁUGA SIECI MAI (Maia/services/network)
-    # maia-network-service rozmawia z NetworkManagerem (Wi-Fi) i podaje stan sieci shellom, Maia Settings
-    # i aplikacjom (moduł QML Maia.Network, przez Cap'n Proto). Jest też agentem haseł sesji: okno hasła
-    # pokazuje shell. Agent KDE (moduł kded networkmanagement) jest w sesji Mai wyłączony
-    # (etc/xdg/kded6rc), żeby odpowiadał tylko jeden. Nie zależy od kompozytora.
-    maia_start_service maia-network-service "Wi-Fi w Mai nie zadziała"
-
-    # USŁUGA WYGLĄDU MAI (Maia/services/appearance)
-    # maia-appearance-service jako jedyna zna sposób, w jaki kompozytor przechowuje wygląd: dekoracje
-    # okien (wybór, instalacja motywów, wybór zapamiętany dla każdego frontendu), później ikony,
-    # kursory i kolory. Ma na razie tylko backend KWin (kwinrc, D-Bus KWina): pod Wayfire zmieniałaby
-    # wygląd sesji KWin, więc tam nie startuje, dopóki nie powstanie backend Wayfire.
-    if [ "${compositor}" = "kwin" ]; then
-        maia_start_service maia-appearance-service "frontendy nie zmienią dekoracji okien"
-    else
-        echo "Pomijam maia-appearance-service: brak backendu dla kompozytora ${compositor}"
-    fi
-
-    export MAIA_LOG_FILE="${MAIA_SERVER_LOG}"
-    export MAIA_LOG_PORT=50001
-    export MAIA_LOG_HOST=127.0.0.1
-
-    # Maia działa natywnie jako klient Wayland. Platformę podajemy argumentem -platform
-    # (a nie przez QT_QPA_PLATFORM), żeby aplikacje uruchamiane z Mai dziedziczyły
-    # sesyjne QT_QPA_PLATFORM="wayland;xcb" z fallbackiem na Xwayland.
-    # Do porównań ze starym zachowaniem: MAIA_QPA_PLATFORM=xcb (Maia przez Xwayland).
-    local platform="${MAIA_QPA_PLATFORM:-wayland}"
-
-    echo "Uruchamianie serwera Maia (-platform ${platform}) z: ${MAIA_OPT_PATH}..."
-    # Bez exec: po wyjściu z Mai trzeba jeszcze zatrzymać usługi uruchomione wyżej. Skrypt czeka więc
-    # na Maię, sygnały zakończenia (wylogowanie, zamknięcie kompozytora) przekazuje jej dalej i oddaje
-    # jej kod wyjścia.
-    env -u QT_QPA_PLATFORMTHEME \
-        -u QT_PLUGIN_PATH \
-        "${MAIA_OPT_PATH}/bin/appMaiaServer" -platform "${platform}" &
-    MAIA_PID=$!
-    local status=0
-    trap 'kill -TERM "${MAIA_PID}" 2>/dev/null' TERM INT HUP
-
-    # wait wraca także po przechwyconym sygnale, dlatego czekamy, dopóki proces Mai istnieje
-    # (zakończony, ale jeszcze nie odebrany proces też istnieje, więc pętla wykona się co najmniej raz)
-    while kill -0 "${MAIA_PID}" 2>/dev/null; do
-        wait "${MAIA_PID}"
-        status=$?
-    done
-    echo "Serwer Maia zakończył się (kod ${status})"
-
-    [ -n "${MAIA_SERVICE_PIDS}" ] && kill ${MAIA_SERVICE_PIDS} 2>/dev/null
-    maia_stop_kde_services
-    return "${status}"
+    echo "Uruchamianie usługi sesji (${compositor})..."
+    exec "${MAIA_OPT_PATH}/libexec/maia-session-service" --compositor "${compositor}"
 }

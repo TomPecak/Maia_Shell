@@ -169,19 +169,19 @@ Window {
     // Button{
     //     text: "poweroff"
     //     onClicked: {
-    //         MSessionManager.poweroff()
+    //         Session.powerOff()
     //     }
     // }
     // Button{
     //     text: "logout"
     //     onClicked: {
-    //         MSessionManager.logout()
+    //         Session.logout()
     //     }
     // }
     // Button{
     //     text: "reboot"
     //     onClicked: {
-    //         MSessionManager.reboot()
+    //         Session.reboot()
     //     }
     // }
     // Button{

@@ -4,6 +4,7 @@ import QtQuick
 import QtQuick.Effects
 
 import Maia.Backend as Maia
+import Maia.Session
 import MaiaFrontend
 
 // Session screen: sleep, restart, shut down and log out, opened by the power button of the status
@@ -50,11 +51,11 @@ Item {
 
     readonly property var powerActions: [
         { id: "suspend", text: qsTr("Sleep"), icon: d.icon("system-suspend-symbolic"),
-          available: Maia.MSessionManager.canSuspend, destructive: false },
+          available: Session.canSuspend, destructive: false },
         { id: "reboot", text: qsTr("Restart"), icon: d.icon("system-reboot-symbolic"),
-          available: Maia.MSessionManager.canReboot, destructive: false },
+          available: Session.canReboot, destructive: false },
         { id: "shutdown", text: qsTr("Shut Down"), icon: d.icon("system-shutdown-symbolic"),
-          available: Maia.MSessionManager.canPowerOff, destructive: true }
+          available: Session.canPowerOff, destructive: true }
     ].filter(action => action.available)
 
     readonly property var sessionActions: [
@@ -470,16 +471,16 @@ Item {
         function carryOut() {
             switch (performing) {
             case "suspend":
-                Maia.MSessionManager.suspend()
+                Session.suspend()
                 break
             case "reboot":
-                Maia.MSessionManager.reboot()
+                Session.reboot()
                 break
             case "shutdown":
-                Maia.MSessionManager.poweroff()
+                Session.powerOff()
                 break
             case "logout":
-                Maia.MSessionManager.logout()
+                Session.logout()
                 break
             }
             recoverTimer.restart()
