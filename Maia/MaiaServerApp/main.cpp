@@ -12,7 +12,6 @@
 #include <QStandardPaths>
 #include <QWindow>
 #include <QtQuick3D/qquick3d.h>
-#include <QtWebEngineQuick>
 #include <QtPlugin>
 
 #include <AppsListModel.hpp>
@@ -89,7 +88,6 @@ int main(int argc, char *argv[])
     //INIT APPLICATION
     // QSettings and QML's Settings {} use ~/.config/maia/<version>/maia.conf
     MaiaPaths::setupApplicationNames();
-    QtWebEngineQuick::initialize();
 
     QGuiApplication app(argc, argv);
 

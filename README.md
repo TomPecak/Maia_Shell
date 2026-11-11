@@ -158,7 +158,6 @@ sudo apt install -y \
     qt6-wayland-dev \
     qt6-scxml-dev \
     qt6-svg-dev \
-    qt6-webengine-dev \
     qt6-websockets-dev \
     qt6-quick3d-dev
 

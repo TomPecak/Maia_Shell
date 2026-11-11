@@ -119,17 +119,6 @@ Window {
 
 
 
-    // WebEngineView {
-    //     id: youtubeView
-    //     width: 450
-    //     height: 600
-    //     anchors.top: parent.top
-    //     anchors.right: parent.right
-    //     anchors.margins: 20
-    //     url: "https://www.youtube.com/watch?v=izaO5-_nyp0&list=RDGMEMQ1dJ7wXfLlqCjwV0xfSNbA&index=2"  // Youtube link
-    // }
-
-
     // View3D {
     //     id: view
     //     width: 600

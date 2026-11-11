@@ -7,7 +7,7 @@ set(CMAKE_AUTOMOC ON)
 
 include(ECMGenerateHeaders)
 
-find_package(Qt6 ${REQUIRED_QT_VERSION} REQUIRED COMPONENTS Core Quick Quick3D DBus WebEngineQuick WebSockets)
+find_package(Qt6 ${REQUIRED_QT_VERSION} REQUIRED COMPONENTS Core Quick Quick3D DBus WebSockets)
 find_package(KF6PulseAudioQt ${REQUIRED_PULSEAUDIOQT_VERSION} REQUIRED)
 
 # Generate maia_version.h file with version #definitions, file will be generated in build directories
@@ -50,7 +50,6 @@ target_link_libraries(appMaiaServer
     PRIVATE Qt6::Quick
     PRIVATE Qt6::DBus
     PRIVATE Qt6::Quick3D
-    PUBLIC Qt6::WebEngineQuick
     PRIVATE Qt6::WebSockets
 
     PUBLIC KF6::PulseAudioQt

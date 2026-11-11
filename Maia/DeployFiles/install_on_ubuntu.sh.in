@@ -55,7 +55,6 @@ sudo apt install -y --no-install-recommends --no-install-suggests plasma-integra
 
 # INSTALL MAIA
 sudo apt install -y libqt6scxml6
-sudo apt install -y libqt6webenginequick6
 sudo apt install -y libqt6websockets6
 sudo apt install -y qml6-module-qtquick-controls
 sudo apt install -y qml6-module-qtcore
