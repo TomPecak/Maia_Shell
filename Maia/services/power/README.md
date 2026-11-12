@@ -85,5 +85,6 @@ it is dragged.
     changes made by others, a session that may not change the screen, UPower's signals, devices
     added and removed, the daemon going away and coming back, a machine without UPower).
 - `tst_power` (CTest `maia-power-qml`): `Maia.Power` against the real service with the fake backend.
-- A nested session (`run_maia_nested_wayland.sh`) uses the fake backend: logind changes the screen only
-  for the active session, and the nested one is a window inside it.
+- A nested session (`run_maia_nested_wayland.sh`) uses the fake backend by default: it belongs to the
+  same, active logind session, so the system backend would change the real screen's brightness and
+  the machine's profile (`MAIA_POWER_BACKEND=system` does that on purpose).

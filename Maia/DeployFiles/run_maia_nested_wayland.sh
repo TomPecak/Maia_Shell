@@ -117,7 +117,8 @@ export MAIA_SESSION_BACKEND="${MAIA_SESSION_BACKEND:-fake}"
 # Usługi KDE (systemd --user) należą do głównej sesji: nie uruchamiamy ich
 export MAIA_SESSION_TEST=1
 export MAIA_NETWORK_BACKEND="${MAIA_NETWORK_BACKEND:-fake}"
-# Jasność ekranu przez logind działa tylko dla aktywnej sesji, a zagnieżdżona to okno w niej: atrapa
+# Zagnieżdżona sesja należy do tej samej, aktywnej sesji logind: z backendem system zmieniałaby
+# jasność prawdziwego ekranu i profil zasilania tego komputera. Domyślnie atrapa (symulowany laptop).
 export MAIA_POWER_BACKEND="${MAIA_POWER_BACKEND:-fake}"
 export MAIA_LOG_PORT="${MAIA_LOG_PORT:-50003}"
 export MAIA_LOG_FILE="${MAIA_LOG_FILE:-${XDG_RUNTIME_DIR:-/tmp}/maia-nested-server.log}"
