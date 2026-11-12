@@ -48,7 +48,7 @@ FlyoutWindow {
         { name: qsTr("Terminal"), icon: "utilities-terminal", exec: "konsole" },
         { name: qsTr("Kate"), icon: "kate", exec: "kate" },
         { name: qsTr("Discover"), icon: "plasmadiscover", exec: "plasma-discover" },
-        { name: qsTr("Settings"), icon: "systemsettings", exec: "systemsettings" },
+        { name: qsTr("Settings"), icon: "preferences-system", exec: "maia-settings" },
         { name: qsTr("Calculator"), icon: "accessories-calculator", exec: "kcalc" },
         { name: qsTr("Screenshot"), icon: "spectacle", exec: "spectacle" },
         { name: qsTr("Documents"), icon: "okular", exec: "okular" },

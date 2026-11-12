@@ -305,7 +305,7 @@ FlyoutWindow {
                 Layout.preferredHeight: 36
                 padding: 0
                 Accessible.name: qsTr("All settings")
-                onClicked: Shell.launch("systemsettings")
+                onClicked: Shell.launch("maia-settings")
                 contentItem: Item {
                     LIcon { anchors.centerIn: parent; size: 18; iconName: "configure-symbolic" }
                 }
