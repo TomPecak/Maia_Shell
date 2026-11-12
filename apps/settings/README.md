@@ -1,7 +1,7 @@
 # Maia Settings
 
 `maia-settings [--page <id>]`: the settings of Maia. Lumen's "More Wi-Fi settings" opens it with
-`--page network`; a second start hands its page to the running window and exits, so there is
+`--page network`, the battery in Lumen's quick settings with `--page power`; a second start hands its page to the running window and exits, so there is
 one window per session.
 
 ## Not a monolith
@@ -57,6 +57,23 @@ from its details page, turn off the hotspot).
 
 New passwords are asked by the shell (Lumen's quick settings), the session's one secret prompter.
 
+## The Power page
+
+`pages/power/`, on `Maia.Power` (maia-power-service), laid out like GNOME's Power panel
+(Ubuntu 24.04 / 26.04):
+
+| Group | Shows |
+|---|---|
+| Battery | The computer's battery: what it does and for how long ("3 h 58 min remaining", "Charging, 40 min until full"), its level, its health; a warning when it runs low |
+| Devices | The batteries of a mouse, headphones, a phone |
+| Power Mode | Performance, Balanced, Power Saver (power-profiles-daemon); which application holds a mode and why; why performance is limited (too hot, on a lap) |
+| Brightness | The screen (each display of the service) and the keyboard backlight, stepped by its own levels |
+
+What the machine lacks is left out, not shown disabled (a desktop has no battery group). GNOME has
+brightness only in its quick settings; here it sits with the rest of what the power service does.
+Idle dimming, blanking, suspend and the power button are powerdevil's for now, so the page does
+not show GNOME's "Power Saving Options" and "General" groups yet.
+
 ## Testing
 
 Offscreen with the fake network service, a screenshot and an action:
@@ -69,5 +86,8 @@ MAIA_SETTINGS_PAGES_PATH=apps/settings/pages QT_QPA_PLATFORM=offscreen \
 ```
 
 Actions of the Wi-Fi page: `hidden`, `enterprise`, `hotspot`, `hotspot-on`, `share`, `saved`,
-`forget`, `details:<tab>`. Use an isolated `XDG_CONFIG_HOME`; never the real NetworkManager for
+`forget`, `details:<tab>`. The Power page works the same way with a fake power service
+(`MAIA_POWER_BACKEND=fake MAIA_POWER_SOCKET=...`): actions `hold` (an application holds
+Performance) and `end` (scrolled to the end). `QML_IMPORT_PATH` comes before the installation's
+modules, so a build's `Maia.*` modules can be tried with an installed Maia. Use an isolated `XDG_CONFIG_HOME`; never the real NetworkManager for
 actions.

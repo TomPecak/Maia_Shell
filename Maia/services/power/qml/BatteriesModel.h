@@ -3,11 +3,12 @@
 // BatteriesModel: the batteries the system knows, the computer's and the devices' (a mouse,
 // headphones, a phone), for a list of devices and their levels.
 //
-//   ListView { model: BatteriesModel { devicesOnly: true } delegate: Text { text: model.model + " " + model.percentage } }
+//   ListView { model: BatteriesModel { devicesOnly: true } delegate: Text { text: model.modelName + " " + model.percentage } }
 //
-// Roles: id, kind (Power.DeviceKind), vendor, model, present, powerSupply (powers the computer),
-// percentage, state (Power.BatteryState), warningLevel (Power.WarningLevel), timeToEmpty, timeToFull
-// (seconds), energyRate (watts), capacity (health, %), iconName.
+// Roles: id, kind (Power.DeviceKind), vendor, modelName (not "model": a role of that name hides a
+// delegate's model object), present, powerSupply (powers the computer), percentage, state
+// (Power.BatteryState), warningLevel (Power.WarningLevel), timeToEmpty, timeToFull (seconds),
+// energyRate (watts), capacity (health, %), iconName.
 
 #include "PowerConnection.h"
 
@@ -27,7 +28,7 @@ class BatteriesModel : public QAbstractListModel
 
 public:
     enum Role {
-        IdRole = Qt::UserRole + 1, KindRole, VendorRole, ModelRole, PresentRole, PowerSupplyRole, PercentageRole,
+        IdRole = Qt::UserRole + 1, KindRole, VendorRole, ModelNameRole, PresentRole, PowerSupplyRole, PercentageRole,
         StateRole, WarningLevelRole, TimeToEmptyRole, TimeToFullRole, EnergyRateRole, CapacityRole, IconNameRole
     };
     Q_ENUM(Role)

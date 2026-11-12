@@ -161,7 +161,7 @@ void TestPower::theModels()
     QTRY_COMPARE_WITH_TIMEOUT(all.rowCount(), 2, 10000);
     QCOMPARE(devices.rowCount(), 1);
     const QModelIndex mouse = devices.index(0);
-    QCOMPARE(mouse.data(BatteriesModel::ModelRole).toString(), QStringLiteral("MX Master 3"));
+    QCOMPARE(mouse.data(BatteriesModel::ModelNameRole).toString(), QStringLiteral("MX Master 3"));
     QCOMPARE(mouse.data(BatteriesModel::KindRole).toInt(), int(Power::MouseDevice));
     QCOMPARE(mouse.data(BatteriesModel::PercentageRole).toDouble(), 45.0);
     QCOMPARE(mouse.data(BatteriesModel::PowerSupplyRole).toBool(), false);

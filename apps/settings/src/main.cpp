@@ -72,7 +72,8 @@ int main(int argc, char *argv[])
 
     QQuickStyle::setStyle(QStringLiteral("Basic"));
     QQmlApplicationEngine engine;
-    engine.addImportPath(QStringLiteral(MAIA_QML_INSTALL_DIR));
+    // Last, after QML_IMPORT_PATH: a build's modules can be tried with an installed Maia
+    engine.setImportPathList(engine.importPathList() << QStringLiteral(MAIA_QML_INSTALL_DIR));
 
     FrontendModules frontendModules;
     if (!frontendModules.registerForFile(engine, frontendShell())) {

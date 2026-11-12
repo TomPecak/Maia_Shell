@@ -277,12 +277,25 @@ FlyoutWindow {
         RowLayout {
             Layout.fillWidth: true
 
-            LIcon { visible: Shell.hasBattery; iconName: Shell.batteryIconName; size: 18 }
-            LText {
+            // The battery opens its settings page (as on Windows 11)
+            SubtleButton {
                 visible: Shell.hasBattery
-                text: Shell.batteryTime.length > 0 ? qsTr("%1 % · %2").arg(Shell.batteryPercent).arg(Shell.batteryTime)
-                                                   : qsTr("%1 %").arg(Shell.batteryPercent)
-                color: Theme.textSecondary
+                Layout.preferredHeight: 36
+                leftPadding: Theme.spacingS
+                rightPadding: Theme.spacingS
+                Accessible.name: qsTr("Power settings")
+                onClicked: Shell.launch("maia-settings --page power")
+                contentItem: Row {
+                    spacing: Theme.spacingS
+
+                    LIcon { anchors.verticalCenter: parent.verticalCenter; iconName: Shell.batteryIconName; size: 18 }
+                    LText {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: Shell.batteryTime.length > 0 ? qsTr("%1 % · %2").arg(Shell.batteryPercent).arg(Shell.batteryTime)
+                                                           : qsTr("%1 %").arg(Shell.batteryPercent)
+                        color: Theme.textSecondary
+                    }
+                }
             }
 
             Item { Layout.fillWidth: true }

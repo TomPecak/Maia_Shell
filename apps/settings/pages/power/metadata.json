@@ -1,0 +1,12 @@
+{
+    "id": "power",
+    "name": "Power",
+    "description": "Battery, power mode and brightness",
+    "description[pl]": "Bateria, tryb zasilania i jasność",
+    "icon": "battery-080-symbolic",
+    "order": 50,
+    "main": "PowerPage.qml",
+    "formFactors": ["desktop"],
+    "keywords": ["power", "battery", "charge", "charging", "energy", "profile", "mode", "performance", "balanced", "saver", "brightness", "screen", "backlight", "keyboard", "devices", "mouse", "headphones"],
+    "keywords[pl]": ["zasilanie", "bateria", "akumulator", "ładowanie", "energia", "profil", "tryb", "wydajność", "zrównoważony", "oszczędzanie", "jasność", "ekran", "podświetlenie", "klawiatura", "urządzenia", "mysz", "słuchawki"]
+}

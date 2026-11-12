@@ -11,6 +11,9 @@ Window {
     // From the command line (main.cpp)
     property string initialPage
     property string testAction
+    // --dark (1) / --light (0) for screenshots; it is saved like the user's own choice, so use an
+    // isolated XDG_CONFIG_HOME
+    property int forceDark: -1
 
     property string currentPageId
 
@@ -45,6 +48,8 @@ Window {
     }
 
     Component.onCompleted: {
+        if (forceDark >= 0)
+            Theme.setDark(forceDark === 1)
         SettingsApp.testAction = testAction
         if (!(initialPage && openPage(initialPage)) && Pages.count > 0)
             openPage(Pages.get(0).pageId)
