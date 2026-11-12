@@ -15,6 +15,9 @@
 //!   attribute sends no kernel event, so the value is read again every `POLL`; the kernel's uevents
 //!   (netlink) tell at once about backlight devices that appear, disappear or change by hardware keys.
 //!
+//! Reading sysfs is a blocking file read (microseconds for these attributes, but a slow driver could
+//! take longer): it runs on tokio's blocking pool, never on the event loop.
+//!
 //! The sysfs root is $MAIA_POWER_SYSFS_ROOT (tests point it at a directory of their own), "/sys"
 //! otherwise.
 
@@ -191,9 +194,15 @@ struct Source {
 
 impl Source {
     /// Finds the device again (it may come and go) and sends its state when it changed
-    fn refresh(&mut self) {
-        let device = choose(&scan(&self.root)).cloned();
-        let display = device.as_ref().and_then(|d| read_display(&self.root, d));
+    async fn refresh(&mut self) {
+        let root = self.root.clone();
+        let read = tokio::task::spawn_blocking(move || {
+            let device = choose(&scan(&root)).cloned();
+            let display = device.as_ref().and_then(|d| read_display(&root, d));
+            (device, display)
+        });
+        // The blocking pool shutting down (the service ends): nothing to tell
+        let Ok((device, display)) = read.await else { return };
         if let Some(old) = &self.sent {
             if display.as_ref().map(|d| &d.id) != Some(&old.id) {
                 let _ = self.events.send(BackendEvent::DisplayRemoved(old.id.clone()));
@@ -218,7 +227,7 @@ pub async fn run(
     mut commands: mpsc::UnboundedReceiver<Command>,
 ) {
     let mut source = Source { root, conn, events, device: None, sent: None };
-    source.refresh();
+    source.refresh().await;
     let uevents = uevent_socket();
     let mut poll = tokio::time::interval(POLL);
     poll.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
@@ -251,7 +260,7 @@ pub async fn run(
                 for reply in answering.drain(..) {
                     let _ = reply.send(result.clone());
                 }
-                source.refresh();
+                source.refresh().await;
             }
             command = commands.recv() => match command {
                 Some(Command::SetBrightness { display_id, raw, reply }) => {
@@ -265,13 +274,13 @@ pub async fn run(
                 Some(other) => eprintln!("maia-power-service: backlight got a command it does not handle: {other:?}"),
                 None => return,
             },
-            _ = poll.tick() => source.refresh(),
+            _ = poll.tick() => source.refresh().await,
             ready = async { uevents.as_ref().unwrap().readable().await }, if uevents.is_some() => {
                 if let Ok(mut guard) = ready {
                     let backlight = drain_uevents(guard.get_inner());
                     guard.clear_ready();
                     if backlight {
-                        source.refresh();
+                        source.refresh().await;
                     }
                 }
             }

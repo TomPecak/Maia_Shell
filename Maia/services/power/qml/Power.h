@@ -149,6 +149,8 @@ private:
     double m_localBrightness = -1;
     QElapsedTimer m_sinceLocal;
     QTimer m_sendTimer;
+    // After the last local change: show the service's value again
+    QTimer m_localTimer;
     bool m_sendPending = false;
 };
 

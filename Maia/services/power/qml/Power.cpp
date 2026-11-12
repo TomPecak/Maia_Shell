@@ -26,6 +26,9 @@ Power::Power(QObject *parent)
         if (m_sendPending)
             sendBrightness();
     });
+    m_localTimer.setInterval(kLocalHold + 20);
+    m_localTimer.setSingleShot(true);
+    connect(&m_localTimer, &QTimer::timeout, this, &Power::brightnessChanged);
 
     connect(m_connection, &PowerConnection::connectedChanged, this, &Power::connectedChanged);
     connect(m_connection, &PowerConnection::statusChanged, this, &Power::statusChanged);
@@ -169,11 +172,8 @@ void Power::setBrightness(double brightness)
     m_localBrightness = brightness;
     m_sinceLocal.start();
     Q_EMIT brightnessChanged();
-    // The service's value is shown again once the user has stopped
-    QTimer::singleShot(kLocalHold + 20, this, [this] {
-        if (m_sinceLocal.isValid() && m_sinceLocal.elapsed() >= kLocalHold)
-            Q_EMIT brightnessChanged();
-    });
+    // The service's value is shown again once the user has stopped (one timer, restarted on every move)
+    m_localTimer.start();
     if (m_sendTimer.isActive()) {
         m_sendPending = true;
     } else {

@@ -177,20 +177,33 @@ fn text(value: &str) -> OwnedValue {
     OwnedValue::from(Str::from(value.to_string()))
 }
 
-struct FakeProfiles {
+#[derive(Default)]
+struct ProfilesState {
     chosen: String,
     holds: Vec<(u32, String, String, String)>,
     next: u32,
 }
 
+/// power-profiles-daemon; `slow` makes setting a profile take a second, as an open polkit dialog
+/// would. Its state is behind a mutex so that its methods take &self: zbus then runs them side by side.
+struct FakeProfiles {
+    state: std::sync::Mutex<ProfilesState>,
+    slow: std::sync::Arc<std::sync::atomic::AtomicBool>,
+}
+
 impl FakeProfiles {
+    fn new(slow: std::sync::Arc<std::sync::atomic::AtomicBool>) -> FakeProfiles {
+        FakeProfiles { state: std::sync::Mutex::new(ProfilesState { chosen: "balanced".into(), ..Default::default() }), slow }
+    }
+
     fn active(&self) -> String {
-        if self.holds.iter().any(|h| h.1 == "power-saver") {
+        let state = self.state.lock().unwrap();
+        if state.holds.iter().any(|h| h.1 == "power-saver") {
             "power-saver".into()
-        } else if self.holds.iter().any(|h| h.1 == "performance") {
+        } else if state.holds.iter().any(|h| h.1 == "performance") {
             "performance".into()
         } else {
-            self.chosen.clone()
+            state.chosen.clone()
         }
     }
 }
@@ -203,9 +216,13 @@ impl FakeProfiles {
     }
 
     #[zbus(property)]
-    fn set_active_profile(&mut self, profile: String) {
-        self.chosen = profile;
-        self.holds.clear();
+    async fn set_active_profile(&self, profile: String) {
+        if self.slow.load(Ordering::SeqCst) {
+            tokio::time::sleep(Duration::from_secs(1)).await;
+        }
+        let mut state = self.state.lock().unwrap();
+        state.chosen = profile;
+        state.holds.clear();
     }
 
     #[zbus(property)]
@@ -223,7 +240,10 @@ impl FakeProfiles {
 
     #[zbus(property)]
     fn active_profile_holds(&self) -> Vec<Dict> {
-        self.holds
+        self.state
+            .lock()
+            .unwrap()
+            .holds
             .iter()
             .map(|(_, profile, reason, app)| {
                 HashMap::from([
@@ -236,21 +256,26 @@ impl FakeProfiles {
     }
 
     async fn hold_profile(
-        &mut self,
+        &self,
         profile: String,
         reason: String,
         application_id: String,
         #[zbus(signal_emitter)] emitter: SignalEmitter<'_>,
     ) -> u32 {
-        self.next += 1;
-        self.holds.push((self.next, profile, reason, application_id));
+        let cookie = {
+            let mut state = self.state.lock().unwrap();
+            state.next += 1;
+            let cookie = state.next;
+            state.holds.push((cookie, profile, reason, application_id));
+            cookie
+        };
         let _ = self.active_profile_changed(&emitter).await;
         let _ = self.active_profile_holds_changed(&emitter).await;
-        self.next
+        cookie
     }
 
-    async fn release_profile(&mut self, cookie: u32, #[zbus(signal_emitter)] emitter: SignalEmitter<'_>) {
-        self.holds.retain(|h| h.0 != cookie);
+    async fn release_profile(&self, cookie: u32, #[zbus(signal_emitter)] emitter: SignalEmitter<'_>) {
+        self.state.lock().unwrap().holds.retain(|h| h.0 != cookie);
         let _ = self.active_profile_changed(&emitter).await;
         let _ = self.active_profile_holds_changed(&emitter).await;
     }
@@ -337,10 +362,7 @@ async fn services(machine: &Machine, with_profiles: bool, refuse_brightness: boo
     conn.request_name("org.freedesktop.UPower").await.unwrap();
     conn.request_name("org.freedesktop.login1").await.unwrap();
     if with_profiles {
-        server
-            .at("/org/freedesktop/UPower/PowerProfiles", FakeProfiles { chosen: "balanced".into(), holds: Vec::new(), next: 0 })
-            .await
-            .unwrap();
+        server.at("/org/freedesktop/UPower/PowerProfiles", FakeProfiles::new(Default::default())).await.unwrap();
         conn.request_name("org.freedesktop.UPower.PowerProfiles").await.unwrap();
     }
     conn
@@ -546,5 +568,35 @@ fn without_upower() {
         let s = client.seen.borrow();
         assert!(s.batteries.is_empty());
         assert_eq!(s.keyboard, Some((false, 0.0)));
+    });
+}
+
+#[test]
+fn a_profile_change_waiting_for_a_password_holds_nothing_else_up() {
+    let machine = machine();
+    local(async {
+        let services = services(&machine, true, false).await;
+        let client = std::rc::Rc::new(service(&machine).await);
+        client.wait("the profiles", |s| s.offered.len() == 3).await;
+        let profiles = services.object_server().interface::<_, FakeProfiles>("/org/freedesktop/UPower/PowerProfiles").await.unwrap();
+        profiles.get().await.slow.store(true, Ordering::SeqCst);
+
+        // The change waits a second, as for the administrator's password
+        let started = std::time::Instant::now();
+        let slow = {
+            let client = client.clone();
+            tokio::task::spawn_local(async move { client.set_profile(p::Profile::Performance).await })
+        };
+        tokio::time::sleep(Duration::from_millis(100)).await;
+        // Meanwhile a hold is made and seen at once
+        let (error, _hold) = client.hold_profile(p::Profile::PowerSaver, "Presenting").await;
+        assert_eq!(error, p::ErrorCode::None);
+        client.wait("held", |s| s.active_profile == Some(p::Profile::PowerSaver)).await;
+        assert!(started.elapsed() < Duration::from_millis(800), "the hold waited for the change: {:?}", started.elapsed());
+
+        assert_eq!(slow.await.unwrap(), p::ErrorCode::None);
+        assert!(started.elapsed() >= Duration::from_secs(1));
+        // Choosing by hand released the hold, as the daemon does
+        client.wait("performance", |s| s.active_profile == Some(p::Profile::Performance) && s.holds.is_empty()).await;
     });
 }

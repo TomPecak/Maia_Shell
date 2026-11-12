@@ -4,6 +4,9 @@
 //! net.hadess.PowerProfiles (older; newer versions keep it as an alias). The first that has an owner
 //! is used. Its properties are read again after every signal it sends.
 //!
+//! Commands run as tasks of their own, so a profile change waiting for the administrator's password
+//! (polkit) holds up neither the daemon's signals nor the other commands.
+//!
 //! Holds (HoldProfile) belong to the D-Bus connection that made them: the daemon releases them when
 //! this service ends, so a crashed client of Maia never leaves a profile held for good.
 
@@ -97,57 +100,57 @@ impl Source {
             self.sent = Some(profiles);
         }
     }
+}
 
-    async fn proxy(&self) -> Result<Proxy<'static>, OpError> {
-        let (dest, path, iface) = self.target.ok_or_else(|| OpError::new(ErrorCode::Unavailable, "power-profiles-daemon does not run"))?;
-        Proxy::new(&self.conn, dest, path, iface).await.map_err(op_error)
-    }
+type Target = Option<(&'static str, &'static str, &'static str)>;
 
-    async fn command(&mut self, command: Command) {
-        match command {
-            Command::SetProfile { profile, reply } => {
-                let result = async {
-                    let proxy = self.proxy().await?;
-                    let (_, path, iface) = self.target.unwrap();
-                    let props = Proxy::new(&self.conn, proxy.destination().to_owned(), path, dbus::PROPERTIES)
-                        .await
-                        .map_err(op_error)?;
-                    props
-                        .call_with_flags::<_, _, ()>(
-                            "Set",
-                            MethodFlags::AllowInteractiveAuth.into(),
-                            &(iface, "ActiveProfile", Value::from(profile.ppd_name())),
-                        )
-                        .await
-                        .map(|_| ())
-                        .map_err(op_error)
-                }
-                .await;
-                let _ = reply.send(result);
-                self.refresh().await;
+async fn proxy(conn: &Connection, target: Target) -> Result<Proxy<'static>, OpError> {
+    let (dest, path, iface) = target.ok_or_else(|| OpError::new(ErrorCode::Unavailable, "power-profiles-daemon does not run"))?;
+    Proxy::new(conn, dest, path, iface).await.map_err(op_error)
+}
+
+/// Carries out one command. Runs as a task of its own: setting a profile may wait for the
+/// administrator's password (polkit) as long as the dialog is open, and meanwhile the daemon's
+/// signals and the other commands go on.
+async fn execute(conn: Connection, target: Target, command: Command) {
+    match command {
+        Command::SetProfile { profile, reply } => {
+            let result = async {
+                let (dest, path, iface) =
+                    target.ok_or_else(|| OpError::new(ErrorCode::Unavailable, "power-profiles-daemon does not run"))?;
+                let props = Proxy::new(&conn, dest, path, dbus::PROPERTIES).await.map_err(op_error)?;
+                props
+                    .call_with_flags::<_, _, ()>(
+                        "Set",
+                        MethodFlags::AllowInteractiveAuth.into(),
+                        &(iface, "ActiveProfile", Value::from(profile.ppd_name())),
+                    )
+                    .await
+                    .map(|_| ())
+                    .map_err(op_error)
             }
-            Command::HoldProfile { profile, reason, application_id, reply } => {
-                let result = async {
-                    let proxy = self.proxy().await?;
-                    proxy
-                        .call::<_, _, u32>("HoldProfile", &(profile.ppd_name(), reason.as_str(), application_id.as_str()))
-                        .await
-                        .map_err(op_error)
-                }
-                .await;
-                let _ = reply.send(result);
-                self.refresh().await;
-            }
-            Command::ReleaseProfile { cookie } => {
-                if let Ok(proxy) = self.proxy().await {
-                    if let Err(error) = proxy.call::<_, _, ()>("ReleaseProfile", &(cookie,)).await {
-                        eprintln!("maia-power-service: releasing profile hold {cookie}: {error}");
-                    }
-                }
-                self.refresh().await;
-            }
-            other => eprintln!("maia-power-service: profiles got a command it does not handle: {other:?}"),
+            .await;
+            let _ = reply.send(result);
         }
+        Command::HoldProfile { profile, reason, application_id, reply } => {
+            let result = async {
+                proxy(&conn, target)
+                    .await?
+                    .call::<_, _, u32>("HoldProfile", &(profile.ppd_name(), reason.as_str(), application_id.as_str()))
+                    .await
+                    .map_err(op_error)
+            }
+            .await;
+            let _ = reply.send(result);
+        }
+        Command::ReleaseProfile { cookie } => {
+            if let Ok(proxy) = proxy(&conn, target).await {
+                if let Err(error) = proxy.call::<_, _, ()>("ReleaseProfile", &(cookie,)).await {
+                    eprintln!("maia-power-service: releasing profile hold {cookie}: {error}");
+                }
+            }
+        }
+        other => eprintln!("maia-power-service: profiles got a command it does not handle: {other:?}"),
     }
 }
 
@@ -170,6 +173,7 @@ pub async fn run(conn: Connection, events: mpsc::UnboundedSender<BackendEvent>, 
         }
     }
     let mut signals = futures::stream::select_all(streams);
+    let (done, mut finished) = mpsc::unbounded_channel::<()>();
     let mut source = Source { conn, events, target: None, sent: None };
     source.refresh().await;
     let mut settle: Option<tokio::time::Instant> = None;
@@ -178,12 +182,22 @@ pub async fn run(conn: Connection, events: mpsc::UnboundedSender<BackendEvent>, 
             Some(_) = signals.next() => {
                 settle.get_or_insert(tokio::time::Instant::now() + SETTLE);
             }
+            // A command finished: read the state again (the daemon may not signal everything)
+            Some(()) = finished.recv() => {
+                settle.get_or_insert(tokio::time::Instant::now() + SETTLE);
+            }
             _ = async { tokio::time::sleep_until(settle.unwrap()).await }, if settle.is_some() => {
                 settle = None;
                 source.refresh().await;
             }
             command = commands.recv() => match command {
-                Some(command) => source.command(command).await,
+                Some(command) => {
+                    let (conn, target, done) = (source.conn.clone(), source.target, done.clone());
+                    tokio::task::spawn_local(async move {
+                        execute(conn, target, command).await;
+                        let _ = done.send(());
+                    });
+                }
                 None => return,
             },
         }
