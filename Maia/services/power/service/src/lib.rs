@@ -11,7 +11,7 @@
 //!                          ◄──── Command ◄────────────── control (checked) ◄── setBrightness, setProfile, …
 //! ```
 //!
-//! - `model`: the state as plain values; UPower's numbers, the brightness arithmetic, battery icons.
+//! - `model`: the state as plain values; UPower's numbers, the brightness arithmetic.
 //! - `backend`: the events and commands between a backend and the hub.
 //! - `system`: the real backend (UPower, the backlight through sysfs and logind, power-profiles-daemon).
 //! - `fake`: a simulated laptop for tests and interface work (MAIA_POWER_BACKEND=fake).

@@ -8,7 +8,7 @@
 // Roles: id, kind (Power.DeviceKind), vendor, modelName (not "model": a role of that name hides a
 // delegate's model object), present, powerSupply (powers the computer), percentage, state
 // (Power.BatteryState), warningLevel (Power.WarningLevel), timeToEmpty, timeToFull (seconds),
-// energyRate (watts), capacity (health, %), iconName.
+// energyRate (watts), capacity (health, %). Only data: icons and wording are the shell's or the app's.
 
 #include "PowerConnection.h"
 
@@ -29,7 +29,7 @@ class BatteriesModel : public QAbstractListModel
 public:
     enum Role {
         IdRole = Qt::UserRole + 1, KindRole, VendorRole, ModelNameRole, PresentRole, PowerSupplyRole, PercentageRole,
-        StateRole, WarningLevelRole, TimeToEmptyRole, TimeToFullRole, EnergyRateRole, CapacityRole, IconNameRole
+        StateRole, WarningLevelRole, TimeToEmptyRole, TimeToFullRole, EnergyRateRole, CapacityRole
     };
     Q_ENUM(Role)
 

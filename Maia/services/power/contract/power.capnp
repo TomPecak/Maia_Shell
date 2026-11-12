@@ -29,8 +29,8 @@
 #   the latest of the following ones is applied next (a dragged slider sends many).
 # - What is missing is a state, not an error: no battery (a desktop computer), no backlight (an
 #   external monitor), no power-profiles-daemon. Each part says whether it is available.
-# - Texts for people are not part of the contract: kinds, states and events are enumerations, and
-#   every frontend words them in its own language and style.
+# - Only data and state: how it looks is not part of the contract. Kinds, states and events are
+#   enumerations; every frontend words them and picks their icons in its own language and style.
 # - Results that the user has to see are values (Result), not exceptions. A Cap'n Proto exception
 #   means the call itself failed (service gone, bug).
 
@@ -111,7 +111,6 @@ struct Battery {
   timeToFull @10 :Int64;  # seconds, 0 = unknown
   energyRate @11 :Float64;# watts drawn or charged, 0 = unknown
   capacity @12 :Float64;  # health: the full capacity in percent of the design capacity, 0 = unknown
-  iconName @13 :Text;     # a freedesktop icon name for the state ("battery-level-80-symbolic")
 }
 
 struct PowerStatus {

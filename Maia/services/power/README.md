@@ -75,7 +75,7 @@ it is dragged.
 ## Tests
 
 - `cargo test` in `service/`:
-  - unit tests: UPower's numbers, the brightness arithmetic, battery icons, events, the choice of the
+  - unit tests: UPower's numbers, the brightness arithmetic, events, the choice of the
     backlight device, coalescing, the parsing of UPower's and power-profiles-daemon's properties;
   - `tests/service.rs`: the service over a real Cap'n Proto connection with the fake backend (the
     charger and a draining battery with their events, the slider and the keys, devices coming and

@@ -102,8 +102,6 @@ QVariant BatteriesModel::data(const QModelIndex &index, int role) const
         return b.energyRate;
     case CapacityRole:
         return b.capacity;
-    case IconNameRole:
-        return b.iconName;
     }
     return {};
 }
@@ -114,7 +112,7 @@ QHash<int, QByteArray> BatteriesModel::roleNames() const
         {IdRole, "id"}, {KindRole, "kind"}, {VendorRole, "vendor"}, {ModelNameRole, "modelName"}, {PresentRole, "present"},
         {PowerSupplyRole, "powerSupply"}, {PercentageRole, "percentage"}, {StateRole, "state"},
         {WarningLevelRole, "warningLevel"}, {TimeToEmptyRole, "timeToEmpty"}, {TimeToFullRole, "timeToFull"},
-        {EnergyRateRole, "energyRate"}, {CapacityRole, "capacity"}, {IconNameRole, "iconName"},
+        {EnergyRateRole, "energyRate"}, {CapacityRole, "capacity"},
     };
 }
 

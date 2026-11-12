@@ -21,7 +21,7 @@ use tokio::sync::mpsc;
 use crate::backend::{BackendEvent, Command, ErrorCode, OpError};
 use crate::model::{
     Battery, BatteryState, Degradation, DeviceKind, Display, DisplayKind, HeldProfile, KeyboardBacklight, PowerStatus,
-    Profile, Profiles, WarningLevel, battery_icon,
+    Profile, Profiles, WarningLevel,
 };
 
 pub const NAME: &str = "fake";
@@ -94,7 +94,6 @@ impl Machine {
                 percentage: 45.0,
                 state: BatteryState::Discharging,
                 warning_level: WarningLevel::None,
-                icon_name: battery_icon(45.0, BatteryState::Discharging, true),
                 ..Battery::absent(MOUSE)
             }],
             panel_raw: 48000,
@@ -134,7 +133,6 @@ impl Machine {
             time_to_full: if self.on_charger && self.percentage < 100.0 { ((100.0 - self.percentage) * 90.0) as i64 } else { 0 },
             energy_rate: if state == BatteryState::Full { 0.0 } else { 7.5 },
             capacity: 92.0,
-            icon_name: battery_icon(self.percentage, state, true),
         }
     }
 

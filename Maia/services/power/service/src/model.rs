@@ -1,5 +1,6 @@
 //! The power state as plain values (what the contract tells), and the rules about them that do not
-//! depend on a source: UPower's numbers, the brightness arithmetic, the icon of a battery.
+//! depend on a source: UPower's numbers, the brightness arithmetic. Only data: how it looks (icons,
+//! wording) is the shells' and the apps'.
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum DeviceKind {
@@ -108,7 +109,6 @@ pub struct Battery {
     pub time_to_full: i64,
     pub energy_rate: f64,
     pub capacity: f64,
-    pub icon_name: String,
 }
 
 impl Battery {
@@ -128,26 +128,11 @@ impl Battery {
             time_to_full: 0,
             energy_rate: 0.0,
             capacity: 0.0,
-            icon_name: String::new(),
         }
     }
 
     pub fn charging(&self) -> bool {
         matches!(self.state, BatteryState::Charging | BatteryState::PendingCharge)
-    }
-}
-
-/// The freedesktop icon of a battery in this state, in steps of ten ("battery-level-80-charging-symbolic"),
-/// as GNOME and Plasma name them; for sources that give none
-pub fn battery_icon(percentage: f64, state: BatteryState, present: bool) -> String {
-    if !present {
-        return "battery-missing-symbolic".into();
-    }
-    let level = ((percentage.clamp(0.0, 100.0) / 10.0).round() as u32) * 10;
-    match state {
-        BatteryState::Full => "battery-level-100-charged-symbolic".into(),
-        BatteryState::Charging | BatteryState::PendingCharge => format!("battery-level-{level}-charging-symbolic"),
-        _ => format!("battery-level-{level}-symbolic"),
     }
 }
 
@@ -384,15 +369,6 @@ mod tests {
         assert_eq!(k.raw_for(0.4), 1);
         assert_eq!(k.raw_for(1.0), 2);
         assert!((k.fraction() - 0.5).abs() < 1e-9);
-    }
-
-    #[test]
-    fn icons_by_level_and_state() {
-        assert_eq!(battery_icon(83.0, BatteryState::Discharging, true), "battery-level-80-symbolic");
-        assert_eq!(battery_icon(86.0, BatteryState::Charging, true), "battery-level-90-charging-symbolic");
-        assert_eq!(battery_icon(100.0, BatteryState::Full, true), "battery-level-100-charged-symbolic");
-        assert_eq!(battery_icon(3.0, BatteryState::Discharging, true), "battery-level-0-symbolic");
-        assert_eq!(battery_icon(50.0, BatteryState::Unknown, false), "battery-missing-symbolic");
     }
 
     #[test]

@@ -367,7 +367,6 @@ pub fn write_battery(mut b: p::battery::Builder, battery: &Battery) {
     b.set_time_to_full(battery.time_to_full);
     b.set_energy_rate(battery.energy_rate);
     b.set_capacity(battery.capacity);
-    b.set_icon_name(&battery.icon_name);
 }
 
 fn write_status(mut b: p::power_status::Builder, status: &PowerStatus) {

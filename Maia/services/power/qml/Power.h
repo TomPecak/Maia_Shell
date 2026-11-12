@@ -13,6 +13,8 @@
 // BatteriesModel. brightness is the built-in screen's (DisplaysModel has every display): set it
 // freely while dragging, the requests are thinned out and the service's echoes do not move the
 // slider back meanwhile. Requests that fail come back through requestFailed.
+//
+// Only data and state: icons, wording and colors are the shell's or the app's.
 
 #include "PowerConnection.h"
 
@@ -44,7 +46,6 @@ class Power : public QObject
     // Seconds, 0 = unknown
     Q_PROPERTY(qint64 timeToEmpty READ timeToEmpty NOTIFY statusChanged)
     Q_PROPERTY(qint64 timeToFull READ timeToFull NOTIFY statusChanged)
-    Q_PROPERTY(QString batteryIconName READ batteryIconName NOTIFY statusChanged)
     // Health: the full capacity in percent of the design capacity, 0 = unknown
     Q_PROPERTY(double batteryCapacity READ batteryCapacity NOTIFY statusChanged)
     Q_PROPERTY(bool lidPresent READ lidPresent NOTIFY statusChanged)
@@ -105,7 +106,6 @@ public:
     WarningLevel warningLevel() const;
     qint64 timeToEmpty() const;
     qint64 timeToFull() const;
-    QString batteryIconName() const;
     double batteryCapacity() const;
     bool lidPresent() const;
     bool lidClosed() const;

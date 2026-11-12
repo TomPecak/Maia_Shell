@@ -52,7 +52,6 @@ BatteryInfo toBattery(C::Battery::Reader b)
     info.timeToFull = b.getTimeToFull();
     info.energyRate = b.getEnergyRate();
     info.capacity = b.getCapacity();
-    info.iconName = toQString(b.getIconName());
     return info;
 }
 

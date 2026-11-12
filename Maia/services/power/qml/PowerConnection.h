@@ -45,7 +45,6 @@ struct BatteryInfo {
     qint64 timeToFull = 0;
     double energyRate = 0;
     double capacity = 0;
-    QString iconName;
 
     bool operator==(const BatteryInfo &) const = default;
 };

@@ -113,11 +113,6 @@ qint64 Power::timeToFull() const
     return m_connection->status().summary.timeToFull;
 }
 
-QString Power::batteryIconName() const
-{
-    return m_connection->status().summary.iconName;
-}
-
 double Power::batteryCapacity() const
 {
     return m_connection->status().summary.capacity;

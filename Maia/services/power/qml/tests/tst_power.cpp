@@ -63,7 +63,6 @@ void TestPower::theBattery()
     QVERIFY(!power.charging());
     QCOMPARE(power.warningLevel(), Power::NoWarning);
     QVERIFY(power.timeToEmpty() > 0);
-    QCOMPARE(power.batteryIconName(), QStringLiteral("battery-level-80-symbolic"));
     QVERIFY(power.lidPresent() && !power.lidClosed());
 }
 

@@ -18,7 +18,7 @@ use zbus::{Connection, MatchRule, MessageStream};
 
 use super::dbus::{self, Props, bool_of, f64_of, i64_of, string_of, u32_of};
 use crate::backend::{BackendEvent, Command, ErrorCode, OpError};
-use crate::model::{Battery, BatteryState, DeviceKind, KeyboardBacklight, PowerStatus, WarningLevel, battery_icon};
+use crate::model::{Battery, BatteryState, DeviceKind, KeyboardBacklight, PowerStatus, WarningLevel};
 
 pub const UPOWER: &str = "org.freedesktop.UPower";
 const PATH: &str = "/org/freedesktop/UPower";
@@ -39,10 +39,6 @@ pub fn battery_from(id: &str, props: &Props) -> Option<Battery> {
     let percentage = f64_of(props, "Percentage");
     let state = BatteryState::from_upower(u32_of(props, "State"));
     let present = bool_of(props, "IsPresent");
-    let mut icon_name = string_of(props, "IconName");
-    if icon_name.is_empty() {
-        icon_name = battery_icon(percentage, state, present);
-    }
     Some(Battery {
         id: id.to_string(),
         kind,
@@ -57,7 +53,6 @@ pub fn battery_from(id: &str, props: &Props) -> Option<Battery> {
         time_to_full: i64_of(props, "TimeToFull"),
         energy_rate: f64_of(props, "EnergyRate"),
         capacity: f64_of(props, "Capacity"),
-        icon_name,
     })
 }
 
@@ -243,7 +238,6 @@ mod tests {
             ("Capacity", OwnedValue::from(91.5f64)),
             ("Vendor", text("LGC")),
             ("Model", text("5B10W51867")),
-            ("IconName", text("battery-level-80-symbolic")),
         ])
     }
 
@@ -256,7 +250,6 @@ mod tests {
         assert_eq!(b.warning_level, WarningLevel::None);
         assert_eq!(b.time_to_empty, 12600);
         assert_eq!((b.vendor.as_str(), b.model.as_str()), ("LGC", "5B10W51867"));
-        assert_eq!(b.icon_name, "battery-level-80-symbolic");
         assert!((b.capacity - 91.5).abs() < 1e-9);
     }
 
@@ -267,7 +260,7 @@ mod tests {
     }
 
     #[test]
-    fn a_mouse_without_an_icon_gets_one() {
+    fn a_mouse() {
         let mouse = props(&[
             ("Type", OwnedValue::from(5u32)),
             ("IsPresent", OwnedValue::from(true)),
@@ -279,7 +272,6 @@ mod tests {
         assert_eq!(b.kind, DeviceKind::Mouse);
         assert!(!b.power_supply);
         assert_eq!(b.warning_level, WarningLevel::Low);
-        assert_eq!(b.icon_name, "battery-level-10-symbolic");
     }
 
     #[test]
