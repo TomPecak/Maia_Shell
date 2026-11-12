@@ -161,7 +161,8 @@ Item {
                 title: qsTr("Brightness")
                 icon: center.controlCenter.icon("brightness-high-symbolic")
                 value: center.controlCenter.brightness
-                onMoved: function (value) { center.controlCenter.brightness = value }
+                enabled: center.controlCenter.hasBrightness
+                onMoved: function (value) { center.controlCenter.setBrightness(value) }
             }
 
             VerticalSlider {
@@ -207,12 +208,14 @@ Item {
                 transformOrigin: d.cornerOrigin
                 interactive: false
                 title: qsTr("Battery")
-                subtitle: center.controlCenter.batteryCharging
+                subtitle: !center.controlCenter.hasBattery ? qsTr("No battery")
+                          : center.controlCenter.batteryCharging
                           ? qsTr("%1 %, charging").arg(center.controlCenter.batteryLevel)
                           : qsTr("%1 %").arg(center.controlCenter.batteryLevel)
-                icon: center.controlCenter.batteryIcon
-                checked: true
-                onColor: center.controlCenter.batteryLevel <= 20 ? Theme.red : Theme.green
+                icon: center.controlCenter.hasBattery ? center.controlCenter.batteryIcon
+                                                      : center.controlCenter.icon("battery-missing-symbolic")
+                checked: center.controlCenter.hasBattery
+                onColor: center.controlCenter.batteryLow && !center.controlCenter.batteryCharging ? Theme.red : Theme.green
             }
 
             // The hotspot shares this computer's internet; setting it up (name, password) belongs

@@ -3,6 +3,7 @@ pragma Singleton
 import QtQuick
 
 import Maia.Network as Network
+import Maia.Power as PowerModule
 
 // Shared state of the Lumen shell: which flyout is open, the current time, the user
 // and the actions triggered from the UI. All windows of the frontend run in one process,
@@ -181,12 +182,71 @@ QtObject {
         return "network-wireless-signal-" + ["none", "weak", "ok", "good", "excellent"][wifi.signalLevel] + "-symbolic"
     }
 
+    // --- The battery and the screen (the Maia power service) ---
+
+    readonly property bool hasBattery: PowerModule.Power.hasBattery
+    readonly property int batteryPercent: Math.round(PowerModule.Power.batteryPercentage)
+    readonly property bool batteryCharging: PowerModule.Power.charging
+    // The shipped Breeze glyphs (assets/icons): battery-080-symbolic, battery-030-charging-symbolic, …
+    readonly property string batteryIconName: {
+        if (!hasBattery)
+            return ""
+        if (PowerModule.Power.batteryState === PowerModule.Power.Full)
+            return "battery-full-charged-symbolic"
+        const level = Math.max(0, Math.min(100, Math.round(PowerModule.Power.batteryPercentage / 10) * 10))
+        return "battery-" + ("00" + level).slice(-3) + (batteryCharging ? "-charging" : "") + "-symbolic"
+    }
+    // "2 h 15 min left", "45 min to full", or "" when unknown
+    readonly property string batteryTime: {
+        const seconds = batteryCharging ? PowerModule.Power.timeToFull : PowerModule.Power.timeToEmpty
+        if (!hasBattery || seconds <= 0)
+            return ""
+        const hours = Math.floor(seconds / 3600)
+        const minutes = Math.round((seconds % 3600) / 60)
+        const span = hours > 0 ? qsTr("%1 h %2 min").arg(hours).arg(minutes) : qsTr("%1 min").arg(minutes)
+        return batteryCharging ? qsTr("%1 to full").arg(span) : qsTr("%1 left").arg(span)
+    }
+
+    // 0..1 of the built-in screen; setting it changes the screen (dragging is thinned out by Maia.Power)
+    readonly property bool hasBrightness: PowerModule.Power.brightnessAvailable
+    readonly property real brightness: PowerModule.Power.brightness
+    function setBrightness(value) {
+        PowerModule.Power.brightness = value
+    }
+
+    // Battery events become notifications (the notification center and the badge of the clock)
+    property Connections powerEvents: Connections {
+        target: PowerModule.Power
+
+        function onEvent(kind, batteryId, percentage) {
+            const P = PowerModule.Power
+            const texts = {
+                [P.ChargerConnected]: [qsTr("Charger connected"), qsTr("Charging, %1 %").arg(Math.round(percentage))],
+                [P.ChargerDisconnected]: [qsTr("On battery"), qsTr("%1 % left").arg(Math.round(percentage))],
+                [P.BatteryLow]: [qsTr("Battery low"), qsTr("%1 % left. Connect the charger.").arg(Math.round(percentage))],
+                [P.BatteryCritical]: [qsTr("Battery critically low"), qsTr("%1 % left. Connect the charger now.").arg(Math.round(percentage))],
+                [P.BatteryAction]: [qsTr("Battery empty"), qsTr("The computer will turn off soon.")],
+                [P.BatteryFull]: [qsTr("Battery charged"), qsTr("You can unplug the charger.")],
+                [P.DeviceBatteryLow]: [qsTr("Device battery low"), qsTr("A connected device has %1 % left.").arg(Math.round(percentage))],
+            }
+            const text = texts[kind]
+            if (!text)
+                return
+            shell.notifications.insert(0, {
+                app: qsTr("Power"),
+                icon: kind === P.ChargerConnected || kind === P.BatteryFull ? "battery-100-charging-symbolic" : "battery-010-symbolic",
+                title: text[0],
+                body: text[1],
+                time: Qt.formatTime(new Date(), "hh:mm"),
+            })
+        }
+    }
+
     // --- Quick settings (mock state, not connected to the system yet) ---
     property bool bluetoothEnabled: false
     property bool airplaneMode: false
     property bool nightLight: false
     property bool focusMode: false
-    property real brightness: 0.8
 
     // --- Notifications (mock data) ---
 

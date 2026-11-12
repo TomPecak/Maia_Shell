@@ -2,16 +2,16 @@ import QtQuick
 import QtCore
 
 import Maia.Network as Network
+import Maia.Power
 import MaiaFrontend
 
 // What the Control Center shows and changes, in one place: the button in the dock strip and the
 // panel read the same state.
 //
-// Real: Wi-Fi (the Maia network service, Maia.Network), the volume (the audio backend of Maia),
-// the light / dark mode (Theme).
+// Real: Wi-Fi (the Maia network service, Maia.Network), the battery and the brightness (the Maia
+// power service, Maia.Power), the volume (the audio backend of Maia), the light / dark mode (Theme).
 // Mock-ups (no backend in Maia yet; they change only what is shown, like Lumen's quick settings):
-// Bluetooth, airplane mode, night light, brightness, battery. Each is one property below,
-// to be replaced by its backend.
+// Bluetooth, airplane mode, night light. Each is one property below, to be replaced by its backend.
 QtObject {
     id: state
 
@@ -77,19 +77,40 @@ QtObject {
                                        : volume < 0.67 ? icon("audio-volume-medium-symbolic")
                                        : icon("audio-volume-high-symbolic")
 
+    // --- The battery and the screen (the power service) ---
+
+    // A computer without a battery shows none
+    readonly property bool hasBattery: Power.hasBattery
+    readonly property int batteryLevel: Math.round(Power.batteryPercentage)
+    readonly property bool batteryCharging: Power.charging
+    // UPower's low level (its threshold, about 20 %) and below
+    readonly property bool batteryLow: Power.warningLevel !== Power.NoWarning
+    readonly property string batteryIcon: hasBattery
+                                          ? batteryIconFor(Power.batteryPercentage, Power.charging,
+                                                           Power.batteryState === Power.Full)
+                                          : ""
+    // 0..1 of the built-in screen; setBrightness changes it (dragging is fine: Maia.Power thins it out)
+    readonly property bool hasBrightness: Power.brightnessAvailable
+    readonly property real brightness: Power.brightness
+
+    function setBrightness(value) {
+        Power.brightness = value
+    }
+
+    // The shipped Breeze glyphs (assets/icons): battery-080-symbolic, battery-030-charging-symbolic, …
+    function batteryIconFor(percentage, charging, full) {
+        if (full)
+            return icon("battery-full-charged-symbolic")
+        const level = Math.max(0, Math.min(100, Math.round(percentage / 10) * 10))
+        return icon("battery-" + ("00" + level).slice(-3) + (charging ? "-charging" : "") + "-symbolic")
+    }
+
     // --- Mock-ups ---
 
     property bool bluetooth: true
     property bool airplaneMode: false
     property bool nightLight: false
-    // 0..1
-    property real brightness: 0.7
-    // Percent, and whether the charger is plugged in
-    property int batteryLevel: 80
-    property bool batteryCharging: false
 
-    readonly property string batteryIcon: batteryCharging ? icon("battery-full-charging-symbolic")
-                                                          : icon("battery-080-symbolic")
     readonly property string bluetoothIcon: icon("network-bluetooth-symbolic")
 
     // --- The layout of the button in the dock strip (being tried out) ---

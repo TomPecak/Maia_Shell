@@ -552,7 +552,7 @@ def start_tree():
                  files=[("reads", "<prefix>/etc/xdg/kwalletrc, kded6rc (last in XDG_CONFIG_DIRS)")]),
         ])
     shell = Node(
-        "appMaiaServer -platform wayland", "maia", "Maia server · the shell", order=7, name="t_shell",
+        "appMaiaServer -platform wayland", "maia", "Maia server · the shell", order=8, name="t_shell",
         paths=["<prefix>/bin/appMaiaServer   ← Maia/MaiaServerApp/, Maia/BackendLib/"],
         desc=["Server mode: its D-Bus services (org.maia.FrontendManager, …), then the QML engine with the active "
               "frontend. Started again after a crash (the open windows stay); 5 crashes in 2 minutes end the session."],
@@ -592,7 +592,12 @@ def start_tree():
             Node("maia-network-service", "maia", "Maia service", order=5,
                  paths=["<prefix>/libexec/maia-network-service   ← Maia/services/network/service/"],
                  desc=["Wi-Fi through NetworkManager (system D-Bus); the session's secret agent."]),
-            Node("maia-appearance-service", "maia", "Maia service · KWin only", order=6,
+            Node("maia-power-service", "maia", "Maia service", order=6,
+                 paths=["<prefix>/libexec/maia-power-service   ← Maia/services/power/service/"],
+                 desc=["Batteries, brightness, power profiles: UPower, the backlight through logind, "
+                       "power-profiles-daemon."],
+                 files=[("reads", "/sys/class/backlight/*/brightness, max_brightness")]),
+            Node("maia-appearance-service", "maia", "Maia service · KWin only", order=7,
                  paths=["<prefix>/libexec/maia-appearance-service   ← Maia/services/appearance/service/"],
                  desc=["Window decorations: kwinrc and KWin's D-Bus; the choice of every frontend."],
                  files=[("writes", "~/.config/kwinrc (kwriteconfig6)"), ("writes", "~/.config/maia/<v>/appearance.json")]),
@@ -953,6 +958,59 @@ def rows():
                     ]),
         ],
     )
+    power = dict(
+        kernel=[Kernel("Backlight, power supply", ["/sys/class/backlight/*: the panel's brightness",
+                                                   "/sys/class/power_supply/*: batteries, the charger (for UPower)"],
+                       name="k_backlight")],
+        linux=[
+            Process("UPower", "system process · system D-Bus", PROCESS_SYSTEM, name="upower", children=[
+                Contract("org.freedesktop.UPower", "dbusapi", None, [
+                    ("UPower", "", [("OnBattery, LidIsClosed; EnumerateDevices()", "the charger, the lid, devices"),
+                                    ("DeviceAdded, DeviceRemoved", "signals")]),
+                    ("UPower.Device", "", [("Percentage, State, WarningLevel, TimeToEmpty, …", "a battery")]),
+                    ("UPower.KbdBacklight", "", [("GetBrightness, SetBrightness", "the keyboard backlight")])]),
+            ]),
+            Process("power-profiles-daemon", "system process · system D-Bus", PROCESS_SYSTEM, name="ppd", children=[
+                Contract("org.freedesktop.UPower.PowerProfiles", "dbusapi", None, [
+                    ("PowerProfiles", "", [("ActiveProfile, Profiles, PerformanceDegraded", "properties"),
+                                           ("HoldProfile, ReleaseProfile", "applications hold a profile")])]),
+            ]),
+        ],
+        service=[
+            Process("maia-power-service", "Maia service · Rust", PROCESS_MAIA,
+                    path="Maia/services/power/service/ → <prefix>/libexec/", name="powersvc", children=[
+                        Card("system/: upower.rs, backlight.rs, profiles.rs", "rust", [
+                            "UPower: every signal, then everything read again",
+                            "backlight: sysfs read every second, written through logind Session.SetBrightness "
+                            "(no root, only the active session); requests coalesced",
+                            "fake.rs: a simulated laptop (MAIA_POWER_BACKEND=fake)"]),
+                        Contract("power.capnp", "capnp", "Maia/services/power/contract/power.capnp", [
+                            ("PowerService", "", [("watch(listener)", "batteries, displays, keyboard, profiles, events"),
+                                                  ("control()", "→ PowerControl")]),
+                            ("PowerControl", "", [("setBrightness(display, 0..1)", "the slider"),
+                                                  ("stepBrightness(display, steps)", "the keys, 5 % each"),
+                                                  ("setKeyboardBrightness(0..1)", ""),
+                                                  ("setProfile(profile)", "power saver / balanced / performance"),
+                                                  ("holdProfile(profile, reason, app)", "→ ProfileHold while kept")])]),
+                        Socket("$XDG_RUNTIME_DIR/maia/power-$WAYLAND_DISPLAY.sock", name="power_sock"),
+                    ]),
+        ],
+        module=[
+            Process("Maia.Power", "QML module · C++", "#047857", library=True,
+                    path="Maia/services/power/qml/ → <prefix>/lib/…/qml6/Maia/Power/", name="m_power", children=[
+                        Card("Power (singleton)", "qml", [
+                            "the battery: hasBattery, batteryPercentage, charging, timeToEmpty, …",
+                            "brightness (writable, smooth while dragged), keyboardBrightness, profile",
+                            "event(kind): charger, battery low, …; requestFailed"]),
+                        Card("BatteriesModel, DisplaysModel, ProfileHold", "qml", [
+                            "every battery (devicesOnly: mice, headphones); every screen; a held profile"]),
+                    ]),
+        ],
+        engine=Card("Battery and brightness in the shell", "qmlfile", [
+            "Lumen: the battery icon, quick settings (slider, time left), battery notifications",
+            "Maia frontend: the Control Center (battery tile, brightness slider, indicator)"], name="e_power"),
+        right=[],
+    )
     session = dict(
         kernel=[Kernel("Power management", ["ACPI, /sys/power: suspend, reboot, power off for logind"],
                        name="k_power")],
@@ -1126,12 +1184,12 @@ def rows():
                     ]),
         ],
     )
-    return [windows, appearance, network, session, server, rest]
+    return [windows, appearance, network, power, session, server, rest]
 
 
 ENGINE_HEAD = 76
 # The rows the QML engine frame covers end with this one (the server)
-SERVER_ROW = 4
+SERVER_ROW = 5
 
 
 def running_session(s, y):
@@ -1253,6 +1311,15 @@ def connections(s, r, road_y, road_h, row_tops):
     nmp = r["nm_profiles"]
     s.arrow([(nmp.mid_x(), nm.bottom), (nmp.mid_x(), nmp.y)], "file", label="keeps the profiles",
             label_at=(nmp.mid_x() + 8, (nm.bottom + nmp.y) / 2 + 4))
+    # The power service: UPower and power-profiles-daemon on the system bus, the backlight in sysfs
+    psvc, upower, ppd = r["powersvc"], r["upower"], r["ppd"]
+    y = upower.mid_y(-10)
+    s.arrow([(psvc.x, y), (upower.right, y)], "dbussys", both=True, label="UPower:\nbatteries, keyboard",
+            label_at=(upower.right + 12, y - 22))
+    lane = 1020
+    y2 = psvc.y + 150
+    s.arrow([(psvc.x, y2), (lane, y2), (lane, ppd.mid_y()), (ppd.right, ppd.mid_y())], "dbussys", both=True,
+            label="profiles,\nholds", label_at=(ppd.right + 12, ppd.mid_y() - 22))
     # The session service and logind (system bus); session.toml
     svc, logind = r["sessionsvc"], r["logind"]
     y = logind.mid_y(-20)
@@ -1277,7 +1344,7 @@ def connections(s, r, road_y, road_h, row_tops):
     # Cap'n Proto: each QML module is a client of its service
     lane = 1742
     for sock, mod in [("windows_sock", "m_windows"), ("appearance_sock", "m_appearance"), ("network_sock", "m_network"),
-                      ("session_sock", "m_session")]:
+                      ("session_sock", "m_session"), ("power_sock", "m_power")]:
         a, b = r[sock], r[mod]
         y = b.y + 60
         s.arrow([(b.x, y), (lane, y), (lane, a.mid_y()), (a.right, a.mid_y())], "capnp", both=True, width=2.6)
@@ -1289,7 +1356,7 @@ def connections(s, r, road_y, road_h, row_tops):
     s.text(b.x - 6, y - 9, "org.maia.*", size=11, weight="bold", fill="#2563eb", anchor="end")
     # QML imports: the modules are loaded into the shell
     for mod, card in [("m_windows", "e_dock"), ("m_appearance", "e_look"), ("m_network", "e_wifi"),
-                      ("m_session", "e_session"), ("m_backend", "e_main")]:
+                      ("m_power", "e_power"), ("m_session", "e_session"), ("m_backend", "e_main")]:
         a, b = r[mod], r[card]
         y = b.mid_y()
         if a.y + 30 < y < a.bottom - 10:
@@ -1345,8 +1412,8 @@ def where(s, y):
             ("bin/run_maia_nested_wayland.sh", "Maia in a nested KWin window (development)"),
             ("bin/maia_<v>-kwin.desktop, -wayfire.desktop", "copied to /usr/share/wayland-sessions"),
             ("libexec/maia-session-service", "the main process of a session"),
-            ("libexec/maia-*-service", "the services: windows, network, appearance"),
-            ("lib/x86_64-linux-gnu/qml6/Maia/", "the QML modules Windows, Network, Appearance, Session"),
+            ("libexec/maia-*-service", "the services: windows, network, appearance, power"),
+            ("lib/x86_64-linux-gnu/qml6/Maia/", "the QML modules Windows, Network, Appearance, Session, Power"),
             ("frontends/<name>/", "the frontends, as in the repository"),
             ("share/maia-settings/pages/", "the pages of Maia Settings"),
             ("share/aurorae/themes/", "decorations shipped with Maia (Se7enAero, XBoomer)"),

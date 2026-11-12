@@ -127,6 +127,13 @@ kind = "maia-service"
 command = ["${MAIA_NETWORK_SERVICE:-${MAIA_PREFIX}/libexec/maia-network-service}"]
 restart = "always"
 
+# Batteries, brightness, power profiles: UPower, the backlight through logind, power-profiles-daemon
+[[process]]
+name = "maia-power-service"
+kind = "maia-service"
+command = ["${MAIA_POWER_SERVICE:-${MAIA_PREFIX}/libexec/maia-power-service}"]
+restart = "always"
+
 # Only the KWin backend exists so far: under Wayfire it would change the look of the KWin session
 [[process]]
 name = "maia-appearance-service"

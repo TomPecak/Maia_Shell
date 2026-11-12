@@ -8,7 +8,8 @@ import LumenFrontend
 // Quick settings, in the bottom-right corner above the system tray.
 // Real: Wi-Fi (the Maia network service: the tile, and its page with the networks), dark mode and
 // accent color (persisted), volume (Maia audio backend).
-// Mock-ups: bluetooth, airplane mode, night light, brightness, battery.
+// The battery and the brightness: the Maia power service (Maia.Power, through Shell).
+// Mock-ups: bluetooth, airplane mode, night light.
 //
 // Two pages, as in Windows 11: the main one, and the Wi-Fi page opened by the chevron of the Wi-Fi
 // tile (Shell.quickSettingsPage). The page coming in slides from the side it belongs to and fades
@@ -130,8 +131,9 @@ FlyoutWindow {
 
             LSlider {
                 Layout.fillWidth: true
+                enabled: Shell.hasBrightness
                 value: Shell.brightness
-                onMoved: Shell.brightness = value
+                onMoved: Shell.setBrightness(value)
                 Accessible.name: qsTr("Brightness")
             }
         }
@@ -275,8 +277,13 @@ FlyoutWindow {
         RowLayout {
             Layout.fillWidth: true
 
-            LIcon { iconName: "battery-080-symbolic"; size: 18 }
-            LText { text: "80%"; color: Theme.textSecondary }
+            LIcon { visible: Shell.hasBattery; iconName: Shell.batteryIconName; size: 18 }
+            LText {
+                visible: Shell.hasBattery
+                text: Shell.batteryTime.length > 0 ? qsTr("%1 % · %2").arg(Shell.batteryPercent).arg(Shell.batteryTime)
+                                                   : qsTr("%1 %").arg(Shell.batteryPercent)
+                color: Theme.textSecondary
+            }
 
             Item { Layout.fillWidth: true }
 

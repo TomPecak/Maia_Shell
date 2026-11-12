@@ -255,13 +255,15 @@ StripItem {
         readonly property string minutes: Qt.formatTime(now, "mm")
         readonly property string time: hours + ":" + minutes
 
+        // Without a battery (a desktop computer) its icon is "" and left out
         readonly property var indicators: area.controlCenter
                                           ? [area.controlCenter.wifiIcon, area.controlCenter.volumeIcon,
-                                             area.controlCenter.batteryIcon]
+                                             area.controlCenter.batteryIcon].filter(icon => icon !== "")
                                           : []
         readonly property var indicatorsWithBluetooth: area.controlCenter
                                                        ? [area.controlCenter.wifiIcon, area.controlCenter.bluetoothIcon,
                                                           area.controlCenter.volumeIcon, area.controlCenter.batteryIcon]
+                                                         .filter(icon => icon !== "")
                                                        : []
     }
 

@@ -179,9 +179,11 @@ Window {
                     iconName: typeof audioBackend !== "undefined" && audioBackend && audioBackend.prefferedOutputMuted
                           ? "audio-volume-muted-symbolic" : "audio-volume-high-symbolic"
                 }
+                // A computer without a battery shows none
                 LIcon {
                     anchors.verticalCenter: parent.verticalCenter
-                    iconName: "battery-080-symbolic"
+                    visible: Shell.hasBattery
+                    iconName: Shell.batteryIconName
                 }
             }
         }

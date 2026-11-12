@@ -32,6 +32,9 @@
 #   MAIA_NETWORK_BACKEND                  - fake (domyślnie): symulowana sieć; networkmanager: prawdziwy
 #                                           NetworkManager - akcje zmieniają sieć tego komputera, a agent
 #                                           haseł konkuruje z agentem głównej sesji
+#   MAIA_POWER_SERVICE                    - program usługi zasilania (domyślnie szukany obok Mai)
+#   MAIA_POWER_BACKEND                    - fake (domyślnie): symulowany laptop; system: bateria, jasność
+#                                           i profile tego komputera
 #   MAIA_APPEARANCE_SERVICE               - program usługi wyglądu (domyślnie szukany obok Mai)
 #   MAIA_APPEARANCE_BACKEND               - kwin (domyślnie): kwinrc z XDG_CONFIG_HOME tej sesji; fake: w pamięci
 
@@ -88,7 +91,7 @@ if [ ! -x "${MAIA_SESSION_SERVICE}" ]; then
     echo "[ERROR] Nie znaleziono maia-session-service obok ${BIN_DIR} (MAIA_SESSION_SERVICE wskazuje go jawnie)" >&2
     exit 1
 fi
-for service in windows network appearance; do
+for service in windows network appearance power; do
     variable="MAIA_$(echo "${service}" | tr '[:lower:]' '[:upper:]')_SERVICE"
     if [ -z "${!variable}" ]; then
         found="$(find_program "maia-${service}-service")"
@@ -114,6 +117,8 @@ export MAIA_SESSION_BACKEND="${MAIA_SESSION_BACKEND:-fake}"
 # Usługi KDE (systemd --user) należą do głównej sesji: nie uruchamiamy ich
 export MAIA_SESSION_TEST=1
 export MAIA_NETWORK_BACKEND="${MAIA_NETWORK_BACKEND:-fake}"
+# Jasność ekranu przez logind działa tylko dla aktywnej sesji, a zagnieżdżona to okno w niej: atrapa
+export MAIA_POWER_BACKEND="${MAIA_POWER_BACKEND:-fake}"
 export MAIA_LOG_PORT="${MAIA_LOG_PORT:-50003}"
 export MAIA_LOG_FILE="${MAIA_LOG_FILE:-${XDG_RUNTIME_DIR:-/tmp}/maia-nested-server.log}"
 export MAIA_QPA_PLATFORM="${MAIA_QPA_PLATFORM:-wayland}"
