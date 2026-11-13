@@ -25,11 +25,14 @@ pub mod notifications_capnp {
 }
 
 pub mod dbus;
+pub mod dbus_jobs;
 pub mod hub;
 pub mod image;
+pub mod jobs;
 pub mod markup;
 pub mod model;
 pub mod rpc;
+pub mod throttle;
 
 /// What the server can do (GetCapabilities, NotificationCenter.info): only what Maia's shells show
 /// and play (sounds: Maia.Sounds, when the popup appears). Not yet: "body-images", "action-icons",

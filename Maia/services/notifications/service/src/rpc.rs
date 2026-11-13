@@ -99,7 +99,57 @@ pub fn write_do_not_disturb(mut b: n::do_not_disturb::Builder, dnd: &DoNotDistur
     }
 }
 
-pub fn write_snapshot(mut b: n::snapshot::Builder, store: &Store<Origin>, now: i64) {
+pub fn write_job(mut b: n::job::Builder, job: &crate::jobs::Job) {
+    use crate::jobs::JobState;
+    b.set_id(job.id);
+    b.set_app_name(&job.app_name);
+    b.set_desktop_entry(&job.desktop_entry);
+    b.set_app_icon(&job.app_icon);
+    b.set_title(&job.title);
+    b.set_info_message(&job.info_message);
+    b.set_state(match job.state {
+        JobState::Running => n::JobState::Running,
+        JobState::Suspended => n::JobState::Suspended,
+        JobState::Finished => n::JobState::Finished,
+        JobState::Failed => n::JobState::Failed,
+    });
+    b.set_percent(job.percent);
+    b.set_processed_bytes(job.processed_bytes);
+    b.set_total_bytes(job.total_bytes);
+    b.set_processed_files(job.processed_files);
+    b.set_total_files(job.total_files);
+    b.set_processed_directories(job.processed_directories);
+    b.set_total_directories(job.total_directories);
+    b.set_processed_items(job.processed_items);
+    b.set_total_items(job.total_items);
+    b.set_speed(job.speed);
+    b.set_elapsed(job.elapsed);
+    {
+        let mut fields = b.reborrow().init_fields(job.fields.len() as u32);
+        for (i, field) in job.fields.values().enumerate() {
+            let mut f = fields.reborrow().get(i as u32);
+            f.set_label(&field.label);
+            f.set_value(&field.value);
+        }
+    }
+    b.set_destination(&job.destination);
+    b.set_error_code(job.error_code);
+    b.set_error_text(&job.error_text);
+    b.set_owner_gone(job.owner_gone);
+    b.set_killable(job.killable);
+    b.set_suspendable(job.suspendable);
+    b.set_started(job.started);
+    b.set_updated(job.updated);
+}
+
+pub fn write_snapshot(mut b: n::snapshot::Builder, store: &Store<Origin>, jobs: &crate::jobs::JobStore, now: i64) {
+    {
+        let visible = jobs.visible();
+        let mut list = b.reborrow().init_jobs(visible.len() as u32);
+        for (i, job) in visible.iter().enumerate() {
+            write_job(list.reborrow().get(i as u32), job);
+        }
+    }
     let ready = store.ready();
     {
         let mut list = b.reborrow().init_notifications(ready.len() as u32);
@@ -278,6 +328,37 @@ impl notification_center::Server for Center {
     ) -> Result<(), capnp::Error> {
         let params = params.get()?;
         Hub::set_do_not_disturb(&self.hub, params.get_enabled(), params.get_until());
+        Ok(())
+    }
+
+    async fn cancel_job(
+        self: Rc<Self>,
+        params: notification_center::CancelJobParams,
+        mut results: notification_center::CancelJobResults,
+    ) -> Result<(), capnp::Error> {
+        let result = Hub::cancel_job(&self.hub, params.get()?.get_id());
+        write_result(results.get().init_result(), &result);
+        Ok(())
+    }
+
+    async fn suspend_job(
+        self: Rc<Self>,
+        params: notification_center::SuspendJobParams,
+        mut results: notification_center::SuspendJobResults,
+    ) -> Result<(), capnp::Error> {
+        let params = params.get()?;
+        let result = Hub::suspend_job(&self.hub, params.get_id(), params.get_suspended());
+        write_result(results.get().init_result(), &result);
+        Ok(())
+    }
+
+    async fn dismiss_job(
+        self: Rc<Self>,
+        params: notification_center::DismissJobParams,
+        mut results: notification_center::DismissJobResults,
+    ) -> Result<(), capnp::Error> {
+        let result = Hub::dismiss_job(&self.hub, params.get()?.get_id());
+        write_result(results.get().init_result(), &result);
         Ok(())
     }
 }

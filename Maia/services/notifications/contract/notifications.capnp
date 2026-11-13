@@ -31,6 +31,10 @@
 # - Nothing is kept on disk: the list lives as long as the session, across restarts of the shell.
 # - Nothing here blocks: notify() answers at once; an image is prepared in the background and the
 #   notification is shown when it is ready.
+# - Jobs (the progress of a copy in Dolphin, of an archive, a download) come from KDE's
+#   org.kde.JobViewServer on D-Bus and are a second list next to the notifications: shown 0.5 s
+#   after they start (a short job never flickers), updated at most every 250 ms, and kept when they
+#   end (finished or failed) until dismissed; a job the user canceled goes at once.
 
 using Cxx = import "/capnp/c++.capnp";
 $Cxx.namespace("MaiaNotifications::Contract");
@@ -120,9 +124,56 @@ struct DoNotDisturb {
   active @3 :Bool;        # quiet now: enabled or any inhibitor
 }
 
+# ---------------------------------------------------------------------------------------------
+# Jobs (org.kde.JobViewServer)
+# ---------------------------------------------------------------------------------------------
+
+enum JobState {
+  running @0;
+  suspended @1;           # paused (by the user, through suspendJob)
+  finished @2;            # ended well
+  failed @3;              # ended with an error (errorText), or its application quit (ownerGone)
+}
+
+struct JobField {         # a line of details the application gives: ("Source", "/home/a/x.iso")
+  label @0 :Text;
+  value @1 :Text;
+}
+
+struct Job {
+  id @0 :UInt32;          # its own numbering, not that of notifications
+  appName @1 :Text;
+  desktopEntry @2 :Text;
+  appIcon @3 :Text;       # a theme icon name, "" none
+  title @4 :Text;         # what it does ("Copying"), from the application
+  infoMessage @5 :Text;   # the current step ("Copying photo.jpg"), from the application
+  state @6 :JobState;
+  percent @7 :Int32;      # 0 .. 100, -1 unknown
+  processedBytes @8 :UInt64;
+  totalBytes @9 :UInt64;  # 0 = unknown, likewise for the other amounts
+  processedFiles @10 :UInt64;
+  totalFiles @11 :UInt64;
+  processedDirectories @12 :UInt64;
+  totalDirectories @13 :UInt64;
+  processedItems @14 :UInt64;
+  totalItems @15 :UInt64;
+  speed @16 :UInt64;      # bytes per second, 0 unknown
+  elapsed @17 :Int64;     # ms the application reports it has been working, 0 unknown
+  fields @18 :List(JobField);
+  destination @19 :Text;  # where the result is (a URL, e.g. file:///home/a/Pictures), "" unknown
+  errorCode @20 :UInt32;  # the application's (KIO's) code, 0 none
+  errorText @21 :Text;    # the application's description of the error, "" none
+  ownerGone @22 :Bool;    # failed because its application quit
+  killable @23 :Bool;     # cancelJob works
+  suspendable @24 :Bool;  # suspendJob works
+  started @25 :Int64;     # ms since 1970
+  updated @26 :Int64;     # ms since 1970, the last change
+}
+
 struct Snapshot {
   notifications @0 :List(Notification);   # the newest first
   doNotDisturb @1 :DoNotDisturb;
+  jobs @2 :List(Job);                     # the newest first
 }
 
 # ---------------------------------------------------------------------------------------------
@@ -134,6 +185,8 @@ interface CenterListener {
   changes @1 (changed :List(Notification), removed :List(UInt32));
                                            # one batch: new or changed (same id), and removed
   doNotDisturbChanged @2 (doNotDisturb :DoNotDisturb);
+  jobsChanged @3 (changed :List(Job), removed :List(UInt32));
+                                           # one batch of jobs, like changes()
 }
 
 interface Subscription {}                 # dropping it stops the listener
@@ -155,6 +208,13 @@ interface NotificationCenter {
   dismissAll @6 () -> ();
   # until: ms since 1970, 0 = until turned off
   setDoNotDisturb @7 (enabled :Bool, until :Int64) -> ();
+
+  # Jobs: the application is asked (cancel: it ends the job; one that does not within 2 s is
+  # ended by the service)
+  cancelJob @8 (id :UInt32) -> (result :Result);
+  suspendJob @9 (id :UInt32, suspended :Bool) -> (result :Result);
+  # A finished or failed job leaves the list
+  dismissJob @10 (id :UInt32) -> (result :Result);
 }
 
 # ---------------------------------------------------------------------------------------------

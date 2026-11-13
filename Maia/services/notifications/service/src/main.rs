@@ -98,6 +98,9 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
                         if !dbus::take_name(&connection).await? {
                             eprintln!("maia-notifications-service: another notification server keeps {}", dbus::NAME);
                         }
+                        if !dbus::take_job_names(&connection).await? {
+                            eprintln!("maia-notifications-service: another job server keeps org.kde.JobViewServer");
+                        }
                         Some(connection)
                     }
                     Err(error) => {

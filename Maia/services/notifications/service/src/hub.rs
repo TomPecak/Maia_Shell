@@ -27,7 +27,9 @@ use std::time::{Duration, Instant};
 use tokio::sync::mpsc;
 
 use crate::image;
+use crate::jobs::{self, Ended, JobRequest, JobStore, JobUpdate};
 use crate::model::{CloseReason, Expired, Inhibitor, Request, Store, now_ms};
+use crate::throttle::ChangeThrottle;
 use crate::notifications_capnp::{center_listener, notifier_listener};
 use crate::rpc;
 
@@ -69,7 +71,14 @@ pub enum SenderEvent {
 pub enum Outgoing {
     Signal { destination: String, id: u32, event: SenderEvent },
     InhibitedChanged,
+    /// The shell asks a job's application to cancel, pause or go on
+    JobRequest { id: u32, kind: crate::dbus_jobs::JobRequestKind },
+    /// A job is over for its application: its D-Bus objects go
+    JobGone(u32),
 }
+
+/// The shortest time between two changes of one job to the shells
+pub const JOB_INTERVAL: Duration = Duration::from_millis(250);
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ErrorCode {
@@ -110,6 +119,10 @@ pub struct Hub {
     inhibited: Arc<AtomicBool>,
     /// Bumped by every change of do not disturb: an older "until" timer does nothing
     dnd_timer: u64,
+    jobs: JobStore,
+    jobs_changed: BTreeSet<u32>,
+    jobs_removed: Vec<u32>,
+    job_throttle: ChangeThrottle,
 }
 
 pub type HubRef = Rc<RefCell<Hub>>;
@@ -134,11 +147,19 @@ impl Hub {
             dbus_out: None,
             inhibited: Arc::new(AtomicBool::new(false)),
             dnd_timer: 0,
+            jobs: JobStore::new(),
+            jobs_changed: BTreeSet::new(),
+            jobs_removed: Vec::new(),
+            job_throttle: ChangeThrottle::new(JOB_INTERVAL),
         }))
     }
 
     pub fn store(&self) -> &Store<Origin> {
         &self.store
+    }
+
+    pub fn jobs(&self) -> &JobStore {
+        &self.jobs
     }
 
     pub fn listener_count(&self) -> usize {
@@ -305,12 +326,118 @@ impl Hub {
         }
     }
 
-    /// A D-Bus client left the bus: its inhibitions end
+    /// A D-Bus client left the bus: its inhibitions end, its running jobs have failed
     pub fn owner_gone(hub: &HubRef, name: &str) {
         let mut this = hub.borrow_mut();
         if this.store.owner_gone(name) {
             this.dnd_did_change();
+        }
+        for id in this.jobs.owner_gone(name) {
+            this.job_ended(id);
+            this.send_out(Outgoing::JobGone(id));
+        }
+        schedule_flush(hub, &mut this);
+    }
+
+    // --- Jobs (dbus_jobs.rs, jobs.rs) ---
+
+    /// A new job; shown after its delay (or as soon as an "immediate" one has a title)
+    pub fn create_job(hub: &HubRef, owner: &str, request: JobRequest) -> u32 {
+        let mut this = hub.borrow_mut();
+        let delay = if request.immediate { jobs::SHOW_DELAY_IMMEDIATE } else { jobs::SHOW_DELAY };
+        let id = this.jobs.create(request, owner);
+        if this.jobs.get(id).is_some_and(|e| e.visible) {
+            this.job_shown(id);
+        }
+        let weak = Rc::downgrade(hub);
+        tokio::task::spawn_local(async move {
+            tokio::time::sleep(delay).await;
+            let Some(hub) = weak.upgrade() else { return };
+            let mut this = hub.borrow_mut();
+            if this.jobs.show(id) {
+                this.job_shown(id);
+                schedule_flush(&hub, &mut this);
+            }
+        });
+        schedule_flush(hub, &mut this);
+        id
+    }
+
+    pub fn update_job(hub: &HubRef, id: u32, update: JobUpdate) {
+        let mut this = hub.borrow_mut();
+        let was_visible = this.jobs.get(id).is_some_and(|e| e.visible);
+        if this.jobs.update(id, update) {
+            if was_visible {
+                this.job_changed(id);
+            } else {
+                this.job_shown(id);
+            }
             schedule_flush(hub, &mut this);
+        }
+    }
+
+    pub fn set_job_error(hub: &HubRef, id: u32, code: u32) {
+        hub.borrow_mut().jobs.set_error(id, code);
+    }
+
+    /// The application ended the job
+    pub fn terminate_job(hub: &HubRef, id: u32, code: u32, text: &str) {
+        let mut this = hub.borrow_mut();
+        let ended = this.jobs.terminate(id, code, text);
+        this.job_end(id, ended);
+        schedule_flush(hub, &mut this);
+    }
+
+    /// The user cancels a job: its application is asked, and the job ends anyway when it does not
+    /// answer within CANCEL_GRACE
+    pub fn cancel_job(hub: &HubRef, id: u32) -> Result<(), OpError> {
+        let mut this = hub.borrow_mut();
+        if this.jobs.get(id).is_none() {
+            return Err(OpError::not_found(id));
+        }
+        if !this.jobs.request_cancel(id) {
+            return Err(OpError::new(ErrorCode::InvalidArgument, format!("job {id} cannot be canceled")));
+        }
+        this.send_out(Outgoing::JobRequest { id, kind: crate::dbus_jobs::JobRequestKind::Cancel });
+        let weak = Rc::downgrade(hub);
+        tokio::task::spawn_local(async move {
+            tokio::time::sleep(jobs::CANCEL_GRACE).await;
+            let Some(hub) = weak.upgrade() else { return };
+            let mut this = hub.borrow_mut();
+            let ended = this.jobs.cancel_timed_out(id);
+            if ended != Ended::NotFound {
+                this.job_end(id, ended);
+                schedule_flush(&hub, &mut this);
+            }
+        });
+        Ok(())
+    }
+
+    /// The user pauses or resumes a job; its state changes when its application reports it
+    pub fn suspend_job(hub: &HubRef, id: u32, suspended: bool) -> Result<(), OpError> {
+        let this = hub.borrow_mut();
+        let entry = this.jobs.get(id).ok_or_else(|| OpError::not_found(id))?;
+        if !entry.job.suspendable || entry.job.state.ended() {
+            return Err(OpError::new(ErrorCode::InvalidArgument, format!("job {id} cannot be paused")));
+        }
+        let kind = if suspended { crate::dbus_jobs::JobRequestKind::Suspend } else { crate::dbus_jobs::JobRequestKind::Resume };
+        this.send_out(Outgoing::JobRequest { id, kind });
+        Ok(())
+    }
+
+    /// The user dismisses an ended job
+    pub fn dismiss_job(hub: &HubRef, id: u32) -> Result<(), OpError> {
+        let mut this = hub.borrow_mut();
+        match this.jobs.dismiss(id) {
+            Some(was_visible) => {
+                if was_visible {
+                    this.job_removed(id);
+                }
+                schedule_flush(hub, &mut this);
+                Ok(())
+            }
+            None if this.jobs.get(id).is_some() => Err(OpError::new(ErrorCode::InvalidArgument, format!("job {id} still runs"))),
+            None => Err(OpError::not_found(id)),
         }
     }
 
@@ -321,7 +448,7 @@ impl Hub {
         this.next_listener += 1;
         let id = this.next_listener;
         let mut request = client.snapshot_request();
-        rpc::write_snapshot(request.get().init_snapshot(), &this.store, now_ms());
+        rpc::write_snapshot(request.get().init_snapshot(), &this.store, &this.jobs, now_ms());
         deliver(hub, id, request.send().promise);
         this.listeners.push((id, client));
         id
@@ -335,6 +462,53 @@ impl Hub {
 
     fn mark_changed(&mut self, id: u32) {
         self.changed.insert(id);
+    }
+
+    fn send_out(&self, outgoing: Outgoing) {
+        if let Some(out) = &self.dbus_out {
+            let _ = out.send(outgoing);
+        }
+    }
+
+    /// A job became visible: to the shells now
+    fn job_shown(&mut self, id: u32) {
+        self.job_throttle.added(&id.to_string(), Instant::now());
+        self.jobs_changed.insert(id);
+    }
+
+    /// A visible job changed: to the shells at most every JOB_INTERVAL
+    fn job_changed(&mut self, id: u32) {
+        if self.job_throttle.changed(&id.to_string(), Instant::now()) {
+            self.jobs_changed.insert(id);
+        }
+    }
+
+    /// A job ended and stays: to the shells now, with nothing older waiting
+    fn job_ended(&mut self, id: u32) {
+        self.job_throttle.removed(&id.to_string());
+        self.jobs_changed.insert(id);
+    }
+
+    fn job_removed(&mut self, id: u32) {
+        self.job_throttle.removed(&id.to_string());
+        self.jobs_changed.remove(&id);
+        self.jobs_removed.push(id);
+    }
+
+    fn job_end(&mut self, id: u32, ended: Ended) {
+        match ended {
+            Ended::NotFound => return,
+            Ended::Removed { was_visible } => {
+                if was_visible {
+                    self.job_removed(id);
+                }
+            }
+            Ended::Kept { .. } => self.job_ended(id),
+        }
+        self.send_out(Outgoing::JobGone(id));
+        for dropped in self.jobs.trim() {
+            self.job_removed(dropped);
+        }
     }
 
     fn mark_removed(&mut self, id: u32) {
@@ -416,6 +590,14 @@ impl Hub {
         let changed: Vec<u32> = std::mem::take(&mut this.changed).into_iter().collect();
         let removed = std::mem::take(&mut this.removed);
         let dnd = std::mem::take(&mut this.dnd_changed);
+        for key in this.job_throttle.take_due(Instant::now()) {
+            if let Ok(id) = key.parse::<u32>() {
+                this.jobs_changed.insert(id);
+            }
+        }
+        let job_ids: Vec<u32> = std::mem::take(&mut this.jobs_changed).into_iter().collect();
+        let jobs_removed = std::mem::take(&mut this.jobs_removed);
+        let jobs: Vec<_> = job_ids.iter().filter_map(|id| this.jobs.get(*id)).filter(|e| e.visible).map(|e| &e.job).collect();
         let notifications: Vec<_> = changed
             .iter()
             .filter_map(|id| this.store.get(*id))
@@ -445,17 +627,49 @@ impl Hub {
                 rpc::write_do_not_disturb(request.get().init_do_not_disturb(), &this.store.dnd, now);
                 deliver(hub, *listener_id, request.send().promise);
             }
+            if !jobs.is_empty() || !jobs_removed.is_empty() {
+                let mut request = listener.jobs_changed_request();
+                {
+                    let mut list = request.get().init_changed(jobs.len() as u32);
+                    for (i, job) in jobs.iter().enumerate() {
+                        rpc::write_job(list.reborrow().get(i as u32), job);
+                    }
+                }
+                {
+                    let mut list = request.get().init_removed(jobs_removed.len() as u32);
+                    for (i, id) in jobs_removed.iter().enumerate() {
+                        list.set(i as u32, *id);
+                    }
+                }
+                deliver(hub, *listener_id, request.send().promise);
+            }
         }
+        // Changes of jobs that wait for their interval
+        schedule_flush(hub, &mut this);
     }
 }
 
 /// The batch goes out at the next frame
 fn schedule_flush(hub: &HubRef, this: &mut Hub) {
-    if this.flush_scheduled || (this.changed.is_empty() && this.removed.is_empty() && !this.dnd_changed) {
+    if this.flush_scheduled {
         return;
     }
+    let pending = !this.changed.is_empty()
+        || !this.removed.is_empty()
+        || this.dnd_changed
+        || !this.jobs_changed.is_empty()
+        || !this.jobs_removed.is_empty();
+    let frame = this.last_flush.map(|last| last + FRAME).unwrap_or_else(Instant::now);
+    let at = if pending {
+        frame
+    } else {
+        // Only a job's change waits for its interval
+        match this.job_throttle.next_deadline() {
+            Some(deadline) => deadline.max(frame),
+            None => return,
+        }
+    };
     this.flush_scheduled = true;
-    let at = this.last_flush.map(|last| last + FRAME).unwrap_or_else(Instant::now);
     let weak: Weak<RefCell<Hub>> = Rc::downgrade(hub);
     tokio::task::spawn_local(async move {
         // Also when it is due already: everything that arrives in this turn of the loop joins

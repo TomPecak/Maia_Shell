@@ -43,6 +43,11 @@ pub enum DbusCall {
     Inhibit { inhibitor: Inhibitor, reply: oneshot::Sender<u32> },
     UnInhibit { cookie: u32 },
     OwnerGone(String),
+    // Jobs (dbus_jobs.rs)
+    JobCreate { owner: String, request: crate::jobs::JobRequest, reply: oneshot::Sender<u32> },
+    JobUpdate { id: u32, update: crate::jobs::JobUpdate },
+    JobSetError { id: u32, code: u32 },
+    JobTerminate { id: u32, code: u32, text: String },
 }
 
 pub struct Server {
@@ -270,6 +275,7 @@ pub async fn serve(connection: &zbus::Connection, hub: &HubRef) -> zbus::Result<
     let (out, out_receiver) = mpsc::unbounded_channel();
     let inhibited = hub.borrow().inhibited_flag();
     connection.object_server().at(PATH, Server { calls: calls.clone(), inhibited }).await?;
+    crate::dbus_jobs::serve(connection, calls.clone()).await?;
     hub.borrow_mut().set_dbus_out(out);
     tokio::task::spawn_local(run_calls(hub.clone(), call_receiver));
     tokio::task::spawn_local(run_outgoing(connection.clone(), out_receiver));
@@ -280,9 +286,23 @@ pub async fn serve(connection: &zbus::Connection, hub: &HubRef) -> zbus::Result<
 /// Takes org.freedesktop.Notifications, replacing another server that allows it. False when another
 /// server keeps it (Maia's programs are still served over Cap'n Proto).
 pub async fn take_name(connection: &zbus::Connection) -> zbus::Result<bool> {
+    take(connection, NAME).await
+}
+
+/// Takes the names of the job server (org.kde.JobViewServer, org.kde.kuiserver); false when another
+/// server keeps them
+pub async fn take_job_names(connection: &zbus::Connection) -> zbus::Result<bool> {
+    let mut all = true;
+    for name in crate::dbus_jobs::NAMES {
+        all &= take(connection, name).await?;
+    }
+    Ok(all)
+}
+
+async fn take(connection: &zbus::Connection, name: &'static str) -> zbus::Result<bool> {
     use zbus::fdo::{RequestNameFlags, RequestNameReply};
     let flags = RequestNameFlags::ReplaceExisting | RequestNameFlags::DoNotQueue;
-    match connection.request_name_with_flags(NAME, flags).await {
+    match connection.request_name_with_flags(name, flags).await {
         Ok(RequestNameReply::PrimaryOwner | RequestNameReply::AlreadyOwner) => Ok(true),
         Ok(_) => Ok(false),
         Err(zbus::Error::NameTaken) => Ok(false),
@@ -305,6 +325,12 @@ async fn run_calls(hub: HubRef, mut calls: mpsc::UnboundedReceiver<DbusCall>) {
             }
             DbusCall::UnInhibit { cookie } => Hub::uninhibit(&hub, cookie),
             DbusCall::OwnerGone(name) => Hub::owner_gone(&hub, &name),
+            DbusCall::JobCreate { owner, request, reply } => {
+                let _ = reply.send(Hub::create_job(&hub, &owner, request));
+            }
+            DbusCall::JobUpdate { id, update } => Hub::update_job(&hub, id, update),
+            DbusCall::JobSetError { id, code } => Hub::set_job_error(&hub, id, code),
+            DbusCall::JobTerminate { id, code, text } => Hub::terminate_job(&hub, id, code, &text),
         }
     }
 }
@@ -318,6 +344,11 @@ async fn run_outgoing(connection: zbus::Connection, mut out: mpsc::UnboundedRece
                 Ok(iface) => iface.get().await.inhibited_changed(iface.signal_emitter()).await,
                 Err(error) => Err(error),
             },
+            Outgoing::JobRequest { id, kind } => crate::dbus_jobs::emit(&connection, id, kind).await,
+            Outgoing::JobGone(id) => {
+                crate::dbus_jobs::remove(&connection, id).await;
+                Ok(())
+            }
         };
         if let Err(error) = result {
             // A sender that left the bus cannot be told; nothing else to do
