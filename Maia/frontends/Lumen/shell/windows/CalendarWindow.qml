@@ -19,6 +19,7 @@ FlyoutWindow {
 
     // Height of everything except the notification list, the list gets the rest of the card
     readonly property int fixedContentHeight: notificationsHeader.implicitHeight + 1 + dateLabel.implicitHeight
+                                              + (jobsSection.visible ? jobsSection.implicitHeight + layout.spacing : 0)
                                               + calendarView.implicitHeight + focusCard.Layout.preferredHeight
                                               + 5 * layout.spacing + 2 * Theme.spacingL
     edges: LayerShell.Window.AnchorBottom | LayerShell.Window.AnchorRight
@@ -29,6 +30,49 @@ FlyoutWindow {
         anchors.fill: parent
         anchors.margins: Theme.spacingL
         spacing: Theme.spacingM
+
+        // --- Jobs: copies, archives (the newest first; ended ones until dismissed) ---
+
+        ColumnLayout {
+            id: jobsSection
+
+            Layout.fillWidth: true
+            visible: jobs.count > 0
+            spacing: Theme.spacingS
+
+            Repeater {
+                model: JobsModel {
+                    id: jobs
+                }
+
+                delegate: JobCard {
+                    required property var model
+
+                    Layout.fillWidth: true
+                    appName: model.appName
+                    iconName: model.appIcon
+                    desktopEntry: model.desktopEntry
+                    title: model.title
+                    infoMessage: model.infoMessage
+                    state: model.state
+                    percent: model.percent
+                    processedBytes: model.processedBytes
+                    totalBytes: model.totalBytes
+                    processedFiles: model.processedFiles
+                    totalFiles: model.totalFiles
+                    speed: model.speed
+                    destination: model.destination
+                    errorText: model.errorText
+                    ownerGone: model.ownerGone
+                    killable: model.killable
+                    suspendable: model.suspendable
+
+                    onPauseRequested: paused => NotificationCenter.suspendJob(model.jobId, paused)
+                    onCancelRequested: NotificationCenter.cancelJob(model.jobId)
+                    onDismissed: NotificationCenter.dismissJob(model.jobId)
+                }
+            }
+        }
 
         // --- Notifications ---
 
@@ -46,10 +90,18 @@ FlyoutWindow {
             }
 
             SubtleButton {
-                visible: notifications.count > 0
+                visible: notifications.count > 0 || jobs.count > jobs.runningCount
                 leftPadding: Theme.spacingM
                 rightPadding: Theme.spacingM
-                onClicked: NotificationCenter.dismissAll()
+                onClicked: {
+                    NotificationCenter.dismissAll()
+                    // Ended jobs too (running ones stay: they are not done)
+                    for (let row = 0; row < jobs.count; ++row) {
+                        const index = jobs.index(row, 0)
+                        if (jobs.data(index, JobsModel.StateRole) >= 2)
+                            NotificationCenter.dismissJob(jobs.data(index, JobsModel.JobIdRole))
+                    }
+                }
                 contentItem: LText { text: qsTr("Clear all"); font.pixelSize: Theme.fontCaption }
             }
         }

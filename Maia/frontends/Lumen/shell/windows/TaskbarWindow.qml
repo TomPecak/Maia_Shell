@@ -214,6 +214,31 @@ Window {
                     }
                 }
 
+                // A copy or another job runs: how far all of them are (the details: in the center)
+                ProgressRing {
+                    implicitWidth: 18
+                    implicitHeight: 18
+                    thickness: 3
+                    visible: jobs.runningCount > 0
+                    value: jobs.percent >= 0 ? jobs.percent / 100 : 0.25
+                    Accessible.name: jobs.percent >= 0 ? qsTr("Copying, %1 %").arg(jobs.percent) : qsTr("Copying")
+
+                    JobsModel {
+                        id: jobs
+
+                        runningOnly: true
+                    }
+
+                    // Unknown progress: a quarter that turns
+                    RotationAnimator on rotation {
+                        running: jobs.runningCount > 0 && jobs.percent < 0
+                        from: 0
+                        to: 360
+                        duration: 1200
+                        loops: Animation.Infinite
+                    }
+                }
+
                 // Quiet: do not disturb is on (by the user or an application)
                 LIcon {
                     visible: NotificationCenter.doNotDisturbActive

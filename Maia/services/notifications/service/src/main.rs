@@ -10,8 +10,8 @@
 //!          $XDG_RUNTIME_DIR/maia/notifications-center-$WAYLAND_DISPLAY.sock (NotificationCenter)
 //! Images:  $XDG_RUNTIME_DIR/maia/notifications-$WAYLAND_DISPLAY/
 //! D-Bus:   org.freedesktop.Notifications on the session bus; MAIA_NOTIFICATIONS_DBUS=0 leaves it out.
-//!          org.kde.JobViewServer (jobs) only with MAIA_NOTIFICATIONS_JOBS=1, until a shell shows
-//!          jobs: without it KIO shows its own progress dialog
+//!          org.kde.JobViewServer and org.kde.kuiserver (jobs); MAIA_NOTIFICATIONS_JOBS=0 leaves
+//!          them out (KIO then shows its own progress dialog)
 
 use std::os::unix::fs::{DirBuilderExt, MetadataExt};
 use std::path::{Path, PathBuf};
@@ -100,9 +100,9 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
                         if !dbus::take_name(&connection).await? {
                             eprintln!("maia-notifications-service: another notification server keeps {}", dbus::NAME);
                         }
-                        // Off until a shell shows jobs: taking the names makes KIO (Dolphin) report its
-                        // progress here instead of in its own dialog
-                        if std::env::var("MAIA_NOTIFICATIONS_JOBS").as_deref() == Ok("1")
+                        // The job server: KIO (Dolphin) then reports its progress here instead of in
+                        // its own dialog; MAIA_NOTIFICATIONS_JOBS=0 leaves it to the dialog
+                        if std::env::var("MAIA_NOTIFICATIONS_JOBS").as_deref() != Ok("0")
                             && !dbus::take_job_names(&connection).await?
                         {
                             eprintln!("maia-notifications-service: another job server keeps org.kde.JobViewServer");

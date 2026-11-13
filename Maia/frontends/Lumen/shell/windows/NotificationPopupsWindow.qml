@@ -29,6 +29,35 @@ Window {
     property bool shown: false
     // An answer field of a popup is open
     property bool replying: false
+    // Jobs the user hid from the popups (they go on in the notification center)
+    property var hiddenJobs: ({})
+    // Jobs that ended while shown: a few seconds more ("Done", "Open folder")
+    property var endedJobs: ({})
+    readonly property int endedJobTime: 6000
+    // Jobs shown as popups: running or just ended, not hidden, not while fullscreen
+    readonly property int shownJobs: {
+        if (fullscreen.active)
+            return 0
+        let shown = 0
+        for (let row = 0; row < jobs.count; ++row) {
+            const index = jobs.index(row, 0)
+            const id = jobs.data(index, JobsModel.JobIdRole)
+            const running = jobs.data(index, JobsModel.StateRole) < 2
+            if (!hiddenJobs[id] && (running || endedJobs[id]))
+                ++shown
+        }
+        return shown
+    }
+
+    function setJobFlag(name, id, on) {
+        const flags = Object.assign({}, popupsWindow[name])
+        if (on)
+            flags[id] = true
+        else
+            delete flags[id]
+        popupsWindow[name] = flags
+    }
+    onShownJobsChanged: updateShown()
 
     width: cardWidth + 2 * margin
     height: Math.min(Screen.height - Theme.taskbarHeight, 720)
@@ -64,15 +93,20 @@ Window {
                 Sounds.play(soundName, soundFile)
         }
         maximumCount: 3
-        paused: listHover.hovered || popupsWindow.replying
+        paused: listHover.hovered || jobsHover.hovered || popupsWindow.replying
 
         onCountChanged: popupsWindow.updateShown()
     }
 
     Component.onCompleted: updateShown()
 
+    // The copies and other jobs, shown above the notifications while they run and a moment after
+    JobsModel {
+        id: jobs
+    }
+
     function updateShown() {
-        if (popups.count > 0) {
+        if (popups.count > 0 || shownJobs > 0) {
             hideTimer.stop()
             shown = true
         } else {
@@ -85,6 +119,80 @@ Window {
 
         interval: Theme.durationNormal + 100
         onTriggered: popupsWindow.shown = false
+    }
+
+    Column {
+        id: jobPopups
+
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: list.top
+        anchors.leftMargin: popupsWindow.margin
+        anchors.rightMargin: popupsWindow.margin
+        anchors.bottomMargin: list.count > 0 ? Theme.spacingS : 0
+        spacing: Theme.spacingS
+        visible: popupsWindow.shownJobs > 0
+
+        HoverHandler {
+            id: jobsHover
+        }
+
+        Repeater {
+            model: jobs
+
+            delegate: JobCard {
+                id: jobCard
+
+                required property var model
+
+                width: jobPopups.width
+                visible: !popupsWindow.hiddenJobs[model.jobId] && (running || !!popupsWindow.endedJobs[model.jobId])
+                hideable: true
+                color: Qt.rgba(Theme.surface.r, Theme.surface.g, Theme.surface.b, 1)
+                appName: model.appName
+                iconName: model.appIcon
+                desktopEntry: model.desktopEntry
+                title: model.title
+                infoMessage: model.infoMessage
+                state: model.state
+                percent: model.percent
+                processedBytes: model.processedBytes
+                totalBytes: model.totalBytes
+                processedFiles: model.processedFiles
+                totalFiles: model.totalFiles
+                speed: model.speed
+                destination: model.destination
+                errorText: model.errorText
+                ownerGone: model.ownerGone
+                killable: model.killable
+                suspendable: model.suspendable
+
+                onPauseRequested: paused => NotificationCenter.suspendJob(model.jobId, paused)
+                onCancelRequested: NotificationCenter.cancelJob(model.jobId)
+                onDismissed: popupsWindow.setJobFlag("hiddenJobs", model.jobId, true)
+
+                // Ended while on screen: shown a moment longer (a job that ended before the shell
+                // came is in the notification center only)
+                onRunningChanged: {
+                    if (!running) {
+                        popupsWindow.setJobFlag("endedJobs", model.jobId, true)
+                        endTimer.restart()
+                    }
+                }
+
+                Timer {
+                    id: endTimer
+
+                    interval: popupsWindow.endedJobTime
+                    onTriggered: popupsWindow.setJobFlag("endedJobs", jobCard.model.jobId, false)
+                }
+
+                Maia.MaskArea {
+                    anchors.fill: parent
+                    enabled: parent.visible
+                }
+            }
+        }
     }
 
     ListView {

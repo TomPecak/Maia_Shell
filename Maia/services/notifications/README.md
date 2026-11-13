@@ -110,6 +110,7 @@ ToggleTile { checked: NotificationCenter.doNotDisturb; onToggled: NotificationCe
 | `MAIA_NOTIFICATIONS_SOCKET` | the senders' socket (default `$XDG_RUNTIME_DIR/maia/notifications-$WAYLAND_DISPLAY.sock`) |
 | `MAIA_NOTIFICATIONS_CENTER_SOCKET` | the shells' socket (default `…/notifications-center-$WAYLAND_DISPLAY.sock`) |
 | `MAIA_NOTIFICATIONS_DBUS` | `0`: no D-Bus door (tests) |
+| `MAIA_NOTIFICATIONS_JOBS` | `0`: no job server (KIO shows its own progress dialog) |
 
 The image directory is named after `$WAYLAND_DISPLAY` and emptied at start: a test or a second
 instance needs its own display name.
@@ -126,4 +127,18 @@ instance needs its own display name.
   updates, a restart of the service, the flood and the GUI thread's longest stall.
 - maia-power-service's `tests/notify.rs`: the battery warnings reach a stand-in of the Notifier.
 
-Not yet: `org.kde.JobViewServer` (the progress of file copies), history on disk.
+## Jobs
+
+The progress of long operations of KDE applications (a copy in Dolphin, an archive in Ark) comes
+through `org.kde.JobViewServer` (`dbus_jobs.rs`, the interfaces of Plasma's notification applet)
+and is a second list next to the notifications (`jobs.rs`, Plasma's rules: shown after 0.5 s, the
+progress at most every 250 ms, finished and failed jobs kept until dismissed, canceled ones gone, a
+cancel without an answer ends the job after 2 s, a job whose application quits has failed). Shells
+get it as `JobsModel` and act with `NotificationCenter.cancelJob / suspendJob / dismissJob`; Lumen
+shows a card with the progress above the popups, keeps it a few seconds after the end ("Open
+folder"), lists the jobs in the notification center and turns a ring by the clock.
+
+While the service owns `org.kde.kuiserver`, KIO reports to it instead of showing its own progress
+dialog; `MAIA_NOTIFICATIONS_JOBS=0` leaves the names to nobody (KIO's dialog again).
+
+Not yet: history on disk.
