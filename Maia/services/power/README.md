@@ -33,6 +33,15 @@ power-profiles ────┘   system/     state, events,    power.capnp └�
 | `service/` | The service (Rust): `model.rs` the state and its rules, `system/` the real sources, `fake.rs` a simulated laptop, `events.rs` notifications, `rpc.rs` Cap'n Proto |
 | `qml/` | The QML module `Maia.Power`: `Power`, `BatteriesModel`, `DisplaysModel`, `ProfileHold` |
 
+## Battery warnings
+
+The power service sends its own warnings as notifications (`service/src/notify.rs`), as a client of
+maia-notifications-service's Notifier: one notification for the computer's battery (low, then
+critical, then empty: replaced, more urgent each time), one per device, and "Battery charged" (low
+urgency: into the list only). The charger takes the warning away. Without the notification service
+the warnings are left out; nothing waits for it. Shells only show them, they no longer turn power
+events into texts.
+
 ## The contract in short
 
 - `watch(listener)`: the whole state first (snapshot), then each change: `statusChanged` (the charger,

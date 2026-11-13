@@ -82,6 +82,8 @@ enum Change {
 
 pub struct Hub {
     state: State,
+    /// Events also go here (notify.rs), with the battery they are about
+    event_sink: Option<mpsc::UnboundedSender<(Event, Option<Battery>)>>,
     listeners: Vec<(u64, power_listener::Client)>,
     next_listener: u64,
     throttle: ChangeThrottle,
@@ -94,6 +96,7 @@ impl Hub {
     pub fn new() -> HubRef {
         Rc::new(RefCell::new(Hub {
             state: State::new(),
+            event_sink: None,
             listeners: Vec::new(),
             next_listener: 0,
             throttle: ChangeThrottle::new(CHANGE_INTERVAL),
@@ -103,6 +106,11 @@ impl Hub {
 
     pub fn state(&self) -> &State {
         &self.state
+    }
+
+    /// The battery warnings go to the notification service through this (notify::run)
+    pub fn set_event_sink(&mut self, sink: mpsc::UnboundedSender<(Event, Option<Battery>)>) {
+        self.event_sink = Some(sink);
     }
 
     pub fn listener_count(&self) -> usize {
@@ -187,6 +195,10 @@ impl Hub {
         }
         for change in &changes {
             this.broadcast(hub, change);
+            if let (Change::Event(event), Some(sink)) = (change, &this.event_sink) {
+                let battery = this.state.batteries.get(&event.battery_id).cloned();
+                let _ = sink.send((event.clone(), battery));
+            }
         }
         schedule_flush(hub, &mut this);
     }

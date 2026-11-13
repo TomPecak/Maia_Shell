@@ -68,6 +68,10 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
         .run_until(async {
             let (event_sender, events) = mpsc::unbounded_channel();
             let hub = Hub::new();
+            // The battery warnings as notifications (the notification service; without it, none)
+            let (notices, notice_receiver) = mpsc::unbounded_channel();
+            hub.borrow_mut().set_event_sink(notices);
+            tokio::task::spawn_local(maia_power::notify::run(notice_receiver, maia_power::notify::socket_path()));
             tokio::task::spawn_local(Hub::run(hub.clone(), events));
             let (commands, backend_task): (Commands, std::pin::Pin<Box<dyn std::future::Future<Output = ()>>>) =
                 if backend == fake::NAME {

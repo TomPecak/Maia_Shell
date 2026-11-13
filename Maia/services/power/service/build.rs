@@ -1,4 +1,5 @@
-// Generates the Rust code of the contract ../contract/power.capnp with the Cap'n Proto compiler.
+// Generates the Rust code of the contract ../contract/power.capnp, and of the notification service's
+// contract (the power service is its client), with the Cap'n Proto compiler.
 //
 // The CMake build passes the compiler it built from 3rdparty/capnproto (MAIA_CAPNP_EXECUTABLE) and
 // the directory of the standard schemas such as capnp/c++.capnp (MAIA_CAPNP_IMPORT_DIR); see
@@ -27,9 +28,24 @@ fn main() {
     }
     command
         .no_standard_import()
-        .import_path(import_dir)
+        .import_path(&import_dir)
         .src_prefix("../contract")
         .file("../contract/power.capnp")
         .run()
         .expect("compiling the schema power.capnp");
+
+    // The notification service's contract: the power service sends its battery warnings as a
+    // Notifier client
+    println!("cargo:rerun-if-changed=../../notifications/contract/notifications.capnp");
+    let mut command = capnpc::CompilerCommand::new();
+    if let Some(executable) = env::var_os("MAIA_CAPNP_EXECUTABLE") {
+        command.capnp_executable(executable);
+    }
+    command
+        .no_standard_import()
+        .import_path(&import_dir)
+        .src_prefix("../../notifications/contract")
+        .file("../../notifications/contract/notifications.capnp")
+        .run()
+        .expect("compiling the schema notifications.capnp");
 }

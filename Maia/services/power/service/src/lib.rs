@@ -17,6 +17,7 @@
 //! - `fake`: a simulated laptop for tests and interface work (MAIA_POWER_BACKEND=fake).
 //! - `events`: notifications (charger, low battery) from two states one after the other.
 //! - `rpc`: the Cap'n Proto side; `throttle`: at most one change per object every 50 ms.
+//! - `notify`: the battery warnings as notifications, sent to the notification service.
 //!
 //! Everything runs in one thread (tokio current_thread): Cap'n Proto objects are not Send, and the
 //! work per event is microseconds. Nothing blocks: D-Bus and the clients are awaited, never waited for.
@@ -25,10 +26,16 @@ pub mod power_capnp {
     include!(concat!(env!("OUT_DIR"), "/power_capnp.rs"));
 }
 
+/// The notification service's contract, for `notify`
+pub mod notifications_capnp {
+    include!(concat!(env!("OUT_DIR"), "/notifications_capnp.rs"));
+}
+
 pub mod backend;
 pub mod events;
 pub mod fake;
 pub mod model;
+pub mod notify;
 pub mod rpc;
 pub mod system;
 pub mod throttle;
