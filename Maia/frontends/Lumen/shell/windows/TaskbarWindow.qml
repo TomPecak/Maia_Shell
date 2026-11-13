@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import org.kde.layershell 1.0 as LayerShell
 import Maia.Windows as Windows
-import Maia.NotificationCenter
+import Maia.Notifications.Center
 
 import LumenFrontend
 

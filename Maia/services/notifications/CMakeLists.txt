@@ -1,5 +1,5 @@
 # The notification service (service/, Rust) and its two QML modules (qml/): Maia.Notifications for
-# programs that send notifications, Maia.NotificationCenter for shells that show them. The contract
+# programs that send notifications, Maia.Notifications.Center for shells that show them. The contract
 # is contract/notifications.capnp. See README.md.
 
 include(MaiaRust)

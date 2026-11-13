@@ -2,14 +2,14 @@ import QtQuick
 import org.kde.layershell 1.0 as LayerShell
 
 import Maia.Backend as Maia
-import Maia.NotificationCenter
+import Maia.Notifications.Center
 
 import LumenFrontend
 
 // Notification popups in the bottom-right corner, above the taskbar (as on Windows 11): the newest
 // at the bottom, at most three, the rest waits for a place.
 //
-// What pops up and for how long is Maia.NotificationCenter's (NotificationPopups counts the time);
+// What pops up and for how long is Maia.Notifications.Center's (NotificationPopups counts the time);
 // this window only shows it. The clocks stop while the pointer is over the popups or an answer is
 // being typed. Only the cards take input (MaskArea), the rest of the window lets clicks through.
 // The window never takes the keyboard by itself (a popup must not take it from the program being

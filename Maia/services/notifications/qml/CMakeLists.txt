@@ -1,8 +1,11 @@
 # The QML modules of the notification service, two because they have two kinds of users:
 #
-#   notifications/  Maia.Notifications      Notification, Notifications: for programs that send
-#   center/         Maia.NotificationCenter NotificationCenter, NotificationsModel,
-#                                           NotificationPopups: for shells that show them
+#   notifications/  Maia.Notifications         Notification, Notifications: for programs that send
+#   center/         Maia.Notifications.Center  NotificationCenter, NotificationsModel,
+#                                              NotificationPopups: for shells that show them
+#
+# The shells' module is a part of the notifications' domain (Maia.<domain>.Center), not a module of
+# the service: a module names its domain, never the process behind it.
 #
 # Both are built on common/ (a static library linked into each): the C++ code of the contract and
 # ServiceLink, the connection whose Cap'n Proto runs in its own thread. No user interface: the
@@ -40,7 +43,7 @@ if(BUILD_TESTING)
     # Both modules against the real service (without D-Bus), as a program and a shell use them
     find_package(Qt6 ${REQUIRED_QT_VERSION} REQUIRED COMPONENTS Test)
     add_executable(tst_notifications tests/tst_notifications.cpp)
-    target_link_libraries(tst_notifications PRIVATE Maia::Notifications Maia::NotificationCenter Qt6::Test)
+    target_link_libraries(tst_notifications PRIVATE Maia::Notifications Maia::NotificationsCenter Qt6::Test)
     get_target_property(notifications_service maia-notifications-service MAIA_CARGO_BINARY)
     target_compile_definitions(tst_notifications PRIVATE MAIA_NOTIFICATIONS_SERVICE="${notifications_service}")
     add_dependencies(tst_notifications maia-notifications-service)

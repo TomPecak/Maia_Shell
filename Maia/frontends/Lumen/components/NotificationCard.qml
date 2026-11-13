@@ -5,7 +5,7 @@ import LumenFrontend
 
 // A notification: its application and time, title, text (a little markup), a picture, its actions
 // and an answer field. Used by the popups and by the notification center; the data comes from
-// Maia.NotificationCenter, this card only shows it.
+// Maia.Notifications.Center, this card only shows it.
 //
 // The whole card is the target of the default action (when the notification has one); the close
 // button and the actions sit on top of it.

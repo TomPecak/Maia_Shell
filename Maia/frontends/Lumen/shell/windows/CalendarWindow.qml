@@ -2,12 +2,12 @@ import QtQuick
 import QtQuick.Layouts
 import org.kde.layershell 1.0 as LayerShell
 
-import Maia.NotificationCenter
+import Maia.Notifications.Center
 
 import LumenFrontend
 
 // Notification center and calendar, in the bottom-right corner above the clock.
-// The notifications are those of the session (Maia.NotificationCenter), the newest first.
+// The notifications are those of the session (Maia.Notifications.Center), the newest first.
 FlyoutWindow {
     id: calendarFlyout
 

@@ -1,4 +1,4 @@
-// Maia.Notifications and Maia.NotificationCenter against the real service (without D-Bus): a
+// Maia.Notifications and Maia.Notifications.Center against the real service (without D-Bus): a
 // program sends with Notification, a shell sees it in NotificationsModel and NotificationPopups and
 // acts on it with NotificationCenter.
 //

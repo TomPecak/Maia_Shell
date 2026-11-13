@@ -15,7 +15,7 @@ void logResult(const char *action, Response &&response)
 {
     auto result = response.getResult();
     if (result.getError() != C::ErrorCode::NONE)
-        qDebug() << "[Maia.NotificationCenter]" << action << "refused:" << toQString(result.getMessage());
+        qDebug() << "[Maia.Notifications.Center]" << action << "refused:" << toQString(result.getMessage());
 }
 
 } // namespace
@@ -71,7 +71,7 @@ private:
 };
 
 CenterConnection::CenterConnection(const QString &socketPath, QObject *parent)
-    : ServiceLink(socketPath, QStringLiteral("Maia.NotificationCenter"), parent)
+    : ServiceLink(socketPath, QStringLiteral("Maia.Notifications.Center"), parent)
 {
     start();
 }

@@ -8,7 +8,7 @@ it was. A shell only draws.
 applications ──D-Bus: org.freedesktop.Notifications──┐  (+ KDE: inline reply, Inhibit)
                                                       ├──► hub: the list, the rules ──Cap'n Proto──► shells
 Maia's programs ──Cap'n Proto: Notifier──────────────┘     batches, ≤ 1 per frame   NotificationCenter
-           ▲                                                                           (Maia.NotificationCenter)
+           ▲                                                                           (Maia.Notifications.Center)
            └─────────── ActionInvoked, Replied, Closed (to the sender only) ◄──────────┘
 ```
 
@@ -16,7 +16,7 @@ Maia's programs ──Cap'n Proto: Notifier────────────�
 |---|---|---|
 | `org.freedesktop.Notifications` (session D-Bus) | every application: `notify-send`, libnotify, KNotification, Flatpak apps through their portal | the [specification](https://specifications.freedesktop.org/notification-spec/) 1.2: `Notify`, `CloseNotification`, `GetCapabilities`, `GetServerInformation`, the signals; KDE's `Inhibit`/`UnInhibit`/`Inhibited`, `NotificationReplied`, hints `x-kde-*` |
 | `Notifier` (Cap'n Proto, `notifications-<display>.sock`) | Maia's programs and services (`Maia.Notifications`; maia-power-service's battery warnings) | `notify` → a handle (`update`, `close`) and a listener that hears only its own notification |
-| `NotificationCenter` (Cap'n Proto, `notifications-center-<display>.sock`) | shells (`Maia.NotificationCenter`) | the list (snapshot, then batches), actions with an activation token, replies, dismiss, the end of a popup, do not disturb |
+| `NotificationCenter` (Cap'n Proto, `notifications-center-<display>.sock`) | shells (`Maia.Notifications.Center`) | the list (snapshot, then batches), actions with an activation token, replies, dismiss, the end of a popup, do not disturb |
 
 Two sockets because the center sees the content of every notification and a sender only its own:
 a sandbox can later be given the first one only.
@@ -27,7 +27,7 @@ a sandbox can later be given the first one only.
 | `service/` | The service (Rust): `model.rs` the list and its rules, `markup.rs` the safe body, `image.rs` images as files, `hub.rs` the shared state and the batches, `dbus.rs` the D-Bus door, `rpc.rs` the Cap'n Proto doors |
 | `qml/common/` | What both QML modules share: the contract's values, `ServiceLink` (Cap'n Proto in its own thread) |
 | `qml/notifications/` | `Maia.Notifications`, for programs that send |
-| `qml/center/` | `Maia.NotificationCenter`, for shells that show |
+| `qml/center/` | `Maia.Notifications.Center`, for shells that show |
 
 ## The rules
 
@@ -87,7 +87,7 @@ Notification {
 A shell:
 
 ```qml
-import Maia.NotificationCenter
+import Maia.Notifications.Center
 
 ListView { model: NotificationPopups { maximumCount: 3; paused: hover.hovered } … }   // the popups now
 ListView { model: NotificationsModel {} … }                                         // the center

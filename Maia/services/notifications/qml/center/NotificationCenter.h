@@ -2,7 +2,7 @@
 
 // NotificationCenter: the notification service for a shell, a singleton.
 //
-//   import Maia.NotificationCenter
+//   import Maia.Notifications.Center
 //
 //   Badge { count: NotificationCenter.count }
 //   ToggleTile { checked: NotificationCenter.doNotDisturb; onToggled: NotificationCenter.doNotDisturb = checked }

@@ -13,7 +13,7 @@
 # The center sees the content of every notification (messages, codes), a sender only its own: a
 # sandbox can later be given the first socket and not the second.
 #
-# QML: Maia.Notifications (senders) and Maia.NotificationCenter (shells), qml/.
+# QML: Maia.Notifications (senders) and Maia.Notifications.Center (shells), qml/.
 #
 # Rules:
 # - A notification is identified by its id (UInt32, never 0), the one D-Bus clients get too.

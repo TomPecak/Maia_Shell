@@ -15,7 +15,7 @@
 // A subclass calls start() at the end of its constructor and stop() first in its destructor (the
 // thread calls its virtual functions).
 //
-// Shared by Maia.Notifications (the Notifier socket) and Maia.NotificationCenter (the
+// Shared by Maia.Notifications (the Notifier socket) and Maia.Notifications.Center (the
 // NotificationCenter socket).
 
 #include <QObject>
