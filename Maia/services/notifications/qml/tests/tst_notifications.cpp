@@ -104,15 +104,23 @@ private Q_SLOTS:
 
     void init()
     {
+        // A clean list for every test. Only what is needed, and confirmed by the service: the shell's
+        // requests and the program's notifications go over two connections, a "clear all" still on
+        // its way would also clear the next test's notification
         NotificationCenter center;
-        center.setDoNotDisturb(false);
-        center.dismissAll();
-        // "Clear all" keeps critical notifications: those one by one
-        NotificationsModel model;
-        for (int row = 0; row < model.rowCount(); ++row)
-            center.dismiss(role(model, row, NotificationRoles::NotificationIdRole).toUInt());
-        QTRY_COMPARE(center.count(), 0);
-        QTRY_VERIFY(!center.doNotDisturbActive());
+        if (center.doNotDisturb()) {
+            center.setDoNotDisturb(false);
+            QTRY_VERIFY(!center.doNotDisturbActive());
+        }
+        if (center.count() > 0) {
+            center.dismissAll();
+            // "Clear all" keeps critical notifications: those one by one
+            QTest::qWait(50);
+            NotificationsModel model;
+            for (int row = 0; row < model.rowCount(); ++row)
+                center.dismiss(role(model, row, NotificationRoles::NotificationIdRole).toUInt());
+            QTRY_COMPARE(center.count(), 0);
+        }
     }
 
     void aSentNotificationReachesTheListAndThePopups()
