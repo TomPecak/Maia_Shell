@@ -1,0 +1,27 @@
+[package]
+name = "maia-notifications-service"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.87"
+description = "Maia notification service: the session's notification server (D-Bus org.freedesktop.Notifications and Cap'n Proto)"
+publish = false
+
+[lib]
+name = "maia_notifications"
+path = "src/lib.rs"
+
+[[bin]]
+name = "maia-notifications-service"
+path = "src/main.rs"
+
+[dependencies]
+capnp = "0.27.2"
+capnp-rpc = "0.27.1"
+futures = "0.3.34"
+tokio = { version = "1.54", features = ["rt", "net", "io-util", "macros", "signal", "time", "sync", "fs"] }
+tokio-util = { version = "0.7.20", features = ["compat"] }
+zbus = { version = "5.19", default-features = false, features = ["tokio"] }
+png = "0.18"
+
+[build-dependencies]
+capnpc = "0.27.0"
