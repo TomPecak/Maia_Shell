@@ -233,6 +233,42 @@ private Q_SLOTS:
         QCOMPARE(role(popups, 0, NotificationRoles::SummaryRole).toString(), QStringLiteral("Battery empty"));
     }
 
+    void suppressedPopupsGoIntoTheListOnlyCriticalOnesShow()
+    {
+        NotificationsModel model;
+        NotificationPopupsModel popups;
+        // On screen when the film goes fullscreen: it goes into the list at once
+        auto shown = sent(QStringLiteral("shown before"), 0);
+        QTRY_COMPARE(popups.rowCount(), 1);
+        QSignalSpy suppressedChanged(&popups, &NotificationPopupsModel::suppressedChanged);
+        popups.setSuppressed(true);
+        QCOMPARE(suppressedChanged.count(), 1);
+        QCOMPARE(popups.rowCount(), 0);
+        QTRY_VERIFY(role(model, 0, NotificationRoles::ExpiredRole).toBool());
+
+        // During the film: into the list, no popup; critical ones still pop up
+        auto quiet = sent(QStringLiteral("during the film"), 0);
+        QTRY_COMPARE(model.rowCount(), 2);
+        QTRY_VERIFY(role(model, model.rowOf(quiet->notificationId()), NotificationRoles::ExpiredRole).toBool());
+        QCOMPARE(popups.rowCount(), 0);
+        QCOMPARE(popups.waiting(), 0);
+        auto critical = std::make_unique<Notification>();
+        critical->setSummary(QStringLiteral("Battery empty"));
+        critical->setUrgency(Notification::Critical);
+        critical->send();
+        QTRY_COMPARE(popups.rowCount(), 1);
+        QCOMPARE(role(popups, 0, NotificationRoles::SummaryRole).toString(), QStringLiteral("Battery empty"));
+
+        // After the film nothing comes back
+        popups.setSuppressed(false);
+        QTest::qWait(200);
+        QCOMPARE(popups.rowCount(), 1);
+        QCOMPARE(popups.waiting(), 0);
+        // And new ones pop up again
+        auto after = sent(QStringLiteral("after the film"), 0);
+        QTRY_COMPARE(popups.rowCount(), 2);
+    }
+
     void anActionReachesTheSenderAndClosesIt()
     {
         NotificationsModel model;

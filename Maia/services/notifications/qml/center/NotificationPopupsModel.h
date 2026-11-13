@@ -12,7 +12,12 @@
 //   shell; 0, and critical ones without a timeout, stay until closed;
 // - paused (the pointer is over the popups) stops every clock; they go on where they stopped;
 // - when its time is over a popup goes and the service is told (expire): the notification stays
-//   in the list of NotificationsModel. hide() does the same at once (the popup was swiped away).
+//   in the list of NotificationsModel. hide() does the same at once (the popup was swiped away);
+// - suppressed (the user works fullscreen: Maia.Windows' FullscreenState) shows only critical
+//   popups: the others go into the list at once, those on screen go too, and nothing comes back
+//   when it ends.
+//
+// One process of a shell shows popups: two models in a session would show every popup twice.
 //
 // One timer for all popups (the nearest end). Roles: those of NotificationsModel (NotificationRoles.h).
 //
@@ -37,6 +42,8 @@ class NotificationPopupsModel : public QAbstractListModel
     // ms of a popup whose sender leaves the time to the shell
     Q_PROPERTY(int defaultTimeout READ defaultTimeout WRITE setDefaultTimeout NOTIFY defaultTimeoutChanged)
     Q_PROPERTY(bool paused READ paused WRITE setPaused NOTIFY pausedChanged)
+    // Only critical popups (fullscreen); the others go into the list without a popup
+    Q_PROPERTY(bool suppressed READ suppressed WRITE setSuppressed NOTIFY suppressedChanged)
     // How many wait for a free place
     Q_PROPERTY(int waiting READ waiting NOTIFY waitingChanged)
 
@@ -53,6 +60,8 @@ public:
     void setDefaultTimeout(int ms);
     bool paused() const { return m_paused; }
     void setPaused(bool paused);
+    bool suppressed() const { return m_suppressed; }
+    void setSuppressed(bool suppressed);
     int waiting() const { return int(m_waiting.size()); }
 
     // The popup goes now (swiped away); the notification stays in the list
@@ -66,6 +75,7 @@ Q_SIGNALS:
     void maximumCountChanged();
     void defaultTimeoutChanged();
     void pausedChanged();
+    void suppressedChanged();
     void waitingChanged();
 
 private:
@@ -82,6 +92,8 @@ private:
     void enqueue(const NotificationData &n);
     void applyBatch(const QList<NotificationData> &changed, const QList<quint32> &removed);
     bool wantsPopup(const NotificationData &n) const;
+    // Suppressed and not critical: into the list without a popup
+    bool keptQuiet(const NotificationData &n) const;
     qint64 timeoutOf(const NotificationData &n) const;
     int rowOf(quint32 id) const;
     void removeRow(int row);
@@ -97,6 +109,7 @@ private:
     int m_maximumCount = 3;
     int m_defaultTimeout = 6000;
     bool m_paused = false;
+    bool m_suppressed = false;
 };
 
 } // namespace MaiaNotifications

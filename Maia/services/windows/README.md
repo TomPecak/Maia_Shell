@@ -30,7 +30,9 @@ Rule: **data and control go through the service; streams and everything tied to 
 | `qml/ServiceConnection.*` | The connection of a process (KJ thread, never blocks the GUI, reconnects every second). |
 | `qml/WindowSource.*` | The window list of the process; the models read it. |
 | `qml/TasksModel.*`, `qml/AbstractTasksModel.h` | The model with the API and role names of Plasma's `org.kde.taskmanager`. |
+| `qml/FullscreenState.*` | Whether the window the user works in is fullscreen on a screen, and its application. |
 | `qml/tests/tst_tasksmodel.cpp` | The model on a fake source, checked by `QAbstractItemModelTester`. |
+| `qml/tests/tst_fullscreenstate.cpp` | `FullscreenState` on a fake source: the rule, screens, no noise from drags. |
 
 ## Using it from QML
 
@@ -54,6 +56,14 @@ Repeater {
 
 // Roles by enum, as in Plasma
 tasksModel.data(index, Windows.AbstractTasksModel.LastActivated)
+```
+
+A shell that keeps quiet while the user watches a film or plays (derived from the windows' states
+and geometry, nothing extra in the contract):
+
+```qml
+Windows.FullscreenState { id: fullscreen; screen: popupsWindow.screen }   // the active window, on that screen
+NotificationPopupsModel { suppressed: fullscreen.active }               // fullscreen.appName: which one
 ```
 
 QML written for `org.kde.taskmanager` mostly needs only the import changed. Not there (yet):

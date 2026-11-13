@@ -3,6 +3,7 @@ import org.kde.layershell 1.0 as LayerShell
 
 import Maia.Backend as Maia
 import Maia.Notifications.Center
+import Maia.Windows as Windows
 
 import LumenFrontend
 
@@ -12,6 +13,9 @@ import LumenFrontend
 // What pops up and for how long is Maia.Notifications.Center's (NotificationPopupsModel counts the time);
 // this window only shows it. The clocks stop while the pointer is over the popups or an answer is
 // being typed. Only the cards take input (MaskArea), the rest of the window lets clicks through.
+// While the user works fullscreen on this screen (a film, a game) only critical notifications pop
+// up, the others go into the notification center; nothing comes back afterwards. So the window can
+// sit in the overlay layer, above fullscreen windows, where a critical warning must be seen.
 // The window never takes the keyboard by itself (a popup must not take it from the program being
 // typed in), only while an answer field is open.
 // Popups slide in and out (view transitions: Animators would leave an added popup invisible).
@@ -32,7 +36,7 @@ Window {
     visible: shown
 
     LayerShell.Window.scope: "lumen-notifications"
-    LayerShell.Window.layer: LayerShell.Window.LayerTop
+    LayerShell.Window.layer: LayerShell.Window.LayerOverlay
     LayerShell.Window.anchors: LayerShell.Window.AnchorBottom | LayerShell.Window.AnchorRight
     LayerShell.Window.exclusionZone: 0
     // The keyboard only for an answer
@@ -40,9 +44,17 @@ Window {
                                                       : LayerShell.Window.KeyboardInteractivityNone
     LayerShell.Window.activateOnShow: false
 
+    // The window the user works in is fullscreen on this screen
+    Windows.FullscreenState {
+        id: fullscreen
+
+        screen: popupsWindow.screen
+    }
+
     NotificationPopupsModel {
         id: popups
 
+        suppressed: fullscreen.active
         maximumCount: 3
         paused: listHover.hovered || popupsWindow.replying
 

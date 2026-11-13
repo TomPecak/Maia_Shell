@@ -23,6 +23,7 @@ qt_add_qml_module(MaiaWindows
         ServiceConnection.h ServiceConnection.cpp
         AbstractTasksModel.h
         TasksModel.h TasksModel.cpp
+        FullscreenState.h FullscreenState.cpp
 )
 
 # C++ code of the contract (shared with the Rust service); also links Maia::CapnProto
@@ -43,4 +44,9 @@ if(BUILD_TESTING)
     target_link_libraries(tst_tasksmodel PRIVATE Maia::Windows Qt6::Test)
     add_test(NAME maia-windows-tasksmodel COMMAND tst_tasksmodel)
     set_tests_properties(maia-windows-tasksmodel PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
+    add_executable(tst_fullscreenstate tests/tst_fullscreenstate.cpp)
+    target_link_libraries(tst_fullscreenstate PRIVATE Maia::Windows Qt6::Test)
+    add_test(NAME maia-windows-fullscreen COMMAND tst_fullscreenstate)
+    set_tests_properties(maia-windows-fullscreen PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 endif()

@@ -47,6 +47,11 @@ bool NotificationPopupsModel::wantsPopup(const NotificationData &n) const
     return n.popup && !n.expired;
 }
 
+bool NotificationPopupsModel::keptQuiet(const NotificationData &n) const
+{
+    return m_suppressed && n.urgency != kCritical;
+}
+
 qint64 NotificationPopupsModel::timeoutOf(const NotificationData &n) const
 {
     if (n.timeout == 0)
@@ -80,10 +85,15 @@ void NotificationPopupsModel::reload()
     const int waitingBefore = int(m_waiting.size());
     m_waiting.clear();
     QList<NotificationData> wanted;
+    QList<quint32> quiet;
     for (const auto &n : CenterConnection::instance()->notifications()) {
-        if (wantsPopup(n))
+        if (wantsPopup(n) && keptQuiet(n))
+            quiet.append(n.id);
+        else if (wantsPopup(n))
             wanted.append(n);
     }
+    for (quint32 id : quiet)
+        CenterConnection::instance()->expire(id);
     std::sort(wanted.begin(), wanted.end(), [](const NotificationData &a, const NotificationData &b) {
         return a.time != b.time ? a.time < b.time : a.id < b.id;
     });
@@ -124,6 +134,10 @@ void NotificationPopupsModel::applyBatch(const QList<NotificationData> &changed,
             }
             const QModelIndex at = index(row);
             Q_EMIT dataChanged(at, at);
+        } else if (keptQuiet(n)) {
+            // Straight into the list
+            m_waiting.removeAll(n.id);
+            CenterConnection::instance()->expire(n.id);
         } else if (!m_waiting.contains(n.id)) {
             enqueue(n);
         }
@@ -263,6 +277,40 @@ void NotificationPopupsModel::setDefaultTimeout(int ms)
         return;
     m_defaultTimeout = ms;
     Q_EMIT defaultTimeoutChanged();
+}
+
+void NotificationPopupsModel::setSuppressed(bool suppressed)
+{
+    if (m_suppressed == suppressed)
+        return;
+    m_suppressed = suppressed;
+    if (suppressed) {
+        // What is on screen or waits goes into the list now, critical ones stay
+        const int countBefore = int(m_popups.size());
+        const int waitingBefore = int(m_waiting.size());
+        auto *connection = CenterConnection::instance();
+        for (int row = int(m_popups.size()) - 1; row >= 0; --row) {
+            if (keptQuiet(m_popups[row].data)) {
+                const quint32 id = m_popups[row].data.id;
+                removeRow(row);
+                connection->expire(id);
+            }
+        }
+        for (int i = int(m_waiting.size()) - 1; i >= 0; --i) {
+            const NotificationData *n = connection->find(m_waiting[i]);
+            if (!n || keptQuiet(*n)) {
+                if (n)
+                    connection->expire(n->id);
+                m_waiting.removeAt(i);
+            }
+        }
+        fill();
+        if (countBefore != m_popups.size())
+            Q_EMIT countChanged();
+        if (waitingBefore != m_waiting.size())
+            Q_EMIT waitingChanged();
+    }
+    Q_EMIT suppressedChanged();
 }
 
 void NotificationPopupsModel::setPaused(bool paused)

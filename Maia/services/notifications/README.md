@@ -42,7 +42,9 @@ a sandbox can later be given the first one only.
   still do), not low urgency (into the list only, as Plasma does by default). The shell counts how
   long (`NotificationPopupsModel`: the sender's timeout or the shell's default, paused while hovered,
   critical ones and timeout 0 until closed) and reports the end with `expire`; the notification
-  stays in the list unless it is transient.
+  stays in the list unless it is transient. While the user works fullscreen on the popups' screen
+  (`suppressed`, from Maia.Windows' `FullscreenState`) only critical ones pop up, the others go
+  into the list at once and do not come back afterwards. One process of a shell shows popups.
 - **Actions.** The shell asks the compositor for an xdg-activation token for the click, the service
   hands it to the sender (on D-Bus the signal `ActivationToken` before `ActionInvoked`), so that the
   application may raise its window. After an action or a reply the notification closes, unless it is
