@@ -1,0 +1,97 @@
+#pragma once
+
+// NotificationPopups: the notifications to show as popups now, the oldest first, for the popup
+// stack of a shell. The service decides which notifications pop up at all (popup: not during do not
+// disturb, not low urgency); this model decides for how long, which is the shell's to count:
+//
+// - at most maximumCount at once; the rest waits and comes when one goes;
+// - each stays for its timeout: the sender's, or defaultTimeout when the sender leaves it to the
+//   shell; 0, and critical ones without a timeout, stay until closed;
+// - paused (the pointer is over the popups) stops every clock; they go on where they stopped;
+// - when its time is over a popup goes and the service is told (expire): the notification stays
+//   in the list of NotificationsModel. hide() does the same at once (the popup was swiped away).
+//
+// One timer for all popups (the nearest end). Roles: those of NotificationsModel (NotificationRoles.h).
+//
+//   Repeater { model: NotificationPopups { paused: hover.hovered } delegate: Popup { … } }
+
+#include "NotificationData.h"
+
+#include <QAbstractListModel>
+#include <QElapsedTimer>
+#include <QTimer>
+#include <QtQml/qqmlregistration.h>
+
+namespace MaiaNotifications {
+
+class NotificationPopups : public QAbstractListModel
+{
+    Q_OBJECT
+    QML_ELEMENT
+
+    Q_PROPERTY(int count READ rowCount NOTIFY countChanged)
+    Q_PROPERTY(int maximumCount READ maximumCount WRITE setMaximumCount NOTIFY maximumCountChanged)
+    // ms of a popup whose sender leaves the time to the shell
+    Q_PROPERTY(int defaultTimeout READ defaultTimeout WRITE setDefaultTimeout NOTIFY defaultTimeoutChanged)
+    Q_PROPERTY(bool paused READ paused WRITE setPaused NOTIFY pausedChanged)
+    // How many wait for a free place
+    Q_PROPERTY(int waiting READ waiting NOTIFY waitingChanged)
+
+public:
+    explicit NotificationPopups(QObject *parent = nullptr);
+
+    int rowCount(const QModelIndex &parent = {}) const override;
+    QVariant data(const QModelIndex &index, int role) const override;
+    QHash<int, QByteArray> roleNames() const override;
+
+    int maximumCount() const { return m_maximumCount; }
+    void setMaximumCount(int count);
+    int defaultTimeout() const { return m_defaultTimeout; }
+    void setDefaultTimeout(int ms);
+    bool paused() const { return m_paused; }
+    void setPaused(bool paused);
+    int waiting() const { return int(m_waiting.size()); }
+
+    // The popup goes now (swiped away); the notification stays in the list
+    Q_INVOKABLE void hide(uint notificationId);
+
+    // The shortest time a popup is shown, whatever its sender asks
+    static constexpr int kMinimumTimeout = 1000;
+
+Q_SIGNALS:
+    void countChanged();
+    void maximumCountChanged();
+    void defaultTimeoutChanged();
+    void pausedChanged();
+    void waitingChanged();
+
+private:
+    struct Popup {
+        NotificationData data;
+        // ms left; < 0 = stays until closed
+        qint64 remaining = -1;
+        // Since the clock last ran on
+        QElapsedTimer running;
+    };
+
+    void reload();
+    void applyBatch(const QList<NotificationData> &changed, const QList<quint32> &removed);
+    bool wantsPopup(const NotificationData &n) const;
+    qint64 timeoutOf(const NotificationData &n) const;
+    int rowOf(quint32 id) const;
+    void removeRow(int row);
+    void fill();
+    void show(const NotificationData &n);
+    void restartTimer();
+    void timeUp();
+    qint64 leftOf(const Popup &popup) const;
+
+    QList<Popup> m_popups;
+    QList<quint32> m_waiting;
+    QTimer m_timer;
+    int m_maximumCount = 3;
+    int m_defaultTimeout = 6000;
+    bool m_paused = false;
+};
+
+} // namespace MaiaNotifications
