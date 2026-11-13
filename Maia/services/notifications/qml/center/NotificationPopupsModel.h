@@ -17,6 +17,10 @@
 //   popups: the others go into the list at once, those on screen go too, and nothing comes back
 //   when it ends.
 //
+// - popupShown tells when a new popup appears, with what the sender asked to hear (a name of the
+//   sound theme or a file): the shell plays it (Maia.Sounds). Not for the popups found after a
+//   (re)connection, not when a shown popup gets new content.
+//
 // One process of a shell shows popups: two models in a session would show every popup twice.
 //
 // One timer for all popups (the nearest end). Roles: those of NotificationsModel (NotificationRoles.h).
@@ -27,6 +31,7 @@
 
 #include <QAbstractListModel>
 #include <QElapsedTimer>
+#include <QSet>
 #include <QTimer>
 #include <QtQml/qqmlregistration.h>
 
@@ -76,6 +81,9 @@ Q_SIGNALS:
     void defaultTimeoutChanged();
     void pausedChanged();
     void suppressedChanged();
+    // A new popup is on screen. soundName: of the sound theme; soundFile: a file URL; suppressSound:
+    // the sender plays its own (or wants none)
+    void popupShown(uint notificationId, const QString &soundName, const QString &soundFile, bool suppressSound);
     void waitingChanged();
 
 private:
@@ -110,6 +118,8 @@ private:
     int m_defaultTimeout = 6000;
     bool m_paused = false;
     bool m_suppressed = false;
+    // Popups already announced (popupShown), until they leave for good
+    QSet<quint32> m_announced;
 };
 
 } // namespace MaiaNotifications

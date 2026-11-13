@@ -31,9 +31,10 @@ pub mod markup;
 pub mod model;
 pub mod rpc;
 
-/// What the server can do (GetCapabilities, NotificationCenter.info): only what Maia's shells show.
-/// Not yet: "sound" (no shell plays sounds), "body-images", "action-icons", "x-kde-urls".
-pub const CAPABILITIES: [&str; 10] = [
+/// What the server can do (GetCapabilities, NotificationCenter.info): only what Maia's shells show
+/// and play (sounds: Maia.Sounds, when the popup appears). Not yet: "body-images", "action-icons",
+/// "x-kde-urls".
+pub const CAPABILITIES: [&str; 11] = [
     "actions",
     "body",
     "body-hyperlinks",
@@ -44,4 +45,5 @@ pub const CAPABILITIES: [&str; 10] = [
     "inhibitions",
     "x-kde-origin-name",
     "x-kde-display-appname",
+    "sound",
 ];

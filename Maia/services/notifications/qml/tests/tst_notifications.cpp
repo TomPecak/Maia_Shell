@@ -269,6 +269,49 @@ private Q_SLOTS:
         QTRY_COMPARE(popups.rowCount(), 2);
     }
 
+    void aNewPopupIsAnnouncedOnceWithItsSound()
+    {
+        NotificationPopupsModel popups;
+        QSignalSpy shown(&popups, &NotificationPopupsModel::popupShown);
+        popups.setMaximumCount(1);
+        auto message = std::make_unique<Notification>();
+        message->setSummary(QStringLiteral("Anna"));
+        message->setSoundName(QStringLiteral("message-new-instant"));
+        message->setTimeout(0);
+        message->send();
+        QTRY_COMPARE(shown.count(), 1);
+        QCOMPARE(shown[0][0].toUInt(), message->notificationId());
+        QCOMPARE(shown[0][1].toString(), QStringLiteral("message-new-instant"));
+        QCOMPARE(shown[0][3].toBool(), false);
+
+        // New content of the shown popup: no second sound
+        QTest::qWait(5);
+        message->setBody(QStringLiteral("2 new messages"));
+        message->send();
+        QTRY_COMPARE(role(popups, 0, NotificationRoles::BodyRole).toString(), QStringLiteral("2 new messages"));
+        QTest::qWait(100);
+        QCOMPARE(shown.count(), 1);
+
+        // A sender that plays its own: announced, with suppressSound for the shell to respect
+        auto own = std::make_unique<Notification>();
+        own->setSummary(QStringLiteral("Own sound"));
+        own->setSuppressSound(true);
+        own->setTimeout(0);
+        own->send();
+        QTest::qWait(100);
+        QCOMPARE(shown.count(), 1); // still waiting for a place: not on screen yet
+        popups.hide(message->notificationId());
+        QTRY_COMPARE(shown.count(), 2);
+        QCOMPARE(shown[1][3].toBool(), true);
+
+        // A shell that comes later (or reconnects) finds them without a sound
+        NotificationPopupsModel later;
+        QSignalSpy laterShown(&later, &NotificationPopupsModel::popupShown);
+        QTRY_VERIFY(later.rowCount() > 0);
+        QTest::qWait(100);
+        QCOMPARE(laterShown.count(), 0);
+    }
+
     void anActionReachesTheSenderAndClosesIt()
     {
         NotificationsModel model;

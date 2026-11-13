@@ -97,8 +97,11 @@ void NotificationPopupsModel::reload()
     std::sort(wanted.begin(), wanted.end(), [](const NotificationData &a, const NotificationData &b) {
         return a.time != b.time ? a.time < b.time : a.id < b.id;
     });
-    for (const auto &n : wanted)
+    for (const auto &n : wanted) {
         enqueue(n);
+        // Already there before this connection: no sound for them
+        m_announced.insert(n.id);
+    }
     endResetModel();
     fill();
     Q_EMIT countChanged();
@@ -112,6 +115,7 @@ void NotificationPopupsModel::applyBatch(const QList<NotificationData> &changed,
     const int waitingBefore = int(m_waiting.size());
 
     for (quint32 id : removed) {
+        m_announced.remove(id);
         m_waiting.removeAll(id);
         const int row = rowOf(id);
         if (row >= 0)
@@ -120,6 +124,8 @@ void NotificationPopupsModel::applyBatch(const QList<NotificationData> &changed,
     for (const auto &n : changed) {
         const int row = rowOf(n.id);
         if (!wantsPopup(n)) {
+            // Its popup is over: a later replacement that pops up again is news again
+            m_announced.remove(n.id);
             m_waiting.removeAll(n.id);
             if (row >= 0)
                 removeRow(row);
@@ -185,6 +191,10 @@ void NotificationPopupsModel::show(const NotificationData &n)
     beginInsertRows({}, row, row);
     m_popups.append(popup);
     endInsertRows();
+    if (!m_announced.contains(n.id)) {
+        m_announced.insert(n.id);
+        Q_EMIT popupShown(n.id, n.soundName, n.soundFile, n.suppressSound);
+    }
 }
 
 void NotificationPopupsModel::fill()

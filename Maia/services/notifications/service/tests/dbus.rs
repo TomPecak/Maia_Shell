@@ -135,7 +135,7 @@ fn server_information_and_capabilities() {
         for c in ["actions", "body", "body-markup", "body-hyperlinks", "persistence", "inline-reply", "inhibitions"] {
             assert!(capabilities.iter().any(|x| x == c), "{c} in {capabilities:?}");
         }
-        assert!(!capabilities.iter().any(|x| x == "sound"));
+        assert!(capabilities.iter().any(|x| x == "sound"));
     });
 }
 

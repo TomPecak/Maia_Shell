@@ -45,6 +45,12 @@ a sandbox can later be given the first one only.
   stays in the list unless it is transient. While the user works fullscreen on the popups' screen
   (`suppressed`, from Maia.Windows' `FullscreenState`) only critical ones pop up, the others go
   into the list at once and do not come back afterwards. One process of a shell shows popups.
+- **Sounds.** A sender asks for one by name (`sound-name`, of the freedesktop sound theme) or file
+  (`sound-file`, a `file://` URL in the contract); the name stays a name, as an icon name does: the
+  shell's sound theme decides how it sounds. The shell plays it when the popup appears
+  (`NotificationPopupsModel.popupShown`, then `Maia.Sounds`), so do not disturb, fullscreen and low
+  urgency are silent too. No default sound: KDE applications play theirs through KNotification,
+  a default one would ring twice (as Plasma does).
 - **Actions.** The shell asks the compositor for an xdg-activation token for the click, the service
   hands it to the sender (on D-Bus the signal `ActivationToken` before `ActionInvoked`), so that the
   application may raise its window. After an action or a reply the notification closes, unless it is
@@ -120,4 +126,4 @@ instance needs its own display name.
   updates, a restart of the service, the flood and the GUI thread's longest stall.
 - maia-power-service's `tests/notify.rs`: the battery warnings reach a stand-in of the Notifier.
 
-Not yet: `org.kde.JobViewServer` (the progress of file copies), sounds, history on disk.
+Not yet: `org.kde.JobViewServer` (the progress of file copies), history on disk.

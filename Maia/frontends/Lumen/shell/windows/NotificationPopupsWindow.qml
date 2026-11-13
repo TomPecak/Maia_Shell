@@ -3,6 +3,7 @@ import org.kde.layershell 1.0 as LayerShell
 
 import Maia.Backend as Maia
 import Maia.Notifications.Center
+import Maia.Sounds
 import Maia.Windows as Windows
 
 import LumenFrontend
@@ -55,6 +56,13 @@ Window {
         id: popups
 
         suppressed: fullscreen.active
+
+        // The sound the sender asked for, when its popup appears (a sender that plays its own, as
+        // every KDE application through KNotification, asks for none or suppresses it)
+        onPopupShown: (notificationId, soundName, soundFile, suppressSound) => {
+            if (!suppressSound)
+                Sounds.play(soundName, soundFile)
+        }
         maximumCount: 3
         paused: listHover.hovered || popupsWindow.replying
 
