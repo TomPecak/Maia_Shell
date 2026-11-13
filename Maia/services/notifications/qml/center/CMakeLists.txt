@@ -15,6 +15,7 @@ qt_add_qml_module(MaiaNotificationsCenter
         NotificationCenter.h NotificationCenter.cpp
         NotificationsModel.h NotificationsModel.cpp
         NotificationPopupsModel.h NotificationPopupsModel.cpp
+        JobsModel.h JobsModel.cpp
 )
 
 target_include_directories(MaiaNotificationsCenter PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

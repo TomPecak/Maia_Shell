@@ -39,7 +39,10 @@ protected:
         for (auto n : notifications)
             list.append(readNotification(n));
         const DoNotDisturbData dnd = readDoNotDisturb(s.getDoNotDisturb());
-        m_connection->toGui([c = m_connection, list = std::move(list), dnd] { c->applySnapshot(list, dnd); });
+        QList<JobData> jobs;
+        for (auto j : s.getJobs())
+            jobs.append(readJob(j));
+        m_connection->toGui([c = m_connection, list = std::move(list), dnd, jobs = std::move(jobs)] { c->applySnapshot(list, dnd, jobs); });
         return kj::READY_NOW;
     }
 
@@ -56,6 +59,19 @@ protected:
         m_connection->toGui([c = m_connection, changed = std::move(changed), removed = std::move(removed)] {
             c->applyBatch(changed, removed);
         });
+        return kj::READY_NOW;
+    }
+
+    kj::Promise<void> jobsChanged(JobsChangedContext context) override
+    {
+        auto p = context.getParams();
+        QList<JobData> changed;
+        for (auto j : p.getChanged())
+            changed.append(readJob(j));
+        QList<quint32> removed;
+        for (auto id : p.getRemoved())
+            removed.append(id);
+        m_connection->toGui([c = m_connection, changed = std::move(changed), removed = std::move(removed)] { c->applyJobs(changed, removed); });
         return kj::READY_NOW;
     }
 
@@ -124,8 +140,12 @@ void CenterConnection::disconnected()
 
 // --- GUI thread: the state ---
 
-void CenterConnection::applySnapshot(const QList<NotificationData> &list, const DoNotDisturbData &dnd)
+void CenterConnection::applySnapshot(const QList<NotificationData> &list, const DoNotDisturbData &dnd, const QList<JobData> &jobs)
 {
+    m_jobs.clear();
+    for (const auto &job : jobs)
+        m_jobs.insert(job.id, job);
+    Q_EMIT jobsReset();
     m_notifications.clear();
     m_notifications.reserve(list.size());
     for (const auto &n : list)
@@ -141,6 +161,15 @@ void CenterConnection::applyBatch(const QList<NotificationData> &changed, const 
     for (const auto &n : changed)
         m_notifications.insert(n.id, n);
     Q_EMIT batch(changed, removed);
+}
+
+void CenterConnection::applyJobs(const QList<JobData> &changed, const QList<quint32> &removed)
+{
+    for (quint32 id : removed)
+        m_jobs.remove(id);
+    for (const auto &job : changed)
+        m_jobs.insert(job.id, job);
+    Q_EMIT jobsBatch(changed, removed);
 }
 
 void CenterConnection::applyDoNotDisturb(const DoNotDisturbData &dnd)
@@ -205,6 +234,34 @@ void CenterConnection::setDoNotDisturb(bool enabled, qint64 until)
         call.setEnabled(enabled);
         call.setUntil(until);
         tasks.add(call.send().ignoreResult());
+    });
+}
+
+void CenterConnection::cancelJob(quint32 id)
+{
+    post([this, id](kj::TaskSet &tasks) {
+        auto call = m_center->cancelJobRequest();
+        call.setId(id);
+        tasks.add(call.send().then([](auto &&response) { logResult("cancelJob", response); }));
+    });
+}
+
+void CenterConnection::suspendJob(quint32 id, bool suspended)
+{
+    post([this, id, suspended](kj::TaskSet &tasks) {
+        auto call = m_center->suspendJobRequest();
+        call.setId(id);
+        call.setSuspended(suspended);
+        tasks.add(call.send().then([](auto &&response) { logResult("suspendJob", response); }));
+    });
+}
+
+void CenterConnection::dismissJob(quint32 id)
+{
+    post([this, id](kj::TaskSet &tasks) {
+        auto call = m_center->dismissJobRequest();
+        call.setId(id);
+        tasks.add(call.send().then([](auto &&response) { logResult("dismissJob", response); }));
     });
 }
 

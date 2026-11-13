@@ -60,6 +60,40 @@ DoNotDisturbData readDoNotDisturb(C::DoNotDisturb::Reader r)
     return d;
 }
 
+JobData readJob(C::Job::Reader j)
+{
+    JobData d;
+    d.id = j.getId();
+    d.appName = toQString(j.getAppName());
+    d.desktopEntry = toQString(j.getDesktopEntry());
+    d.appIcon = toQString(j.getAppIcon());
+    d.title = toQString(j.getTitle());
+    d.infoMessage = toQString(j.getInfoMessage());
+    d.state = int(j.getState());
+    d.percent = j.getPercent();
+    d.processedBytes = j.getProcessedBytes();
+    d.totalBytes = j.getTotalBytes();
+    d.processedFiles = j.getProcessedFiles();
+    d.totalFiles = j.getTotalFiles();
+    d.processedDirectories = j.getProcessedDirectories();
+    d.totalDirectories = j.getTotalDirectories();
+    d.processedItems = j.getProcessedItems();
+    d.totalItems = j.getTotalItems();
+    d.speed = j.getSpeed();
+    d.elapsed = j.getElapsed();
+    for (auto field : j.getFields())
+        d.fields.append({toQString(field.getLabel()), toQString(field.getValue())});
+    d.destination = toQString(j.getDestination());
+    d.errorCode = j.getErrorCode();
+    d.errorText = toQString(j.getErrorText());
+    d.ownerGone = j.getOwnerGone();
+    d.killable = j.getKillable();
+    d.suspendable = j.getSuspendable();
+    d.started = j.getStarted();
+    d.updated = j.getUpdated();
+    return d;
+}
+
 void writeRequest(C::NotificationRequest::Builder b, const RequestData &r)
 {
     b.setAppName(r.appName.toUtf8().constData());

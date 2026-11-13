@@ -130,4 +130,19 @@ void NotificationCenter::dismissAll()
     CenterConnection::instance()->dismissAll();
 }
 
+void NotificationCenter::cancelJob(uint jobId)
+{
+    CenterConnection::instance()->cancelJob(jobId);
+}
+
+void NotificationCenter::suspendJob(uint jobId, bool suspended)
+{
+    CenterConnection::instance()->suspendJob(jobId, suspended);
+}
+
+void NotificationCenter::dismissJob(uint jobId)
+{
+    CenterConnection::instance()->dismissJob(jobId);
+}
+
 } // namespace MaiaNotifications

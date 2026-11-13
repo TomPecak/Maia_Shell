@@ -91,4 +91,45 @@ struct DoNotDisturbData {
     bool operator==(const DoNotDisturbData &) const = default;
 };
 
+// A job (the progress of a copy, an archive); state: Running 0, Suspended 1, Finished 2, Failed 3
+struct JobFieldData {
+    QString label;
+    QString value;
+
+    bool operator==(const JobFieldData &) const = default;
+};
+
+struct JobData {
+    quint32 id = 0;
+    QString appName;
+    QString desktopEntry;
+    QString appIcon;
+    QString title;
+    QString infoMessage;
+    int state = 0;
+    int percent = -1;
+    quint64 processedBytes = 0;
+    quint64 totalBytes = 0;
+    quint64 processedFiles = 0;
+    quint64 totalFiles = 0;
+    quint64 processedDirectories = 0;
+    quint64 totalDirectories = 0;
+    quint64 processedItems = 0;
+    quint64 totalItems = 0;
+    quint64 speed = 0;
+    qint64 elapsed = 0;
+    QList<JobFieldData> fields;
+    QString destination;
+    quint32 errorCode = 0;
+    QString errorText;
+    bool ownerGone = false;
+    bool killable = false;
+    bool suspendable = false;
+    qint64 started = 0;
+    qint64 updated = 0;
+
+    bool operator==(const JobData &) const = default;
+    bool running() const { return state == 0 || state == 1; }
+};
+
 } // namespace MaiaNotifications

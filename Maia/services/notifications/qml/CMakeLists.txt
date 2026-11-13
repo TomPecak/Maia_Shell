@@ -49,4 +49,13 @@ if(BUILD_TESTING)
     add_dependencies(tst_notifications maia-notifications-service)
     add_test(NAME maia-notifications-qml COMMAND tst_notifications)
     set_tests_properties(maia-notifications-qml PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
+    # Jobs: the real service on a private dbus-daemon, a QtDBus client as KJobWidgets
+    find_package(Qt6 ${REQUIRED_QT_VERSION} REQUIRED COMPONENTS DBus)
+    add_executable(tst_jobs tests/tst_jobs.cpp)
+    target_link_libraries(tst_jobs PRIVATE Maia::NotificationsCenter Qt6::DBus Qt6::Test)
+    target_compile_definitions(tst_jobs PRIVATE MAIA_NOTIFICATIONS_SERVICE="${notifications_service}")
+    add_dependencies(tst_jobs maia-notifications-service)
+    add_test(NAME maia-notifications-jobs COMMAND tst_jobs)
+    set_tests_properties(maia-notifications-jobs PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 endif()

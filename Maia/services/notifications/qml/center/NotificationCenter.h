@@ -48,6 +48,8 @@ public:
     // The numbers are those of the contract (notifications.capnp)
     enum Urgency { Normal, Low, Critical };
     Q_ENUM(Urgency)
+    enum JobState { JobRunning, JobSuspended, JobFinished, JobFailed };
+    Q_ENUM(JobState)
 
     explicit NotificationCenter(QObject *parent = nullptr);
 
@@ -69,6 +71,12 @@ public:
     Q_INVOKABLE void dismissAll();
     // Do not disturb for `minutes`, then off by itself
     Q_INVOKABLE void setDoNotDisturbFor(int minutes);
+
+    // Jobs (JobsModel): the application is asked to cancel or pause; a finished or failed job
+    // leaves the list
+    Q_INVOKABLE void cancelJob(uint jobId);
+    Q_INVOKABLE void suspendJob(uint jobId, bool suspended);
+    Q_INVOKABLE void dismissJob(uint jobId);
 
 Q_SIGNALS:
     void connectedChanged();

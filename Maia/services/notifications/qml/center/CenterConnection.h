@@ -34,6 +34,8 @@ public:
     // The current list by id (the snapshot and every batch since); the models keep their order
     const QHash<quint32, NotificationData> &notifications() const { return m_notifications; }
     const DoNotDisturbData &doNotDisturb() const { return m_doNotDisturb; }
+    // The jobs by id (the snapshot and every batch since)
+    const QHash<quint32, JobData> &jobs() const { return m_jobs; }
     // A notification by id, or nullptr
     const NotificationData *find(quint32 id) const;
 
@@ -45,6 +47,9 @@ public:
     void dismissAll();
     // until: ms since 1970, 0 = until turned off
     void setDoNotDisturb(bool enabled, qint64 until);
+    void cancelJob(quint32 id);
+    void suspendJob(quint32 id, bool suspended);
+    void dismissJob(quint32 id);
 
 Q_SIGNALS:
     // The whole list again (a new connection)
@@ -52,6 +57,9 @@ Q_SIGNALS:
     // One batch: new or changed notifications, and removed ids
     void batch(const QList<MaiaNotifications::NotificationData> &changed, const QList<quint32> &removed);
     void doNotDisturbChanged();
+    // The jobs again (a new connection), or one batch of them
+    void jobsReset();
+    void jobsBatch(const QList<MaiaNotifications::JobData> &changed, const QList<quint32> &removed);
 
 protected:
     void connected(capnp::Capability::Client bootstrap, kj::TaskSet &tasks) override;
@@ -61,12 +69,14 @@ private:
     friend class ShellListener;
 
     // GUI thread
-    void applySnapshot(const QList<NotificationData> &list, const DoNotDisturbData &dnd);
+    void applySnapshot(const QList<NotificationData> &list, const DoNotDisturbData &dnd, const QList<JobData> &jobs);
+    void applyJobs(const QList<JobData> &changed, const QList<quint32> &removed);
     void applyBatch(const QList<NotificationData> &changed, const QList<quint32> &removed);
     void applyDoNotDisturb(const DoNotDisturbData &dnd);
 
     QHash<quint32, NotificationData> m_notifications;
     DoNotDisturbData m_doNotDisturb;
+    QHash<quint32, JobData> m_jobs;
 
     // KJ thread
     std::optional<C::NotificationCenter::Client> m_center;
