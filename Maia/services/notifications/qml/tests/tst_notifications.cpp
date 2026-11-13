@@ -1,5 +1,5 @@
 // Maia.Notifications and Maia.Notifications.Center against the real service (without D-Bus): a
-// program sends with Notification, a shell sees it in NotificationsModel and NotificationPopups and
+// program sends with Notification, a shell sees it in NotificationsModel and NotificationPopupsModel and
 // acts on it with NotificationCenter.
 //
 // The service runs with its own sockets and its own display name, so that neither its sockets nor
@@ -7,7 +7,7 @@
 
 #include "Notification.h"
 #include "NotificationCenter.h"
-#include "NotificationPopups.h"
+#include "NotificationPopupsModel.h"
 #include "NotificationRoles.h"
 #include "Notifications.h"
 #include "NotificationsModel.h"
@@ -126,7 +126,7 @@ private Q_SLOTS:
     void aSentNotificationReachesTheListAndThePopups()
     {
         NotificationsModel model;
-        NotificationPopups popups;
+        NotificationPopupsModel popups;
         auto n = std::make_unique<Notification>();
         n->setAppName(QStringLiteral("Backup"));
         n->setDesktopEntry(QStringLiteral("org.maia.backup"));
@@ -156,7 +156,7 @@ private Q_SLOTS:
     void aPopupEndsByItselfAndTheNotificationStays()
     {
         NotificationsModel model;
-        NotificationPopups popups;
+        NotificationPopupsModel popups;
         auto n = sent(QStringLiteral("Short"), 1000);
         QTRY_COMPARE(popups.rowCount(), 1);
         QElapsedTimer shown;
@@ -171,7 +171,7 @@ private Q_SLOTS:
 
     void pausedPopupsWaitAndThenGoOn()
     {
-        NotificationPopups popups;
+        NotificationPopupsModel popups;
         auto n = sent(QStringLiteral("Hovered"), 1000);
         QTRY_COMPARE(popups.rowCount(), 1);
         popups.setPaused(true);
@@ -183,7 +183,7 @@ private Q_SLOTS:
 
     void criticalAndTimeoutZeroStayUntilClosed()
     {
-        NotificationPopups popups;
+        NotificationPopupsModel popups;
         popups.setDefaultTimeout(1000);
         auto critical = std::make_unique<Notification>();
         critical->setSummary(QStringLiteral("Battery empty"));
@@ -202,7 +202,7 @@ private Q_SLOTS:
 
     void popupsBeyondTheMaximumWaitForAPlace()
     {
-        NotificationPopups popups;
+        NotificationPopupsModel popups;
         popups.setMaximumCount(2);
         std::vector<std::unique_ptr<Notification>> list;
         for (int i = 0; i < 5; ++i)
@@ -219,7 +219,7 @@ private Q_SLOTS:
 
     void criticalNotificationsWaitInFrontOfTheOthers()
     {
-        NotificationPopups popups;
+        NotificationPopupsModel popups;
         popups.setMaximumCount(1);
         auto first = sent(QStringLiteral("first"), 0);
         QTRY_COMPARE(popups.rowCount(), 1);
@@ -313,7 +313,7 @@ private Q_SLOTS:
     {
         NotificationCenter center;
         NotificationsModel model;
-        NotificationPopups popups;
+        NotificationPopupsModel popups;
         QSignalSpy changed(&center, &NotificationCenter::doNotDisturbChanged);
         center.setDoNotDisturb(true);
         QTRY_VERIFY(center.doNotDisturb() && center.doNotDisturbActive());
@@ -338,7 +338,7 @@ private Q_SLOTS:
     void aFloodKeepsTheGuiThreadFree()
     {
         NotificationsModel model;
-        NotificationPopups popups;
+        NotificationPopupsModel popups;
         constexpr int kCount = 1000;
         std::vector<std::unique_ptr<Notification>> list;
         list.reserve(kCount);

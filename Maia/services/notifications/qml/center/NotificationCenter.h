@@ -8,7 +8,7 @@
 //   ToggleTile { checked: NotificationCenter.doNotDisturb; onToggled: NotificationCenter.doNotDisturb = checked }
 //   Button { onClicked: NotificationCenter.invokeAction(model.notificationId, "default", Window.window) }
 //
-// The lists are NotificationsModel (all) and NotificationPopups (the popups now). Actions and
+// The lists are NotificationsModel (all) and NotificationPopupsModel (the popups now). Actions and
 // replies take the window that was clicked: the shell asks the compositor for an activation token
 // for it, so that the application may raise its window; the request goes out when the token is
 // there (at most kTokenWait later, then without one).

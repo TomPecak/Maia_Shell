@@ -1,7 +1,10 @@
 #pragma once
 
-// NotificationPopups: the notifications to show as popups now, the oldest first, for the popup
-// stack of a shell. The service decides which notifications pop up at all (popup: not during do not
+// NotificationPopupsModel: the notifications to show as popups now, the oldest first: data and
+// behaviour, no look. The shell draws them as it likes (Lumen: cards in the bottom-right corner, a
+// tablet face: one banner at the top) and only sets how many, how long and when to pause.
+//
+// The service decides which notifications pop up at all (popup: not during do not
 // disturb, not low urgency); this model decides for how long, which is the shell's to count:
 //
 // - at most maximumCount at once; the rest waits and comes when one goes, critical ones first;
@@ -13,7 +16,7 @@
 //
 // One timer for all popups (the nearest end). Roles: those of NotificationsModel (NotificationRoles.h).
 //
-//   Repeater { model: NotificationPopups { paused: hover.hovered } delegate: Popup { … } }
+//   Repeater { model: NotificationPopupsModel { paused: hover.hovered } delegate: Popup { … } }
 
 #include "NotificationData.h"
 
@@ -24,7 +27,7 @@
 
 namespace MaiaNotifications {
 
-class NotificationPopups : public QAbstractListModel
+class NotificationPopupsModel : public QAbstractListModel
 {
     Q_OBJECT
     QML_ELEMENT
@@ -38,7 +41,7 @@ class NotificationPopups : public QAbstractListModel
     Q_PROPERTY(int waiting READ waiting NOTIFY waitingChanged)
 
 public:
-    explicit NotificationPopups(QObject *parent = nullptr);
+    explicit NotificationPopupsModel(QObject *parent = nullptr);
 
     int rowCount(const QModelIndex &parent = {}) const override;
     QVariant data(const QModelIndex &index, int role) const override;

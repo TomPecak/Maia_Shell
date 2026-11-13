@@ -40,7 +40,7 @@ a sandbox can later be given the first one only.
   (`Image { asynchronous: true; sourceSize: … }`), and messages stay small.
 - **Popups.** The service decides what pops up: not during do not disturb (critical notifications
   still do), not low urgency (into the list only, as Plasma does by default). The shell counts how
-  long (`NotificationPopups`: the sender's timeout or the shell's default, paused while hovered,
+  long (`NotificationPopupsModel`: the sender's timeout or the shell's default, paused while hovered,
   critical ones and timeout 0 until closed) and reports the end with `expire`; the notification
   stays in the list unless it is transient.
 - **Actions.** The shell asks the compositor for an xdg-activation token for the click, the service
@@ -89,7 +89,7 @@ A shell:
 ```qml
 import Maia.Notifications.Center
 
-ListView { model: NotificationPopups { maximumCount: 3; paused: hover.hovered } … }   // the popups now
+ListView { model: NotificationPopupsModel { maximumCount: 3; paused: hover.hovered } … }   // the popups now
 ListView { model: NotificationsModel {} … }                                         // the center
 Button { onClicked: NotificationCenter.invokeAction(model.notificationId, "default", Window.window) }
 ToggleTile { checked: NotificationCenter.doNotDisturb; onToggled: NotificationCenter.doNotDisturb = checked }

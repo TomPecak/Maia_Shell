@@ -1,7 +1,7 @@
 #pragma once
 
 // The connection of a shell to the NotificationCenter of the notification service. One per
-// process (instance()), shared by NotificationCenter, NotificationsModel and NotificationPopups.
+// process (instance()), shared by NotificationCenter, NotificationsModel and NotificationPopupsModel.
 //
 // The service sends the whole list first, then batches of changes (at most one per frame); a batch
 // is read into Qt values in the KJ thread and applied in the GUI thread as a whole: the models

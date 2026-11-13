@@ -1,6 +1,6 @@
 #pragma once
 
-// The roles of a notification, shared by NotificationsModel and NotificationPopups.
+// The roles of a notification, shared by NotificationsModel and NotificationPopupsModel.
 //
 //   notificationId, appName, desktopEntry, appIcon (a theme icon name or a file URL), summary (plain
 //   text), body (StyledText: <b> <i> <u> <a> <br/>), image (a file URL, "" none), actions

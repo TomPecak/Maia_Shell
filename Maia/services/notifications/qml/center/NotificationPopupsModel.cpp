@@ -1,4 +1,4 @@
-#include "NotificationPopups.h"
+#include "NotificationPopupsModel.h"
 
 #include "CenterConnection.h"
 #include "NotificationRoles.h"
@@ -12,42 +12,42 @@ namespace {
 constexpr int kCritical = int(C::Urgency::CRITICAL);
 }
 
-NotificationPopups::NotificationPopups(QObject *parent)
+NotificationPopupsModel::NotificationPopupsModel(QObject *parent)
     : QAbstractListModel(parent)
 {
     m_timer.setSingleShot(true);
     // Precise: a popup's end is visible
     m_timer.setTimerType(Qt::PreciseTimer);
-    connect(&m_timer, &QTimer::timeout, this, &NotificationPopups::timeUp);
+    connect(&m_timer, &QTimer::timeout, this, &NotificationPopupsModel::timeUp);
     auto *connection = CenterConnection::instance();
-    connect(connection, &CenterConnection::reset, this, &NotificationPopups::reload);
-    connect(connection, &CenterConnection::batch, this, &NotificationPopups::applyBatch);
+    connect(connection, &CenterConnection::reset, this, &NotificationPopupsModel::reload);
+    connect(connection, &CenterConnection::batch, this, &NotificationPopupsModel::applyBatch);
     reload();
 }
 
-int NotificationPopups::rowCount(const QModelIndex &parent) const
+int NotificationPopupsModel::rowCount(const QModelIndex &parent) const
 {
     return parent.isValid() ? 0 : int(m_popups.size());
 }
 
-QVariant NotificationPopups::data(const QModelIndex &index, int role) const
+QVariant NotificationPopupsModel::data(const QModelIndex &index, int role) const
 {
     if (!checkIndex(index, CheckIndexOption::IndexIsValid | CheckIndexOption::ParentIsInvalid))
         return {};
     return NotificationRoles::data(m_popups.at(index.row()).data, role);
 }
 
-QHash<int, QByteArray> NotificationPopups::roleNames() const
+QHash<int, QByteArray> NotificationPopupsModel::roleNames() const
 {
     return NotificationRoles::names();
 }
 
-bool NotificationPopups::wantsPopup(const NotificationData &n) const
+bool NotificationPopupsModel::wantsPopup(const NotificationData &n) const
 {
     return n.popup && !n.expired;
 }
 
-qint64 NotificationPopups::timeoutOf(const NotificationData &n) const
+qint64 NotificationPopupsModel::timeoutOf(const NotificationData &n) const
 {
     if (n.timeout == 0)
         return -1;
@@ -56,7 +56,7 @@ qint64 NotificationPopups::timeoutOf(const NotificationData &n) const
     return std::max(n.timeout, kMinimumTimeout);
 }
 
-int NotificationPopups::rowOf(quint32 id) const
+int NotificationPopupsModel::rowOf(quint32 id) const
 {
     for (int row = 0; row < m_popups.size(); ++row) {
         if (m_popups[row].data.id == id)
@@ -65,14 +65,14 @@ int NotificationPopups::rowOf(quint32 id) const
     return -1;
 }
 
-qint64 NotificationPopups::leftOf(const Popup &popup) const
+qint64 NotificationPopupsModel::leftOf(const Popup &popup) const
 {
     if (popup.remaining < 0)
         return -1;
     return m_paused ? popup.remaining : std::max<qint64>(0, popup.remaining - popup.running.elapsed());
 }
 
-void NotificationPopups::reload()
+void NotificationPopupsModel::reload()
 {
     // After a (re)connection: what still wants a popup, the oldest first
     beginResetModel();
@@ -96,7 +96,7 @@ void NotificationPopups::reload()
         Q_EMIT waitingChanged();
 }
 
-void NotificationPopups::applyBatch(const QList<NotificationData> &changed, const QList<quint32> &removed)
+void NotificationPopupsModel::applyBatch(const QList<NotificationData> &changed, const QList<quint32> &removed)
 {
     const int countBefore = int(m_popups.size());
     const int waitingBefore = int(m_waiting.size());
@@ -136,7 +136,7 @@ void NotificationPopups::applyBatch(const QList<NotificationData> &changed, cons
         Q_EMIT waitingChanged();
 }
 
-void NotificationPopups::enqueue(const NotificationData &n)
+void NotificationPopupsModel::enqueue(const NotificationData &n)
 {
     if (n.urgency != kCritical) {
         m_waiting.append(n.id);
@@ -154,14 +154,14 @@ void NotificationPopups::enqueue(const NotificationData &n)
     m_waiting.insert(at, n.id);
 }
 
-void NotificationPopups::removeRow(int row)
+void NotificationPopupsModel::removeRow(int row)
 {
     beginRemoveRows({}, row, row);
     m_popups.removeAt(row);
     endRemoveRows();
 }
 
-void NotificationPopups::show(const NotificationData &n)
+void NotificationPopupsModel::show(const NotificationData &n)
 {
     Popup popup;
     popup.data = n;
@@ -173,7 +173,7 @@ void NotificationPopups::show(const NotificationData &n)
     endInsertRows();
 }
 
-void NotificationPopups::fill()
+void NotificationPopupsModel::fill()
 {
     const auto &notifications = CenterConnection::instance()->notifications();
     while (m_popups.size() < m_maximumCount && !m_waiting.isEmpty()) {
@@ -185,7 +185,7 @@ void NotificationPopups::fill()
     restartTimer();
 }
 
-void NotificationPopups::restartTimer()
+void NotificationPopupsModel::restartTimer()
 {
     if (m_paused) {
         m_timer.stop();
@@ -203,7 +203,7 @@ void NotificationPopups::restartTimer()
         m_timer.start(int(nearest));
 }
 
-void NotificationPopups::timeUp()
+void NotificationPopupsModel::timeUp()
 {
     const int countBefore = int(m_popups.size());
     const int waitingBefore = int(m_waiting.size());
@@ -223,7 +223,7 @@ void NotificationPopups::timeUp()
         Q_EMIT waitingChanged();
 }
 
-void NotificationPopups::hide(uint notificationId)
+void NotificationPopupsModel::hide(uint notificationId)
 {
     const int row = rowOf(notificationId);
     if (row < 0)
@@ -237,7 +237,7 @@ void NotificationPopups::hide(uint notificationId)
         Q_EMIT waitingChanged();
 }
 
-void NotificationPopups::setMaximumCount(int count)
+void NotificationPopupsModel::setMaximumCount(int count)
 {
     count = std::max(1, count);
     if (m_maximumCount == count)
@@ -256,7 +256,7 @@ void NotificationPopups::setMaximumCount(int count)
     Q_EMIT waitingChanged();
 }
 
-void NotificationPopups::setDefaultTimeout(int ms)
+void NotificationPopupsModel::setDefaultTimeout(int ms)
 {
     ms = std::max(ms, kMinimumTimeout);
     if (m_defaultTimeout == ms)
@@ -265,7 +265,7 @@ void NotificationPopups::setDefaultTimeout(int ms)
     Q_EMIT defaultTimeoutChanged();
 }
 
-void NotificationPopups::setPaused(bool paused)
+void NotificationPopupsModel::setPaused(bool paused)
 {
     if (m_paused == paused)
         return;

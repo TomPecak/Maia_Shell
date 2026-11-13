@@ -2,7 +2,7 @@
 #
 #   notifications/  Maia.Notifications         Notification, Notifications: for programs that send
 #   center/         Maia.Notifications.Center  NotificationCenter, NotificationsModel,
-#                                              NotificationPopups: for shells that show them
+#                                              NotificationPopupsModel: for shells that show them
 #
 # The shells' module is a part of the notifications' domain (Maia.<domain>.Center), not a module of
 # the service: a module names its domain, never the process behind it.
