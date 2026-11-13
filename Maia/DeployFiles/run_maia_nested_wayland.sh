@@ -32,6 +32,9 @@
 #   MAIA_NETWORK_BACKEND                  - fake (domyślnie): symulowana sieć; networkmanager: prawdziwy
 #                                           NetworkManager - akcje zmieniają sieć tego komputera, a agent
 #                                           haseł konkuruje z agentem głównej sesji
+#   MAIA_NOTIFICATIONS_SERVICE            - program usługi powiadomień (domyślnie szukany obok Mai); ma
+#                                           własną magistralę D-Bus tej sesji, więc nie zabiera powiadomień
+#                                           głównej sesji
 #   MAIA_POWER_SERVICE                    - program usługi zasilania (domyślnie szukany obok Mai)
 #   MAIA_POWER_BACKEND                    - fake (domyślnie): symulowany laptop; system: bateria, jasność
 #                                           i profile tego komputera
@@ -91,7 +94,7 @@ if [ ! -x "${MAIA_SESSION_SERVICE}" ]; then
     echo "[ERROR] Nie znaleziono maia-session-service obok ${BIN_DIR} (MAIA_SESSION_SERVICE wskazuje go jawnie)" >&2
     exit 1
 fi
-for service in windows network appearance power; do
+for service in windows network appearance power notifications; do
     variable="MAIA_$(echo "${service}" | tr '[:lower:]' '[:upper:]')_SERVICE"
     if [ -z "${!variable}" ]; then
         found="$(find_program "maia-${service}-service")"

@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import org.kde.layershell 1.0 as LayerShell
 import Maia.Windows as Windows
+import Maia.NotificationCenter
 
 import LumenFrontend
 
@@ -213,19 +214,27 @@ Window {
                     }
                 }
 
-                // Number of unread notifications
+                // Quiet: do not disturb is on (by the user or an application)
+                LIcon {
+                    visible: NotificationCenter.doNotDisturbActive
+                    iconName: "notifications-disabled-symbolic"
+                    size: 16
+                    tint: Theme.textSecondary
+                }
+
+                // How many notifications the center has
                 Rectangle {
                     implicitWidth: Math.max(20, badge.implicitWidth + Theme.spacingS)
                     implicitHeight: 20
                     radius: 10
                     color: Theme.accent
-                    visible: Shell.notifications.count > 0
+                    visible: NotificationCenter.count > 0
 
                     LText {
                         id: badge
 
                         anchors.centerIn: parent
-                        text: Shell.notifications.count
+                        text: NotificationCenter.count > 99 ? "99+" : NotificationCenter.count
                         color: Theme.onAccent
                         font.pixelSize: Theme.fontCaption
                         font.weight: Font.DemiBold

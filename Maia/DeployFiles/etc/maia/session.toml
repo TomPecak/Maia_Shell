@@ -59,6 +59,15 @@ command = ["kwin_wayland", "--width", "${MAIA_NESTED_WIDTH:-1280}", "--height", 
 ready = "argument"
 environment = { KWIN_WAYLAND_NO_PERMISSION_CHECKS = "1" }
 
+# The notification server (org.freedesktop.Notifications), first of all: KDE's services and
+# applications send notifications as soon as they start (a call before it waits on the bus, which
+# delivers it once the name is taken)
+[[process]]
+name = "maia-notifications-service"
+kind = "maia-service"
+command = ["${MAIA_NOTIFICATIONS_SERVICE:-${MAIA_PREFIX}/libexec/maia-notifications-service}"]
+restart = "always"
+
 # Before the KDE services: powerdevil registers its shortcuts when it starts. KWin has kglobalacceld
 # built in; elsewhere nobody starts it (on Kubuntu two units claim its D-Bus name, so D-Bus
 # activation fails). Without XDG_SESSION_TYPE (with "wayland" it ends at once, expecting KWin) and

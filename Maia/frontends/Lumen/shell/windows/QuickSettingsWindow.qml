@@ -3,13 +3,15 @@ import QtQuick.Layouts
 import QtQuick.Templates as T
 import org.kde.layershell 1.0 as LayerShell
 
+import Maia.NotificationCenter
+
 import LumenFrontend
 
 // Quick settings, in the bottom-right corner above the system tray.
 // Real: Wi-Fi (the Maia network service: the tile, and its page with the networks), dark mode and
 // accent color (persisted), volume (Maia audio backend).
 // The battery and the brightness: the Maia power service (Maia.Power, through Shell).
-// Mock-ups: bluetooth, airplane mode, night light.
+// Mock-ups: bluetooth, airplane mode, night light. Do not disturb is Maia.NotificationCenter.
 //
 // Two pages, as in Windows 11: the main one, and the Wi-Fi page opened by the chevron of the Wi-Fi
 // tile (Shell.quickSettingsPage). The page coming in slides from the side it belongs to and fades
@@ -114,10 +116,10 @@ FlyoutWindow {
             }
             ToggleTile {
                 Layout.fillWidth: true
-                text: qsTr("Focus")
+                text: qsTr("Do not disturb")
                 iconName: "notifications-disabled-symbolic"
-                checked: Shell.focusMode
-                onToggled: Shell.focusMode = checked
+                checked: NotificationCenter.doNotDisturb
+                onToggled: NotificationCenter.doNotDisturb = checked
             }
         }
 

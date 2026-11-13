@@ -214,45 +214,8 @@ QtObject {
         PowerModule.Power.brightness = value
     }
 
-    // Battery events become notifications (the notification center and the badge of the clock)
-    property Connections powerEvents: Connections {
-        target: PowerModule.Power
-
-        function onEvent(kind, batteryId, percentage) {
-            const P = PowerModule.Power
-            const texts = {
-                [P.ChargerConnected]: [qsTr("Charger connected"), qsTr("Charging, %1 %").arg(Math.round(percentage))],
-                [P.ChargerDisconnected]: [qsTr("On battery"), qsTr("%1 % left").arg(Math.round(percentage))],
-                [P.BatteryLow]: [qsTr("Battery low"), qsTr("%1 % left. Connect the charger.").arg(Math.round(percentage))],
-                [P.BatteryCritical]: [qsTr("Battery critically low"), qsTr("%1 % left. Connect the charger now.").arg(Math.round(percentage))],
-                [P.BatteryAction]: [qsTr("Battery empty"), qsTr("The computer will turn off soon.")],
-                [P.BatteryFull]: [qsTr("Battery charged"), qsTr("You can unplug the charger.")],
-                [P.DeviceBatteryLow]: [qsTr("Device battery low"), qsTr("A connected device has %1 % left.").arg(Math.round(percentage))],
-            }
-            const text = texts[kind]
-            if (!text)
-                return
-            shell.notifications.insert(0, {
-                app: qsTr("Power"),
-                icon: kind === P.ChargerConnected || kind === P.BatteryFull ? "battery-100-charging-symbolic" : "battery-010-symbolic",
-                title: text[0],
-                body: text[1],
-                time: Qt.formatTime(new Date(), "hh:mm"),
-            })
-        }
-    }
-
     // --- Quick settings (mock state, not connected to the system yet) ---
     property bool bluetoothEnabled: false
     property bool airplaneMode: false
     property bool nightLight: false
-    property bool focusMode: false
-
-    // --- Notifications (mock data) ---
-
-    property ListModel notifications: ListModel {
-        ListElement { app: "Discover"; icon: "plasmadiscover"; title: "Updates available"; body: "12 packages can be updated."; time: "10:24" }
-        ListElement { app: "Calendar"; icon: "view-calendar-symbolic"; title: "Design review"; body: "Starts in 15 minutes, room 2.04"; time: "09:45" }
-        ListElement { app: "Files"; icon: "system-file-manager"; title: "Copy finished"; body: "48 photos copied to Pictures."; time: "08:12" }
-    }
 }

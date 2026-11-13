@@ -2,10 +2,12 @@ import QtQuick
 import QtQuick.Layouts
 import org.kde.layershell 1.0 as LayerShell
 
+import Maia.NotificationCenter
+
 import LumenFrontend
 
 // Notification center and calendar, in the bottom-right corner above the clock.
-// The notifications are mock data (Shell.notifications), the calendar is real.
+// The notifications are those of the session (Maia.NotificationCenter), the newest first.
 FlyoutWindow {
     id: calendarFlyout
 
@@ -44,10 +46,10 @@ FlyoutWindow {
             }
 
             SubtleButton {
-                visible: Shell.notifications.count > 0
+                visible: notifications.count > 0
                 leftPadding: Theme.spacingM
                 rightPadding: Theme.spacingM
-                onClicked: Shell.notifications.clear()
+                onClicked: NotificationCenter.dismissAll()
                 contentItem: LText { text: qsTr("Clear all"); font.pixelSize: Theme.fontCaption }
             }
         }
@@ -61,22 +63,41 @@ FlyoutWindow {
                                               : 120
             spacing: Theme.spacingS
             clip: true
-            model: Shell.notifications
+            model: NotificationsModel {
+                id: notifications
+            }
             boundsBehavior: Flickable.StopAtBounds
 
             delegate: NotificationCard {
                 required property int index
-                required property string app
-                required property string icon
-                // Existing properties of NotificationCard filled from the roles of the same name
-                required title
-                required body
-                required time
+                required property var model
 
                 width: notificationList.width
-                appName: app
-                iconName: icon
-                onDismissed: Shell.notifications.remove(index)
+                appName: model.appName
+                iconName: model.appIcon
+                desktopEntry: model.desktopEntry
+                title: model.summary
+                body: model.body
+                time: model.time
+                image: model.image
+                actions: model.actions
+                hasDefaultAction: model.hasDefaultAction
+                inlineReply: model.inlineReply
+                replyPlaceholder: model.replyPlaceholder
+                replySubmitText: model.replySubmitText
+                urgency: model.urgency
+                originName: model.originName
+
+                onDismissed: NotificationCenter.dismiss(model.notificationId)
+                onDefaultInvoked: {
+                    NotificationCenter.invokeAction(model.notificationId, "default", calendarFlyout)
+                    Shell.closeFlyouts()
+                }
+                onActionInvoked: key => {
+                    NotificationCenter.invokeAction(model.notificationId, key, calendarFlyout)
+                    Shell.closeFlyouts()
+                }
+                onReplied: text => NotificationCenter.reply(model.notificationId, text, calendarFlyout)
             }
 
             // Removed notifications slide out to the right, the rest moves up
@@ -140,7 +161,7 @@ FlyoutWindow {
             Layout.fillWidth: true
         }
 
-        // --- Focus session (mock) ---
+        // --- Focus session: do not disturb for 30 minutes ---
 
         Card {
             id: focusCard
@@ -163,12 +184,24 @@ FlyoutWindow {
                 Column {
                     Layout.fillWidth: true
                     LText { text: qsTr("Focus"); font.weight: Font.DemiBold }
-                    LText { text: qsTr("30 minutes, no notifications"); font.pixelSize: Theme.fontCaption; color: Theme.textSecondary }
+                    LText {
+                        text: NotificationCenter.doNotDisturb
+                              ? (!isNaN(NotificationCenter.doNotDisturbUntil.getTime()) ? qsTr("No notifications until %1").arg(Qt.formatTime(NotificationCenter.doNotDisturbUntil, Qt.locale().timeFormat(Locale.ShortFormat)))
+                                                                             : qsTr("No notifications"))
+                              : qsTr("30 minutes, no notifications")
+                        font.pixelSize: Theme.fontCaption
+                        color: Theme.textSecondary
+                    }
                 }
 
                 AccentButton {
-                    text: Shell.focusMode ? qsTr("Stop") : qsTr("Start")
-                    onClicked: Shell.focusMode = !Shell.focusMode
+                    text: NotificationCenter.doNotDisturb ? qsTr("Stop") : qsTr("Start")
+                    onClicked: {
+                        if (NotificationCenter.doNotDisturb)
+                            NotificationCenter.doNotDisturb = false
+                        else
+                            NotificationCenter.setDoNotDisturbFor(30)
+                    }
                 }
             }
         }

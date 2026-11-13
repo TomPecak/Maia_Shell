@@ -17,6 +17,7 @@ import LumenFrontend
 // - desktop (this window): wallpaper and desktop clock, background layer,
 // - taskbar: bottom edge, reserves its area,
 // - flyouts: start menu, calendar and notifications, quick settings, widgets,
+// - notification popups (Maia.NotificationCenter), bottom right above the taskbar,
 // - context menu of the desktop, kitchen timer,
 // - built-in applications: File Explorer (apps/files, a normal window).
 Window {
@@ -83,6 +84,7 @@ Window {
     WidgetsWindow {}
     DesktopMenuWindow {}
     TimerWindow {}
+    NotificationPopupsWindow {}
 
     // Built-in File Explorer, exists while it is open
     Instantiator {
