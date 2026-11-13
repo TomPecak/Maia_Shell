@@ -120,6 +120,60 @@ pub struct Seen {
     pub dnd_active: bool,
     pub dnd_until: i64,
     pub inhibitors: Vec<String>,
+    pub jobs: BTreeMap<u32, ShownJob>,
+    pub job_batches: u32,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct ShownJob {
+    pub app_name: String,
+    pub desktop_entry: String,
+    pub app_icon: String,
+    pub title: String,
+    pub info_message: String,
+    pub state: n::JobState,
+    pub percent: i32,
+    pub processed_bytes: u64,
+    pub total_bytes: u64,
+    pub total_files: u64,
+    pub speed: u64,
+    pub fields: Vec<(String, String)>,
+    pub destination: String,
+    pub error_code: u32,
+    pub error_text: String,
+    pub owner_gone: bool,
+    pub killable: bool,
+    pub suspendable: bool,
+}
+
+fn read_job(j: n::job::Reader) -> capnp::Result<(u32, ShownJob)> {
+    let mut fields = Vec::new();
+    for f in j.get_fields()? {
+        fields.push((f.get_label()?.to_string()?, f.get_value()?.to_string()?));
+    }
+    Ok((
+        j.get_id(),
+        ShownJob {
+            app_name: j.get_app_name()?.to_string()?,
+            desktop_entry: j.get_desktop_entry()?.to_string()?,
+            app_icon: j.get_app_icon()?.to_string()?,
+            title: j.get_title()?.to_string()?,
+            info_message: j.get_info_message()?.to_string()?,
+            state: j.get_state()?,
+            percent: j.get_percent(),
+            processed_bytes: j.get_processed_bytes(),
+            total_bytes: j.get_total_bytes(),
+            total_files: j.get_total_files(),
+            speed: j.get_speed(),
+            fields,
+            destination: j.get_destination()?.to_string()?,
+            error_code: j.get_error_code(),
+            error_text: j.get_error_text()?.to_string()?,
+            owner_gone: j.get_owner_gone(),
+            killable: j.get_killable(),
+            suspendable: j.get_suspendable(),
+        },
+    ))
 }
 
 fn read(n: n::notification::Reader) -> capnp::Result<(u32, Shown)> {
@@ -173,6 +227,11 @@ impl center_listener::Server for ShellListener {
             seen.snapshot_order.push(id);
             seen.notifications.insert(id, shown);
         }
+        seen.jobs.clear();
+        for j in snapshot.get_jobs()? {
+            let (id, job) = read_job(j)?;
+            seen.jobs.insert(id, job);
+        }
         read_dnd(&mut seen, snapshot.get_do_not_disturb()?)
     }
 
@@ -190,6 +249,24 @@ impl center_listener::Server for ShellListener {
         }
         for id in params.get_removed()? {
             seen.notifications.remove(&id);
+        }
+        Ok(())
+    }
+
+    async fn jobs_changed(
+        self: Rc<Self>,
+        params: center_listener::JobsChangedParams,
+        _: center_listener::JobsChangedResults,
+    ) -> Result<(), capnp::Error> {
+        let params = params.get()?;
+        let mut seen = self.0.borrow_mut();
+        seen.job_batches += 1;
+        for j in params.get_changed()? {
+            let (id, job) = read_job(j)?;
+            seen.jobs.insert(id, job);
+        }
+        for id in params.get_removed()? {
+            seen.jobs.remove(&id);
         }
         Ok(())
     }
@@ -290,6 +367,25 @@ impl Shell {
 
     pub async fn dismiss_all(&self) {
         self.center.dismiss_all_request().send().promise.await.unwrap();
+    }
+
+    pub async fn cancel_job(&self, id: u32) -> n::ErrorCode {
+        let mut request = self.center.cancel_job_request();
+        request.get().set_id(id);
+        Shell::error(request.send().promise.await.unwrap().get().unwrap().get_result().unwrap())
+    }
+
+    pub async fn suspend_job(&self, id: u32, suspended: bool) -> n::ErrorCode {
+        let mut request = self.center.suspend_job_request();
+        request.get().set_id(id);
+        request.get().set_suspended(suspended);
+        Shell::error(request.send().promise.await.unwrap().get().unwrap().get_result().unwrap())
+    }
+
+    pub async fn dismiss_job(&self, id: u32) -> n::ErrorCode {
+        let mut request = self.center.dismiss_job_request();
+        request.get().set_id(id);
+        Shell::error(request.send().promise.await.unwrap().get().unwrap().get_result().unwrap())
     }
 
     pub async fn set_dnd(&self, enabled: bool, until: i64) {
