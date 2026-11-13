@@ -217,6 +217,22 @@ private Q_SLOTS:
         QCOMPARE(role(popups, 1, NotificationRoles::SummaryRole).toString(), QStringLiteral("n2"));
     }
 
+    void criticalNotificationsWaitInFrontOfTheOthers()
+    {
+        NotificationPopups popups;
+        popups.setMaximumCount(1);
+        auto first = sent(QStringLiteral("first"), 0);
+        QTRY_COMPARE(popups.rowCount(), 1);
+        auto second = sent(QStringLiteral("second"), 0);
+        auto critical = std::make_unique<Notification>();
+        critical->setSummary(QStringLiteral("Battery empty"));
+        critical->setUrgency(Notification::Critical);
+        critical->send();
+        QTRY_COMPARE(popups.waiting(), 2);
+        popups.hide(role(popups, 0, NotificationRoles::NotificationIdRole).toUInt());
+        QCOMPARE(role(popups, 0, NotificationRoles::SummaryRole).toString(), QStringLiteral("Battery empty"));
+    }
+
     void anActionReachesTheSenderAndClosesIt()
     {
         NotificationsModel model;

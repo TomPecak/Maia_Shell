@@ -4,7 +4,7 @@
 // stack of a shell. The service decides which notifications pop up at all (popup: not during do not
 // disturb, not low urgency); this model decides for how long, which is the shell's to count:
 //
-// - at most maximumCount at once; the rest waits and comes when one goes;
+// - at most maximumCount at once; the rest waits and comes when one goes, critical ones first;
 // - each stays for its timeout: the sender's, or defaultTimeout when the sender leaves it to the
 //   shell; 0, and critical ones without a timeout, stay until closed;
 // - paused (the pointer is over the popups) stops every clock; they go on where they stopped;
@@ -75,6 +75,8 @@ private:
     };
 
     void reload();
+    // Into the queue: critical ones before the others
+    void enqueue(const NotificationData &n);
     void applyBatch(const QList<NotificationData> &changed, const QList<quint32> &removed);
     bool wantsPopup(const NotificationData &n) const;
     qint64 timeoutOf(const NotificationData &n) const;

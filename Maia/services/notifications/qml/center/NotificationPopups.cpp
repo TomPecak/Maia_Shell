@@ -88,7 +88,7 @@ void NotificationPopups::reload()
         return a.time != b.time ? a.time < b.time : a.id < b.id;
     });
     for (const auto &n : wanted)
-        m_waiting.append(n.id);
+        enqueue(n);
     endResetModel();
     fill();
     Q_EMIT countChanged();
@@ -125,7 +125,7 @@ void NotificationPopups::applyBatch(const QList<NotificationData> &changed, cons
             const QModelIndex at = index(row);
             Q_EMIT dataChanged(at, at);
         } else if (!m_waiting.contains(n.id)) {
-            m_waiting.append(n.id);
+            enqueue(n);
         }
     }
     fill();
@@ -134,6 +134,24 @@ void NotificationPopups::applyBatch(const QList<NotificationData> &changed, cons
         Q_EMIT countChanged();
     if (waitingBefore != m_waiting.size())
         Q_EMIT waitingChanged();
+}
+
+void NotificationPopups::enqueue(const NotificationData &n)
+{
+    if (n.urgency != kCritical) {
+        m_waiting.append(n.id);
+        return;
+    }
+    // Before every waiting notification that is not critical
+    const auto &notifications = CenterConnection::instance()->notifications();
+    int at = 0;
+    while (at < m_waiting.size()) {
+        auto it = notifications.constFind(m_waiting[at]);
+        if (it == notifications.constEnd() || it->urgency != kCritical)
+            break;
+        ++at;
+    }
+    m_waiting.insert(at, n.id);
 }
 
 void NotificationPopups::removeRow(int row)
