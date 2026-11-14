@@ -139,6 +139,13 @@ shows a card with the progress above the popups, keeps it a few seconds after th
 folder"), lists the jobs in the notification center and turns a ring by the clock.
 
 While the service owns `org.kde.kuiserver`, KIO reports to it instead of showing its own progress
-dialog; `MAIA_NOTIFICATIONS_JOBS=0` leaves the names to nobody (KIO's dialog again).
+dialog; `MAIA_NOTIFICATIONS_JOBS=0` leaves the names to nobody (KIO's dialog again). Before it
+reports a job KIO asks the server (KDynamicJobTracker): `/JobViewServer` must introspect
+`org.kde.JobViewServerV2` and answer `org.kde.kuiserver.requiresJobTracker()` with false; the same
+interface tells file managers where running jobs write to (`jobUrlsChanged`).
+
+`tools/fake-job.py` reports a pretend copy the way KIO does for Dolphin (pause and cancel work):
+
+    Maia/services/notifications/tools/fake-job.py --seconds 20 --size 15000
 
 Not yet: history on disk.

@@ -177,6 +177,12 @@ impl JobStore {
         self.entries.is_empty()
     }
 
+    /// Where the jobs that still run write to (org.kde.kuiserver's jobUrls: file managers mark
+    /// those folders), the oldest first
+    pub fn running_urls(&self) -> Vec<String> {
+        self.entries.values().filter(|e| !e.job.state.ended() && !e.job.destination.is_empty()).map(|e| e.job.destination.clone()).collect()
+    }
+
     /// The jobs the shells see, the newest first
     pub fn visible(&self) -> Vec<&Job> {
         let mut list: Vec<&Entry> = self.entries.values().filter(|e| e.visible).collect();

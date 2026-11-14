@@ -75,6 +75,8 @@ pub enum Outgoing {
     JobRequest { id: u32, kind: crate::dbus_jobs::JobRequestKind },
     /// A job is over for its application: its D-Bus objects go
     JobGone(u32),
+    /// org.kde.kuiserver's jobUrlsChanged: where the running jobs write to
+    JobUrls(Vec<String>),
 }
 
 /// The shortest time between two changes of one job to the shells
@@ -123,6 +125,8 @@ pub struct Hub {
     jobs_changed: BTreeSet<u32>,
     jobs_removed: Vec<u32>,
     job_throttle: ChangeThrottle,
+    /// The last jobUrlsChanged sent
+    job_urls: Vec<String>,
 }
 
 pub type HubRef = Rc<RefCell<Hub>>;
@@ -151,6 +155,7 @@ impl Hub {
             jobs_changed: BTreeSet::new(),
             jobs_removed: Vec::new(),
             job_throttle: ChangeThrottle::new(JOB_INTERVAL),
+            job_urls: Vec::new(),
         }))
     }
 
@@ -336,6 +341,7 @@ impl Hub {
             this.job_ended(id);
             this.send_out(Outgoing::JobGone(id));
         }
+        this.check_job_urls();
         schedule_flush(hub, &mut this);
     }
 
@@ -359,6 +365,7 @@ impl Hub {
                 schedule_flush(&hub, &mut this);
             }
         });
+        this.check_job_urls();
         schedule_flush(hub, &mut this);
         id
     }
@@ -372,6 +379,7 @@ impl Hub {
             } else {
                 this.job_shown(id);
             }
+            this.check_job_urls();
             schedule_flush(hub, &mut this);
         }
     }
@@ -441,6 +449,12 @@ impl Hub {
         }
     }
 
+    /// org.kde.kuiserver's emitJobUrlsChanged: a file manager asks where the running jobs write to
+    pub fn emit_job_urls(hub: &HubRef) {
+        let this = hub.borrow();
+        this.send_out(Outgoing::JobUrls(this.jobs.running_urls()));
+    }
+
     // --- Listeners ---
 
     pub fn add_listener(hub: &HubRef, client: center_listener::Client) -> u64 {
@@ -508,6 +522,16 @@ impl Hub {
         self.send_out(Outgoing::JobGone(id));
         for dropped in self.jobs.trim() {
             self.job_removed(dropped);
+        }
+        self.check_job_urls();
+    }
+
+    /// Tells the bus where the running jobs write to, when that changed
+    fn check_job_urls(&mut self) {
+        let urls = self.jobs.running_urls();
+        if urls != self.job_urls {
+            self.job_urls = urls.clone();
+            self.send_out(Outgoing::JobUrls(urls));
         }
     }
 

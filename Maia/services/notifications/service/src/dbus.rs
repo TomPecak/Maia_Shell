@@ -48,6 +48,7 @@ pub enum DbusCall {
     JobUpdate { id: u32, update: crate::jobs::JobUpdate },
     JobSetError { id: u32, code: u32 },
     JobTerminate { id: u32, code: u32, text: String },
+    JobUrls,
 }
 
 pub struct Server {
@@ -331,6 +332,7 @@ async fn run_calls(hub: HubRef, mut calls: mpsc::UnboundedReceiver<DbusCall>) {
             DbusCall::JobUpdate { id, update } => Hub::update_job(&hub, id, update),
             DbusCall::JobSetError { id, code } => Hub::set_job_error(&hub, id, code),
             DbusCall::JobTerminate { id, code, text } => Hub::terminate_job(&hub, id, code, &text),
+            DbusCall::JobUrls => Hub::emit_job_urls(&hub),
         }
     }
 }
@@ -349,6 +351,7 @@ async fn run_outgoing(connection: zbus::Connection, mut out: mpsc::UnboundedRece
                 crate::dbus_jobs::remove(&connection, id).await;
                 Ok(())
             }
+            Outgoing::JobUrls(urls) => crate::dbus_jobs::emit_urls(&connection, urls).await,
         };
         if let Err(error) = result {
             // A sender that left the bus cannot be told; nothing else to do

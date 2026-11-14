@@ -55,6 +55,16 @@ trait JobViewV2 {
     fn terminate(&self, error_message: &str) -> zbus::Result<()>;
 }
 
+#[zbus::proxy(interface = "org.kde.kuiserver", default_service = "org.kde.kuiserver", default_path = "/JobViewServer")]
+trait Kuiserver {
+    #[zbus(name = "requiresJobTracker")]
+    fn requires_job_tracker(&self) -> zbus::Result<bool>;
+    #[zbus(name = "emitJobUrlsChanged")]
+    fn emit_job_urls_changed(&self) -> zbus::Result<()>;
+    #[zbus(signal, name = "jobUrlsChanged")]
+    fn job_urls_changed(&self, urls: Vec<String>) -> zbus::Result<()>;
+}
+
 const KILLABLE_SUSPENDABLE: i32 = 0x3;
 
 struct Service {
@@ -133,6 +143,52 @@ async fn only_job(shell: &Shell) -> (u32, common::ShownJob) {
     let seen = shell.seen.borrow();
     let (id, job) = seen.jobs.iter().next().unwrap();
     (*id, job.clone())
+}
+
+/// What KIO asks before it reports a job (KDynamicJobTracker): without the V2 interface in the
+/// introspection or with requiresJobTracker() true it keeps its own progress dialog
+#[test]
+fn kio_finds_a_server_that_shows_its_jobs() {
+    local(async {
+        let bus = Bus::start();
+        let dir = TempDir::new("jobs-kio-probe");
+        let _service = service(&bus, &dir).await;
+        let connection = bus.connect().await;
+        let introspectable = zbus::fdo::IntrospectableProxy::builder(&connection)
+            .destination("org.kde.kuiserver")
+            .unwrap()
+            .path("/JobViewServer")
+            .unwrap()
+            .build()
+            .await
+            .unwrap();
+        let xml = introspectable.introspect().await.unwrap();
+        assert!(xml.contains("org.kde.JobViewServerV2"));
+        assert!(!KuiserverProxy::new(&connection).await.unwrap().requires_job_tracker().await.unwrap());
+    });
+}
+
+/// File managers mark the folders jobs write to: jobUrlsChanged while a job runs, again when it ends
+#[test]
+fn the_folders_jobs_write_to_go_to_file_managers() {
+    local(async {
+        let bus = Bus::start();
+        let dir = TempDir::new("jobs-urls");
+        let _service = service(&bus, &dir).await;
+        let connection = bus.connect().await;
+        let kuiserver = KuiserverProxy::new(&connection).await.unwrap();
+        let mut changes = kuiserver.receive_job_urls_changed().await.unwrap();
+        let mut next = async || changes.next().await.unwrap().args().unwrap().urls;
+
+        kuiserver.emit_job_urls_changed().await.unwrap();
+        assert!(next().await.is_empty());
+        let app = App::copy(&bus, HashMap::from([("title", Value::from("Copying")), ("destUrl", Value::from("file:///media/usb/"))])).await;
+        assert_eq!(next().await, ["file:///media/usb"]);
+        kuiserver.emit_job_urls_changed().await.unwrap();
+        assert_eq!(next().await, ["file:///media/usb"]);
+        app.terminate(0, "").await;
+        assert!(next().await.is_empty());
+    });
 }
 
 #[test]

@@ -6,6 +6,9 @@
 //! - /JobViewServer: org.kde.JobViewServerV2.requestView(desktopEntry, capabilities, hints), used by
 //!   KJobWidgets (KUiServerV2JobTracker), and the old org.kde.JobViewServer.requestView(appName,
 //!   appIconName, capabilities); bus names org.kde.JobViewServer and org.kde.kuiserver;
+//! - /JobViewServer also: org.kde.kuiserver, which KIO asks before it reports a job
+//!   (KDynamicJobTracker: without it, or with requiresJobTracker() true, KIO keeps its own progress
+//!   dialog), and jobUrlsChanged for file managers;
 //! - one object per job, /org/kde/notificationmanager/jobs/JobView_<id>, with org.kde.JobViewV3
 //!   (update(properties), terminate(code, message, hints)) and the old org.kde.JobViewV2 (one setter
 //!   per value); both emit cancelRequested, suspendRequested and resumeRequested.
@@ -166,6 +169,10 @@ pub struct JobViewServerV1 {
     pub(crate) calls: mpsc::UnboundedSender<DbusCall>,
 }
 
+pub struct Kuiserver {
+    pub(crate) calls: mpsc::UnboundedSender<DbusCall>,
+}
+
 /// Makes the job, puts its objects on the bus, answers with their path
 async fn create(
     calls: &mpsc::UnboundedSender<DbusCall>,
@@ -230,6 +237,43 @@ impl JobViewServerV1 {
         }
         create(&self.calls, connection, sender_of(&header), request).await
     }
+}
+
+#[zbus::interface(name = "org.kde.kuiserver")]
+impl Kuiserver {
+    /// kuiserver's proxying of other job servers; gone in Plasma too
+    #[zbus(name = "registerService")]
+    fn register_service(&self, _service: String, _object_path: String) -> zbus::fdo::Result<()> {
+        Err(zbus::fdo::Error::NotSupported("kuiserver proxying capabilities are deprecated and defunct.".into()))
+    }
+
+    #[zbus(name = "emitJobUrlsChanged")]
+    fn emit_job_urls_changed(&self) {
+        let _ = self.calls.send(DbusCall::JobUrls);
+    }
+
+    /// False: the jobs are shown here, the application needs no window of its own for them
+    #[zbus(name = "requiresJobTracker")]
+    fn requires_job_tracker(&self) -> bool {
+        false
+    }
+
+    #[zbus(name = "registeredJobContacts")]
+    fn registered_job_contacts(&self) -> Vec<String> {
+        Vec::new()
+    }
+
+    #[zbus(signal, name = "jobUrlsChanged")]
+    async fn job_urls_changed(emitter: &SignalEmitter<'_>, urls: Vec<String>) -> zbus::Result<()>;
+
+    #[zbus(signal, name = "requiresJobTrackerChanged")]
+    async fn requires_job_tracker_changed(emitter: &SignalEmitter<'_>, required: bool) -> zbus::Result<()>;
+}
+
+/// Where the running jobs write to, to everyone listening
+pub async fn emit_urls(connection: &zbus::Connection, urls: Vec<String>) -> zbus::Result<()> {
+    let emitter = SignalEmitter::new(connection, SERVER_PATH)?;
+    Kuiserver::job_urls_changed(&emitter, urls).await
 }
 
 // --- One job ---
@@ -389,7 +433,8 @@ pub async fn remove(connection: &zbus::Connection, id: u32) {
 pub async fn serve(connection: &zbus::Connection, calls: mpsc::UnboundedSender<DbusCall>) -> zbus::Result<()> {
     let server = connection.object_server();
     server.at(SERVER_PATH, JobViewServerV2 { calls: calls.clone() }).await?;
-    server.at(SERVER_PATH, JobViewServerV1 { calls }).await?;
+    server.at(SERVER_PATH, JobViewServerV1 { calls: calls.clone() }).await?;
+    server.at(SERVER_PATH, Kuiserver { calls }).await?;
     Ok(())
 }
 
