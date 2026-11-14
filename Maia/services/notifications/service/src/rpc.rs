@@ -15,8 +15,9 @@ use crate::model::{
     Action, CloseReason, DoNotDisturb, ImageSource, MAX_ACTIONS, MAX_BODY_CHARS, MAX_SUMMARY_CHARS, Notification,
     Request, Store, Urgency, limit_chars,
 };
+use crate::jobs::{self, JobRequest, JobUpdate, Unit};
 use crate::notifications_capnp::{
-    self as n, notification_center, notification_handle, notifier, subscription,
+    self as n, job_handle, notification_center, notification_handle, notifier, subscription,
 };
 
 // --- Plain values into the contract ---
@@ -210,6 +211,40 @@ pub fn read_request(r: n::notification_request::Reader) -> capnp::Result<Request
         sound_name: text(r.get_sound_name())?,
         sound_file: String::new(),
         suppress_sound: r.get_suppress_sound(),
+    })
+}
+
+/// The most detail lines of a Maia sender's job
+pub const MAX_JOB_FIELDS: usize = 8;
+
+/// A Maia sender's whole state of its job, as a change that replaces everything
+pub fn read_progress(p: n::job_progress::Reader) -> capnp::Result<JobUpdate> {
+    let mut fields = Vec::new();
+    for (i, field) in p.get_fields()?.iter().take(MAX_JOB_FIELDS).enumerate() {
+        fields.push((i as u32, text(field.get_label())?, text(field.get_value())?));
+    }
+    Ok(JobUpdate {
+        title: Some(text(p.get_title())?),
+        info_message: Some(text(p.get_info_message())?),
+        percent: Some(p.get_percent()),
+        processed: vec![
+            (Unit::Bytes, p.get_processed_bytes()),
+            (Unit::Files, p.get_processed_files()),
+            (Unit::Directories, p.get_processed_directories()),
+            (Unit::Items, p.get_processed_items()),
+        ],
+        total: vec![
+            (Unit::Bytes, p.get_total_bytes()),
+            (Unit::Files, p.get_total_files()),
+            (Unit::Directories, p.get_total_directories()),
+            (Unit::Items, p.get_total_items()),
+        ],
+        speed: Some(p.get_speed()),
+        elapsed: None,
+        fields,
+        all_fields: true,
+        destination: Some(text(p.get_destination())?),
+        suspended: Some(p.get_suspended()),
     })
 }
 
@@ -413,6 +448,68 @@ impl notification_handle::Server for HandleImpl {
     }
 }
 
+/// A sender's hold on its job; dropping it before the end fails the job
+struct JobHandleImpl {
+    hub: Weak<RefCell<Hub>>,
+    id: u32,
+}
+
+impl JobHandleImpl {
+    fn end(&self, code: u32, text: &str) {
+        if let Some(hub) = self.hub.upgrade() {
+            Hub::terminate_job(&hub, self.id, code, text);
+        }
+    }
+}
+
+impl Drop for JobHandleImpl {
+    fn drop(&mut self) {
+        // Nothing when it has ended already
+        if let Some(hub) = self.hub.upgrade() {
+            Hub::abandon_job(&hub, self.id);
+        }
+    }
+}
+
+impl job_handle::Server for JobHandleImpl {
+    async fn update(
+        self: Rc<Self>,
+        params: job_handle::UpdateParams,
+        mut results: job_handle::UpdateResults,
+    ) -> Result<(), capnp::Error> {
+        let update = read_progress(params.get()?.get_progress()?)?;
+        let result = match self.hub.upgrade() {
+            Some(hub) if hub.borrow().job_running(self.id) => {
+                Hub::update_job(&hub, self.id, update);
+                Ok(())
+            }
+            Some(_) => Err(OpError::new(ErrorCode::NotFound, format!("job {} has ended", self.id))),
+            None => Err(OpError::new(ErrorCode::Unavailable, "the service is ending")),
+        };
+        write_result(results.get().init_result(), &result);
+        Ok(())
+    }
+
+    async fn finish(
+        self: Rc<Self>,
+        params: job_handle::FinishParams,
+        _: job_handle::FinishResults,
+    ) -> Result<(), capnp::Error> {
+        let error = text(params.get()?.get_error_text())?;
+        self.end(if error.is_empty() { 0 } else { jobs::ERR_FAILED }, &error);
+        Ok(())
+    }
+
+    async fn canceled(
+        self: Rc<Self>,
+        _: job_handle::CanceledParams,
+        _: job_handle::CanceledResults,
+    ) -> Result<(), capnp::Error> {
+        self.end(jobs::ERR_USER_CANCELED, "");
+        Ok(())
+    }
+}
+
 impl notifier::Server for NotifierImpl {
     async fn info(
         self: Rc<Self>,
@@ -440,6 +537,29 @@ impl notifier::Server for NotifierImpl {
         let mut b = results.get();
         b.set_id(id);
         b.set_handle(capnp_rpc::new_client(HandleImpl { hub: Rc::downgrade(&self.hub), id, origin }));
+        Ok(())
+    }
+
+    async fn start_job(
+        self: Rc<Self>,
+        params: notifier::StartJobParams,
+        mut results: notifier::StartJobResults,
+    ) -> Result<(), capnp::Error> {
+        let params = params.get()?;
+        let listener = params.get_listener()?;
+        let r = params.get_job()?;
+        let desktop_entry = text(r.get_desktop_entry())?.trim_end_matches(".desktop").to_string();
+        let mut app_name = text(r.get_app_name())?;
+        let mut app_icon = crate::image::icon(&text(r.get_app_icon())?);
+        let capabilities = if r.get_killable() { jobs::CAP_KILLABLE } else { 0 } | if r.get_suspendable() { jobs::CAP_SUSPENDABLE } else { 0 };
+        let (immediate, transient) = (r.get_immediate(), r.get_transient());
+        let initial = read_progress(r.get_progress()?)?;
+        crate::dbus_jobs::complete_from_entry(&desktop_entry, &mut app_name, &mut app_icon).await;
+        let request = JobRequest { app_name, desktop_entry, app_icon, capabilities, immediate, transient, initial };
+        let id = Hub::create_maia_job(&self.hub, request, listener);
+        let mut b = results.get();
+        b.set_id(id);
+        b.set_handle(capnp_rpc::new_client(JobHandleImpl { hub: Rc::downgrade(&self.hub), id }));
         Ok(())
     }
 }

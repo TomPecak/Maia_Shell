@@ -32,7 +32,8 @@
 # - Nothing here blocks: notify() answers at once; an image is prepared in the background and the
 #   notification is shown when it is ready.
 # - Jobs (the progress of a copy in Dolphin, of an archive, a download) come from KDE's
-#   org.kde.JobViewServer on D-Bus and are a second list next to the notifications: shown 0.5 s
+#   org.kde.JobViewServer on D-Bus or from Maia's programs (Notifier.startJob) and are a second
+#   list next to the notifications: shown 0.5 s
 #   after they start (a short job never flickers), updated at most every 250 ms, and kept when they
 #   end (finished or failed) until dismissed; a job the user canceled goes at once.
 
@@ -255,8 +256,54 @@ interface NotificationHandle {
   close @1 () -> ();
 }
 
+# A job of the sender (a copy, an export, a download): its progress, as the shell shows jobs
+struct JobProgress {      # the whole state; each update sends all of it
+  title @0 :Text;         # what it does ("Copying")
+  infoMessage @1 :Text;   # the current step ("Copying photo.jpg")
+  percent @2 :Int32;      # 0 .. 100, -1 unknown
+  processedBytes @3 :UInt64;
+  totalBytes @4 :UInt64;  # 0 = unknown, likewise for the other amounts
+  processedFiles @5 :UInt64;
+  totalFiles @6 :UInt64;
+  processedDirectories @7 :UInt64;
+  totalDirectories @8 :UInt64;
+  processedItems @9 :UInt64;
+  totalItems @10 :UInt64;
+  speed @11 :UInt64;      # bytes per second, 0 unknown
+  fields @12 :List(JobField);
+  destination @13 :Text;  # where the result goes (a URL), "" unknown
+  suspended @14 :Bool;    # paused (the sender says so after suspendRequested)
+}
+
+struct JobRequest {
+  appName @0 :Text;
+  desktopEntry @1 :Text;  # its Name= and Icon= complete appName and appIcon when they are ""
+  appIcon @2 :Text;
+  killable @3 :Bool;      # the shell offers to cancel it
+  suspendable @4 :Bool;   # the shell offers to pause it
+  immediate @5 :Bool;     # shown at once, not after 0.5 s
+  transient @6 :Bool;     # gone when it finishes well (kept only when it fails)
+  progress @7 :JobProgress;
+}
+
+# What the user asks of the sender's job: only the sender hears it
+interface JobListener {
+  cancelRequested @0 ();  # stop, then canceled(); a job that does not within 2 s counts as canceled
+  suspendRequested @1 ();
+  resumeRequested @2 ();
+}
+
+# The sender's hold on its job. Dropping it before finish() or canceled() (or losing the
+# connection) ends the job as failed: a job never hangs in the shell after its program is gone.
+interface JobHandle {
+  update @0 (progress :JobProgress) -> (result :Result);
+  finish @1 (errorText :Text) -> ();     # "" done, otherwise failed with this text
+  canceled @2 () -> ();                  # stopped: gone from the shell without a trace
+}
+
 interface Notifier {
   info @0 () -> (serviceVersion :Text, capabilities :List(Text));
   notify @1 (notification :NotificationRequest, listener :NotifierListener)
          -> (id :UInt32, handle :NotificationHandle);
+  startJob @2 (job :JobRequest, listener :JobListener) -> (id :UInt32, handle :JobHandle);
 }

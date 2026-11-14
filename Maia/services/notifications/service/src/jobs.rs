@@ -20,6 +20,8 @@ pub const SHOW_DELAY_IMMEDIATE: Duration = Duration::from_millis(50);
 pub const CANCEL_GRACE: Duration = Duration::from_secs(2);
 /// KIO's ERR_USER_CANCELED (KJob::KilledJobError)
 pub const ERR_USER_CANCELED: u32 = 1;
+/// A failure without a KIO code: a Maia sender's error, an application gone
+pub const ERR_FAILED: u32 = u32::MAX;
 /// At most this many ended jobs are kept; the oldest go first
 pub const MAX_ENDED: usize = 50;
 pub const MAX_TEXT_CHARS: usize = 1000;
@@ -107,13 +109,16 @@ impl Unit {
 pub struct JobUpdate {
     pub title: Option<String>,
     pub info_message: Option<String>,
-    pub percent: Option<u32>,
+    /// 0 .. 100, -1 unknown
+    pub percent: Option<i32>,
     pub processed: Vec<(Unit, u64)>,
     pub total: Vec<(Unit, u64)>,
     pub speed: Option<u64>,
     pub elapsed: Option<i64>,
     /// (number, label, value); an empty label and value clears the field
     pub fields: Vec<(u32, String, String)>,
+    /// `fields` are all of them: the others go (a Maia sender sends its whole state)
+    pub all_fields: bool,
     pub destination: Option<String>,
     pub suspended: Option<bool>,
 }
@@ -246,7 +251,7 @@ impl JobStore {
             job.info_message = crate::model::limit_chars(info, MAX_TEXT_CHARS);
         }
         if let Some(percent) = update.percent {
-            job.percent = percent.min(100) as i32;
+            job.percent = percent.clamp(-1, 100);
         }
         for (unit, amount) in update.processed {
             *amount_of(job, unit, true) = amount;
@@ -259,6 +264,9 @@ impl JobStore {
         }
         if let Some(elapsed) = update.elapsed {
             job.elapsed = elapsed.max(0);
+        }
+        if update.all_fields {
+            job.fields.clear();
         }
         for (number, label, value) in update.fields {
             if label.is_empty() && value.is_empty() {
@@ -360,9 +368,20 @@ impl JobStore {
             if let Some(entry) = self.entries.get_mut(id) {
                 entry.job.owner_gone = true;
             }
-            self.terminate(*id, u32::MAX, "");
+            self.terminate(*id, ERR_FAILED, "");
         }
         ids
+    }
+
+    /// A Maia sender dropped its job without ending it (or lost its connection): failed
+    pub fn abandon(&mut self, id: u32) -> Ended {
+        match self.entries.get_mut(&id) {
+            Some(entry) if !entry.job.state.ended() => {
+                entry.job.owner_gone = true;
+                self.terminate(id, ERR_FAILED, "")
+            }
+            _ => Ended::NotFound,
+        }
     }
 
     /// Ended jobs beyond MAX_ENDED, the oldest first: removed; their ids (those the shells had)
@@ -407,6 +426,31 @@ mod tests {
 
     fn titled(title: &str) -> JobUpdate {
         JobUpdate { title: Some(title.into()), ..Default::default() }
+    }
+
+    #[test]
+    fn a_whole_state_replaces_the_fields_and_may_not_know_the_percent() {
+        let mut store = JobStore::new();
+        let id = store.create(copy(), "");
+        let field = |n: u32, label: &str| (n, label.to_string(), "x".to_string());
+        store.update(id, JobUpdate { percent: Some(40), fields: vec![field(0, "Source"), field(1, "Destination")], ..Default::default() });
+        store.update(id, JobUpdate { percent: Some(-1), fields: vec![field(0, "File")], all_fields: true, ..Default::default() });
+        let job = &store.get(id).unwrap().job;
+        assert_eq!(job.percent, -1);
+        assert_eq!(job.fields.values().map(|f| f.label.as_str()).collect::<Vec<_>>(), ["File"]);
+    }
+
+    #[test]
+    fn an_abandoned_job_has_failed_and_an_ended_one_stays_as_it_was() {
+        let mut store = JobStore::new();
+        let id = store.create(copy(), "");
+        assert_eq!(store.abandon(id), Ended::Kept { newly_visible: true });
+        let job = &store.get(id).unwrap().job;
+        assert!(job.owner_gone && job.state == JobState::Failed);
+        let done = store.create(copy(), "");
+        store.terminate(done, 0, "");
+        assert_eq!(store.abandon(done), Ended::NotFound);
+        assert_eq!(store.get(done).unwrap().job.state, JobState::Finished);
     }
 
     #[test]

@@ -1,10 +1,12 @@
 // Maia.Notifications and Maia.Notifications.Center against the real service (without D-Bus): a
 // program sends with Notification, a shell sees it in NotificationsModel and NotificationPopupsModel and
-// acts on it with NotificationCenter.
+// acts on it with NotificationCenter. Likewise a program's Job, seen in JobsModel.
 //
 // The service runs with its own sockets and its own display name, so that neither its sockets nor
 // its image directory are those of the session the test runs in.
 
+#include "Job.h"
+#include "JobsModel.h"
 #include "Notification.h"
 #include "NotificationCenter.h"
 #include "NotificationPopupsModel.h"
@@ -485,6 +487,154 @@ private Q_SLOTS:
         QTRY_COMPARE(model.rowCount(), 1);
         QTRY_COMPARE(role(model, 0, NotificationRoles::SummaryRole).toString(), QStringLiteral("Sent without the service"));
         QTRY_VERIFY(waiting->notificationId() != 0);
+    }
+
+    // --- Jobs of programs (Job) ---
+
+private:
+    // The ended jobs of earlier tests go (a running one would be a test's leftover)
+    void clearJobs()
+    {
+        JobsModel jobs;
+        NotificationCenter center;
+        QTRY_VERIFY(center.connected());
+        QTest::qWait(50);
+        for (int row = 0; row < jobs.rowCount(); ++row)
+            center.dismissJob(role(jobs, row, JobsModel::JobIdRole).toUInt());
+        QTRY_COMPARE(jobs.rowCount(), 0);
+    }
+
+    std::unique_ptr<Job> exportJob()
+    {
+        auto job = std::make_unique<Job>();
+        job->setAppName(QStringLiteral("Video Editor"));
+        job->setDesktopEntry(QStringLiteral("org.maia.videoeditor"));
+        job->setIconName(QStringLiteral("video-x-generic"));
+        job->setTitle(QStringLiteral("Exporting"));
+        job->setKillable(true);
+        job->setSuspendable(true);
+        job->setImmediate(true);
+        job->setTotalBytes(1000);
+        return job;
+    }
+
+private Q_SLOTS:
+    void aProgramsJobReachesTheShellWithItsProgress()
+    {
+        clearJobs();
+        JobsModel jobs;
+        auto job = exportJob();
+        job->setFields({QVariantMap{{QStringLiteral("label"), QStringLiteral("Format")}, {QStringLiteral("value"), QStringLiteral("AV1")}}});
+        job->setDestination(QUrl::fromLocalFile(QStringLiteral("/home/a/Videos")));
+        QVERIFY(!job->isRunning());
+        job->start();
+        QVERIFY(job->isRunning());
+        QTRY_VERIFY(job->jobId() != 0);
+        QTRY_COMPARE(jobs.rowCount(), 1);
+        QCOMPARE(role(jobs, 0, JobsModel::JobIdRole).toUInt(), job->jobId());
+        QCOMPARE(role(jobs, 0, JobsModel::AppNameRole).toString(), QStringLiteral("Video Editor"));
+        QCOMPARE(role(jobs, 0, JobsModel::TitleRole).toString(), QStringLiteral("Exporting"));
+        QCOMPARE(role(jobs, 0, JobsModel::DestinationRole).toString(), QStringLiteral("file:///home/a/Videos"));
+        QCOMPARE(role(jobs, 0, JobsModel::FieldsRole).toList().size(), 1);
+
+        // Many changes in a row: a few updates, the last state wins
+        for (int written = 0; written <= 400; written += 10)
+            job->setProcessedBytes(written);
+        job->setSpeed(5000);
+        QTRY_COMPARE(role(jobs, 0, JobsModel::ProcessedBytesRole).toLongLong(), 400);
+        QCOMPARE(role(jobs, 0, JobsModel::SpeedRole).toLongLong(), 5000);
+        // No percent of its own: from the bytes
+        QCOMPARE(role(jobs, 0, JobsModel::PercentRole).toInt(), 40);
+
+        job->setProcessedBytes(1000);
+        job->finish();
+        QVERIFY(!job->isRunning());
+        // The last state goes before the end
+        QTRY_COMPARE(role(jobs, 0, JobsModel::StateRole).toInt(), int(NotificationCenter::JobFinished));
+        QCOMPARE(role(jobs, 0, JobsModel::ProcessedBytesRole).toLongLong(), 1000);
+        QCOMPARE(role(jobs, 0, JobsModel::PercentRole).toInt(), 100);
+    }
+
+    void pauseAndCancelReachTheProgram()
+    {
+        clearJobs();
+        JobsModel jobs;
+        NotificationCenter center;
+        auto job = exportJob();
+        QSignalSpy suspend(job.get(), &Job::suspendRequested);
+        QSignalSpy resume(job.get(), &Job::resumeRequested);
+        QSignalSpy cancel(job.get(), &Job::cancelRequested);
+        job->start();
+        QTRY_COMPARE(jobs.rowCount(), 1);
+        const uint id = job->jobId();
+
+        center.suspendJob(id, true);
+        QTRY_COMPARE(suspend.count(), 1);
+        job->setSuspended(true);
+        QTRY_COMPARE(role(jobs, 0, JobsModel::StateRole).toInt(), int(NotificationCenter::JobSuspended));
+        center.suspendJob(id, false);
+        QTRY_COMPARE(resume.count(), 1);
+        job->setSuspended(false);
+        QTRY_COMPARE(role(jobs, 0, JobsModel::StateRole).toInt(), int(NotificationCenter::JobRunning));
+
+        center.cancelJob(id);
+        QTRY_COMPARE(cancel.count(), 1);
+        job->cancel();
+        // Canceled: gone without a trace
+        QTRY_COMPARE(jobs.rowCount(), 0);
+        QCOMPARE(suspend.count(), 1);
+    }
+
+    void aJobFailsWithItsTextOrWhenItsObjectGoes()
+    {
+        clearJobs();
+        JobsModel jobs;
+        auto failing = exportJob();
+        failing->start();
+        QTRY_COMPARE(jobs.rowCount(), 1);
+        failing->finish(QStringLiteral("The disk is full"));
+        QTRY_COMPARE(role(jobs, 0, JobsModel::StateRole).toInt(), int(NotificationCenter::JobFailed));
+        QCOMPARE(role(jobs, 0, JobsModel::ErrorTextRole).toString(), QStringLiteral("The disk is full"));
+        QVERIFY(!role(jobs, 0, JobsModel::OwnerGoneRole).toBool());
+
+        auto dropped = exportJob();
+        dropped->setTitle(QStringLiteral("Rendering"));
+        // Nothing known: no percent
+        dropped->setTotalBytes(0);
+        dropped->start();
+        QTRY_COMPARE(jobs.rowCount(), 2);
+        dropped.reset();
+        // The newest first
+        QTRY_COMPARE(role(jobs, 0, JobsModel::StateRole).toInt(), int(NotificationCenter::JobFailed));
+        QCOMPARE(role(jobs, 0, JobsModel::TitleRole).toString(), QStringLiteral("Rendering"));
+        QVERIFY(role(jobs, 0, JobsModel::OwnerGoneRole).toBool());
+        QCOMPARE(role(jobs, 0, JobsModel::PercentRole).toInt(), -1);
+    }
+
+    void aRunningJobComesBackWithTheService()
+    {
+        clearJobs();
+        JobsModel jobs;
+        NotificationCenter center;
+        Notifications notifications;
+        auto job = exportJob();
+        job->setProcessedBytes(300);
+        job->start();
+        QTRY_COMPARE(jobs.rowCount(), 1);
+
+        stopService();
+        QTRY_VERIFY(!notifications.available());
+        QTRY_COMPARE(job->jobId(), 0u);
+        QVERIFY(job->isRunning());
+        // Its progress goes on meanwhile
+        job->setProcessedBytes(600);
+        startService();
+        QTRY_VERIFY_WITH_TIMEOUT(center.connected() && notifications.available(), 5000);
+        QTRY_VERIFY(job->jobId() != 0);
+        QTRY_COMPARE(jobs.rowCount(), 1);
+        QTRY_COMPARE(role(jobs, 0, JobsModel::ProcessedBytesRole).toLongLong(), 600);
+        job->finish();
+        QTRY_COMPARE(role(jobs, 0, JobsModel::StateRole).toInt(), int(NotificationCenter::JobFinished));
     }
 };
 

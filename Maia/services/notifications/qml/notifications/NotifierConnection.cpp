@@ -1,5 +1,6 @@
 #include "NotifierConnection.h"
 
+#include "Job.h"
 #include "Notification.h"
 
 #include <QCoreApplication>
@@ -52,17 +53,59 @@ private:
     int m_local;
 };
 
+// What the user asks of one job (KJ thread), handed to the GUI thread in order
+class JobListenerImpl final : public C::JobListener::Server
+{
+public:
+    JobListenerImpl(NotifierConnection *connection, int local)
+        : m_connection(connection)
+        , m_local(local)
+    {
+    }
+
+protected:
+    kj::Promise<void> cancelRequested(CancelRequestedContext) override
+    {
+        return ask(NotifierConnection::JobCancel);
+    }
+
+    kj::Promise<void> suspendRequested(SuspendRequestedContext) override
+    {
+        return ask(NotifierConnection::JobSuspend);
+    }
+
+    kj::Promise<void> resumeRequested(ResumeRequestedContext) override
+    {
+        return ask(NotifierConnection::JobResume);
+    }
+
+private:
+    kj::Promise<void> ask(int kind)
+    {
+        m_connection->tell({NotifierConnection::Event::JobAsked, m_local, 0, {}, {}, kind});
+        return kj::READY_NOW;
+    }
+
+    NotifierConnection *m_connection;
+    int m_local;
+};
+
 NotifierConnection::NotifierConnection(const QString &socketPath, QObject *parent)
     : ServiceLink(socketPath, QStringLiteral("Maia.Notifications"), parent)
 {
     connect(this, &ServiceLink::connectedChanged, this, [this] {
         if (isConnected()) {
             flushWaiting();
+            // Its jobs were lost with the service (or never sent): out now, as they are
+            for (auto it = m_jobs.cbegin(); it != m_jobs.cend(); ++it)
+                postStartJob(it.key(), it.value()->request());
         } else {
             // The service's list is gone with it
             const auto active = m_active;
             for (int local : active)
                 deliverClosed(local, int(C::CloseReason::OTHER));
+            for (Job *job : std::as_const(m_jobs))
+                job->onLost();
         }
     });
     start();
@@ -97,6 +140,7 @@ void NotifierConnection::connected(capnp::Capability::Client bootstrap, kj::Task
 void NotifierConnection::disconnected()
 {
     m_handles.clear();
+    m_jobHandles.clear();
     m_notifier.reset();
 }
 
@@ -193,6 +237,82 @@ void NotifierConnection::release(int local)
     post([this, local](kj::TaskSet &) { m_handles.erase(local); });
 }
 
+int NotifierConnection::startJob(Job *object)
+{
+    const int local = ++m_nextLocal;
+    m_jobs.insert(local, object);
+    if (isConnected())
+        postStartJob(local, object->request());
+    return local;
+}
+
+void NotifierConnection::postStartJob(int local, const JobRequestData &request)
+{
+    post([this, local, request](kj::TaskSet &tasks) {
+        if (!m_notifier)
+            return;
+        auto call = m_notifier->startJobRequest();
+        writeJobRequest(call.initJob(), request);
+        call.setListener(kj::heap<JobListenerImpl>(this, local));
+        auto promise = call.send();
+        // Pipelined: updates and the end work before the answer
+        m_jobHandles.insert_or_assign(local, promise.getHandle());
+        auto done = [this, local](auto &&response) {
+            tell({Event::JobStarted, local, response.getId(), {}, {}});
+        };
+        tasks.add(promise.then(kj::cp(done)));
+    });
+}
+
+void NotifierConnection::updateJob(int local, const JobProgressData &progress)
+{
+    post([this, local, progress](kj::TaskSet &tasks) {
+        auto handle = m_jobHandles.find(local);
+        if (handle == m_jobHandles.end())
+            return;
+        auto call = handle->second.updateRequest();
+        writeJobProgress(call.initProgress(), progress);
+        tasks.add(call.send().ignoreResult());
+    });
+}
+
+void NotifierConnection::finishJob(int local, const QString &errorText)
+{
+    endJob(local, errorText);
+}
+
+void NotifierConnection::cancelJob(int local)
+{
+    endJob(local, std::nullopt);
+}
+
+void NotifierConnection::endJob(int local, std::optional<QString> errorText)
+{
+    // Not sent yet (no service): nothing to end
+    if (!m_jobs.remove(local))
+        return;
+    post([this, local, errorText](kj::TaskSet &tasks) {
+        auto handle = m_jobHandles.find(local);
+        if (handle == m_jobHandles.end())
+            return;
+        if (errorText) {
+            auto call = handle->second.finishRequest();
+            call.setErrorText(errorText->toUtf8().constData());
+            tasks.add(call.send().ignoreResult());
+        } else {
+            tasks.add(handle->second.canceledRequest().send().ignoreResult());
+        }
+        // Dropped after the end: it no longer fails the job
+        m_jobHandles.erase(handle);
+    });
+}
+
+void NotifierConnection::releaseJob(int local)
+{
+    m_jobs.remove(local);
+    post([this, local](kj::TaskSet &) { m_jobHandles.erase(local); });
+}
+
 void NotifierConnection::tell(Event event)
 {
     bool first;
@@ -225,6 +345,14 @@ void NotifierConnection::deliver()
             break;
         case Event::Closed:
             deliverClosed(e.local, e.reason);
+            break;
+        case Event::JobStarted:
+            if (Job *job = m_jobs.value(e.local))
+                job->onStarted(e.id);
+            break;
+        case Event::JobAsked:
+            if (Job *job = m_jobs.value(e.local))
+                job->onRequest(e.reason);
             break;
         }
     }

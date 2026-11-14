@@ -1,5 +1,6 @@
-# QML module Maia.Notifications: Notification (one notification of a program, declaratively) and
-# Notifications (whether the service runs), over the Notifier of the notification service.
+# QML module Maia.Notifications: Notification (one notification of a program, declaratively), Job
+# (a long operation of a program, with its progress) and Notifications (whether the service runs),
+# over the Notifier of the notification service.
 
 qt_add_library(MaiaNotifications SHARED)
 add_library(Maia::Notifications ALIAS MaiaNotifications)
@@ -11,6 +12,7 @@ qt_add_qml_module(MaiaNotifications
     SOURCES
         NotifierConnection.h NotifierConnection.cpp
         Notification.h Notification.cpp
+        Job.h Job.cpp
         Notifications.h Notifications.cpp
 )
 

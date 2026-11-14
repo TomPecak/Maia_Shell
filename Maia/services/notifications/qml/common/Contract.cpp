@@ -120,4 +120,39 @@ void writeRequest(C::NotificationRequest::Builder b, const RequestData &r)
     b.setSuppressSound(r.suppressSound);
 }
 
+void writeJobProgress(C::JobProgress::Builder b, const JobProgressData &p)
+{
+    b.setTitle(p.title.toUtf8().constData());
+    b.setInfoMessage(p.infoMessage.toUtf8().constData());
+    b.setPercent(p.percent);
+    b.setProcessedBytes(p.processedBytes);
+    b.setTotalBytes(p.totalBytes);
+    b.setProcessedFiles(p.processedFiles);
+    b.setTotalFiles(p.totalFiles);
+    b.setProcessedDirectories(p.processedDirectories);
+    b.setTotalDirectories(p.totalDirectories);
+    b.setProcessedItems(p.processedItems);
+    b.setTotalItems(p.totalItems);
+    b.setSpeed(p.speed);
+    auto fields = b.initFields(uint(p.fields.size()));
+    for (int i = 0; i < p.fields.size(); ++i) {
+        fields[uint(i)].setLabel(p.fields[i].label.toUtf8().constData());
+        fields[uint(i)].setValue(p.fields[i].value.toUtf8().constData());
+    }
+    b.setDestination(p.destination.toUtf8().constData());
+    b.setSuspended(p.suspended);
+}
+
+void writeJobRequest(C::JobRequest::Builder b, const JobRequestData &r)
+{
+    b.setAppName(r.appName.toUtf8().constData());
+    b.setDesktopEntry(r.desktopEntry.toUtf8().constData());
+    b.setAppIcon(r.appIcon.toUtf8().constData());
+    b.setKillable(r.killable);
+    b.setSuspendable(r.suspendable);
+    b.setImmediate(r.immediate);
+    b.setTransient(r.transient);
+    writeJobProgress(b.initProgress(), r.progress);
+}
+
 } // namespace MaiaNotifications

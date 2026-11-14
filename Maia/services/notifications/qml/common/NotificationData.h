@@ -132,4 +132,34 @@ struct JobData {
     bool running() const { return state == 0 || state == 1; }
 };
 
+// What a program says about its job (Notifier.startJob, JobHandle.update): its whole state
+struct JobProgressData {
+    QString title;
+    QString infoMessage;
+    int percent = -1;
+    quint64 processedBytes = 0;
+    quint64 totalBytes = 0;
+    quint64 processedFiles = 0;
+    quint64 totalFiles = 0;
+    quint64 processedDirectories = 0;
+    quint64 totalDirectories = 0;
+    quint64 processedItems = 0;
+    quint64 totalItems = 0;
+    quint64 speed = 0;
+    QList<JobFieldData> fields;
+    QString destination;
+    bool suspended = false;
+};
+
+struct JobRequestData {
+    QString appName;
+    QString desktopEntry;
+    QString appIcon;
+    bool killable = false;
+    bool suspendable = false;
+    bool immediate = false;
+    bool transient = false;
+    JobProgressData progress;
+};
+
 } // namespace MaiaNotifications

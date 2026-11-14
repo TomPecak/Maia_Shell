@@ -17,20 +17,21 @@
 //! blocking threads, calls to listeners and D-Bus signals are sent in the background, in order.
 
 use std::cell::RefCell;
-use std::collections::BTreeSet;
+use std::collections::{BTreeSet, HashMap};
 use std::path::PathBuf;
 use std::rc::{Rc, Weak};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
 
+use futures::FutureExt;
 use tokio::sync::mpsc;
 
 use crate::image;
 use crate::jobs::{self, Ended, JobRequest, JobStore, JobUpdate};
 use crate::model::{CloseReason, Expired, Inhibitor, Request, Store, now_ms};
 use crate::throttle::ChangeThrottle;
-use crate::notifications_capnp::{center_listener, notifier_listener};
+use crate::notifications_capnp::{center_listener, job_listener, notifier_listener};
 use crate::rpc;
 
 /// The shortest time between two batches to the shells: one frame
@@ -127,6 +128,8 @@ pub struct Hub {
     job_throttle: ChangeThrottle,
     /// The last jobUrlsChanged sent
     job_urls: Vec<String>,
+    /// Jobs of Maia senders (Notifier.startJob): what the user asks goes to them, not to D-Bus
+    job_listeners: HashMap<u32, job_listener::Client>,
 }
 
 pub type HubRef = Rc<RefCell<Hub>>;
@@ -156,6 +159,7 @@ impl Hub {
             jobs_removed: Vec::new(),
             job_throttle: ChangeThrottle::new(JOB_INTERVAL),
             job_urls: Vec::new(),
+            job_listeners: HashMap::new(),
         }))
     }
 
@@ -370,6 +374,28 @@ impl Hub {
         id
     }
 
+    /// A job of a Maia sender, which hears the user's requests through `listener`
+    pub fn create_maia_job(hub: &HubRef, request: JobRequest, listener: job_listener::Client) -> u32 {
+        let id = Hub::create_job(hub, "", request);
+        hub.borrow_mut().job_listeners.insert(id, listener);
+        id
+    }
+
+    /// A Maia sender let go of its job without ending it: failed
+    pub fn abandon_job(hub: &HubRef, id: u32) {
+        let mut this = hub.borrow_mut();
+        let ended = this.jobs.abandon(id);
+        if ended != Ended::NotFound {
+            this.job_end(id, ended);
+            schedule_flush(hub, &mut this);
+        }
+    }
+
+    /// Whether a job still runs (a sender's update to an ended one is refused)
+    pub fn job_running(&self, id: u32) -> bool {
+        self.jobs.get(id).is_some_and(|e| !e.job.state.ended())
+    }
+
     pub fn update_job(hub: &HubRef, id: u32, update: JobUpdate) {
         let mut this = hub.borrow_mut();
         let was_visible = this.jobs.get(id).is_some_and(|e| e.visible);
@@ -406,7 +432,7 @@ impl Hub {
         if !this.jobs.request_cancel(id) {
             return Err(OpError::new(ErrorCode::InvalidArgument, format!("job {id} cannot be canceled")));
         }
-        this.send_out(Outgoing::JobRequest { id, kind: crate::dbus_jobs::JobRequestKind::Cancel });
+        this.ask_job(id, crate::dbus_jobs::JobRequestKind::Cancel);
         let weak = Rc::downgrade(hub);
         tokio::task::spawn_local(async move {
             tokio::time::sleep(jobs::CANCEL_GRACE).await;
@@ -429,7 +455,7 @@ impl Hub {
             return Err(OpError::new(ErrorCode::InvalidArgument, format!("job {id} cannot be paused")));
         }
         let kind = if suspended { crate::dbus_jobs::JobRequestKind::Suspend } else { crate::dbus_jobs::JobRequestKind::Resume };
-        this.send_out(Outgoing::JobRequest { id, kind });
+        this.ask_job(id, kind);
         Ok(())
     }
 
@@ -519,11 +545,32 @@ impl Hub {
             }
             Ended::Kept { .. } => self.job_ended(id),
         }
-        self.send_out(Outgoing::JobGone(id));
+        // Over for its program: a Maia sender's listener is let go, a D-Bus job's objects go
+        if self.job_listeners.remove(&id).is_none() {
+            self.send_out(Outgoing::JobGone(id));
+        }
         for dropped in self.jobs.trim() {
             self.job_removed(dropped);
         }
         self.check_job_urls();
+    }
+
+    /// Passes the user's request to the job's program: its JobListener, or D-Bus
+    fn ask_job(&self, id: u32, kind: crate::dbus_jobs::JobRequestKind) {
+        use crate::dbus_jobs::JobRequestKind;
+        let Some(listener) = self.job_listeners.get(&id) else {
+            self.send_out(Outgoing::JobRequest { id, kind });
+            return;
+        };
+        // In the background: a sender that does not answer holds nothing up
+        let sent = match kind {
+            JobRequestKind::Cancel => listener.cancel_requested_request().send().promise.map(|r| r.map(|_| ())).boxed_local(),
+            JobRequestKind::Suspend => listener.suspend_requested_request().send().promise.map(|r| r.map(|_| ())).boxed_local(),
+            JobRequestKind::Resume => listener.resume_requested_request().send().promise.map(|r| r.map(|_| ())).boxed_local(),
+        };
+        tokio::task::spawn_local(async move {
+            let _ = sent.await;
+        });
     }
 
     /// Tells the bus where the running jobs write to, when that changed

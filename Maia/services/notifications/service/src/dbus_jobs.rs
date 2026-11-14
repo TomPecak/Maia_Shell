@@ -79,7 +79,7 @@ pub fn update_from(properties: &HashMap<String, OwnedValue>) -> JobUpdate {
     let mut update = JobUpdate {
         title: get("title").and_then(str_of),
         info_message: get("infoMessage").and_then(str_of),
-        percent: get("percent").and_then(u64_of).map(|p| p.min(100) as u32),
+        percent: get("percent").and_then(u64_of).map(|p| p.min(100) as i32),
         speed: get("speed").and_then(u64_of),
         elapsed: get("elapsedTime").and_then(u64_of).map(|e| e as i64),
         destination: get("destUrl").and_then(str_of),
@@ -132,22 +132,27 @@ fn desktop_entry_info(entry: &str) -> (String, String) {
     (String::new(), String::new())
 }
 
+/// Fills an empty program name and icon from the desktop entry's Name= and Icon= (off the loop)
+pub async fn complete_from_entry(desktop_entry: &str, app_name: &mut String, app_icon: &mut String) {
+    if (app_name.is_empty() || app_icon.is_empty()) && !desktop_entry.is_empty() {
+        let entry = desktop_entry.to_string();
+        let (name, icon) = tokio::task::spawn_blocking(move || desktop_entry_info(&entry)).await.unwrap_or_default();
+        if app_name.is_empty() {
+            *app_name = name;
+        }
+        if app_icon.is_empty() {
+            *app_icon = icon;
+        }
+    }
+}
+
 /// What requestView says, completed from the application's desktop entry
 async fn request_from(desktop_entry: String, capabilities: i32, hints: &HashMap<String, OwnedValue>) -> JobRequest {
     let get = |key: &str| hints.get(key).map(|v| &**v);
     let mut app_name = get("application-display-name").and_then(str_of).unwrap_or_default();
     let mut app_icon = get("application-icon-name").and_then(str_of).unwrap_or_default();
     let desktop_entry = desktop_entry.trim_end_matches(".desktop").to_string();
-    if (app_name.is_empty() || app_icon.is_empty()) && !desktop_entry.is_empty() {
-        let entry = desktop_entry.clone();
-        let (name, icon) = tokio::task::spawn_blocking(move || desktop_entry_info(&entry)).await.unwrap_or_default();
-        if app_name.is_empty() {
-            app_name = name;
-        }
-        if app_icon.is_empty() {
-            app_icon = icon;
-        }
-    }
+    complete_from_entry(&desktop_entry, &mut app_name, &mut app_icon).await;
     JobRequest {
         app_name,
         desktop_entry,
@@ -347,7 +352,7 @@ impl JobViewV2 {
 
     #[zbus(name = "setPercent")]
     fn set_percent(&self, percent: u32) -> zbus::fdo::Result<()> {
-        self.send(JobUpdate { percent: Some(percent), ..Default::default() })
+        self.send(JobUpdate { percent: Some(percent.min(100) as i32), ..Default::default() })
     }
 
     #[zbus(name = "setSpeed")]

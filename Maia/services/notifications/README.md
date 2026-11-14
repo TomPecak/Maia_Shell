@@ -15,7 +15,7 @@ Maia's programs ──Cap'n Proto: Notifier────────────�
 | Door | For | What |
 |---|---|---|
 | `org.freedesktop.Notifications` (session D-Bus) | every application: `notify-send`, libnotify, KNotification, Flatpak apps through their portal | the [specification](https://specifications.freedesktop.org/notification-spec/) 1.2: `Notify`, `CloseNotification`, `GetCapabilities`, `GetServerInformation`, the signals; KDE's `Inhibit`/`UnInhibit`/`Inhibited`, `NotificationReplied`, hints `x-kde-*` |
-| `Notifier` (Cap'n Proto, `notifications-<display>.sock`) | Maia's programs and services (`Maia.Notifications`; maia-power-service's battery warnings) | `notify` → a handle (`update`, `close`) and a listener that hears only its own notification |
+| `Notifier` (Cap'n Proto, `notifications-<display>.sock`) | Maia's programs and services (`Maia.Notifications`; maia-power-service's battery warnings) | `notify` → a handle (`update`, `close`) and a listener that hears only its own notification; `startJob` → a job handle (`update`, `finish`, `canceled`) and a listener of the user's pause and cancel |
 | `NotificationCenter` (Cap'n Proto, `notifications-center-<display>.sock`) | shells (`Maia.Notifications.Center`) | the list (snapshot, then batches), actions with an activation token, replies, dismiss, the end of a popup, do not disturb |
 
 Two sockets because the center sees the content of every notification and a sender only its own:
@@ -92,6 +92,21 @@ Notification {
 … done.send()        // shows it; again: replaces its content (a progress)
 ```
 
+A long operation, shown with its progress like a copy in Dolphin:
+
+```qml
+Job {
+    id: export
+    title: qsTr("Exporting")
+    killable: true
+    processedBytes: exporter.written      // the percent follows from the bytes
+    totalBytes: exporter.size
+    destination: folderUrl                // "Open folder" when it is done
+    onCancelRequested: { exporter.stop(); export.cancel() }
+}
+… export.start()   …   export.finish()   // or finish(qsTr("The disk is full"))
+```
+
 A shell:
 
 ```qml
@@ -121,19 +136,24 @@ instance needs its own display name.
   images, the hints); `tests/dbus.rs` against a private `dbus-daemon` as an application talks to it
   (actions with the token in order, replies, signals only to the sender, inhibitions ending with
   their application, pixels as a PNG file, a flood of 1000); `tests/notifier.rs` the Cap'n Proto doors
-  (handles, a reconnecting shell, do not disturb ending by itself, low urgency).
+  (handles, a reconnecting shell, do not disturb ending by itself, low urgency); `tests/jobs.rs`
+  jobs over D-Bus as KJobWidgets and KIO's probe; `tests/maia_jobs.rs` jobs of Maia's programs
+  (pause and cancel to the program alone, a dropped handle fails the job).
 - `tst_notifications` (CTest `maia-notifications-qml`): both QML modules against the real service:
   popups and their clocks (pause, the maximum, critical), actions and replies back to the sender,
-  updates, a restart of the service, the flood and the GUI thread's longest stall.
+  updates, a restart of the service, the flood and the GUI thread's longest stall; a program's Job
+  (progress, pause and cancel, failing, back after a restart of the service). `tst_jobs`: jobs of
+  a QtDBus client in JobsModel.
 - maia-power-service's `tests/notify.rs`: the battery warnings reach a stand-in of the Notifier.
 
 ## Jobs
 
 The progress of long operations of KDE applications (a copy in Dolphin, an archive in Ark) comes
-through `org.kde.JobViewServer` (`dbus_jobs.rs`, the interfaces of Plasma's notification applet)
-and is a second list next to the notifications (`jobs.rs`, Plasma's rules: shown after 0.5 s, the
+through `org.kde.JobViewServer` (`dbus_jobs.rs`, the interfaces of Plasma's notification applet),
+that of Maia's programs through `Notifier.startJob` (QML: `Job`), and is a second list next to the notifications (`jobs.rs`, Plasma's rules: shown after 0.5 s, the
 progress at most every 250 ms, finished and failed jobs kept until dismissed, canceled ones gone, a
-cancel without an answer ends the job after 2 s, a job whose application quits has failed). Shells
+cancel without an answer ends the job after 2 s, a job whose application quits has failed; a
+Maia program's pause and cancel go to its JobListener, a D-Bus one's to its JobView). Shells
 get it as `JobsModel` and act with `NotificationCenter.cancelJob / suspendJob / dismissJob`; Lumen
 shows a card with the progress above the popups, keeps it a few seconds after the end ("Open
 folder"), lists the jobs in the notification center and turns a ring by the clock.

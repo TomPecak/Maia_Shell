@@ -17,5 +17,7 @@ NotificationData readNotification(C::Notification::Reader n);
 DoNotDisturbData readDoNotDisturb(C::DoNotDisturb::Reader d);
 JobData readJob(C::Job::Reader j);
 void writeRequest(C::NotificationRequest::Builder b, const RequestData &request);
+void writeJobProgress(C::JobProgress::Builder b, const JobProgressData &progress);
+void writeJobRequest(C::JobRequest::Builder b, const JobRequestData &request);
 
 } // namespace MaiaNotifications
