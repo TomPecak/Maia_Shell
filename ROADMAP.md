@@ -85,6 +85,12 @@ contracts (see "Principles" below).
       - icons stay names: the shell resolves them in the user's icon theme (the theme is a look);
       - order: the service and `Maia.Apps` → Lumen's start menu → the window service → the names in
         notifications and Maia Settings → later a "Default Apps" page.
+- [ ] **Light/dark and the accent colour from `maia-appearance-service`** (TODO 8). Today every
+      frontend keeps its own in the shared `maia.conf` (`[LumenFrontend]`, `[MaiaAppearance]`: two
+      different dark modes), Maia Settings reads Lumen's private keys, a change reaches other
+      processes only at their next start, and ordinary apps (Firefox, GTK, Qt) never see it. The
+      service owns the choice, `Maia.Appearance` gives it to every shell and app live, and the
+      desktop portal (`org.freedesktop.appearance`) and KDE's colours give it to the other apps.
 - [ ] **Favourite apps shared by every shell** over a contract (today `FavoriteAppsService` on
       D-Bus in the shell process).
 - [ ] **Mock-ups in Lumen's quick settings:** airplane mode (NetworkManager and rfkill), night light
@@ -106,8 +112,8 @@ fallback.
 - [ ] Sound (with the sound service above)
 - [ ] Bluetooth (with the Bluetooth support above)
 - [ ] Displays: resolution, scale, arrangement, night light (KWin's output management)
-- [ ] Appearance: light/dark, accent, fonts, icon theme, decorations (`maia-appearance-service`);
-      it must also reach Qt and GTK apps (the portal's `org.freedesktop.appearance`, KDE colours)
+- [ ] Appearance: light/dark, accent (TODO 8), fonts, icon theme, decorations
+      (`maia-appearance-service`)
 - [ ] Default Apps (with `maia-apps-service`)
 - [ ] Mouse & Touchpad, Keyboard (layouts, shortcuts)
 - [ ] Users, Date & Time, Region & Language, About

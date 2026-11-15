@@ -300,3 +300,52 @@ Decided whether to build it; if yes: the active frontend, the 24-hour clock, Lum
 dock edge go through the service, a change made by one process reaches the others at once, and a
 frontend cannot write outside its namespace (tests for the contract and the permissions, as for the
 window service).
+
+---
+
+## 8. Appearance: light/dark and the accent colour belong to the appearance service
+
+Area: `Maia/frontends/Lumen/theme/Theme.qml` (`Settings { category: "LumenFrontend" }`: `dark`,
+`accentIndex`), `Maia/frontends/Maia/theme/Theme.qml` (`Settings { category: "MaiaAppearance" }`:
+`dark`), Maia Settings (it imports Lumen's theme), `Maia/services/appearance/` (today window
+decorations only).
+
+### What happens
+
+Light/dark and the accent are kept by each frontend in the shared `maia.conf` (QSettings):
+- two different dark modes, `[LumenFrontend] dark` and `[MaiaAppearance] dark`: switching the
+  frontend can switch the look;
+- Maia Settings looks like Lumen by reading Lumen's private keys (`LumenFrontend/accentIndex`),
+  a detail of one frontend;
+- QSettings caches per process: a change in the shell reaches Maia Settings, the layers of the Maia
+  frontend and other processes only at their next start;
+- ordinary applications never learn it: Firefox, GTK and libadwaita apps ask the desktop portal
+  (`org.freedesktop.appearance`: `color-scheme`, `accent-color`), Qt/KDE apps read `kdeglobals`.
+
+### Fix
+
+- `maia-appearance-service` owns the choice and keeps it in `maia-appearance-service.json`:
+  - the colour scheme: light, dark (later: by the time of day);
+  - the accent as a **name** from a shared set (as GNOME does: blue, teal, green, yellow, orange,
+    red, pink, purple, slate), not a colour value: the name is data, each frontend maps it to its
+    own tones for light and dark (Lumen's palettes keep their contrast rules); the portal gets an
+    RGB value of the service's reference tones.
+- Contract: the state and its changes (watch), `setColorScheme`, `setAccent`; `Maia.Appearance`
+  gives `colorScheme` and `accent` to QML, live in every process (the shells, all layers of the Maia
+  frontend, Maia Settings, Maia's apps).
+- The frontends' `Theme.qml` read `Maia.Appearance` instead of their own `Settings`; the shells'
+  tiles and Maia Settings' Appearance page write through it.
+- To the other applications: the portal's `org.freedesktop.appearance` (through the KDE portal
+  backend, which reads `kdeglobals`, or a small backend of Maia's own) and `kdeglobals`
+  (`ColorScheme`, accent) for Qt/KDE apps, written by the service only.
+- Then `maia.conf` keeps no shared look. What else is in it moves as the roadmap says (favourite
+  apps: their contract; Lumen's timer: the timer service; the dock edge: frontend state, item 7),
+  and `maia.conf` can go.
+
+### Done when
+
+Switching dark mode or the accent in Lumen changes at once: Lumen, an open Maia Settings window,
+the Maia frontend after a switch (and all its layers), and a GTK app (e.g. a GNOME app) and a Qt app
+that follow the system scheme. Tests for the contract and for the stored file, as for the
+decorations.
+
