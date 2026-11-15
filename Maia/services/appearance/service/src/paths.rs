@@ -19,7 +19,7 @@ pub struct Paths {
     pub data_home: PathBuf,
     /// Searched in this order (the first one wins for a theme name): data_home, then $XDG_DATA_DIRS
     pub data_dirs: Vec<PathBuf>,
-    /// $XDG_CONFIG_HOME (~/.config): kwinrc, maia/<version>/appearance.json
+    /// $XDG_CONFIG_HOME (~/.config): kwinrc, maia/<version>/maia-appearance-service.json
     pub config_home: PathBuf,
     /// Data directories of Maia itself (<prefix>/share): their themes have origin Maia
     pub maia_data_dirs: Vec<PathBuf>,

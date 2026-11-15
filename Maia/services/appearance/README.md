@@ -58,7 +58,7 @@ use.
 **Frontends**: a frontend declares its look in its shell, `FrontendLook { frontend: "XPLuna";
 windowDecoration: "aurorae-svg:XBoomer" }`. The first time, its default is used (an empty default
 keeps what is chosen); what the user chooses while the frontend runs, here or in KDE's settings, is
-remembered for that frontend (`~/.config/maia/<Maia version>/appearance.json`) and used next time instead.
+remembered for that frontend (`~/.config/maia/<Maia version>/maia-appearance-service.json`) and used next time instead.
 
 **Changing**: `set()` writes kwinrc, tells KWin and waits until KWin reports the new decoration
 (KWin falls back to Breeze when a plugin fails: that is a `failed` result with what it uses

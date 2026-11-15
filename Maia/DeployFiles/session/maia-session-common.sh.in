@@ -16,7 +16,7 @@ MAIA_OPT_PATH="$(readlink -f "$(dirname "${BASH_SOURCE[0]}")/..")"
 export MAIA_SESSION_TEST="${MAIA_SESSION_TEST:-0}"
 
 # Konfiguracja tej wersji Maia, niezależna od innych wersji (zob. Maia/Paths/MaiaPaths.hpp):
-# maia.conf, maiarc, appearance.json, wayfire.ini
+# maia.conf, appMaiaServerrc, maia-appearance-service.json, maia-notifications-service.json, wayfire.ini
 MAIA_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/maia/${MAIA_VERSION}"
 
 # ==========================================================================

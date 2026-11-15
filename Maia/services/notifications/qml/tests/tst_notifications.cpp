@@ -67,7 +67,7 @@ private:
         env.insert(QStringLiteral("MAIA_NOTIFICATIONS_SOCKET"), qEnvironmentVariable("MAIA_NOTIFICATIONS_SOCKET"));
         env.insert(QStringLiteral("MAIA_NOTIFICATIONS_CENTER_SOCKET"), qEnvironmentVariable("MAIA_NOTIFICATIONS_CENTER_SOCKET"));
         env.insert(QStringLiteral("MAIA_NOTIFICATIONS_SETTINGS_SOCKET"), qEnvironmentVariable("MAIA_NOTIFICATIONS_SETTINGS_SOCKET"));
-        env.insert(QStringLiteral("MAIA_NOTIFICATIONS_SETTINGS"), m_settingsDir.filePath(QStringLiteral("notifications.json")));
+        env.insert(QStringLiteral("MAIA_NOTIFICATIONS_SETTINGS"), m_settingsDir.filePath(QStringLiteral("maia-notifications-service.json")));
         m_service.setProcessEnvironment(env);
         m_service.setProcessChannelMode(QProcess::ForwardedErrorChannel);
         m_service.start(QStringLiteral(MAIA_NOTIFICATIONS_SERVICE), {});

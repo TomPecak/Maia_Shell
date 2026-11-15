@@ -1,5 +1,6 @@
-//! The user's rules of notifications, kept across sessions in $MAIA_CONFIG_DIR/notifications.json
-//! (written by this service only, replaced as a whole): do not disturb, notifications on the lock
+//! The user's rules of notifications, kept across sessions in
+//! $MAIA_CONFIG_DIR/maia-notifications-service.json (named after the service, its only writer;
+//! replaced as a whole): do not disturb, notifications on the lock
 //! screen (the shells' business, kept here so every shell and the settings agree), and each
 //! application on or off.
 //!
@@ -85,21 +86,28 @@ impl Default for File {
     }
 }
 
-/// $MAIA_NOTIFICATIONS_SETTINGS (tests), else $MAIA_CONFIG_DIR/notifications.json, else
-/// $XDG_CONFIG_HOME/maia/<version>/notifications.json
+pub const FILE_NAME: &str = "maia-notifications-service.json";
+
+/// $MAIA_NOTIFICATIONS_SETTINGS (tests), else $MAIA_CONFIG_DIR/maia-notifications-service.json, else
+/// $XDG_CONFIG_HOME/maia/<version>/maia-notifications-service.json
 pub fn default_path() -> PathBuf {
     if let Some(path) = std::env::var_os("MAIA_NOTIFICATIONS_SETTINGS").filter(|v| !v.is_empty()) {
         return PathBuf::from(path);
     }
+    config_dir().join(FILE_NAME)
+}
+
+/// $MAIA_CONFIG_DIR, else $XDG_CONFIG_HOME/maia/<version>
+fn config_dir() -> PathBuf {
     if let Some(dir) = std::env::var_os("MAIA_CONFIG_DIR").filter(|v| !v.is_empty()) {
-        return PathBuf::from(dir).join("notifications.json");
+        return PathBuf::from(dir);
     }
     let config_home = std::env::var_os("XDG_CONFIG_HOME")
         .filter(|v| !v.is_empty())
         .map(PathBuf::from)
         .unwrap_or_else(|| PathBuf::from(std::env::var_os("HOME").unwrap_or_default()).join(".config"));
     let version = option_env!("MAIA_VERSION").unwrap_or("dev");
-    config_home.join("maia").join(version).join("notifications.json")
+    config_home.join("maia").join(version)
 }
 
 impl Settings {
@@ -295,7 +303,7 @@ mod tests {
         let dir = std::env::temp_dir().join(format!("maia-settings-load-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
-        let path = dir.join("notifications.json");
+        let path = dir.join(FILE_NAME);
         assert_eq!(Settings::load(&path), Settings::default());
         assert!(Settings::default().lock_screen_notifications);
         std::fs::write(&path, "{ not json").unwrap();
@@ -307,7 +315,7 @@ mod tests {
     fn what_is_kept_comes_back() {
         let dir = std::env::temp_dir().join(format!("maia-settings-save-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
-        let path = dir.join("sub/notifications.json");
+        let path = dir.join("sub").join(FILE_NAME);
         let mut settings = Settings { dnd_enabled: true, dnd_until: 5000, lock_screen_notifications: false, ..Default::default() };
         settings.sent("org.mozilla.firefox", "org.mozilla.firefox", "Firefox", "firefox", None);
         settings.sent("notify-send", "", "notify-send", "", None);

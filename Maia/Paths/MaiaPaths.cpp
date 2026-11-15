@@ -25,6 +25,11 @@ QString configFile(const QString &name)
     return configDir() + QLatin1Char('/') + name;
 }
 
+QString shellConfigFile()
+{
+    return configFile(QStringLiteral("appMaiaServerrc"));
+}
+
 void setupApplicationNames()
 {
     QCoreApplication::setOrganizationName(QStringLiteral("maia/") + version());

@@ -500,8 +500,8 @@ def appearance():
     s.process(tar, "tar, unzip", "child processes", PROCESS_CHILD)
     s.text(LX + 16, y + 62, "unpack theme archives into a private staging directory", size=12, fill="#334155")
     y = tar.bottom + 22
-    choices = s.file(LX, y, LW, "appearance.json", ["the decoration remembered for each frontend"],
-                     ["$XDG_CONFIG_HOME/maia/<version>/appearance.json"])
+    choices = s.file(LX, y, LW, "maia-appearance-service.json", ["the decoration remembered for each frontend"],
+                     ["$XDG_CONFIG_HOME/maia/<version>/maia-appearance-service.json"])
 
     # --- Middle ---
     svc = Rect(MX, y0, MW, 0)
@@ -522,7 +522,7 @@ def appearance():
             "install from a directory or an archive (listing",
             "and tree checked, one rename); remove"]),
         ("decorations/frontends.rs", "rust", "service/src/decorations/frontends.rs", [
-            "the choice per frontend (appearance.json)"]),
+            "the choice per frontend (maia-appearance-service.json)"]),
     ])
     (area, theme, rpcdec, rpcmod, shared, main), b_b = stack(s, BX, y0 + 72, BW, [
         ("decorations/mod.rs", "rust", "service/src/decorations/mod.rs", [

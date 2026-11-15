@@ -11,6 +11,7 @@ use common::{Sender, SettingsClient, Shell, TempDir, local};
 use maia_notifications::hub::{Hub, HubRef, SETTINGS_SAVE_DELAY};
 use maia_notifications::model::now_ms;
 use maia_notifications::notifications_capnp::{self as n, center_listener, notification_center};
+use maia_notifications::settings::FILE_NAME;
 
 fn send_as(desktop_entry: &'static str, name: &'static str, summary: &'static str) -> impl FnOnce(n::notification_request::Builder) {
     move |mut r| {
@@ -24,7 +25,7 @@ fn send_as(desktop_entry: &'static str, name: &'static str, summary: &'static st
 /// A hub whose settings live in `dir`, with `data` as the only data directory
 fn hub_with_settings(dir: &TempDir) -> HubRef {
     let hub = common::hub(dir);
-    Hub::load_settings(&hub, dir.0.join("notifications.json"), vec![dir.0.join("data")]);
+    Hub::load_settings(&hub, dir.0.join(FILE_NAME), vec![dir.0.join("data")]);
     hub
 }
 
@@ -113,7 +114,7 @@ fn the_settings_come_back_after_a_restart() {
             settings.set_do_not_disturb(true, 0).await;
             tokio::time::sleep(SETTINGS_SAVE_DELAY + Duration::from_millis(200)).await;
         }
-        let text = std::fs::read_to_string(dir.0.join("notifications.json")).unwrap();
+        let text = std::fs::read_to_string(dir.0.join(FILE_NAME)).unwrap();
         assert!(text.contains("org.maia.mail"), "{text}");
 
         // The service again, as after a new login
@@ -137,7 +138,7 @@ fn the_settings_come_back_after_a_restart() {
 fn do_not_disturb_whose_time_ran_out_while_away_is_off() {
     local(async {
         let dir = TempDir::new("settings-expired");
-        std::fs::write(dir.0.join("notifications.json"), r#"{ "doNotDisturb": { "enabled": true, "until": 1000 } }"#).unwrap();
+        std::fs::write(dir.0.join(FILE_NAME), r#"{ "doNotDisturb": { "enabled": true, "until": 1000 } }"#).unwrap();
         let hub = hub_with_settings(&dir);
         let settings = SettingsClient::connect(&hub).await;
         assert!(!settings.seen.borrow().dnd_enabled);

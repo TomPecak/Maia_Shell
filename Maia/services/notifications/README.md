@@ -128,7 +128,7 @@ ToggleTile { checked: NotificationCenter.doNotDisturb; onToggled: NotificationCe
 | `MAIA_NOTIFICATIONS_SOCKET` | the senders' socket (default `$XDG_RUNTIME_DIR/maia/notifications-$WAYLAND_DISPLAY.sock`) |
 | `MAIA_NOTIFICATIONS_CENTER_SOCKET` | the shells' socket (default `…/notifications-center-$WAYLAND_DISPLAY.sock`) |
 | `MAIA_NOTIFICATIONS_SETTINGS_SOCKET` | the settings' socket (default `…/notifications-settings-$WAYLAND_DISPLAY.sock`) |
-| `MAIA_NOTIFICATIONS_SETTINGS` | the settings file (default `$MAIA_CONFIG_DIR/notifications.json`); tests must set it |
+| `MAIA_NOTIFICATIONS_SETTINGS` | the settings file (default `$MAIA_CONFIG_DIR/maia-notifications-service.json`); tests must set it |
 | `MAIA_NOTIFICATIONS_DBUS` | `0`: no D-Bus door (tests) |
 | `MAIA_NOTIFICATIONS_JOBS` | `0`: no job server (KIO shows its own progress dialog) |
 
@@ -155,8 +155,9 @@ instance needs its own display name.
 
 ## Settings
 
-Kept across sessions in `$MAIA_CONFIG_DIR/notifications.json` (`settings.rs`; written by the
-service only, a moment after a change, as a whole new file renamed over the old):
+Kept across sessions in `$MAIA_CONFIG_DIR/maia-notifications-service.json` (`settings.rs`; named
+after the service, its only writer; written a moment after a change, as a whole new file renamed
+over the old):
 
 | Setting | Who applies it |
 |---|---|

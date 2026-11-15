@@ -67,7 +67,7 @@ void LocaleSettingsService::setTwentyFourTime(bool newTwentyFourTime)
 
 void LocaleSettingsService::loadSettings()
 {
-    const QString configPath = MaiaPaths::configFile(QStringLiteral("maiarc"));
+    const QString configPath = MaiaPaths::shellConfigFile();
 
     KSharedConfig::Ptr config = KSharedConfig::openConfig(configPath);
     KConfigGroup group = config->group(QStringLiteral("LocaleSettingsService"));
@@ -80,7 +80,7 @@ void LocaleSettingsService::loadSettings()
 
 void LocaleSettingsService::saveSettings()
 {
-    const QString configPath = MaiaPaths::configFile(QStringLiteral("maiarc"));
+    const QString configPath = MaiaPaths::shellConfigFile();
 
     KSharedConfig::Ptr config = KSharedConfig::openConfig(configPath);
     KConfigGroup group = config->group(QStringLiteral("LocaleSettingsService"));

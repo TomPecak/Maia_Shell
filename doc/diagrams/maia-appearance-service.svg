@@ -57,8 +57,8 @@
 <text x="46.0" y="823.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">unpack theme archives into a private staging directory</text>
 <path d="M30,867 h452 l18,18 v50 h-470 z" fill="#fff7ed" stroke="#ea580c" stroke-width="1.8"/>
 <path d="M482,867 v18 h18" fill="none" stroke="#ea580c" stroke-width="1.8"/>
-<text x="42.0" y="887.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13" font-weight="bold" fill="#9a3412" text-anchor="start">appearance.json</text>
-<text x="42.0" y="904.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="10.5" font-weight="normal" fill="#7c2d12" text-anchor="start">$XDG_CONFIG_HOME/maia/&lt;version&gt;/appearance.json</text>
+<text x="42.0" y="887.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13" font-weight="bold" fill="#9a3412" text-anchor="start">maia-appearance-service.json</text>
+<text x="42.0" y="904.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="10.5" font-weight="normal" fill="#7c2d12" text-anchor="start">$XDG_CONFIG_HOME/maia/&lt;version&gt;/maia-appearance-service.json</text>
 <text x="42.0" y="919.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#431407" text-anchor="start">the decoration remembered for each frontend</text>
 <rect x="618" y="222" width="300" height="99" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
 <rect x="618" y="222" width="5" height="99" rx="2" fill="#c2410c"/>
@@ -106,7 +106,7 @@
 <rect x="831.8" y="719" width="78.2" height="17" rx="8.5" fill="#c2410c"/>
 <text x="870.9" y="731.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">Rust module</text>
 <text x="632.0" y="750.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="10.5" font-weight="normal" fill="#64748b" text-anchor="start">service/src/decorations/frontends.rs</text>
-<text x="632.0" y="766.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">the choice per frontend (appearance.json)</text>
+<text x="632.0" y="766.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">the choice per frontend (maia-appearance-service.json)</text>
 <rect x="972" y="222" width="300" height="84" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
 <rect x="972" y="222" width="5" height="84" rx="2" fill="#c2410c"/>
 <text x="986.0" y="243.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13.5" font-weight="bold" fill="#0f172a" text-anchor="start">decorations/mod.rs</text>

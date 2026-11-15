@@ -223,7 +223,8 @@ the session scripts.
 ### What happens
 
 Every Maia version keeps its settings in its own directory, `~/.config/maia/<version>/` (`maia.conf`
-for QSettings and QML `Settings`, `maiarc` for KConfig, `appearance.json`, `notifications.json`,
+for QSettings and QML `Settings`, and a file named after each process that owns one:
+`appMaiaServerrc` for KConfig, `maia-appearance-service.json`, `maia-notifications-service.json`,
 `wayfire.ini`). This is by design: versions are installed side by side (`/opt/Maia/Maia_<version>`)
 and must never share or overwrite each other's settings. The cost: after an update the user finds
 every setting at its default (frontend, theme, favourites, do not disturb, applications turned off).

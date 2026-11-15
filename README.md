@@ -104,7 +104,7 @@ sudo ./install_on_ubuntu.sh
 	- Log out of your current session.
 	- Select the "Maia X.Y.Z (KWin)" or "Maia X.Y.Z (Wayfire)" session from your login manager and log in.
 	- Session logs are written to `~/maia_X.Y.Z_kwin_session.log` (or `~/maia_X.Y.Z_wayfire_session.log`) and `~/maia_X.Y.Z_server.log`.
-	- Every Maia version keeps its settings in `~/.config/maia/X.Y.Z/` (`maia.conf`, `maiarc`, `appearance.json`, and `wayfire.ini` for the Wayfire session, made from `/opt/Maia/Maia_X.Y.Z/etc/maia/wayfire.ini` on the first start); a new version starts with clean settings.
+	- Every Maia version keeps its settings in `~/.config/maia/X.Y.Z/` (`maia.conf` shared by the shell and Maia Settings, a file per process for the rest: `appMaiaServerrc`, `maia-appearance-service.json`, `maia-notifications-service.json`, and `wayfire.ini` for the Wayfire session, made from `/opt/Maia/Maia_X.Y.Z/etc/maia/wayfire.ini` on the first start); a new version starts with clean settings.
 	- The Wayfire session needs the Wayfire plugins `aurorae` (window decorations) and `plasma-window-management` (the window list of the taskbars).
 	
 	

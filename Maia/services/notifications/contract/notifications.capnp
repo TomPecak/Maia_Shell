@@ -34,7 +34,7 @@
 #   unless they are transient.
 # - The list is not kept on disk: it lives as long as the session, across restarts of the shell.
 #   The settings are (do not disturb, the lock screen, each application on or off), in
-#   $MAIA_CONFIG_DIR/notifications.json.
+#   $MAIA_CONFIG_DIR/maia-notifications-service.json.
 # - Nothing here blocks: notify() answers at once; an image is prepared in the background and the
 #   notification is shown when it is ready.
 # - Jobs (the progress of a copy in Dolphin, of an archive, a download) come from KDE's

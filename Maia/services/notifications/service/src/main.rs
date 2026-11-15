@@ -10,7 +10,7 @@
 //!          $XDG_RUNTIME_DIR/maia/notifications-center-$WAYLAND_DISPLAY.sock (NotificationCenter),
 //!          $MAIA_NOTIFICATIONS_SETTINGS_SOCKET or
 //!          $XDG_RUNTIME_DIR/maia/notifications-settings-$WAYLAND_DISPLAY.sock (NotificationSettings)
-//! Settings: $MAIA_NOTIFICATIONS_SETTINGS or $MAIA_CONFIG_DIR/notifications.json
+//! Settings: $MAIA_NOTIFICATIONS_SETTINGS or $MAIA_CONFIG_DIR/maia-notifications-service.json
 //! Images:  $XDG_RUNTIME_DIR/maia/notifications-$WAYLAND_DISPLAY/
 //! D-Bus:   org.freedesktop.Notifications on the session bus; MAIA_NOTIFICATIONS_DBUS=0 leaves it out.
 //!          org.kde.JobViewServer and org.kde.kuiserver (jobs); MAIA_NOTIFICATIONS_JOBS=0 leaves

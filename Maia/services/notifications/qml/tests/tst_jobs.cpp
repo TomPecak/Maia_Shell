@@ -86,7 +86,7 @@ private Q_SLOTS:
         env.insert(QStringLiteral("MAIA_NOTIFICATIONS_SOCKET"), runtime + QStringLiteral("/tjn-") + pid + QStringLiteral(".sock"));
         env.insert(QStringLiteral("MAIA_NOTIFICATIONS_CENTER_SOCKET"), qEnvironmentVariable("MAIA_NOTIFICATIONS_CENTER_SOCKET"));
         // Its own settings file: never the user's
-        env.insert(QStringLiteral("MAIA_NOTIFICATIONS_SETTINGS"), m_settingsDir.filePath(QStringLiteral("notifications.json")));
+        env.insert(QStringLiteral("MAIA_NOTIFICATIONS_SETTINGS"), m_settingsDir.filePath(QStringLiteral("maia-notifications-service.json")));
         m_service.setProcessEnvironment(env);
         m_service.setProcessChannelMode(QProcess::ForwardedErrorChannel);
         m_service.start(QStringLiteral(MAIA_NOTIFICATIONS_SERVICE), {});

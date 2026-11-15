@@ -1,6 +1,7 @@
 //! The choice remembered per frontend: each Maia frontend (Lumen, XPLuna, ...) keeps its own window
-//! decoration. Stored in `$XDG_CONFIG_HOME/maia/<Maia version>/appearance.json` (every Maia version
-//! has its own configuration directory, see Maia/Paths/MaiaPaths.hpp):
+//! decoration. Stored in `$XDG_CONFIG_HOME/maia/<Maia version>/maia-appearance-service.json` (every
+//! Maia version has its own configuration directory, and a file one process owns is named after it,
+//! see Maia/Paths/MaiaPaths.hpp):
 //!
 //! ```json
 //! { "version": 1, "decorations": { "frontends": { "XPLuna": "aurorae-svg:XBoomer" } } }
@@ -28,8 +29,9 @@ struct File {
     decorations: DecorationChoices,
 }
 
+pub const FILE_NAME: &str = "maia-appearance-service.json";
 pub fn file_path(config_home: &Path) -> PathBuf {
-    config_home.join("maia").join(crate::paths::MAIA_VERSION).join("appearance.json")
+    config_home.join("maia").join(crate::paths::MAIA_VERSION).join(FILE_NAME)
 }
 
 /// The remembered choices; none when the file is missing or broken (it is then rewritten)
@@ -53,8 +55,8 @@ pub async fn save(path: &Path, choices: &DecorationChoices) -> OpResult {
         tokio::fs::create_dir_all(dir).await.map_err(|e| OpError::io("creating the config directory", e))?;
     }
     let temporary = path.with_extension("json.new");
-    tokio::fs::write(&temporary, text).await.map_err(|e| OpError::io("writing appearance.json", e))?;
-    tokio::fs::rename(&temporary, path).await.map_err(|e| OpError::io("replacing appearance.json", e))
+    tokio::fs::write(&temporary, text).await.map_err(|e| OpError::io("writing the decoration choices", e))?;
+    tokio::fs::rename(&temporary, path).await.map_err(|e| OpError::io("replacing the decoration choices", e))
 }
 
 #[cfg(test)]

@@ -556,7 +556,7 @@ def start_tree():
         paths=["<prefix>/bin/appMaiaServer   ← Maia/MaiaServerApp/, Maia/BackendLib/"],
         desc=["Server mode: its D-Bus services (org.maia.FrontendManager, …), then the QML engine with the active "
               "frontend. Started again after a crash (the open windows stay); 5 crashes in 2 minutes end the session."],
-        files=[("reads", "~/.config/maia/<v>/maiarc, maia.conf"), ("loads", "<prefix>/frontends/<name>/shell/Main.qml"),
+        files=[("reads", "~/.config/maia/<v>/appMaiaServerrc, maia.conf"), ("loads", "<prefix>/frontends/<name>/shell/Main.qml"),
                ("writes", "~/maia_<v>_server.log")],
         children=[
             Node("appMaiaServer --mode client --source <qml>", "client", "a shell window per process",
@@ -600,7 +600,7 @@ def start_tree():
             Node("maia-appearance-service", "maia", "Maia service · KWin only", order=7,
                  paths=["<prefix>/libexec/maia-appearance-service   ← Maia/services/appearance/service/"],
                  desc=["Window decorations: kwinrc and KWin's D-Bus; the choice of every frontend."],
-                 files=[("writes", "~/.config/kwinrc (kwriteconfig6)"), ("writes", "~/.config/maia/<v>/appearance.json")]),
+                 files=[("writes", "~/.config/kwinrc (kwriteconfig6)"), ("writes", "~/.config/maia/<v>/maia-appearance-service.json")]),
             shell,
         ])
     script_again = Node(
@@ -844,7 +844,7 @@ def rows():
                         Card("decorations/", "rust", [
                             "catalog.rs: the themes on disk (Aurorae SVG and QML, KDecoration plugins)",
                             "install.rs: installs an Aurorae theme from an archive, checked first",
-                            "frontends.rs: the decoration of every frontend (appearance.json)",
+                            "frontends.rs: the decoration of every frontend (maia-appearance-service.json)",
                             "inotify.rs: notices changes made by other programs"]),
                         Contract("appearance.capnp, decorations.capnp", "capnp", "Maia/services/appearance/contract/", [
                             ("AppearanceService", "", [("decorations()", "→ Decorations"), ("info()", "")]),
@@ -856,7 +856,7 @@ def rows():
                                                  ("refresh()", "")])]),
                         Socket("$XDG_RUNTIME_DIR/maia/appearance-$WAYLAND_DISPLAY.sock", name="appearance_sock"),
                     ]),
-            File("appearance.json", ["~/.config/maia/<v>/appearance.json"], ["the decoration chosen in every frontend"],
+            File("maia-appearance-service.json", ["~/.config/maia/<v>/maia-appearance-service.json"], ["the decoration chosen in every frontend"],
                  name="appearance_json"),
         ],
         module=[
@@ -1099,8 +1099,8 @@ def rows():
                             "a local socket for the client processes of MProxyWindow",
                             "Logger: ~/maia_<v>_server.log, WebSocket :50001 for appLogger"], name="core_logger"),
                     ]),
-            File("Settings of the shell", ["~/.config/maia/<v>/maiarc", "~/.config/maia/<v>/maia.conf"], [
-                "maiarc (KConfig): the active frontend, the 24-hour clock",
+            File("Settings of the shell", ["~/.config/maia/<v>/appMaiaServerrc", "~/.config/maia/<v>/maia.conf"], [
+                "appMaiaServerrc (KConfig): the active frontend, the 24-hour clock",
                 "maia.conf (QSettings, QML Settings {}): the favourites, and what the frontends keep "
                 "(LumenFrontend, MaiaDock, MaiaControlCenter, …)"], name="shell_conf"),
         ],
@@ -1425,8 +1425,9 @@ def where(s, y):
         ]),
         ("The user's files", [
             ("~/.config/maia/<v>/maia.conf", "QSettings: favourites, the frontends' settings"),
-            ("~/.config/maia/<v>/maiarc", "KConfig: active frontend, 24-hour clock"),
-            ("~/.config/maia/<v>/appearance.json", "maia-appearance-service: decoration per frontend"),
+            ("~/.config/maia/<v>/appMaiaServerrc", "KConfig: active frontend, 24-hour clock"),
+            ("~/.config/maia/<v>/maia-appearance-service.json", "maia-appearance-service: decoration per frontend"),
+            ("~/.config/maia/<v>/maia-notifications-service.json", "maia-notifications-service: do not disturb, apps on or off"),
             ("~/.config/maia/<v>/wayfire.ini", "the Wayfire session (made on its first start)"),
             ("", "every Maia version has its own directory; nothing is migrated"),
             ("~/.config/kwinrc, kdeglobals, kxkbrc", "KDE's files Maia reads or writes"),

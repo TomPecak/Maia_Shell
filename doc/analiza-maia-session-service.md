@@ -447,7 +447,7 @@ Potem `MSessionManager` i `SessionService` znikają z `Maia.Backend` i `appMaiaS
 | **Wyłączenie z hasłem administratora** (inny użytkownik zalogowany). | Sprawdzenie `Can*` przed zamykaniem; `PowerOff` przy działającym kompozytorze i agencie polkit (punkt 5). |
 | **Wyłączenie spoza Maia** (`systemctl poweroff`, przycisk zasilania przez powerdevil). | `PrepareForShutdown` i `SIGTERM` uruchamiają szybki koniec z krótkimi limitami. |
 | **Restart powłoki zostawia stan.** Okna proxy (`MProxyWindow`) i ich gniazda po starej powłoce. | Procesy klienckie i tak kończą się z serwerem (gniazdo znika); `ProxyWindowLocalServer` już usuwa stare gniazdo przy starcie (`QLocalServer::removeServer`). Do sprawdzenia w teście. |
-| **Pętla awarii powłoki** (zły frontend zapisany w `maiarc`). | Limit 5 awarii w 2 minuty. Później: po 3 awariach z rzędu start z domyślnym frontendem. |
+| **Pętla awarii powłoki** (zły frontend zapisany w `appMaiaServerrc`). | Limit 5 awarii w 2 minuty. Później: po 3 awariach z rzędu start z domyślnym frontendem. |
 | **Sesja zagnieżdżona a prawdziwy systemd użytkownika.** | Zagnieżdżona ma własną magistralę sesyjną, więc wysyłka zmiennych do systemd trafia w próżnię. Dodatkowo tryb testowy usługi pomija `systemctl --user` (jak dziś `MAIA_SESSION_TEST=1`). |
 
 ---
