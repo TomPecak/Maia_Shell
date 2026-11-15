@@ -7,13 +7,17 @@
 #   - D-Bus, for every existing application: org.freedesktop.Notifications (the freedesktop.org
 #     Desktop Notifications specification, with KDE's extensions: inline replies, inhibitions);
 #   - this contract, for Maia's own programs and services: the Notifier.
-# The shell shows the list through the NotificationCenter. Two sockets, one per role:
-#   $XDG_RUNTIME_DIR/maia/notifications-$WAYLAND_DISPLAY.sock          Notifier (any program)
-#   $XDG_RUNTIME_DIR/maia/notifications-center-$WAYLAND_DISPLAY.sock   NotificationCenter (the shell)
-# The center sees the content of every notification (messages, codes), a sender only its own: a
-# sandbox can later be given the first socket and not the second.
+# The shell shows the list through the NotificationCenter; Maia Settings sets the rules through
+# NotificationSettings. Three sockets, one per role:
+#   $XDG_RUNTIME_DIR/maia/notifications-$WAYLAND_DISPLAY.sock            Notifier (any program)
+#   $XDG_RUNTIME_DIR/maia/notifications-center-$WAYLAND_DISPLAY.sock     NotificationCenter (the shell)
+#   $XDG_RUNTIME_DIR/maia/notifications-settings-$WAYLAND_DISPLAY.sock   NotificationSettings
+# The center sees the content of every notification (messages, codes), a sender only its own, the
+# settings none at all (only which applications send): a sandbox can later be given the first
+# socket and not the others.
 #
-# QML: Maia.Notifications (senders) and Maia.Notifications.Center (shells), qml/.
+# QML: Maia.Notifications (senders), Maia.Notifications.Center (shells) and
+# Maia.Notifications.Settings (settings), qml/.
 #
 # Rules:
 # - A notification is identified by its id (UInt32, never 0), the one D-Bus clients get too.
@@ -28,7 +32,9 @@
 # - The popup time is counted by the shell (it pauses while hovered); the shell reports the end with
 #   expire(). Notifications stay in the list after their popup (the server has "persistence")
 #   unless they are transient.
-# - Nothing is kept on disk: the list lives as long as the session, across restarts of the shell.
+# - The list is not kept on disk: it lives as long as the session, across restarts of the shell.
+#   The settings are (do not disturb, the lock screen, each application on or off), in
+#   $MAIA_CONFIG_DIR/notifications.json.
 # - Nothing here blocks: notify() answers at once; an image is prepared in the background and the
 #   notification is shown when it is ready.
 # - Jobs (the progress of a copy in Dolphin, of an archive, a download) come from KDE's
@@ -171,10 +177,16 @@ struct Job {
   updated @26 :Int64;     # ms since 1970, the last change
 }
 
+# What a shell does itself, by the user's settings
+struct ShellSettings {
+  lockScreenNotifications @0 :Bool;       # show notifications on the lock screen
+}
+
 struct Snapshot {
   notifications @0 :List(Notification);   # the newest first
   doNotDisturb @1 :DoNotDisturb;
   jobs @2 :List(Job);                     # the newest first
+  shellSettings @3 :ShellSettings;
 }
 
 # ---------------------------------------------------------------------------------------------
@@ -188,6 +200,7 @@ interface CenterListener {
   doNotDisturbChanged @2 (doNotDisturb :DoNotDisturb);
   jobsChanged @3 (changed :List(Job), removed :List(UInt32));
                                            # one batch of jobs, like changes()
+  shellSettingsChanged @4 (settings :ShellSettings);
 }
 
 interface Subscription {}                 # dropping it stops the listener
@@ -306,4 +319,40 @@ interface Notifier {
   notify @1 (notification :NotificationRequest, listener :NotifierListener)
          -> (id :UInt32, handle :NotificationHandle);
   startJob @2 (job :JobRequest, listener :JobListener) -> (id :UInt32, handle :JobHandle);
+}
+
+# ---------------------------------------------------------------------------------------------
+# Maia Settings: NotificationSettings
+# ---------------------------------------------------------------------------------------------
+
+# An application that sends notifications, and whether the user lets it
+struct AppNotifications {
+  key @0 :Text;           # who it is: its desktop entry, or the name it sends without one
+  desktopEntry @1 :Text;  # "" none (e.g. notify-send)
+  appName @2 :Text;       # its desktop entry's Name= in the session's language, else what it sent
+  appIcon @3 :Text;       # a theme icon name or a file:// URL, "" none
+  enabled @4 :Bool;       # false: its notifications are dropped (no list, no popup, no sound)
+  sent @5 :Bool;          # it has sent a notification (remembered across sessions)
+  declared @6 :Bool;      # its desktop entry or KDE .notifyrc says it sends notifications
+}
+
+struct Settings {
+  doNotDisturb @0 :DoNotDisturb;
+  shell @1 :ShellSettings;
+  apps @2 :List(AppNotifications);        # in no particular order (the settings sort them)
+}
+
+interface SettingsListener {
+  settingsChanged @0 (settings :Settings);   # all of it: first after watch(), then on each change
+                                             # (it is small and changes rarely)
+}
+
+interface NotificationSettings {
+  info @0 () -> (serviceVersion :Text, capabilities :List(Text));
+  watch @1 (listener :SettingsListener) -> (subscription :Subscription);
+  # As NotificationCenter.setDoNotDisturb: the same state, kept across sessions
+  setDoNotDisturb @2 (enabled :Bool, until :Int64) -> ();
+  setLockScreenNotifications @3 (enabled :Bool) -> ();
+  # Applies to notifications sent from now on; notFound when no such application is listed
+  setAppEnabled @4 (key :Text, enabled :Bool) -> (result :Result);
 }

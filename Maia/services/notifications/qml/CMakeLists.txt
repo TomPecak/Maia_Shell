@@ -1,13 +1,18 @@
-# The QML modules of the notification service, two because they have two kinds of users:
+# The QML modules of the notification service, three because they have three kinds of users:
 #
-#   notifications/  Maia.Notifications         Notification, Notifications: for programs that send
-#   center/         Maia.Notifications.Center  NotificationCenter, NotificationsModel,
-#                                              NotificationPopupsModel: for shells that show them
+#   notifications/  Maia.Notifications           Notification, Job, Notifications: for programs that
+#                                                send
+#   center/         Maia.Notifications.Center    NotificationCenter, NotificationsModel,
+#                                                NotificationPopupsModel, JobsModel: for shells that
+#                                                show them
+#   settings/       Maia.Notifications.Settings  NotificationSettings, AppNotificationsModel: for
+#                                                Maia Settings (rules, never a notification)
 #
-# The shells' module is a part of the notifications' domain (Maia.<domain>.Center), not a module of
-# the service: a module names its domain, never the process behind it.
+# The shells' and the settings' modules are parts of the notifications' domain
+# (Maia.<domain>.<part>), not modules of the service: a module names its domain, never the process
+# behind it.
 #
-# Both are built on common/ (a static library linked into each): the C++ code of the contract and
+# All three are built on common/ (a static library linked into each): the C++ code of the contract and
 # ServiceLink, the connection whose Cap'n Proto runs in its own thread. No user interface: the
 # shells and the apps draw notifications in their own style.
 
@@ -38,12 +43,13 @@ kde_target_enable_exceptions(MaiaNotificationsCommon PUBLIC)
 
 add_subdirectory(notifications)
 add_subdirectory(center)
+add_subdirectory(settings)
 
 if(BUILD_TESTING)
     # Both modules against the real service (without D-Bus), as a program and a shell use them
     find_package(Qt6 ${REQUIRED_QT_VERSION} REQUIRED COMPONENTS Test)
     add_executable(tst_notifications tests/tst_notifications.cpp)
-    target_link_libraries(tst_notifications PRIVATE Maia::Notifications Maia::NotificationsCenter Qt6::Test)
+    target_link_libraries(tst_notifications PRIVATE Maia::Notifications Maia::NotificationsCenter Maia::NotificationsSettings Qt6::Test)
     get_target_property(notifications_service maia-notifications-service MAIA_CARGO_BINARY)
     target_compile_definitions(tst_notifications PRIVATE MAIA_NOTIFICATIONS_SERVICE="${notifications_service}")
     add_dependencies(tst_notifications maia-notifications-service)

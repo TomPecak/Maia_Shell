@@ -59,10 +59,11 @@ target_compile_definitions(maia-settings PRIVATE
     MAIA_FRONTENDS_DIR="${CMAKE_INSTALL_PREFIX}/frontends"
 )
 # The pages import these at run time
-maia_target_qml_imports(maia-settings Maia.Network Maia.Power)
+maia_target_qml_imports(maia-settings Maia.Network Maia.Power Maia.Notifications.Settings)
 
 install(TARGETS maia-settings ${KDE_INSTALL_TARGETS_DEFAULT_ARGS})
 install(FILES org.maia.settings.desktop DESTINATION ${KDE_INSTALL_APPDIR})
 
 add_subdirectory(pages/network)
 add_subdirectory(pages/power)
+add_subdirectory(pages/notifications)

@@ -1,0 +1,12 @@
+{
+    "id": "notifications",
+    "name": "Notifications",
+    "description": "Do not disturb, the lock screen and apps",
+    "description[pl]": "Nie przeszkadzać, ekran blokady i aplikacje",
+    "icon": "notification-active-symbolic",
+    "order": 60,
+    "main": "NotificationsPage.qml",
+    "formFactors": ["desktop"],
+    "keywords": ["notifications", "do not disturb", "quiet", "silent", "popups", "banners", "lock screen", "apps", "applications", "alerts"],
+    "keywords[pl]": ["powiadomienia", "nie przeszkadzać", "cisza", "wyciszenie", "dymki", "ekran blokady", "aplikacje", "programy", "alerty"]
+}

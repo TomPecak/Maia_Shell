@@ -16,10 +16,12 @@ Maia's programs ──Cap'n Proto: Notifier────────────�
 |---|---|---|
 | `org.freedesktop.Notifications` (session D-Bus) | every application: `notify-send`, libnotify, KNotification, Flatpak apps through their portal | the [specification](https://specifications.freedesktop.org/notification-spec/) 1.2: `Notify`, `CloseNotification`, `GetCapabilities`, `GetServerInformation`, the signals; KDE's `Inhibit`/`UnInhibit`/`Inhibited`, `NotificationReplied`, hints `x-kde-*` |
 | `Notifier` (Cap'n Proto, `notifications-<display>.sock`) | Maia's programs and services (`Maia.Notifications`; maia-power-service's battery warnings) | `notify` → a handle (`update`, `close`) and a listener that hears only its own notification; `startJob` → a job handle (`update`, `finish`, `canceled`) and a listener of the user's pause and cancel |
-| `NotificationCenter` (Cap'n Proto, `notifications-center-<display>.sock`) | shells (`Maia.Notifications.Center`) | the list (snapshot, then batches), actions with an activation token, replies, dismiss, the end of a popup, do not disturb |
+| `NotificationCenter` (Cap'n Proto, `notifications-center-<display>.sock`) | shells (`Maia.Notifications.Center`) | the list (snapshot, then batches), actions with an activation token, replies, dismiss, the end of a popup, do not disturb, the shells' settings (the lock screen) |
+| `NotificationSettings` (Cap'n Proto, `notifications-settings-<display>.sock`) | Maia Settings (`Maia.Notifications.Settings`) | the rules: do not disturb, notifications on the lock screen, each application on or off |
 
-Two sockets because the center sees the content of every notification and a sender only its own:
-a sandbox can later be given the first one only.
+Three sockets, one per role: the center sees the content of every notification, a sender only its
+own, the settings none (only which applications send). A sandbox can later be given the first one
+only.
 
 | Directory | What it is |
 |---|---|
@@ -28,6 +30,7 @@ a sandbox can later be given the first one only.
 | `qml/common/` | What both QML modules share: the contract's values, `ServiceLink` (Cap'n Proto in its own thread) |
 | `qml/notifications/` | `Maia.Notifications`, for programs that send |
 | `qml/center/` | `Maia.Notifications.Center`, for shells that show |
+| `qml/settings/` | `Maia.Notifications.Settings`, for Maia Settings |
 
 ## The rules
 
@@ -124,6 +127,8 @@ ToggleTile { checked: NotificationCenter.doNotDisturb; onToggled: NotificationCe
 |---|---|
 | `MAIA_NOTIFICATIONS_SOCKET` | the senders' socket (default `$XDG_RUNTIME_DIR/maia/notifications-$WAYLAND_DISPLAY.sock`) |
 | `MAIA_NOTIFICATIONS_CENTER_SOCKET` | the shells' socket (default `…/notifications-center-$WAYLAND_DISPLAY.sock`) |
+| `MAIA_NOTIFICATIONS_SETTINGS_SOCKET` | the settings' socket (default `…/notifications-settings-$WAYLAND_DISPLAY.sock`) |
+| `MAIA_NOTIFICATIONS_SETTINGS` | the settings file (default `$MAIA_CONFIG_DIR/notifications.json`); tests must set it |
 | `MAIA_NOTIFICATIONS_DBUS` | `0`: no D-Bus door (tests) |
 | `MAIA_NOTIFICATIONS_JOBS` | `0`: no job server (KIO shows its own progress dialog) |
 
@@ -138,13 +143,40 @@ instance needs its own display name.
   their application, pixels as a PNG file, a flood of 1000); `tests/notifier.rs` the Cap'n Proto doors
   (handles, a reconnecting shell, do not disturb ending by itself, low urgency); `tests/jobs.rs`
   jobs over D-Bus as KJobWidgets and KIO's probe; `tests/maia_jobs.rs` jobs of Maia's programs
-  (pause and cancel to the program alone, a dropped handle fails the job).
+  (pause and cancel to the program alone, a dropped handle fails the job); `tests/settings.rs` the
+  settings door (a turned off application, the lock screen's flag, the file across a restart,
+  declared applications, a shell on an older contract).
 - `tst_notifications` (CTest `maia-notifications-qml`): both QML modules against the real service:
   popups and their clocks (pause, the maximum, critical), actions and replies back to the sender,
   updates, a restart of the service, the flood and the GUI thread's longest stall; a program's Job
   (progress, pause and cancel, failing, back after a restart of the service). `tst_jobs`: jobs of
   a QtDBus client in JobsModel.
 - maia-power-service's `tests/notify.rs`: the battery warnings reach a stand-in of the Notifier.
+
+## Settings
+
+Kept across sessions in `$MAIA_CONFIG_DIR/notifications.json` (`settings.rs`; written by the
+service only, a moment after a change, as a whole new file renamed over the old):
+
+| Setting | Who applies it |
+|---|---|
+| Do not disturb (and until when) | the service: no popups, no sounds; the notifications go into the list; critical ones still pop up. The same state as the shell's quick settings tile |
+| Notifications on the lock screen | the shells (they draw the lock screen): the service keeps the choice, `NotificationCenter.lockScreenNotifications` gives it to them |
+| Each application on or off | the service: a turned off application's notifications are dropped (no list, no popup, no sound); its sender gets an id and hears "closed" 100 ms later. Jobs are not affected |
+
+The applications are those that have sent a notification (remembered; known by their desktop
+entry, else by the name they send) and those that declare it (`desktop.rs`: a desktop entry with
+`X-GNOME-UsesNotifications=true`, a KDE `.notifyrc` naming its `DesktopEntry`), named by their desktop
+entry in the session's language (`Name[pl]`; names translated by gettext domains, as Ubuntu does for
+GNOME's applications, are not read yet).
+
+```qml
+import Maia.Notifications.Settings
+
+LSwitch { checked: NotificationSettings.doNotDisturb; onToggled: NotificationSettings.doNotDisturb = checked }
+Repeater { model: AppNotificationsModel {}       // sorted by name
+           LSwitch { checked: model.enabled; onToggled: NotificationSettings.setAppEnabled(model.key, checked) } }
+```
 
 ## Jobs
 

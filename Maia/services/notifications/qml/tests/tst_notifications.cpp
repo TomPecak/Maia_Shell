@@ -5,12 +5,14 @@
 // The service runs with its own sockets and its own display name, so that neither its sockets nor
 // its image directory are those of the session the test runs in.
 
+#include "AppNotificationsModel.h"
 #include "Job.h"
 #include "JobsModel.h"
 #include "Notification.h"
 #include "NotificationCenter.h"
 #include "NotificationPopupsModel.h"
 #include "NotificationRoles.h"
+#include "NotificationSettings.h"
 #include "Notifications.h"
 #include "NotificationsModel.h"
 
@@ -18,6 +20,7 @@
 #include <QElapsedTimer>
 #include <QProcess>
 #include <QSignalSpy>
+#include <QTemporaryDir>
 #include <QTest>
 #include <QTimer>
 
@@ -53,6 +56,8 @@ class TestNotifications : public QObject
 private:
     QProcess m_service;
     QString m_display;
+    // The service's settings: never the user's (kept across the restart test)
+    QTemporaryDir m_settingsDir;
 
     void startService()
     {
@@ -61,6 +66,8 @@ private:
         env.insert(QStringLiteral("WAYLAND_DISPLAY"), m_display);
         env.insert(QStringLiteral("MAIA_NOTIFICATIONS_SOCKET"), qEnvironmentVariable("MAIA_NOTIFICATIONS_SOCKET"));
         env.insert(QStringLiteral("MAIA_NOTIFICATIONS_CENTER_SOCKET"), qEnvironmentVariable("MAIA_NOTIFICATIONS_CENTER_SOCKET"));
+        env.insert(QStringLiteral("MAIA_NOTIFICATIONS_SETTINGS_SOCKET"), qEnvironmentVariable("MAIA_NOTIFICATIONS_SETTINGS_SOCKET"));
+        env.insert(QStringLiteral("MAIA_NOTIFICATIONS_SETTINGS"), m_settingsDir.filePath(QStringLiteral("notifications.json")));
         m_service.setProcessEnvironment(env);
         m_service.setProcessChannelMode(QProcess::ForwardedErrorChannel);
         m_service.start(QStringLiteral(MAIA_NOTIFICATIONS_SERVICE), {});
@@ -92,6 +99,9 @@ private Q_SLOTS:
         qputenv("MAIA_NOTIFICATIONS_SOCKET", (runtimeDir() + QStringLiteral("/tn-%1.sock").arg(QCoreApplication::applicationPid())).toUtf8());
         qputenv("MAIA_NOTIFICATIONS_CENTER_SOCKET",
                 (runtimeDir() + QStringLiteral("/tnc-%1.sock").arg(QCoreApplication::applicationPid())).toUtf8());
+        qputenv("MAIA_NOTIFICATIONS_SETTINGS_SOCKET",
+                (runtimeDir() + QStringLiteral("/tns-%1.sock").arg(QCoreApplication::applicationPid())).toUtf8());
+        QVERIFY(m_settingsDir.isValid());
         startService();
         Notifications notifications;
         NotificationCenter center;
@@ -487,6 +497,97 @@ private Q_SLOTS:
         QTRY_COMPARE(model.rowCount(), 1);
         QTRY_COMPARE(role(model, 0, NotificationRoles::SummaryRole).toString(), QStringLiteral("Sent without the service"));
         QTRY_VERIFY(waiting->notificationId() != 0);
+    }
+
+    // --- Settings (Maia.Notifications.Settings) ---
+
+    void theLockScreenSettingReachesTheShell()
+    {
+        NotificationSettings settings;
+        NotificationCenter center;
+        QTRY_VERIFY(settings.connected());
+        QTRY_VERIFY(center.lockScreenNotifications());
+        QSignalSpy changed(&center, &NotificationCenter::lockScreenNotificationsChanged);
+        settings.setLockScreenNotifications(false);
+        QTRY_VERIFY(!settings.lockScreenNotifications());
+        QTRY_VERIFY(!center.lockScreenNotifications());
+        QCOMPARE(changed.count(), 1);
+        settings.setLockScreenNotifications(true);
+        QTRY_VERIFY(center.lockScreenNotifications());
+    }
+
+    void doNotDisturbIsOneForTheSettingsAndTheShell()
+    {
+        NotificationSettings settings;
+        NotificationCenter center;
+        QTRY_VERIFY(settings.connected());
+        settings.setDoNotDisturbFor(30);
+        QTRY_VERIFY(center.doNotDisturb());
+        QTRY_VERIFY(settings.doNotDisturb());
+        QVERIFY(settings.doNotDisturbUntil().isValid());
+        center.setDoNotDisturb(false);
+        QTRY_VERIFY(!settings.doNotDisturb());
+        QVERIFY(!settings.doNotDisturbUntil().isValid());
+    }
+
+    void aSendingApplicationIsListedAndCanBeTurnedOff()
+    {
+        NotificationSettings settings;
+        AppNotificationsModel apps;
+        NotificationsModel list;
+        QTRY_VERIFY(settings.connected());
+        const QString key = QStringLiteral("org.maia.tst.mail");
+        const auto rowOf = [&apps, &key] {
+            for (int row = 0; row < apps.rowCount(); ++row) {
+                if (role(apps, row, AppNotificationsModel::KeyRole).toString() == key)
+                    return row;
+            }
+            return -1;
+        };
+
+        auto first = std::make_unique<Notification>();
+        first->setAppName(QStringLiteral("Test Mail"));
+        first->setDesktopEntry(key);
+        first->setSummary(QStringLiteral("Hello"));
+        first->send();
+        QTRY_VERIFY(rowOf() >= 0);
+        QCOMPARE(role(apps, rowOf(), AppNotificationsModel::AppNameRole).toString(), QStringLiteral("Test Mail"));
+        QVERIFY(role(apps, rowOf(), AppNotificationsModel::EnabledRole).toBool());
+        QVERIFY(role(apps, rowOf(), AppNotificationsModel::SentRole).toBool());
+
+        // Its switch: the row changes, the model is not reset (the switch keeps its delegate)
+        QSignalSpy reset(&apps, &QAbstractItemModel::modelReset);
+        settings.setAppEnabled(key, false);
+        QTRY_VERIFY(!role(apps, rowOf(), AppNotificationsModel::EnabledRole).toBool());
+        QCOMPARE(reset.count(), 0);
+
+        auto second = std::make_unique<Notification>();
+        second->setAppName(QStringLiteral("Test Mail"));
+        second->setDesktopEntry(key);
+        second->setSummary(QStringLiteral("Not shown"));
+        QSignalSpy closed(second.get(), &Notification::closed);
+        second->send();
+        QTRY_COMPARE(closed.count(), 1);
+        for (int row = 0; row < list.rowCount(); ++row)
+            QVERIFY(role(list, row, NotificationRoles::SummaryRole).toString() != QStringLiteral("Not shown"));
+
+        settings.setAppEnabled(key, true);
+        QTRY_VERIFY(role(apps, rowOf(), AppNotificationsModel::EnabledRole).toBool());
+    }
+
+    void applicationsAreSortedByName()
+    {
+        const auto app = [](const char *key, const char *name) {
+            AppNotificationsData a;
+            a.key = QString::fromLatin1(key);
+            a.appName = QString::fromUtf8(name);
+            return a;
+        };
+        const auto list = AppNotificationsModel::sorted({app("z", "zegar"), app("b", "Bluetooth"), app("a", "aparat"), app("c", "Bluetooth")});
+        QStringList keys;
+        for (const auto &a : list)
+            keys.append(a.key);
+        QCOMPARE(keys, (QStringList{QStringLiteral("a"), QStringLiteral("b"), QStringLiteral("c"), QStringLiteral("z")}));
     }
 
     // --- Jobs of programs (Job) ---

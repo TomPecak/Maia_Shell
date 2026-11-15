@@ -132,6 +132,32 @@ struct JobData {
     bool running() const { return state == 0 || state == 1; }
 };
 
+// What a shell does itself, by the user's settings
+struct ShellSettingsData {
+    bool lockScreenNotifications = true;
+
+    bool operator==(const ShellSettingsData &) const = default;
+};
+
+// An application that sends notifications, and whether the user lets it (NotificationSettings)
+struct AppNotificationsData {
+    QString key;
+    QString desktopEntry;
+    QString appName;
+    QString appIcon;
+    bool enabled = true;
+    bool sent = false;
+    bool declared = false;
+
+    bool operator==(const AppNotificationsData &) const = default;
+};
+
+struct SettingsData {
+    DoNotDisturbData doNotDisturb;
+    ShellSettingsData shell;
+    QList<AppNotificationsData> apps;
+};
+
 // What a program says about its job (Notifier.startJob, JobHandle.update): its whole state
 struct JobProgressData {
     QString title;

@@ -15,8 +15,10 @@ use futures::AsyncReadExt;
 use tokio_util::compat::TokioAsyncReadCompatExt;
 
 use maia_notifications::hub::{Hub, HubRef};
-use maia_notifications::notifications_capnp::{self as n, center_listener, notification_center, notifier, notifier_listener};
-use maia_notifications::rpc::{self, Center, NotifierImpl};
+use maia_notifications::notifications_capnp::{
+    self as n, center_listener, notification_center, notification_settings, notifier, notifier_listener, settings_listener,
+};
+use maia_notifications::rpc::{self, Center, NotifierImpl, SettingsImpl};
 
 pub const TIMEOUT: Duration = Duration::from_secs(5);
 
@@ -122,6 +124,8 @@ pub struct Seen {
     pub inhibitors: Vec<String>,
     pub jobs: BTreeMap<u32, ShownJob>,
     pub job_batches: u32,
+    /// ShellSettings, from the snapshot and its changes
+    pub lock_screen_notifications: Option<bool>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -220,6 +224,7 @@ impl center_listener::Server for ShellListener {
         let snapshot = params.get()?.get_snapshot()?;
         let mut seen = self.0.borrow_mut();
         seen.snapshots += 1;
+        seen.lock_screen_notifications = Some(snapshot.get_shell_settings()?.get_lock_screen_notifications());
         seen.notifications.clear();
         seen.snapshot_order.clear();
         for n in snapshot.get_notifications()? {
@@ -277,6 +282,15 @@ impl center_listener::Server for ShellListener {
         _: center_listener::DoNotDisturbChangedResults,
     ) -> Result<(), capnp::Error> {
         read_dnd(&mut self.0.borrow_mut(), params.get()?.get_do_not_disturb()?)
+    }
+
+    async fn shell_settings_changed(
+        self: Rc<Self>,
+        params: center_listener::ShellSettingsChangedParams,
+        _: center_listener::ShellSettingsChangedResults,
+    ) -> Result<(), capnp::Error> {
+        self.0.borrow_mut().lock_screen_notifications = Some(params.get()?.get_settings()?.get_lock_screen_notifications());
+        Ok(())
     }
 }
 
@@ -473,6 +487,112 @@ impl Sender {
         let reply = request.send().promise.await.unwrap();
         let reply = reply.get().unwrap();
         Sent { id: reply.get_id(), handle: reply.get_handle().unwrap(), heard }
+    }
+}
+
+// --- Maia Settings: NotificationSettings ---
+
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct SeenApp {
+    pub desktop_entry: String,
+    pub app_name: String,
+    pub app_icon: String,
+    pub enabled: bool,
+    pub sent: bool,
+    pub declared: bool,
+}
+
+#[derive(Default, Debug)]
+pub struct SeenSettings {
+    pub calls: u32,
+    pub dnd_enabled: bool,
+    pub dnd_until: i64,
+    pub lock_screen_notifications: bool,
+    pub apps: BTreeMap<String, SeenApp>,
+}
+
+struct SettingsRecorder(Rc<RefCell<SeenSettings>>);
+
+impl settings_listener::Server for SettingsRecorder {
+    async fn settings_changed(
+        self: Rc<Self>,
+        params: settings_listener::SettingsChangedParams,
+        _: settings_listener::SettingsChangedResults,
+    ) -> Result<(), capnp::Error> {
+        let settings = params.get()?.get_settings()?;
+        let mut seen = self.0.borrow_mut();
+        seen.calls += 1;
+        let dnd = settings.get_do_not_disturb()?;
+        seen.dnd_enabled = dnd.get_enabled();
+        seen.dnd_until = dnd.get_until();
+        seen.lock_screen_notifications = settings.get_shell()?.get_lock_screen_notifications();
+        seen.apps.clear();
+        for a in settings.get_apps()? {
+            seen.apps.insert(
+                a.get_key()?.to_string()?,
+                SeenApp {
+                    desktop_entry: a.get_desktop_entry()?.to_string()?,
+                    app_name: a.get_app_name()?.to_string()?,
+                    app_icon: a.get_app_icon()?.to_string()?,
+                    enabled: a.get_enabled(),
+                    sent: a.get_sent(),
+                    declared: a.get_declared(),
+                },
+            );
+        }
+        Ok(())
+    }
+}
+
+/// Maia Settings: watches the settings and changes them
+pub struct SettingsClient {
+    pub settings: notification_settings::Client,
+    pub seen: Rc<RefCell<SeenSettings>>,
+    _subscription: n::subscription::Client,
+}
+
+impl SettingsClient {
+    pub async fn connect(hub: &HubRef) -> SettingsClient {
+        let (ours, theirs) = tokio::net::UnixStream::pair().unwrap();
+        rpc::serve(theirs, SettingsImpl::client(hub.clone()).client);
+        let settings: notification_settings::Client = twoparty(ours);
+        let seen = Rc::new(RefCell::new(SeenSettings::default()));
+        let mut request = settings.watch_request();
+        request.get().set_listener(capnp_rpc::new_client(SettingsRecorder(seen.clone())));
+        let reply = request.send().promise.await.unwrap();
+        let subscription = reply.get().unwrap().get_subscription().unwrap();
+        let client = SettingsClient { settings, seen, _subscription: subscription };
+        client.wait("the first settings", |s| s.calls > 0).await;
+        client
+    }
+
+    pub async fn wait(&self, what: &str, condition: impl Fn(&SeenSettings) -> bool) {
+        let start = Instant::now();
+        while !condition(&self.seen.borrow()) {
+            assert!(start.elapsed() < TIMEOUT, "waiting for {what}: {:?}", self.seen.borrow());
+            tokio::time::sleep(Duration::from_millis(2)).await;
+        }
+    }
+
+    pub async fn set_app_enabled(&self, key: &str, enabled: bool) -> n::ErrorCode {
+        let mut request = self.settings.set_app_enabled_request();
+        request.get().set_key(key);
+        request.get().set_enabled(enabled);
+        let reply = request.send().promise.await.unwrap();
+        reply.get().unwrap().get_result().unwrap().get_error().unwrap()
+    }
+
+    pub async fn set_lock_screen_notifications(&self, enabled: bool) {
+        let mut request = self.settings.set_lock_screen_notifications_request();
+        request.get().set_enabled(enabled);
+        request.send().promise.await.unwrap();
+    }
+
+    pub async fn set_do_not_disturb(&self, enabled: bool, until: i64) {
+        let mut request = self.settings.set_do_not_disturb_request();
+        request.get().set_enabled(enabled);
+        request.get().set_until(until);
+        request.send().promise.await.unwrap();
     }
 }
 

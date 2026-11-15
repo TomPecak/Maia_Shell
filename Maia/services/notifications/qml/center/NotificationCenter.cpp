@@ -25,6 +25,7 @@ NotificationCenter::NotificationCenter(QObject *parent)
         Q_EMIT countChanged();
     });
     connect(connection, &CenterConnection::doNotDisturbChanged, this, &NotificationCenter::doNotDisturbChanged);
+    connect(connection, &CenterConnection::shellSettingsChanged, this, &NotificationCenter::lockScreenNotificationsChanged);
 }
 
 bool NotificationCenter::connected() const
@@ -35,6 +36,11 @@ bool NotificationCenter::connected() const
 int NotificationCenter::count() const
 {
     return int(CenterConnection::instance()->notifications().size());
+}
+
+bool NotificationCenter::lockScreenNotifications() const
+{
+    return CenterConnection::instance()->shellSettings().lockScreenNotifications;
 }
 
 bool NotificationCenter::doNotDisturb() const

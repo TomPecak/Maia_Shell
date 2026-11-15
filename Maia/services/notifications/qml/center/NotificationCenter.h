@@ -43,6 +43,8 @@ class NotificationCenter : public QObject
     Q_PROPERTY(bool doNotDisturbActive READ doNotDisturbActive NOTIFY doNotDisturbChanged)
     // Applications that asked for quiet: [{ desktopEntry, appName, reason }]
     Q_PROPERTY(QVariantList inhibitors READ inhibitors NOTIFY doNotDisturbChanged)
+    // The user's setting (Maia Settings): a lock screen shows notifications, or only that there are
+    Q_PROPERTY(bool lockScreenNotifications READ lockScreenNotifications NOTIFY lockScreenNotificationsChanged)
 
 public:
     // The numbers are those of the contract (notifications.capnp)
@@ -62,6 +64,7 @@ public:
     QDateTime doNotDisturbUntil() const;
     bool doNotDisturbActive() const;
     QVariantList inhibitors() const;
+    bool lockScreenNotifications() const;
 
     // key "default": a click on the notification itself
     Q_INVOKABLE void invokeAction(uint notificationId, const QString &key, QWindow *window = nullptr);
@@ -82,6 +85,7 @@ Q_SIGNALS:
     void connectedChanged();
     void countChanged();
     void doNotDisturbChanged();
+    void lockScreenNotificationsChanged();
 
 private:
     // Calls `send` with an activation token for `window` (or "" without one)

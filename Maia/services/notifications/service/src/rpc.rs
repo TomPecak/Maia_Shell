@@ -17,8 +17,9 @@ use crate::model::{
 };
 use crate::jobs::{self, JobRequest, JobUpdate, Unit};
 use crate::notifications_capnp::{
-    self as n, job_handle, notification_center, notification_handle, notifier, subscription,
+    self as n, job_handle, notification_center, notification_handle, notification_settings, notifier, subscription,
 };
+use crate::settings::Settings;
 
 // --- Plain values into the contract ---
 
@@ -143,7 +144,28 @@ pub fn write_job(mut b: n::job::Builder, job: &crate::jobs::Job) {
     b.set_updated(job.updated);
 }
 
-pub fn write_snapshot(mut b: n::snapshot::Builder, store: &Store<Origin>, jobs: &crate::jobs::JobStore, now: i64) {
+pub fn write_shell_settings(mut b: n::shell_settings::Builder, settings: &Settings) {
+    b.set_lock_screen_notifications(settings.lock_screen_notifications);
+}
+
+pub fn write_settings(mut b: n::settings::Builder, settings: &Settings, dnd: &DoNotDisturb, now: i64) {
+    write_do_not_disturb(b.reborrow().init_do_not_disturb(), dnd, now);
+    write_shell_settings(b.reborrow().init_shell(), settings);
+    let mut apps = b.init_apps(settings.apps.len() as u32);
+    for (i, app) in settings.apps.values().enumerate() {
+        let mut a = apps.reborrow().get(i as u32);
+        a.set_key(&app.key);
+        a.set_desktop_entry(&app.desktop_entry);
+        a.set_app_name(&app.app_name);
+        a.set_app_icon(&crate::image::icon(&app.app_icon));
+        a.set_enabled(app.enabled);
+        a.set_sent(app.sent);
+        a.set_declared(app.declared);
+    }
+}
+
+pub fn write_snapshot(mut b: n::snapshot::Builder, store: &Store<Origin>, jobs: &crate::jobs::JobStore, settings: &Settings, now: i64) {
+    write_shell_settings(b.reborrow().init_shell_settings(), settings);
     {
         let visible = jobs.visible();
         let mut list = b.reborrow().init_jobs(visible.len() as u32);
@@ -393,6 +415,87 @@ impl notification_center::Server for Center {
         mut results: notification_center::DismissJobResults,
     ) -> Result<(), capnp::Error> {
         let result = Hub::dismiss_job(&self.hub, params.get()?.get_id());
+        write_result(results.get().init_result(), &result);
+        Ok(())
+    }
+}
+
+// --- NotificationSettings: Maia Settings ---
+
+pub struct SettingsImpl {
+    hub: HubRef,
+}
+
+impl SettingsImpl {
+    pub fn client(hub: HubRef) -> notification_settings::Client {
+        capnp_rpc::new_client(SettingsImpl { hub })
+    }
+}
+
+struct SettingsSubscription {
+    hub: Weak<RefCell<Hub>>,
+    id: u64,
+}
+
+impl Drop for SettingsSubscription {
+    fn drop(&mut self) {
+        if let Some(hub) = self.hub.upgrade() {
+            hub.borrow_mut().remove_settings_listener(self.id);
+        }
+    }
+}
+
+impl subscription::Server for SettingsSubscription {}
+
+impl notification_settings::Server for SettingsImpl {
+    async fn info(
+        self: Rc<Self>,
+        _: notification_settings::InfoParams,
+        mut results: notification_settings::InfoResults,
+    ) -> Result<(), capnp::Error> {
+        let mut b = results.get();
+        b.set_service_version(env!("CARGO_PKG_VERSION"));
+        write_info(b.init_capabilities(crate::CAPABILITIES.len() as u32));
+        Ok(())
+    }
+
+    async fn watch(
+        self: Rc<Self>,
+        params: notification_settings::WatchParams,
+        mut results: notification_settings::WatchResults,
+    ) -> Result<(), capnp::Error> {
+        let listener = params.get()?.get_listener()?;
+        let id = Hub::add_settings_listener(&self.hub, listener);
+        results.get().set_subscription(capnp_rpc::new_client(SettingsSubscription { hub: Rc::downgrade(&self.hub), id }));
+        Ok(())
+    }
+
+    async fn set_do_not_disturb(
+        self: Rc<Self>,
+        params: notification_settings::SetDoNotDisturbParams,
+        _: notification_settings::SetDoNotDisturbResults,
+    ) -> Result<(), capnp::Error> {
+        let params = params.get()?;
+        Hub::set_do_not_disturb(&self.hub, params.get_enabled(), params.get_until());
+        Ok(())
+    }
+
+    async fn set_lock_screen_notifications(
+        self: Rc<Self>,
+        params: notification_settings::SetLockScreenNotificationsParams,
+        _: notification_settings::SetLockScreenNotificationsResults,
+    ) -> Result<(), capnp::Error> {
+        Hub::set_lock_screen_notifications(&self.hub, params.get()?.get_enabled());
+        Ok(())
+    }
+
+    async fn set_app_enabled(
+        self: Rc<Self>,
+        params: notification_settings::SetAppEnabledParams,
+        mut results: notification_settings::SetAppEnabledResults,
+    ) -> Result<(), capnp::Error> {
+        let params = params.get()?;
+        let result = Hub::set_app_enabled(&self.hub, &text(params.get_key())?, params.get_enabled());
         write_result(results.get().init_result(), &result);
         Ok(())
     }

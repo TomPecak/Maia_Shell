@@ -286,6 +286,11 @@ impl<O: Clone> Store<O> {
         self.entries.keys().copied().collect()
     }
 
+    /// An id for a notification that is not kept (its application is turned off): never one in use
+    pub fn reserve_id(&mut self) -> u32 {
+        self.take_id()
+    }
+
     fn take_id(&mut self) -> u32 {
         loop {
             let id = self.next_id;

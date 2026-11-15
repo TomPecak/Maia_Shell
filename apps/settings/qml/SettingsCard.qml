@@ -9,7 +9,11 @@ import LumenFrontend
 Rectangle {
     id: card
 
+    // A symbolic glyph of the frontend (tinted); with appIcon, an application's icon from the icon
+    // theme or a file URL, in its own colors
     property string iconName
+    property bool appIcon: false
+    property int iconSize: appIcon ? 32 : 20
     property string title
     property string description
     property color descriptionColor: Theme.textSecondary
@@ -55,9 +59,20 @@ Rectangle {
         spacing: Theme.spacingL
 
         LIcon {
-            visible: card.iconName.length > 0
+            visible: card.iconName.length > 0 && !card.iconName.startsWith("file:")
             iconName: card.iconName
-            size: 20
+            tinted: !card.appIcon
+            size: card.iconSize
+            Layout.alignment: Qt.AlignVCenter
+        }
+
+        Image {
+            visible: card.iconName.startsWith("file:")
+            source: visible ? card.iconName : ""
+            sourceSize: Qt.size(card.iconSize, card.iconSize)
+            asynchronous: true
+            Layout.preferredWidth: card.iconSize
+            Layout.preferredHeight: card.iconSize
             Layout.alignment: Qt.AlignVCenter
         }
 

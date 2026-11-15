@@ -104,32 +104,11 @@ pub fn update_from(properties: &HashMap<String, OwnedValue>) -> JobUpdate {
     update
 }
 
-/// Name= and Icon= of a desktop entry, from the applications directories (a few small reads)
+/// Name= and Icon= of a desktop entry, in the session's language
 fn desktop_entry_info(entry: &str) -> (String, String) {
-    let mut dirs: Vec<std::path::PathBuf> = Vec::new();
-    if let Some(home) = std::env::var_os("XDG_DATA_HOME").map(std::path::PathBuf::from).or_else(|| std::env::var_os("HOME").map(|h| std::path::PathBuf::from(h).join(".local/share"))) {
-        dirs.push(home);
-    }
-    let data_dirs = std::env::var("XDG_DATA_DIRS").unwrap_or_else(|_| "/usr/local/share:/usr/share".into());
-    dirs.extend(data_dirs.split(':').filter(|d| !d.is_empty()).map(std::path::PathBuf::from));
-    for dir in dirs {
-        let Ok(text) = std::fs::read_to_string(dir.join("applications").join(format!("{entry}.desktop"))) else { continue };
-        let (mut name, mut icon, mut in_entry) = (String::new(), String::new(), false);
-        for line in text.lines() {
-            let line = line.trim();
-            if line.starts_with('[') {
-                in_entry = line == "[Desktop Entry]";
-            } else if in_entry {
-                if let Some(v) = line.strip_prefix("Name=") {
-                    name = v.to_string();
-                } else if let Some(v) = line.strip_prefix("Icon=") {
-                    icon = v.to_string();
-                }
-            }
-        }
-        return (name, icon);
-    }
-    (String::new(), String::new())
+    crate::desktop::find(&crate::desktop::data_dirs(), entry, &crate::desktop::languages())
+        .map(|e| (e.name, e.icon))
+        .unwrap_or_default()
 }
 
 /// Fills an empty program name and icon from the desktop entry's Name= and Icon= (off the loop)

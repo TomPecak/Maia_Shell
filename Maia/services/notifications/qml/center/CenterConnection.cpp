@@ -42,7 +42,10 @@ protected:
         QList<JobData> jobs;
         for (auto j : s.getJobs())
             jobs.append(readJob(j));
-        m_connection->toGui([c = m_connection, list = std::move(list), dnd, jobs = std::move(jobs)] { c->applySnapshot(list, dnd, jobs); });
+        const ShellSettingsData settings = readShellSettings(s.getShellSettings());
+        m_connection->toGui([c = m_connection, list = std::move(list), dnd, jobs = std::move(jobs), settings] {
+            c->applySnapshot(list, dnd, jobs, settings);
+        });
         return kj::READY_NOW;
     }
 
@@ -79,6 +82,13 @@ protected:
     {
         const DoNotDisturbData dnd = readDoNotDisturb(context.getParams().getDoNotDisturb());
         m_connection->toGui([c = m_connection, dnd] { c->applyDoNotDisturb(dnd); });
+        return kj::READY_NOW;
+    }
+
+    kj::Promise<void> shellSettingsChanged(ShellSettingsChangedContext context) override
+    {
+        const ShellSettingsData settings = readShellSettings(context.getParams().getSettings());
+        m_connection->toGui([c = m_connection, settings] { c->applyShellSettings(settings); });
         return kj::READY_NOW;
     }
 
@@ -140,8 +150,10 @@ void CenterConnection::disconnected()
 
 // --- GUI thread: the state ---
 
-void CenterConnection::applySnapshot(const QList<NotificationData> &list, const DoNotDisturbData &dnd, const QList<JobData> &jobs)
+void CenterConnection::applySnapshot(const QList<NotificationData> &list, const DoNotDisturbData &dnd, const QList<JobData> &jobs,
+                                     const ShellSettingsData &shellSettings)
 {
+    applyShellSettings(shellSettings);
     m_jobs.clear();
     for (const auto &job : jobs)
         m_jobs.insert(job.id, job);
@@ -170,6 +182,14 @@ void CenterConnection::applyJobs(const QList<JobData> &changed, const QList<quin
     for (const auto &job : changed)
         m_jobs.insert(job.id, job);
     Q_EMIT jobsBatch(changed, removed);
+}
+
+void CenterConnection::applyShellSettings(const ShellSettingsData &settings)
+{
+    if (settings == m_shellSettings)
+        return;
+    m_shellSettings = settings;
+    Q_EMIT shellSettingsChanged();
 }
 
 void CenterConnection::applyDoNotDisturb(const DoNotDisturbData &dnd)

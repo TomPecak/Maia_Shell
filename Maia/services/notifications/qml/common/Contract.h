@@ -16,6 +16,8 @@ QString toQString(capnp::Text::Reader text);
 NotificationData readNotification(C::Notification::Reader n);
 DoNotDisturbData readDoNotDisturb(C::DoNotDisturb::Reader d);
 JobData readJob(C::Job::Reader j);
+ShellSettingsData readShellSettings(C::ShellSettings::Reader s);
+SettingsData readSettings(C::Settings::Reader s);
 void writeRequest(C::NotificationRequest::Builder b, const RequestData &request);
 void writeJobProgress(C::JobProgress::Builder b, const JobProgressData &progress);
 void writeJobRequest(C::JobRequest::Builder b, const JobRequestData &request);

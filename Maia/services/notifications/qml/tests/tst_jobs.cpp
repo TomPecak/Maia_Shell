@@ -12,6 +12,7 @@
 #include <QDir>
 #include <QProcess>
 #include <QSignalSpy>
+#include <QTemporaryDir>
 #include <QTest>
 
 using namespace MaiaNotifications;
@@ -45,6 +46,7 @@ class TestJobs : public QObject
 
 private:
     QProcess m_bus;
+    QTemporaryDir m_settingsDir;
     QProcess m_service;
     QDBusConnection m_client{QStringLiteral("none")};
 
@@ -83,6 +85,8 @@ private Q_SLOTS:
         env.insert(QStringLiteral("WAYLAND_DISPLAY"), QStringLiteral("maia-tstj-") + pid);
         env.insert(QStringLiteral("MAIA_NOTIFICATIONS_SOCKET"), runtime + QStringLiteral("/tjn-") + pid + QStringLiteral(".sock"));
         env.insert(QStringLiteral("MAIA_NOTIFICATIONS_CENTER_SOCKET"), qEnvironmentVariable("MAIA_NOTIFICATIONS_CENTER_SOCKET"));
+        // Its own settings file: never the user's
+        env.insert(QStringLiteral("MAIA_NOTIFICATIONS_SETTINGS"), m_settingsDir.filePath(QStringLiteral("notifications.json")));
         m_service.setProcessEnvironment(env);
         m_service.setProcessChannelMode(QProcess::ForwardedErrorChannel);
         m_service.start(QStringLiteral(MAIA_NOTIFICATIONS_SERVICE), {});

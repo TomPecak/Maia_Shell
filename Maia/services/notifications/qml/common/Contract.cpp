@@ -60,6 +60,27 @@ DoNotDisturbData readDoNotDisturb(C::DoNotDisturb::Reader r)
     return d;
 }
 
+ShellSettingsData readShellSettings(C::ShellSettings::Reader s)
+{
+    ShellSettingsData d;
+    d.lockScreenNotifications = s.getLockScreenNotifications();
+    return d;
+}
+
+SettingsData readSettings(C::Settings::Reader s)
+{
+    SettingsData d;
+    d.doNotDisturb = readDoNotDisturb(s.getDoNotDisturb());
+    d.shell = readShellSettings(s.getShell());
+    auto apps = s.getApps();
+    d.apps.reserve(apps.size());
+    for (auto a : apps) {
+        d.apps.append({toQString(a.getKey()), toQString(a.getDesktopEntry()), toQString(a.getAppName()), toQString(a.getAppIcon()),
+                       a.getEnabled(), a.getSent(), a.getDeclared()});
+    }
+    return d;
+}
+
 JobData readJob(C::Job::Reader j)
 {
     JobData d;

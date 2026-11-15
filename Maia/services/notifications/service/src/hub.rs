@@ -31,11 +31,19 @@ use crate::image;
 use crate::jobs::{self, Ended, JobRequest, JobStore, JobUpdate};
 use crate::model::{CloseReason, Expired, Inhibitor, Request, Store, now_ms};
 use crate::throttle::ChangeThrottle;
-use crate::notifications_capnp::{center_listener, job_listener, notifier_listener};
+use crate::notifications_capnp::{center_listener, job_listener, notifier_listener, settings_listener};
+use crate::settings::Settings;
 use crate::rpc;
 
 /// The shortest time between two batches to the shells: one frame
 pub const FRAME: Duration = Duration::from_millis(16);
+
+/// A notification of an application the user turned off is closed this long after it came, so
+/// that its sender has its id first (on D-Bus the answer and the signal take different ways)
+pub const REJECTED_CLOSE_DELAY: Duration = Duration::from_millis(100);
+
+/// Settings are written this long after they change: a burst of changes is one write
+pub const SETTINGS_SAVE_DELAY: Duration = Duration::from_millis(300);
 
 /// Who gets the events of a notification
 #[derive(Clone)]
@@ -130,6 +138,15 @@ pub struct Hub {
     job_urls: Vec<String>,
     /// Jobs of Maia senders (Notifier.startJob): what the user asks goes to them, not to D-Bus
     job_listeners: HashMap<u32, job_listener::Client>,
+    /// The user's rules (settings.rs), saved to `settings_path` a moment after they change
+    settings: Settings,
+    settings_path: Option<PathBuf>,
+    save_scheduled: bool,
+    /// The desktop entries (desktop.rs), read once at start: they name new senders
+    entries: Rc<HashMap<String, crate::desktop::Entry>>,
+    settings_listeners: Vec<(u64, settings_listener::Client)>,
+    settings_changed: bool,
+    shell_settings_changed: bool,
 }
 
 pub type HubRef = Rc<RefCell<Hub>>;
@@ -160,6 +177,13 @@ impl Hub {
             job_throttle: ChangeThrottle::new(JOB_INTERVAL),
             job_urls: Vec::new(),
             job_listeners: HashMap::new(),
+            settings: Settings::default(),
+            settings_path: None,
+            save_scheduled: false,
+            entries: Rc::new(HashMap::new()),
+            settings_listeners: Vec::new(),
+            settings_changed: false,
+            shell_settings_changed: false,
         }))
     }
 
@@ -188,6 +212,27 @@ impl Hub {
     /// A new notification or a replacement; answers at once with its id
     pub fn notify(hub: &HubRef, replaces: u32, request: Request, origin: Origin) -> u32 {
         let mut this = hub.borrow_mut();
+        if let Some(key) = Settings::key_of(&request.desktop_entry, &request.app_name) {
+            let entries = this.entries.clone();
+            let entry = entries.get(&request.desktop_entry);
+            if this.settings.sent(&key, &request.desktop_entry, &request.app_name, &request.app_icon, entry) {
+                this.settings_did_change(hub);
+                schedule_flush(hub, &mut this);
+            }
+            if !this.settings.allows(&key) {
+                // Turned off by the user: not shown, not kept. The sender gets an id like any other
+                // and hears that it is closed once it has it (its Notify call answered first)
+                let id = this.store.reserve_id();
+                let weak = Rc::downgrade(hub);
+                tokio::task::spawn_local(async move {
+                    tokio::time::sleep(REJECTED_CLOSE_DELAY).await;
+                    if let Some(hub) = weak.upgrade() {
+                        hub.borrow().tell(&origin, id, SenderEvent::Closed(CloseReason::Other));
+                    }
+                });
+                return id;
+            }
+        }
         let added = this.store.add(replaces, request, origin, now_ms());
         let id = added.id;
         if let Some(file) = added.old_image_file {
@@ -293,6 +338,9 @@ impl Hub {
     /// until: ms since 1970, 0 = until turned off
     pub fn set_do_not_disturb(hub: &HubRef, enabled: bool, until: i64) {
         let mut this = hub.borrow_mut();
+        this.settings.dnd_enabled = enabled;
+        this.settings.dnd_until = if enabled { until.max(0) } else { 0 };
+        this.settings_did_change(hub);
         this.store.dnd.enabled = enabled;
         this.store.dnd.until = if enabled { until.max(0) } else { 0 };
         this.dnd_timer += 1;
@@ -308,6 +356,9 @@ impl Hub {
                     // Its time has run out: off, for everyone to see
                     this.store.dnd.enabled = false;
                     this.store.dnd.until = 0;
+                    this.settings.dnd_enabled = false;
+                    this.settings.dnd_until = 0;
+                    this.settings_did_change(&hub);
                     this.dnd_did_change();
                     schedule_flush(&hub, &mut this);
                 }
@@ -481,6 +532,128 @@ impl Hub {
         this.send_out(Outgoing::JobUrls(this.jobs.running_urls()));
     }
 
+    // --- Settings (settings.rs) ---
+
+    /// The rules kept in `path`, and the applications the desktop entries in `data_dirs` declare
+    /// (read in the background; the list grows when they are read)
+    pub fn load_settings(hub: &HubRef, path: PathBuf, data_dirs: Vec<PathBuf>) {
+        let settings = Settings::load(&path);
+        let (enabled, until) = (settings.dnd_enabled, settings.dnd_until);
+        {
+            let mut this = hub.borrow_mut();
+            this.settings = settings;
+            this.settings_path = Some(path);
+        }
+        if enabled && (until == 0 || until > now_ms()) {
+            Hub::set_do_not_disturb(hub, true, until);
+        } else if enabled {
+            // Its time ran out while the session was away
+            Hub::set_do_not_disturb(hub, false, 0);
+        }
+        let weak = Rc::downgrade(hub);
+        tokio::task::spawn_local(async move {
+            let read = tokio::task::spawn_blocking(move || {
+                let languages = crate::desktop::languages();
+                let entries = crate::desktop::index(&data_dirs, &languages);
+                let declared = crate::desktop::declared(&data_dirs, &entries, &languages);
+                (entries, declared)
+            });
+            let Ok((entries, declared)) = read.await else { return };
+            let Some(hub) = weak.upgrade() else { return };
+            let mut this = hub.borrow_mut();
+            let named = this.settings.apply_entries(&entries);
+            let added = this.settings.apply_declared(&declared);
+            this.entries = Rc::new(entries);
+            if named || added {
+                this.settings_did_change(&hub);
+                schedule_flush(&hub, &mut this);
+            }
+        });
+    }
+
+    pub fn settings(&self) -> &Settings {
+        &self.settings
+    }
+
+    pub fn set_lock_screen_notifications(hub: &HubRef, enabled: bool) {
+        let mut this = hub.borrow_mut();
+        if this.settings.lock_screen_notifications == enabled {
+            return;
+        }
+        this.settings.lock_screen_notifications = enabled;
+        this.shell_settings_changed = true;
+        this.settings_did_change(hub);
+        schedule_flush(hub, &mut this);
+    }
+
+    /// For notifications sent from now on (those in the list stay)
+    pub fn set_app_enabled(hub: &HubRef, key: &str, enabled: bool) -> Result<(), OpError> {
+        let mut this = hub.borrow_mut();
+        match this.settings.set_enabled(key, enabled) {
+            None => Err(OpError::new(ErrorCode::NotFound, format!("no application \"{key}\""))),
+            Some(changed) => {
+                if changed {
+                    this.settings_did_change(hub);
+                    schedule_flush(hub, &mut this);
+                }
+                Ok(())
+            }
+        }
+    }
+
+    pub fn add_settings_listener(hub: &HubRef, client: settings_listener::Client) -> u64 {
+        let mut this = hub.borrow_mut();
+        this.next_listener += 1;
+        let id = this.next_listener;
+        let mut request = client.settings_changed_request();
+        rpc::write_settings(request.get().init_settings(), &this.settings, &this.store.dnd, now_ms());
+        deliver_settings(hub, id, request.send().promise);
+        this.settings_listeners.push((id, client));
+        id
+    }
+
+    pub fn remove_settings_listener(&mut self, id: u64) {
+        self.settings_listeners.retain(|(other, _)| *other != id);
+    }
+
+    /// Writes the settings now, if they wait to be written (the end of the service)
+    pub fn save_settings_now(&mut self) {
+        if let (true, Some(path)) = (self.save_scheduled, &self.settings_path) {
+            self.save_scheduled = false;
+            if let Err(error) = Settings::save(&self.settings.to_json(), path) {
+                eprintln!("maia-notifications-service: {}: {error}", path.display());
+            }
+        }
+    }
+
+    /// The settings changed: to their listeners with the next batch, to the disk a moment later
+    /// (many changes in a row are one write)
+    fn settings_did_change(&mut self, hub: &HubRef) {
+        self.settings_changed = true;
+        if self.save_scheduled || self.settings_path.is_none() {
+            return;
+        }
+        self.save_scheduled = true;
+        let weak = Rc::downgrade(hub);
+        tokio::task::spawn_local(async move {
+            tokio::time::sleep(SETTINGS_SAVE_DELAY).await;
+            let Some(hub) = weak.upgrade() else { return };
+            let (text, path) = {
+                let mut this = hub.borrow_mut();
+                if !this.save_scheduled {
+                    return;
+                }
+                this.save_scheduled = false;
+                let Some(path) = this.settings_path.clone() else { return };
+                (this.settings.to_json(), path)
+            };
+            let written = tokio::task::spawn_blocking(move || Settings::save(&text, &path).map_err(|e| format!("{}: {e}", path.display()))).await;
+            if let Ok(Err(error)) = written {
+                eprintln!("maia-notifications-service: {error}");
+            }
+        });
+    }
+
     // --- Listeners ---
 
     pub fn add_listener(hub: &HubRef, client: center_listener::Client) -> u64 {
@@ -488,7 +661,7 @@ impl Hub {
         this.next_listener += 1;
         let id = this.next_listener;
         let mut request = client.snapshot_request();
-        rpc::write_snapshot(request.get().init_snapshot(), &this.store, &this.jobs, now_ms());
+        rpc::write_snapshot(request.get().init_snapshot(), &this.store, &this.jobs, &this.settings, now_ms());
         deliver(hub, id, request.send().promise);
         this.listeners.push((id, client));
         id
@@ -661,6 +834,8 @@ impl Hub {
         let changed: Vec<u32> = std::mem::take(&mut this.changed).into_iter().collect();
         let removed = std::mem::take(&mut this.removed);
         let dnd = std::mem::take(&mut this.dnd_changed);
+        let settings_changed = std::mem::take(&mut this.settings_changed) || dnd;
+        let shell_settings = std::mem::take(&mut this.shell_settings_changed);
         for key in this.job_throttle.take_due(Instant::now()) {
             if let Ok(id) = key.parse::<u32>() {
                 this.jobs_changed.insert(id);
@@ -698,6 +873,11 @@ impl Hub {
                 rpc::write_do_not_disturb(request.get().init_do_not_disturb(), &this.store.dnd, now);
                 deliver(hub, *listener_id, request.send().promise);
             }
+            if shell_settings {
+                let mut request = listener.shell_settings_changed_request();
+                rpc::write_shell_settings(request.get().init_settings(), &this.settings);
+                deliver(hub, *listener_id, request.send().promise);
+            }
             if !jobs.is_empty() || !jobs_removed.is_empty() {
                 let mut request = listener.jobs_changed_request();
                 {
@@ -715,6 +895,13 @@ impl Hub {
                 deliver(hub, *listener_id, request.send().promise);
             }
         }
+        if settings_changed {
+            for (listener_id, listener) in &this.settings_listeners {
+                let mut request = listener.settings_changed_request();
+                rpc::write_settings(request.get().init_settings(), &this.settings, &this.store.dnd, now);
+                deliver_settings(hub, *listener_id, request.send().promise);
+            }
+        }
         // Changes of jobs that wait for their interval
         schedule_flush(hub, &mut this);
     }
@@ -728,6 +915,8 @@ fn schedule_flush(hub: &HubRef, this: &mut Hub) {
     let pending = !this.changed.is_empty()
         || !this.removed.is_empty()
         || this.dnd_changed
+        || this.settings_changed
+        || this.shell_settings_changed
         || !this.jobs_changed.is_empty()
         || !this.jobs_removed.is_empty();
     let frame = this.last_flush.map(|last| last + FRAME).unwrap_or_else(Instant::now);
@@ -796,10 +985,28 @@ fn discard(file: PathBuf) {
 }
 
 /// Runs the call in the background; when it fails, the listener is gone
+/// Whether a listener's failed call means it is gone. A listener built on an older contract answers
+/// a newer call with "unimplemented": it stays, and gets the calls it knows.
+fn gone(error: &capnp::Error) -> bool {
+    error.kind != capnp::ErrorKind::Unimplemented
+}
+
+/// A settings listener that fails is dropped
+fn deliver_settings<T: 'static>(hub: &HubRef, id: u64, promise: capnp::capability::Promise<T, capnp::Error>) {
+    let hub = Rc::downgrade(hub);
+    tokio::task::spawn_local(async move {
+        if promise.await.is_err_and(|e| gone(&e)) {
+            if let Some(hub) = hub.upgrade() {
+                hub.borrow_mut().remove_settings_listener(id);
+            }
+        }
+    });
+}
+
 fn deliver<T: 'static>(hub: &HubRef, id: u64, promise: capnp::capability::Promise<T, capnp::Error>) {
     let hub = Rc::downgrade(hub);
     tokio::task::spawn_local(async move {
-        if promise.await.is_err() {
+        if promise.await.is_err_and(|e| gone(&e)) {
             if let Some(hub) = hub.upgrade() {
                 hub.borrow_mut().remove_listener(id);
             }

@@ -7,7 +7,10 @@
 //!
 //! Sockets: $MAIA_NOTIFICATIONS_SOCKET or $XDG_RUNTIME_DIR/maia/notifications-$WAYLAND_DISPLAY.sock
 //!          (Notifier), $MAIA_NOTIFICATIONS_CENTER_SOCKET or
-//!          $XDG_RUNTIME_DIR/maia/notifications-center-$WAYLAND_DISPLAY.sock (NotificationCenter)
+//!          $XDG_RUNTIME_DIR/maia/notifications-center-$WAYLAND_DISPLAY.sock (NotificationCenter),
+//!          $MAIA_NOTIFICATIONS_SETTINGS_SOCKET or
+//!          $XDG_RUNTIME_DIR/maia/notifications-settings-$WAYLAND_DISPLAY.sock (NotificationSettings)
+//! Settings: $MAIA_NOTIFICATIONS_SETTINGS or $MAIA_CONFIG_DIR/notifications.json
 //! Images:  $XDG_RUNTIME_DIR/maia/notifications-$WAYLAND_DISPLAY/
 //! D-Bus:   org.freedesktop.Notifications on the session bus; MAIA_NOTIFICATIONS_DBUS=0 leaves it out.
 //!          org.kde.JobViewServer and org.kde.kuiserver (jobs); MAIA_NOTIFICATIONS_JOBS=0 leaves
@@ -17,8 +20,8 @@ use std::os::unix::fs::{DirBuilderExt, MetadataExt};
 use std::path::{Path, PathBuf};
 
 use maia_notifications::hub::Hub;
-use maia_notifications::rpc::{Center, NotifierImpl};
-use maia_notifications::{dbus, image, rpc};
+use maia_notifications::rpc::{Center, NotifierImpl, SettingsImpl};
+use maia_notifications::{dbus, desktop, image, rpc, settings};
 use tokio::signal::unix::{SignalKind, signal};
 
 fn runtime_dir() -> PathBuf {
@@ -76,10 +79,17 @@ async fn accept(listener: tokio::net::UnixListener, bootstrap: capnp::capability
 async fn run() -> Result<(), Box<dyn std::error::Error>> {
     let notifier_path = socket_path("MAIA_NOTIFICATIONS_SOCKET", "notifications");
     let center_path = socket_path("MAIA_NOTIFICATIONS_CENTER_SOCKET", "notifications-center");
+    let settings_path = socket_path("MAIA_NOTIFICATIONS_SETTINGS_SOCKET", "notifications-settings");
     let notifier_listener = bind(&notifier_path)?;
     let center_listener = bind(&center_path)?;
+    let settings_listener = bind(&settings_path)?;
     // At the end the sockets are removed only if they are still ours (not of a newer instance)
-    let inodes = [std::fs::metadata(&notifier_path)?.ino(), std::fs::metadata(&center_path)?.ino()];
+    let sockets = [&notifier_path, &center_path, &settings_path];
+    let inodes = [
+        std::fs::metadata(&notifier_path)?.ino(),
+        std::fs::metadata(&center_path)?.ino(),
+        std::fs::metadata(&settings_path)?.ino(),
+    ];
 
     let image_dir = runtime_dir().join(format!("notifications-{}", display()));
     std::fs::DirBuilder::new().recursive(true).mode(0o700).create(&image_dir)?;
@@ -89,6 +99,7 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
     let result = local
         .run_until(async {
             let hub = Hub::new(Some(image_dir.clone()));
+            Hub::load_settings(&hub, settings::default_path(), desktop::data_dirs());
 
             // D-Bus: without it Maia's programs are still served
             let _connection = if std::env::var("MAIA_NOTIFICATIONS_DBUS").as_deref() == Ok("0") {
@@ -117,25 +128,30 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
             };
 
             eprintln!(
-                "maia-notifications-service {} serves {} and {}",
+                "maia-notifications-service {} serves {}, {} and {}",
                 env!("CARGO_PKG_VERSION"),
                 notifier_path.display(),
-                center_path.display()
+                center_path.display(),
+                settings_path.display()
             );
             let notifier = NotifierImpl::client(hub.clone());
             let center = Center::client(hub.clone());
+            let settings = SettingsImpl::client(hub.clone());
             let mut terminate = signal(SignalKind::terminate())?;
             tokio::select! {
                 _ = accept(notifier_listener, notifier.client) => {}
                 _ = accept(center_listener, center.client) => {}
+                _ = accept(settings_listener, settings.client) => {}
                 _ = tokio::signal::ctrl_c() => {}
                 _ = terminate.recv() => {}
             }
+            // A change of the last moment is not lost
+            hub.borrow_mut().save_settings_now();
             Ok::<(), Box<dyn std::error::Error>>(())
         })
         .await;
 
-    for (path, inode) in [&notifier_path, &center_path].into_iter().zip(inodes) {
+    for (path, inode) in sockets.into_iter().zip(inodes) {
         if std::fs::metadata(path).map(|m| m.ino()).ok() == Some(inode) {
             let _ = std::fs::remove_file(path);
         }

@@ -418,3 +418,28 @@ fn a_flood_is_answered_at_once_and_reaches_the_shell_in_few_batches() {
         drop(app.connection);
     });
 }
+
+/// An application the user turned off: Notify still answers with an id, the shell never sees the
+/// notification, and the application hears that it is closed after it has the id
+#[test]
+fn a_turned_off_application_is_answered_and_closed_but_not_shown() {
+    local(async {
+        let bus = Bus::start();
+        let dir = TempDir::new("dbus-turned-off");
+        let service = service(&bus, &dir).await;
+        let shell = Shell::connect(&service.hub).await;
+        let settings = common::SettingsClient::connect(&service.hub).await;
+        let app = App::connect(&bus).await;
+        let first = app.notify("First", "", &[], HashMap::new()).await;
+        shell.wait("the first", |s| s.notifications.contains_key(&first)).await;
+        settings.wait("Test App listed", |s| s.apps.get("Test App").is_some_and(|a| a.sent)).await;
+
+        assert_eq!(settings.set_app_enabled("Test App", false).await, n::ErrorCode::None);
+        let second = app.notify("Second", "", &[], HashMap::new()).await;
+        assert!(second != 0 && second != first);
+        app.heard(&[&format!("closed {second} 4")]).await;
+        assert!(!shell.seen.borrow().notifications.contains_key(&second));
+        // What was in the list stays
+        assert!(shell.seen.borrow().notifications.contains_key(&first));
+    });
+}

@@ -34,6 +34,7 @@ public:
     // The current list by id (the snapshot and every batch since); the models keep their order
     const QHash<quint32, NotificationData> &notifications() const { return m_notifications; }
     const DoNotDisturbData &doNotDisturb() const { return m_doNotDisturb; }
+    const ShellSettingsData &shellSettings() const { return m_shellSettings; }
     // The jobs by id (the snapshot and every batch since)
     const QHash<quint32, JobData> &jobs() const { return m_jobs; }
     // A notification by id, or nullptr
@@ -57,6 +58,7 @@ Q_SIGNALS:
     // One batch: new or changed notifications, and removed ids
     void batch(const QList<MaiaNotifications::NotificationData> &changed, const QList<quint32> &removed);
     void doNotDisturbChanged();
+    void shellSettingsChanged();
     // The jobs again (a new connection), or one batch of them
     void jobsReset();
     void jobsBatch(const QList<MaiaNotifications::JobData> &changed, const QList<quint32> &removed);
@@ -69,13 +71,16 @@ private:
     friend class ShellListener;
 
     // GUI thread
-    void applySnapshot(const QList<NotificationData> &list, const DoNotDisturbData &dnd, const QList<JobData> &jobs);
+    void applySnapshot(const QList<NotificationData> &list, const DoNotDisturbData &dnd, const QList<JobData> &jobs,
+                       const ShellSettingsData &shellSettings);
+    void applyShellSettings(const ShellSettingsData &settings);
     void applyJobs(const QList<JobData> &changed, const QList<quint32> &removed);
     void applyBatch(const QList<NotificationData> &changed, const QList<quint32> &removed);
     void applyDoNotDisturb(const DoNotDisturbData &dnd);
 
     QHash<quint32, NotificationData> m_notifications;
     DoNotDisturbData m_doNotDisturb;
+    ShellSettingsData m_shellSettings;
     QHash<quint32, JobData> m_jobs;
 
     // KJ thread

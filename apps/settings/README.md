@@ -74,6 +74,20 @@ brightness only in its quick settings; here it sits with the rest of what the po
 Idle dimming, blanking, suspend and the power button are powerdevil's for now, so the page does
 not show GNOME's "Power Saving Options" and "General" groups yet.
 
+## The Notifications page
+
+`pages/notifications/`, on `Maia.Notifications.Settings` (maia-notifications-service), laid out like
+GNOME's Notifications panel (Ubuntu 24.04 / 26.04):
+
+| Group | Shows |
+|---|---|
+| (first) | Do Not Disturb (with "On until 15:30" when it ends by itself), Lock Screen Notifications |
+| App Notifications | Each application that sends or declares notifications, sorted by name, with its switch |
+
+A whole card toggles its switch, as GNOME's switch rows do. GNOME's page per application (sounds,
+banners, content) is left out for now. The lock screen setting is there before any shell has a lock
+screen: the shells read it from `Maia.Notifications.Center` when they get one.
+
 ## Testing
 
 Offscreen with the fake network service, a screenshot and an action:
@@ -88,6 +102,9 @@ MAIA_SETTINGS_PAGES_PATH=apps/settings/pages QT_QPA_PLATFORM=offscreen \
 Actions of the Wi-Fi page: `hidden`, `enterprise`, `hotspot`, `hotspot-on`, `share`, `saved`,
 `forget`, `details:<tab>`. The Power page works the same way with a fake power service
 (`MAIA_POWER_BACKEND=fake MAIA_POWER_SOCKET=...`): actions `hold` (an application holds
-Performance) and `end` (scrolled to the end). `QML_IMPORT_PATH` comes before the installation's
+Performance) and `end` (scrolled to the end). The Notifications page with a private service:
+`MAIA_NOTIFICATIONS_DBUS=0 MAIA_NOTIFICATIONS_SETTINGS=<a test file> MAIA_NOTIFICATIONS_SETTINGS_SOCKET=...
+maia-notifications-service` (and the same socket for maia-settings); `QT_QPA_PLATFORMTHEME=kde`
+for the applications' icons offscreen. `QML_IMPORT_PATH` comes before the installation's
 modules, so a build's `Maia.*` modules can be tried with an installed Maia. Use an isolated `XDG_CONFIG_HOME`; never the real NetworkManager for
 actions.
