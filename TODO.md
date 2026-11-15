@@ -101,16 +101,15 @@ scope).
 
 ## 2. Session: close applications gracefully before the session ends
 
-Area: `Maia/BackendLib/server/SessionService.cpp`, `Server::sessionLogout` (`server/Server.cpp`),
-the session scripts `Maia/DeployFiles/session/` (`maia-session-common.sh.in`).
+Area: `Maia/services/session/` (maia-session-service: `service/src/session.rs`, "Ending" in its
+README), the window service `Maia/services/windows/`, the shells' log out / power menus.
 
 ### What happens
 
-Log out: `SessionService::logout` → `Server::sessionLogout` → `QCoreApplication::exit(0)`. Maia
-exits, the session script ends, and KWin (`--exit-with-session`) quits and takes every window with
-it. Restart and shut down call logind (`Reboot` / `PowerOff`) at once, and systemd then kills the
-session. No application is asked to close first. Unsaved documents are lost, and browsers report
-that they "did not shut down correctly".
+Log out: the session service answers at once and then stops the shell, its other children, KDE's
+units and the compositor, which takes every window with it. Restart and power off ask logind first
+and then end the session the same way. No application is asked to close first: unsaved documents
+are lost, and browsers report that they "did not shut down correctly".
 
 Plasma does it in steps (ksmserver, `org.kde.Shutdown`): ask every application to close, wait for
 them (an application may refuse, e.g. "save changes?"), and only then end the session or call logind.
@@ -127,45 +126,23 @@ them (an application may refuse, e.g. "save changes?"), and only then end the se
   4. then end the session (exit) or call logind.
 - Respect logind inhibitors of type `shutdown` in block mode (`ListInhibitors`), and tell the user
   who blocks.
-- Keep the guard of nested development sessions: there `SessionService` only logs suspend,
-  restart and shut down (`MAIA_NESTED_SESSION=1`, set by `run_maia_nested_wayland.sh`).
+- Keep the guard of nested development sessions: there suspend, restart and power off must never
+  reach the real logind (a stand-in system bus, as below).
 
 ### Done when
 
 In a nested session whose system bus is a stand-in, so nothing reaches the real logind
 (`DBUS_SYSTEM_BUS_ADDRESS` pointing at a private `dbus-daemon`; `dbus-monitor` on it records the
-`login1` calls): an editor with unsaved text asks to save before logout; logout with only closed-on-request windows
-ends within a second or two; a window that does not close shows the dialog after the timeout.
+`login1` calls): an editor with unsaved text asks to save before logout; logout with only
+closed-on-request windows ends within a second or two; a window that does not close shows the dialog after the timeout.
 
 ---
 
-## 3. Notifications: no notification server in the Maia session
+## 3. Notifications: done
 
-Area: a new service, e.g. `Maia/services/notifications/` (same layout as `Maia/services/windows`).
-
-### What happens
-
-Applications send notifications to `org.freedesktop.Notifications` (D-Bus, freedesktop
-Desktop Notifications specification). In Plasma, plasmashell owns that name. Maia replaces
-plasmashell, so nobody owns it: in the Maia session (checked 2026-10-28) the name has no owner, and
-D-Bus activation starts `plasma_waitforname`, which only waits for plasmashell. Notifications of
-all applications are lost.
-
-### Fix
-
-- A notification service (Rust, like `maia-windows-service`): owns `org.freedesktop.Notifications` on the
-  session bus (`Notify`, `CloseNotification`, `GetCapabilities`, `GetServerInformation`, signals
-  `NotificationClosed`, `ActionInvoked`), keeps the list and history, and serves it to the
-  frontends over a Cap'n Proto contract (snapshot + changes, actions back).
-- A QML module for the frontends (like `Maia.Windows`); each frontend shows the popups and the
-  notification centre in its own style.
-- Start it from the session scripts, before Maia.
-
-### Done when
-
-`notify-send "Test" "Body"` and a notification with actions (e.g. from a browser) show up in
-Lumen and the Maia frontend, and the action reaches the application; tests for the D-Bus side and
-the contract, as for the window service.
+Done 2026-11-13..15: `Maia/services/notifications/` (maia-notifications-service, `Maia.Notifications`,
+`Maia.Notifications.Center`, `Maia.Notifications.Settings`). What is left is in `ROADMAP.md`. The
+number stays so that references to items 4 to 7 keep their meaning.
 
 ---
 
@@ -237,46 +214,37 @@ with `forbid(unsafe_code)`, `cargo test` passes and the task bar still updates i
 
 ---
 
-## 6. Settings: the configuration files have the version in their name
+## 6. Settings: a new Maia version starts with default settings
 
-Area: `Maia/MaiaServerApp/main.cpp` (`setApplicationName`, about line 92),
-`Maia/BackendLib/server/FrontendManagerService.cpp` (`readActiveFronted`, `saveActiveFronted`),
-`Maia/BackendLib/server/LocaleSettingsService.cpp` (`loadSettings`, `saveSettings`).
+Area: `Maia/Paths/MaiaPaths.cpp` (`configDir`), the Rust services' copies of the same rule
+(`Maia/services/appearance/service/src/paths.rs`, `Maia/services/notifications/service/src/settings.rs`),
+the session scripts.
 
 ### What happens
 
-Maia keeps its settings in two files in `~/.config/Maia/`, and both names contain the Maia version:
-- `Maia_<version>.conf`: everything QML stores with `Settings` from `QtCore` (Lumen's theme and
-  accent, Lumen's timer, the dock edge of the Maia frontend, XPLuna's notes and warnings), and the
-  favourite applications (`QSettings` in `server/FavoriteAppsListModel.hpp`). QSettings derives the
-  name from the application name, which `main.cpp` sets to `Maia_<version>`.
-- `maiarc_<version>`: what the C++ services store with KConfig (the active frontend, the 24-hour
-  clock).
-
-After an update to a new version, Maia reads new, empty files: every user setting falls back to
-its default, although the old files are still there (`Maia_0.1.0.conf` and `Maia_0.2.0.conf` exist
-side by side on a developer machine). The two mechanisms also write two different files for no
-reason.
+Every Maia version keeps its settings in its own directory, `~/.config/maia/<version>/` (`maia.conf`
+for QSettings and QML `Settings`, `maiarc` for KConfig, `appearance.json`, `notifications.json`,
+`wayfire.ini`). This is by design: versions are installed side by side (`/opt/Maia/Maia_<version>`)
+and must never share or overwrite each other's settings. The cost: after an update the user finds
+every setting at its default (frontend, theme, favourites, do not disturb, applications turned off).
+Older versions used `~/.config/Maia/Maia_<version>.conf` and `maiarc_<version>`.
 
 ### Fix
 
-- Fixed file names without the version, e.g. `~/.config/Maia/maia.conf` for QML and the services
-  (one file, or one per owner, but never per version). The application name used for the
-  configuration must not change with the version. If the version must stay in the application
-  name for other reasons, give the QML `Settings` an explicit `location` instead.
-- If the format ever changes incompatibly, a schema version as a key inside the file, with a
-  migration step, not a new file.
-- Migration of what exists: when the new file is missing, copy the values of the newest versioned
-  file once (`Maia_<x.y.z>.conf`, `maiarc_<x.y.z>`, highest version first), then leave the old files
-  alone.
-- Until item 7 replaces it, keep one convention for new code: the frontends use QML `Settings` with
-  their own `category` (e.g. `LumenFrontend`, `MaiaDock`), no new files.
+- On the first start of a version (its directory does not exist yet), offer to take over the
+  settings of the newest older version: copy its directory (or the old `Maia_<x.y.z>.conf` /
+  `maiarc_<x.y.z>` files), then leave the old ones alone. Ask once (a question in the shell or
+  Maia Settings), or do it by default with an option to start clean.
+- One place decides it (the session service, before the shell and the services start), so that
+  every service reads the copied files.
+- If a file format ever changes incompatibly: a schema version inside the file and a migration
+  step, not a new file name.
 
 ### Done when
 
-In a nested session with isolated XDG directories: settings made with version A survive a start
-with version B (change `MAIA_VERSION` in a test build), no new versioned file appears, and the
-values of an old `Maia_0.2.0.conf` / `maiarc_0.2.0` are taken over on the first start.
+In a nested session with an isolated `XDG_CONFIG_HOME`: settings made with version A are there on
+the first start of version B (a test build with another `MAIA_VERSION`), and a version started
+again keeps its own settings without copying anything.
 
 ---
 

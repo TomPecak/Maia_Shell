@@ -122,6 +122,9 @@ sudo ./install_on_ubuntu.sh
 
 ## Contribution
 
+What comes next, ordered by what matters most to users: [ROADMAP.md](ROADMAP.md). Known problems
+in depth: [TODO.md](TODO.md).
+
 ### Build Maia Shell 0.2.0 from sources
 
 System requrements: Ubuntu 26.04, Maia Shell 0.2.0
