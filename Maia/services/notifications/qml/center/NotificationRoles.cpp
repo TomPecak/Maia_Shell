@@ -31,6 +31,7 @@ QHash<int, QByteArray> names()
         {ReplySubmitTextRole, "replySubmitText"},
         {OriginNameRole, "originName"},
         {UrlsRole, "urls"},
+        {FilesRole, "files"},
         {SoundNameRole, "soundName"},
         {SoundFileRole, "soundFile"},
         {SuppressSoundRole, "suppressSound"},
@@ -92,6 +93,24 @@ QVariant data(const NotificationData &n, int role)
         return n.originName;
     case UrlsRole:
         return n.urls;
+    case FilesRole: {
+        QVariantList list;
+        list.reserve(n.files.size());
+        for (const FileData &f : n.files) {
+            list.append(QVariantMap{
+                {QStringLiteral("url"), f.url},
+                {QStringLiteral("name"), f.name},
+                {QStringLiteral("mimeType"), f.mimeType},
+                {QStringLiteral("iconName"), f.iconName},
+                {QStringLiteral("genericIconName"), f.genericIconName},
+                {QStringLiteral("preview"), f.preview},
+                {QStringLiteral("local"), f.local},
+                {QStringLiteral("exists"), f.exists},
+                {QStringLiteral("image"), f.image},
+            });
+        }
+        return list;
+    }
     case SoundNameRole:
         return n.soundName;
     case SoundFileRole:

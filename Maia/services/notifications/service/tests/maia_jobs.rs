@@ -113,7 +113,7 @@ impl MaiaJob {
 }
 
 fn exporting(percent: i32) -> Progress {
-    Progress { title: "Exporting", percent, processed: percent as u64 * 10, total: 1000, suspended: false }
+    Progress { title: "Exporting", percent, processed: percent.max(0) as u64 * 10, total: 1000, suspended: false }
 }
 
 #[test]

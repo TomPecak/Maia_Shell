@@ -37,9 +37,11 @@ pub mod settings;
 pub mod throttle;
 
 /// What the server can do (GetCapabilities, NotificationCenter.info): only what Maia's shells show
-/// and play (sounds: Maia.Sounds, when the popup appears). Not yet: "body-images", "action-icons",
-/// "x-kde-urls".
-pub const CAPABILITIES: [&str; 11] = [
+/// and play (sounds: Maia.Sounds, when the popup appears). Senders check it: KNotification sends
+/// x-kde-urls and inline replies only to a server that lists them. Not "body-images": images in
+/// the body are dropped on purpose (a remote one would tell the sender the message was read); a
+/// picture goes in the image hint.
+pub const CAPABILITIES: [&str; 13] = [
     "actions",
     "body",
     "body-hyperlinks",
@@ -50,5 +52,7 @@ pub const CAPABILITIES: [&str; 11] = [
     "inhibitions",
     "x-kde-origin-name",
     "x-kde-display-appname",
+    "x-kde-urls",
+    "action-icons",
     "sound",
 ];

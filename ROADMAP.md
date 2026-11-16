@@ -93,8 +93,9 @@ contracts (see "Principles" below).
       A files service: folder listing with change watching, MIME types and icon names, create,
       rename, the freedesktop trash, copy and move as jobs with progress (they would show like
       Dolphin's copies), search, recent files, drives (UDisks2). Later thumbnails and remote places.
-- [ ] **Notifications, what is left:** file thumbnails of `x-kde-urls` (e.g. Spectacle's screenshot
-      to drag away), icons on action buttons, images in the body; history on disk.
+- [x] **Notifications: files and icon actions** (2026-11-16): previews of `x-kde-urls` (open, drag,
+      show in folder), icon buttons for `action-icons`; images in the body left out on purpose.
+- [ ] **Notifications, what is left:** history on disk.
 
 ## 4. Maia Settings
 

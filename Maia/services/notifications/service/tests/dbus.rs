@@ -136,6 +136,11 @@ fn server_information_and_capabilities() {
             assert!(capabilities.iter().any(|x| x == c), "{c} in {capabilities:?}");
         }
         assert!(capabilities.iter().any(|x| x == "sound"));
+        // A shell shows them: KNotification sends the files only to a server that says so
+        for c in ["x-kde-urls", "action-icons"] {
+            assert!(capabilities.iter().any(|x| x == c), "{c} in {capabilities:?}");
+        }
+        assert!(!capabilities.iter().any(|x| x == "body-images"));
     });
 }
 
@@ -443,3 +448,31 @@ fn a_turned_off_application_is_answered_and_closed_but_not_shown() {
         assert!(shell.seen.borrow().notifications.contains_key(&first));
     });
 }
+
+/// What a screenshot tool sends (Spectacle through KNotification): the file, and a media player's
+/// icon buttons; the shell gets the file as a URL, and nothing that is not one
+#[test]
+fn files_and_icon_actions_reach_the_shell() {
+    local(async {
+        let bus = Bus::start();
+        let dir = TempDir::new("dbus-files");
+        let service = service(&bus, &dir).await;
+        let shell = Shell::connect(&service.hub).await;
+        let app = App::connect(&bus).await;
+        let urls = vec!["file:///home/a/Pictures/Screenshot_20261116.png", "/home/a/Videos/clip 1.mkv", "javascript:alert(1)"];
+        let id = app
+            .notify(
+                "Screenshot saved",
+                "",
+                &["media-skip-backward", "Previous", "media-playback-pause", "Pause"],
+                HashMap::from([("x-kde-urls", Value::from(urls)), ("action-icons", Value::Bool(true))]),
+            )
+            .await;
+        shell.wait("the notification", |s| s.notifications.contains_key(&id)).await;
+        let shown = shell.shown(id).unwrap();
+        assert_eq!(shown.urls, ["file:///home/a/Pictures/Screenshot_20261116.png", "file:///home/a/Videos/clip%201.mkv"]);
+        assert!(shown.action_icons);
+        assert_eq!(shown.actions[0], ("media-skip-backward".to_string(), "Previous".to_string()));
+    });
+}
+

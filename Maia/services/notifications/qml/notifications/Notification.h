@@ -47,6 +47,9 @@ class Notification : public QObject
     Q_PROPERTY(QUrl image READ image WRITE setImage NOTIFY changed)
     // [{ key, label }]; key "default" is a click on the notification itself
     Q_PROPERTY(QVariantList actions READ actions WRITE setActions NOTIFY changed)
+    // The actions' keys are icon names ("media-playback-pause"), shown as icon buttons; the labels
+    // name them (tooltips, screen readers)
+    Q_PROPERTY(bool actionIcons READ actionIcons WRITE setActionIcons NOTIFY changed)
     Q_PROPERTY(Urgency urgency READ urgency WRITE setUrgency NOTIFY changed)
     // "email.arrived", "im.received", "transfer.complete", … (the specification's categories)
     Q_PROPERTY(QString category READ category WRITE setCategory NOTIFY changed)
@@ -62,6 +65,9 @@ class Notification : public QObject
     Q_PROPERTY(QString replySubmitText READ replySubmitText WRITE setReplySubmitText NOTIFY changed)
     Q_PROPERTY(QString soundName READ soundName WRITE setSoundName NOTIFY changed)
     Q_PROPERTY(bool suppressSound READ suppressSound WRITE setSuppressSound NOTIFY changed)
+    // Files it is about (a saved screenshot, an exported video): the shell shows a preview, opens
+    // them and lets them be dragged into other applications
+    Q_PROPERTY(QList<QUrl> urls READ urls WRITE setUrls NOTIFY changed)
 
     // Shown now (sent and not closed)
     Q_PROPERTY(bool active READ isActive NOTIFY activeChanged)
@@ -98,6 +104,8 @@ public:
     void setImage(const QUrl &value);
     QVariantList actions() const { return m_actions; }
     void setActions(const QVariantList &value);
+    bool actionIcons() const { return m_actionIcons; }
+    void setActionIcons(bool value);
     Urgency urgency() const { return m_urgency; }
     void setUrgency(Urgency value);
     QString category() const { return m_category; }
@@ -118,6 +126,8 @@ public:
     void setSoundName(const QString &value);
     bool suppressSound() const { return m_suppressSound; }
     void setSuppressSound(bool value);
+    QList<QUrl> urls() const { return m_urls; }
+    void setUrls(const QList<QUrl> &value);
 
     bool isActive() const { return m_local != 0; }
     uint notificationId() const { return m_id; }
@@ -148,6 +158,7 @@ private:
     QString m_body;
     QUrl m_image;
     QVariantList m_actions;
+    bool m_actionIcons = false;
     Urgency m_urgency = Normal;
     QString m_category;
     int m_timeout = -1;
@@ -158,6 +169,7 @@ private:
     QString m_replySubmitText;
     QString m_soundName;
     bool m_suppressSound = false;
+    QList<QUrl> m_urls;
 
     int m_local = 0;
     uint m_id = 0;

@@ -229,7 +229,7 @@ pub fn read_request(r: n::notification_request::Reader) -> capnp::Result<Request
         reply_placeholder: text(r.get_reply_placeholder())?,
         reply_submit_text: text(r.get_reply_submit_text())?,
         origin_name: String::new(),
-        urls: Vec::new(),
+        urls: crate::model::urls(r.get_urls()?.iter().map(|u| Ok(u?.to_string()?)).collect::<capnp::Result<Vec<String>>>()?),
         sound_name: text(r.get_sound_name())?,
         sound_file: String::new(),
         suppress_sound: r.get_suppress_sound(),

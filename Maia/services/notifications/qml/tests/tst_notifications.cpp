@@ -17,6 +17,10 @@
 #include "NotificationsModel.h"
 
 #include <QDir>
+#include <QFile>
+#include <QImage>
+#include <QUrl>
+#include <QCryptographicHash>
 #include <QElapsedTimer>
 #include <QProcess>
 #include <QSignalSpy>
@@ -58,6 +62,8 @@ private:
     QString m_display;
     // The service's settings: never the user's (kept across the restart test)
     QTemporaryDir m_settingsDir;
+    // $XDG_CACHE_HOME of this process: the thumbnail cache the files test fills
+    QTemporaryDir m_cacheDir;
 
     void startService()
     {
@@ -102,6 +108,8 @@ private Q_SLOTS:
         qputenv("MAIA_NOTIFICATIONS_SETTINGS_SOCKET",
                 (runtimeDir() + QStringLiteral("/tns-%1.sock").arg(QCoreApplication::applicationPid())).toUtf8());
         QVERIFY(m_settingsDir.isValid());
+        QVERIFY(m_cacheDir.isValid());
+        qputenv("XDG_CACHE_HOME", m_cacheDir.path().toUtf8());
         startService();
         Notifications notifications;
         NotificationCenter center;
@@ -497,6 +505,71 @@ private Q_SLOTS:
         QTRY_COMPARE(model.rowCount(), 1);
         QTRY_COMPARE(role(model, 0, NotificationRoles::SummaryRole).toString(), QStringLiteral("Sent without the service"));
         QTRY_VERIFY(waiting->notificationId() != 0);
+    }
+
+    // --- Files and icon actions ---
+
+    void filesComeWithANameATypeAndAPreview()
+    {
+        NotificationsModel model;
+        QTemporaryDir files;
+        QVERIFY(files.isValid());
+        // A screenshot: an image is its own preview
+        const QString screenshot = files.filePath(QStringLiteral("Screenshot 1.png"));
+        QImage picture(64, 48, QImage::Format_RGB32);
+        picture.fill(Qt::darkCyan);
+        QVERIFY(picture.save(screenshot));
+        // A PDF a file manager has a thumbnail of: the cached picture is its preview
+        const QString pdf = files.filePath(QStringLiteral("report.pdf"));
+        QFile pdfFile(pdf);
+        QVERIFY(pdfFile.open(QIODevice::WriteOnly));
+        pdfFile.write("%PDF-1.4\n");
+        pdfFile.close();
+        const QString pdfUrl = QUrl::fromLocalFile(pdf).toString(QUrl::FullyEncoded);
+        const QString thumbnails = m_cacheDir.path() + QStringLiteral("/thumbnails/large/");
+        QVERIFY(QDir().mkpath(thumbnails));
+        const QString hash = QString::fromLatin1(QCryptographicHash::hash(QUrl(pdfUrl).toEncoded(), QCryptographicHash::Md5).toHex());
+        QVERIFY(picture.save(thumbnails + hash + QStringLiteral(".png")));
+        // A video whose cached picture is older than the file: stale, no preview
+        const QString video = files.filePath(QStringLiteral("clip.mkv"));
+        QFile videoFile(video);
+        QVERIFY(videoFile.open(QIODevice::WriteOnly));
+        videoFile.close();
+        const QString videoHash = QString::fromLatin1(
+            QCryptographicHash::hash(QUrl::fromLocalFile(video).toEncoded(), QCryptographicHash::Md5).toHex());
+        QVERIFY(picture.save(thumbnails + videoHash + QStringLiteral(".png")));
+        QFile stale(thumbnails + videoHash + QStringLiteral(".png"));
+        QVERIFY(stale.open(QIODevice::ReadWrite));
+        QVERIFY(stale.setFileTime(QDateTime::currentDateTime().addSecs(-3600), QFileDevice::FileModificationTime));
+        stale.close();
+
+        auto n = std::make_unique<Notification>();
+        n->setSummary(QStringLiteral("Files"));
+        n->setUrls({QUrl::fromLocalFile(screenshot), QUrl::fromLocalFile(pdf), QUrl::fromLocalFile(video),
+                    QUrl::fromLocalFile(files.filePath(QStringLiteral("gone.txt"))), QUrl(QStringLiteral("https://example.org/a.html"))});
+        n->setActionIcons(true);
+        n->setActions({action(QStringLiteral("media-playback-pause"), QStringLiteral("Pause"))});
+        n->send();
+        QTRY_COMPARE(model.rowCount(), 1);
+        QVERIFY(role(model, 0, NotificationRoles::ActionIconsRole).toBool());
+        const QVariantList list = role(model, 0, NotificationRoles::FilesRole).toList();
+        QCOMPARE(list.size(), 5);
+        const QVariantMap shot = list[0].toMap();
+        QCOMPARE(shot.value(QStringLiteral("name")).toString(), QStringLiteral("Screenshot 1.png"));
+        QCOMPARE(shot.value(QStringLiteral("mimeType")).toString(), QStringLiteral("image/png"));
+        QCOMPARE(shot.value(QStringLiteral("iconName")).toString(), QStringLiteral("image-png"));
+        QVERIFY(shot.value(QStringLiteral("image")).toBool() && shot.value(QStringLiteral("exists")).toBool());
+        QCOMPARE(QUrl(shot.value(QStringLiteral("preview")).toString()).toLocalFile(), screenshot);
+        const QVariantMap report = list[1].toMap();
+        QCOMPARE(report.value(QStringLiteral("mimeType")).toString(), QStringLiteral("application/pdf"));
+        QCOMPARE(QUrl(report.value(QStringLiteral("preview")).toString()).toLocalFile(), thumbnails + hash + QStringLiteral(".png"));
+        QVERIFY(list[2].toMap().value(QStringLiteral("preview")).toString().isEmpty());
+        const QVariantMap gone = list[3].toMap();
+        QVERIFY(gone.value(QStringLiteral("local")).toBool() && !gone.value(QStringLiteral("exists")).toBool());
+        const QVariantMap web = list[4].toMap();
+        QVERIFY(!web.value(QStringLiteral("local")).toBool());
+        QCOMPARE(web.value(QStringLiteral("name")).toString(), QStringLiteral("a.html"));
+        QCOMPARE(web.value(QStringLiteral("mimeType")).toString(), QStringLiteral("text/html"));
     }
 
     // --- Settings (Maia.Notifications.Settings) ---

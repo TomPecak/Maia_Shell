@@ -108,6 +108,8 @@ pub struct Shown {
     pub transient: bool,
     pub inline_reply: bool,
     pub time: i64,
+    pub urls: Vec<String>,
+    pub action_icons: bool,
 }
 
 /// What a shell has seen, kept like a shell keeps it
@@ -201,6 +203,8 @@ fn read(n: n::notification::Reader) -> capnp::Result<(u32, Shown)> {
             transient: n.get_transient(),
             inline_reply: n.get_inline_reply(),
             time: n.get_time(),
+            urls: n.get_urls()?.iter().map(|u| Ok(u?.to_string()?)).collect::<capnp::Result<_>>()?,
+            action_icons: n.get_action_icons(),
         },
     ))
 }

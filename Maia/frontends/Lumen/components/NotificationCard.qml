@@ -1,10 +1,14 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Layouts
 
 import LumenFrontend
 
-// A notification: its application and time, title, text (a little markup), a picture, its actions
-// and an answer field. Used by the popups and by the notification center; the data comes from
+import "ActionGlyphs.js" as ActionGlyphs
+
+// A notification: its application and time, title, text (a little markup), a picture, its files
+// (NotificationFiles), its actions (text, or icons when the sender asks) and an answer field. Used by the popups and by the notification center; the data comes from
 // Maia.Notifications.Center, this card only shows it.
 //
 // The whole card is the target of the default action (when the notification has one); the close
@@ -23,6 +27,10 @@ Card {
     property string image
     // [{ key, label }] without "default"
     property var actions: []
+    // The keys are icon names (a media player's ⏮ ⏸ ⏭); the labels become tooltips
+    property bool actionIcons: false
+    // The role "files" of Maia.Notifications.Center
+    property var files: []
     property bool hasDefaultAction: false
     property bool inlineReply: false
     property string replyPlaceholder
@@ -35,11 +43,15 @@ Card {
     readonly property bool hovered: hover.hovered
     // The answer field is open: the window needs the keyboard meanwhile
     readonly property bool replying: replyRow.visible
+    // A file is being dragged out (a popup must not end meanwhile)
+    readonly property bool dragging: filesView.dragging
 
     signal dismissed()
     signal defaultInvoked()
     signal actionInvoked(string key)
     signal replied(string text)
+    // One of its files (or their folder) was opened
+    signal fileOpened(string url)
 
     implicitHeight: content.implicitHeight + 2 * Theme.spacingM
     border.color: card.urgency === 2 ? Theme.critical : Theme.stroke
@@ -177,6 +189,17 @@ Card {
             }
         }
 
+        // --- Files ---
+
+        NotificationFiles {
+            id: filesView
+
+            Layout.fillWidth: true
+            Layout.topMargin: Theme.spacingXS
+            model: card.files
+            onOpened: url => card.fileOpened(url)
+        }
+
         // --- Actions ---
 
         Flow {
@@ -193,17 +216,55 @@ Card {
 
                     required property var modelData
 
-                    leftPadding: Theme.spacingM
-                    rightPadding: Theme.spacingM
-                    Accessible.name: modelData.label
+                    objectName: "action:" + actionButton.modelData.key
+
+                    // With actionIcons: Lumen's glyph of the key (ActionGlyphs.js), else the icon
+                    // theme's, else the label (an icon nobody has)
+                    readonly property string glyphName: card.actionIcons ? ActionGlyphs.glyph(actionButton.modelData.key) : ""
+                    readonly property bool showsIcon: card.actionIcons
+                                                      && (glyphName.length > 0 ? glyph.status === Image.Ready : themeIcon.status === Image.Ready)
+
+                    leftPadding: showsIcon ? Theme.spacingS : Theme.spacingM
+                    rightPadding: showsIcon ? Theme.spacingS : Theme.spacingM
+                    Accessible.name: actionButton.modelData.label
                     background: Rectangle {
                         radius: Theme.radiusSmall
                         color: actionButton.pressed ? Theme.subtlePressed : actionButton.hovered ? Theme.subtleHover : Theme.control
                         border.width: 1
                         border.color: Theme.stroke
                     }
-                    contentItem: LText { text: modelData.label; font.pixelSize: Theme.fontCaption }
-                    onClicked: card.actionInvoked(modelData.key)
+                    contentItem: Item {
+                        implicitWidth: actionButton.showsIcon ? 16 : label.implicitWidth
+                        implicitHeight: Math.max(16, label.implicitHeight)
+
+                        LIcon {
+                            id: glyph
+                            anchors.centerIn: parent
+                            visible: actionButton.showsIcon && actionButton.glyphName.length > 0
+                            size: 16
+                            iconName: actionButton.glyphName
+                        }
+
+                        LIcon {
+                            id: themeIcon
+                            anchors.centerIn: parent
+                            visible: actionButton.showsIcon && actionButton.glyphName.length === 0
+                            size: 16
+                            tinted: false
+                            iconName: card.actionIcons && actionButton.glyphName.length === 0 ? actionButton.modelData.key : ""
+                        }
+
+                        LText {
+                            id: label
+                            anchors.centerIn: parent
+                            visible: !actionButton.showsIcon
+                            text: actionButton.modelData.label
+                            font.pixelSize: Theme.fontCaption
+                        }
+                    }
+                    onClicked: card.actionInvoked(actionButton.modelData.key)
+
+                    LToolTip { text: actionButton.showsIcon ? actionButton.modelData.label : "" }
                 }
             }
 

@@ -6,6 +6,8 @@
 // The numbers of urgency and close reasons are the contract's: Normal 0, Low 1, Critical 2;
 // Expired 0, Dismissed 1, ClosedByApp 2, Other 3.
 
+#include "NotificationFiles.h"
+
 #include <QList>
 #include <QMetaType>
 #include <QString>
@@ -40,6 +42,8 @@ struct RequestData {
     QString replySubmitText;
     QString soundName;
     bool suppressSound = false;
+    // Files or places it is about (a screenshot): URLs or absolute paths
+    QStringList urls;
 };
 
 // A notification as the service shows it to shells
@@ -66,6 +70,8 @@ struct NotificationData {
     QString replySubmitText;
     QString originName;
     QStringList urls;
+    // The urls as a shell shows them, read with the notification (NotificationFiles.h)
+    QList<FileData> files;
     QString soundName;
     QString soundFile;
     bool suppressSound = false;

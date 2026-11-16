@@ -81,7 +81,8 @@ enum CloseReason {        # the numbers + 1 are those of NotificationClosed in t
 
 struct Action {
   key @0 :Text;           # sent back to the sender; "default" = a click on the notification itself
-  label @1 :Text;         # the button's text ("" for "default"); an icon name with actionIcons
+  label @1 :Text;         # the button's text ("" for "default"); with actionIcons the key is an
+                          # icon name and the label names it (a tooltip, for screen readers)
 }
 
 struct Notification {
@@ -94,7 +95,8 @@ struct Notification {
                           # everything else is text (Qt's StyledText shows it as it is)
   image @6 :Text;         # file:// URL of a picture to show (a photo, a cover), "" none
   actions @7 :List(Action);
-  actionIcons @8 :Bool;   # the actions' labels are icon names (e.g. a media player's buttons)
+  actionIcons @8 :Bool;   # the actions' keys are icon names, shown as icon buttons (a media
+                          # player's ⏮ ⏸ ⏭); a shell without the icon shows the label
   urgency @9 :Urgency;
   category @10 :Text;     # "email.arrived", "im.received", "device.added", …; "" none
   timeout @11 :Int32;     # ms of the popup: -1 = the shell decides, 0 = until the user closes it
@@ -108,7 +110,9 @@ struct Notification {
   replyPlaceholder @18 :Text;   # the field's hint ("Reply to Anna…"), "" default
   replySubmitText @19 :Text;    # the send button's text, "" default
   originName @20 :Text;   # where it really comes from, e.g. a phone through KDE Connect
-  urls @21 :List(Text);   # files it is about (x-kde-urls), e.g. a screenshot
+  urls @21 :List(Text);   # files or places it is about (x-kde-urls), e.g. a screenshot: URLs with
+                          # a scheme (paths are file:// URLs), at most 32, never javascript: or
+                          # data:; the shells show them (a preview, open, drag)
   soundName @22 :Text;    # a sound of the sound theme ("message-new-instant"), "" none
   soundFile @23 :Text;    # file:// URL of a sound file, "" none
   suppressSound @24 :Bool;
@@ -254,6 +258,7 @@ struct NotificationRequest {
   replySubmitText @15 :Text;
   soundName @16 :Text;
   suppressSound @17 :Bool;
+  urls @18 :List(Text);   # files or places it is about: URLs or absolute paths (as Notification.urls)
 }
 
 # What happens to the sender's notification: only the sender hears it (unlike D-Bus signals)

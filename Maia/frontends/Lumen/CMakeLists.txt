@@ -42,6 +42,7 @@ qt_add_qml_module(LumenFrontend
         components/CalendarView.qml
         components/Card.qml
         components/FlyoutWindow.qml
+        components/JobCard.qml
         components/LIcon.qml
         components/LMenu.qml
         components/LMenuItem.qml
@@ -49,7 +50,10 @@ qt_add_qml_module(LumenFrontend
         components/LSlider.qml
         components/LSwitch.qml
         components/LText.qml
+        components/LToolTip.qml
         components/NotificationCard.qml
+        components/NotificationFiles.qml
+        components/ActionGlyphs.js
         components/PasswordField.qml
         components/ProgressRing.qml
         components/SearchBox.qml
@@ -75,6 +79,7 @@ qt_add_qml_module(LumenFrontend
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/
     DESTINATION "${CMAKE_INSTALL_PREFIX}/frontends/Lumen"
     PATTERN "CMakeLists.txt" EXCLUDE
+    PATTERN "tests" EXCLUDE
     REGEX "/assets/decorations(/|$)" EXCLUDE
 )
 
@@ -84,3 +89,21 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/assets/decorations/Se7enAero
     DESTINATION ${KDE_INSTALL_DATADIR}/aurorae/themes
 )
+
+# Lumen's components on their own (tests/tst_*.qml), offscreen, from the sources: the module is
+# found through a link named after it, the services' modules in the build tree (never a running
+# service: their sockets point nowhere)
+if(BUILD_TESTING)
+    include(MaiaQmlModule)
+    find_program(MAIA_QMLTESTRUNNER qmltestrunner HINTS "${QT6_INSTALL_PREFIX}/${QT6_INSTALL_BINS}")
+    if(MAIA_QMLTESTRUNNER)
+        set(lumen_test_imports "${CMAKE_CURRENT_BINARY_DIR}/test-imports")
+        file(MAKE_DIRECTORY "${lumen_test_imports}")
+        file(CREATE_LINK "${CMAKE_CURRENT_SOURCE_DIR}" "${lumen_test_imports}/LumenFrontend" SYMBOLIC)
+        add_test(NAME lumen-components
+            COMMAND "${MAIA_QMLTESTRUNNER}" -import "${lumen_test_imports}" -import "${MAIA_QML_BUILD_DIR}"
+                    -input "${CMAKE_CURRENT_SOURCE_DIR}/tests")
+        set_tests_properties(lumen-components PROPERTIES ENVIRONMENT
+            "QT_QPA_PLATFORM=offscreen;MAIA_POWER_SOCKET=/nonexistent/power.sock;MAIA_NETWORK_SOCKET=/nonexistent/network.sock")
+    endif()
+endif()

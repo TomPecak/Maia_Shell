@@ -93,6 +93,9 @@ Notification {
     onActionInvoked: key => { openFolder(); done.activate(window) }   // raises the window
 }
 … done.send()        // shows it; again: replaces its content (a progress)
+
+Notification { summary: qsTr("Export finished"); urls: [videoUrl] }   // a preview, open, drag
+Notification { actionIcons: true; actions: [{ key: "media-playback-pause", label: qsTr("Pause") }] }
 ```
 
 A long operation, shown with its progress like a copy in Dolphin:
@@ -152,6 +155,22 @@ instance needs its own display name.
   (progress, pause and cancel, failing, back after a restart of the service). `tst_jobs`: jobs of
   a QtDBus client in JobsModel.
 - maia-power-service's `tests/notify.rs`: the battery warnings reach a stand-in of the Notifier.
+
+## Files and icon actions
+
+- **Files** (`x-kde-urls`, KDE's extension, which KNotification sends only to a server that lists it:
+  Spectacle's screenshot, KDE Connect's received files; Maia's programs: `Notification.urls`). The
+  service keeps URLs only (`model::urls`: a path becomes `file://`, no `javascript:`/`data:`, at most
+  32). The shells' module reads each file once, off the GUI thread (`qml/common/NotificationFiles`):
+  name, MIME type by name, its icon names, and a preview: a fresh picture of the freedesktop
+  thumbnail cache, else the file itself when it is an image; role `files`. Lumen shows one file
+  with a preview large, else rows; a click opens, a drag hands the file to another application,
+  a button opens its folder.
+- **Icon actions** (`action-icons`, the freedesktop specification): the actions' keys are icon
+  names (a media player's ⏮ ⏸ ⏭); the labels become tooltips. Lumen uses its own glyph when it has
+  one, else the icon theme's, else the label.
+- Not `body-images`: images in the body are dropped on purpose (a remote one would tell the sender
+  that the message was read); a picture goes in the `image` hint.
 
 ## Settings
 

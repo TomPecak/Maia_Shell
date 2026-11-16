@@ -215,3 +215,25 @@ fn low_urgency_goes_into_the_list_without_a_popup() {
         assert!(!shell.shown(sent.id).unwrap().popup);
     });
 }
+
+#[test]
+fn a_maia_program_attaches_files() {
+    local(async {
+        let dir = TempDir::new("maia-files");
+        let hub = common::hub(&dir);
+        let shell = Shell::connect(&hub).await;
+        let sender = Sender::connect(&hub).await;
+        let sent = sender
+            .send(|mut r| {
+                r.set_summary("Export finished");
+                let mut urls = r.init_urls(3);
+                urls.set(0, "/home/a/Videos/holiday.mkv");
+                urls.set(1, "data:text/html,<b>x</b>");
+                urls.set(2, "/home/a/Videos/holiday.mkv");
+            })
+            .await;
+        shell.wait("the notification", |s| s.notifications.contains_key(&sent.id)).await;
+        assert_eq!(shell.shown(sent.id).unwrap().urls, ["file:///home/a/Videos/holiday.mkv"]);
+    });
+}
+

@@ -25,6 +25,7 @@ find_package(KF6 ${REQUIRED_KF_VERSION} REQUIRED COMPONENTS WindowSystem)
 qt_add_library(MaiaNotificationsCommon STATIC
     common/ServiceLink.h common/ServiceLink.cpp
     common/NotificationData.h
+    common/NotificationFiles.h common/NotificationFiles.cpp
     common/Contract.h common/Contract.cpp
 )
 set_target_properties(MaiaNotificationsCommon PROPERTIES POSITION_INDEPENDENT_CODE ON)

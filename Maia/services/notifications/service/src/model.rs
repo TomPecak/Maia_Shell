@@ -14,6 +14,39 @@ pub const MAX_ACTIONS: usize = 8;
 pub const MAX_SUMMARY_CHARS: usize = 400;
 pub const MAX_BODY_CHARS: usize = 8000;
 pub const MAX_URLS: usize = 32;
+pub const MAX_URL_CHARS: usize = 4096;
+
+/// Schemes never passed on: they run code or carry their content inline
+const REFUSED_SCHEMES: [&str; 4] = ["javascript", "data", "vbscript", "about"];
+
+/// The files and places a notification is about (x-kde-urls, NotificationRequest.urls), as the
+/// shells may use them (show, open, drag): URLs with a scheme, an absolute path as a file:// URL; no
+/// spaces or control characters, not longer than MAX_URL_CHARS, no REFUSED_SCHEMES, no duplicates,
+/// at most MAX_URLS. Anything else is dropped.
+pub fn urls(list: Vec<String>) -> Vec<String> {
+    let mut kept: Vec<String> = Vec::new();
+    for item in list {
+        if kept.len() == MAX_URLS {
+            break;
+        }
+        let item = item.trim();
+        let url = if item.starts_with('/') { crate::image::url_from_path(item) } else { item.to_string() };
+        if url.len() > MAX_URL_CHARS || url.chars().any(|c| c.is_whitespace() || c.is_control()) {
+            continue;
+        }
+        let Some((scheme, rest)) = url.split_once(':') else { continue };
+        let valid_scheme = scheme.len() >= 2
+            && scheme.starts_with(|c: char| c.is_ascii_alphabetic())
+            && scheme.chars().all(|c| c.is_ascii_alphanumeric() || matches!(c, '+' | '-' | '.'));
+        if !valid_scheme || rest.is_empty() || REFUSED_SCHEMES.contains(&scheme.to_ascii_lowercase().as_str()) {
+            continue;
+        }
+        if !kept.contains(&url) {
+            kept.push(url);
+        }
+    }
+    kept
+}
 
 pub fn now_ms() -> i64 {
     SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_millis() as i64).unwrap_or(0)
@@ -462,6 +495,33 @@ pub fn limit_chars(text: String, max: usize) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn urls_are_urls_and_nothing_else() {
+        let strings = |list: &[&str]| list.iter().map(|s| s.to_string()).collect::<Vec<_>>();
+        let kept = urls(strings(&[
+            "/home/a/Pictures/Screenshot 1.png",
+            "file:///home/a/x.pdf",
+            "https://example.org/report",
+            "smb://server/share/doc.odt",
+            "javascript:alert(1)",
+            "DATA:text/html,<b>x</b>",
+            "not a url",
+            "c:\\windows",
+            "mailto:",
+            "file:///home/a/x.pdf",
+            "",
+        ]));
+        assert_eq!(kept, [
+            "file:///home/a/Pictures/Screenshot%201.png",
+            "file:///home/a/x.pdf",
+            "https://example.org/report",
+            "smb://server/share/doc.odt",
+        ]);
+        let many: Vec<String> = (0..100).map(|i| format!("file:///tmp/{i}")).collect();
+        assert_eq!(urls(many).len(), MAX_URLS);
+        assert!(urls(vec![format!("https://example.org/{}", "a".repeat(MAX_URL_CHARS))]).is_empty());
+    }
 
     fn request(summary: &str) -> Request {
         Request { summary: summary.into(), timeout: -1, ..Default::default() }

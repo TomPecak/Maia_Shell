@@ -27,7 +27,7 @@ use zbus::zvariant::{OwnedValue, Value};
 use crate::hub::{Hub, HubRef, Origin, Outgoing, SenderEvent};
 use crate::markup;
 use crate::model::{
-    Action, ImageSource, Inhibitor, MAX_ACTIONS, MAX_BODY_CHARS, MAX_SUMMARY_CHARS, MAX_URLS, Pixels, Request, Urgency,
+    Action, ImageSource, Inhibitor, MAX_ACTIONS, MAX_BODY_CHARS, MAX_SUMMARY_CHARS, Pixels, Request, Urgency,
     limit_chars,
 };
 
@@ -239,8 +239,7 @@ pub fn request_from(
     }
 
     let display_name = str_hint(hints, "x-kde-display-appname").filter(|n| !n.is_empty());
-    let mut urls: Vec<String> = strings_hint(hints, "x-kde-urls");
-    urls.truncate(MAX_URLS);
+    let urls = crate::model::urls(strings_hint(hints, "x-kde-urls"));
 
     Request {
         app_name: display_name.unwrap_or_else(|| app_name.to_string()),

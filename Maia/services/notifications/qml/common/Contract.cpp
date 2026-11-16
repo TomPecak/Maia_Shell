@@ -43,6 +43,8 @@ NotificationData readNotification(C::Notification::Reader n)
     d.originName = toQString(n.getOriginName());
     for (auto url : n.getUrls())
         d.urls.append(toQString(url));
+    if (!d.urls.isEmpty())
+        d.files = readFiles(d.urls);
     d.soundName = toQString(n.getSoundName());
     d.soundFile = toQString(n.getSoundFile());
     d.suppressSound = n.getSuppressSound();
@@ -139,6 +141,9 @@ void writeRequest(C::NotificationRequest::Builder b, const RequestData &r)
     b.setReplySubmitText(r.replySubmitText.toUtf8().constData());
     b.setSoundName(r.soundName.toUtf8().constData());
     b.setSuppressSound(r.suppressSound);
+    auto urls = b.initUrls(uint(r.urls.size()));
+    for (int i = 0; i < r.urls.size(); ++i)
+        urls.set(uint(i), r.urls[i].toUtf8().constData());
 }
 
 void writeJobProgress(C::JobProgress::Builder b, const JobProgressData &p)

@@ -29,6 +29,8 @@ Window {
     property bool shown: false
     // An answer field of a popup is open
     property bool replying: false
+    // A file is being dragged out of a popup: the popups wait (a drag outlives the hover)
+    property bool dragging: false
     // Jobs the user hid from the popups (they go on in the notification center)
     property var hiddenJobs: ({})
     // Jobs that ended while shown: a few seconds more ("Done", "Open folder")
@@ -93,7 +95,7 @@ Window {
                 Sounds.play(soundName, soundFile)
         }
         maximumCount: 3
-        paused: listHover.hovered || jobsHover.hovered || popupsWindow.replying
+        paused: listHover.hovered || jobsHover.hovered || popupsWindow.replying || popupsWindow.dragging
 
         onCountChanged: popupsWindow.updateShown()
     }
@@ -226,6 +228,8 @@ Window {
             time: model.time
             image: model.image
             actions: model.actions
+            actionIcons: model.actionIcons
+            files: model.files
             hasDefaultAction: model.hasDefaultAction
             inlineReply: model.inlineReply
             replyPlaceholder: model.replyPlaceholder
@@ -237,6 +241,9 @@ Window {
             color: Qt.rgba(Theme.surface.r, Theme.surface.g, Theme.surface.b, 1)
 
             onReplyingChanged: popupsWindow.replying = replying
+            onDraggingChanged: popupsWindow.dragging = dragging
+            // A file opened: this popup has done its job
+            onFileOpened: popups.hide(model.notificationId)
 
             onDismissed: NotificationCenter.dismiss(model.notificationId)
             onDefaultInvoked: NotificationCenter.invokeAction(model.notificationId, "default", popupsWindow)

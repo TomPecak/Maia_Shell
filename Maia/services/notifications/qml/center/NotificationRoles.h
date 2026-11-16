@@ -7,7 +7,8 @@
 //   ([{ key, label }] without "default"), hasDefaultAction (a click on the notification does
 //   something), actionIcons, urgency (NotificationCenter.Urgency), category, timeout (ms, -1, 0),
 //   time (a date), transient, resident, popup, expired, inlineReply, replyPlaceholder,
-//   replySubmitText, originName, urls, soundName, soundFile, suppressSound
+//   replySubmitText, originName, urls, files ([{ url, name, mimeType, iconName, genericIconName,
+//   preview, local, exists, image }], see NotificationFiles.h), soundName, soundFile, suppressSound
 
 #include "NotificationData.h"
 
@@ -42,6 +43,7 @@ enum Role {
     ReplySubmitTextRole,
     OriginNameRole,
     UrlsRole,
+    FilesRole,
     SoundNameRole,
     SoundFileRole,
     SuppressSoundRole,

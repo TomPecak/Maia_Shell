@@ -65,6 +65,7 @@ RequestData Notification::request() const
         if (!key.isEmpty())
             r.actions.append({key, action.value(QStringLiteral("label")).toString()});
     }
+    r.actionIcons = m_actionIcons;
     r.urgency = int(m_urgency);
     r.category = m_category;
     r.timeout = m_timeout;
@@ -75,6 +76,10 @@ RequestData Notification::request() const
     r.replySubmitText = m_replySubmitText;
     r.soundName = m_soundName;
     r.suppressSound = m_suppressSound;
+    for (const QUrl &url : m_urls) {
+        if (url.isValid())
+            r.urls.append(url.isLocalFile() ? url.toLocalFile() : url.toString(QUrl::FullyEncoded));
+    }
     return r;
 }
 
@@ -130,6 +135,7 @@ MAIA_SETTER(const QString &, setSummary, m_summary)
 MAIA_SETTER(const QString &, setBody, m_body)
 MAIA_SETTER(const QUrl &, setImage, m_image)
 MAIA_SETTER(const QVariantList &, setActions, m_actions)
+MAIA_SETTER(bool, setActionIcons, m_actionIcons)
 MAIA_SETTER(Urgency, setUrgency, m_urgency)
 MAIA_SETTER(const QString &, setCategory, m_category)
 MAIA_SETTER(int, setTimeout, m_timeout)
@@ -140,6 +146,7 @@ MAIA_SETTER(const QString &, setReplyPlaceholder, m_replyPlaceholder)
 MAIA_SETTER(const QString &, setReplySubmitText, m_replySubmitText)
 MAIA_SETTER(const QString &, setSoundName, m_soundName)
 MAIA_SETTER(bool, setSuppressSound, m_suppressSound)
+MAIA_SETTER(const QList<QUrl> &, setUrls, m_urls)
 
 #undef MAIA_SETTER
 

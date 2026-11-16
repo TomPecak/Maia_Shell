@@ -133,6 +133,8 @@ FlyoutWindow {
                 time: model.time
                 image: model.image
                 actions: model.actions
+                actionIcons: model.actionIcons
+                files: model.files
                 hasDefaultAction: model.hasDefaultAction
                 inlineReply: model.inlineReply
                 replyPlaceholder: model.replyPlaceholder
