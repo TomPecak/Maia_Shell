@@ -1,0 +1,286 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1240" viewBox="0 0 1800 1240" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif">
+<defs>
+<marker id="a16a34a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#16a34a"/></marker>
+<marker id="s16a34a" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#16a34a"/></marker>
+<marker id="a2563eb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2563eb"/></marker>
+<marker id="s2563eb" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2563eb"/></marker>
+<marker id="a334155" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker>
+<marker id="s334155" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker>
+<marker id="aea580c" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#ea580c"/></marker>
+<marker id="sea580c" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#ea580c"/></marker>
+<marker id="a7c3aed" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7c3aed"/></marker>
+<marker id="s7c3aed" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7c3aed"/></marker>
+</defs>
+<rect width="1800" height="1240" fill="#ffffff"/>
+<text x="30" y="44" font-size="24" font-weight="bold" fill="#0f172a" text-anchor="start">KDE Plasma 6.6: zmiana dekoracji okien w Ustawieniach systemowych</text>
+<text x="30" y="68" font-size="14" font-weight="normal" fill="#475569" text-anchor="start">Od kliknięcia w kcm_kwindecoration do nowej ramki okna: procesy, moduły, biblioteki, repozytoria, pliki i IPC (kod: KDE_repos/kwin v6.6.6)</text>
+<rect x="30" y="90" width="560" height="760" rx="18" fill="#0284c7" fill-opacity="0.06" stroke="#0284c7" stroke-width="3"/>
+<rect x="30" y="90" width="560" height="44" rx="18" fill="#0284c7"/>
+<rect x="30" y="116" width="560" height="18" fill="#0284c7"/>
+<text x="48" y="119" font-size="18" font-weight="bold" fill="#ffffff" text-anchor="start">Proces: systemsettings</text>
+<text x="574" y="119" font-size="12" font-weight="normal" fill="#ffffff" text-anchor="end">aplikacja Ustawień (rama)</text>
+<rect x="50" y="146" width="520" height="62" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<text x="62" y="168" font-size="14" font-weight="bold" fill="#0f172a" text-anchor="start">Rama Ustawień systemowych</text>
+<text x="62" y="187" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">okno, pasek boczny, wyszukiwanie, przyciski Zastosuj / Domyślne</text>
+<rect x="414.4" y="153" width="147.6" height="18" rx="9" fill="#0284c7"/>
+<text x="488.2" y="166" font-size="11" font-weight="bold" fill="#ffffff" text-anchor="middle">plasma/systemsettings</text>
+<path d="M310,208 L310,238" fill="none" stroke="#7c3aed" stroke-width="2.2" stroke-dasharray="7 5" marker-end="url(#a7c3aed)"/>
+<text x="318" y="228" font-size="12" font-weight="bold" fill="#7c3aed" text-anchor="start">ładuje KCM (KCMUtils, dlopen)</text>
+<rect x="50" y="240" width="520" height="490" rx="12" fill="#f5f3ff" stroke="#7c3aed" stroke-width="2"/>
+<text x="64" y="264" font-size="15" font-weight="bold" fill="#0f172a" text-anchor="start">Moduł KCM: kcm_kwindecoration.so</text>
+<text x="64" y="282" font-size="11.5" font-weight="normal" fill="#475569" text-anchor="start" font-family="DejaVu Sans Mono, monospace">kwin/src/kcms/decoration  ·  qt6/plugins/plasma/kcms/systemsettings/</text>
+<rect x="478.4" y="250" width="81.6" height="18" rx="9" fill="#7c3aed"/>
+<text x="519.1999999999999" y="263" font-size="11" font-weight="bold" fill="#ffffff" text-anchor="middle">plasma/kwin</text>
+<rect x="70" y="296" width="230" height="92" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<text x="82" y="318" font-size="14" font-weight="bold" fill="#0f172a" text-anchor="start">UI w QML</text>
+<text x="82" y="337" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">ui/main.qml, ui/Themes.qml</text>
+<text x="82" y="353" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">siatka miniatur, onClicked:</text>
+<text x="82" y="369" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">kcm.theme = index</text>
+<rect x="320" y="296" width="230" height="92" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<text x="332" y="318" font-size="14" font-weight="bold" fill="#0f172a" text-anchor="start">KCMKWinDecoration</text>
+<text x="332" y="337" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">kcm.cpp (KQuickManaged-</text>
+<text x="332" y="353" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">ConfigModule)</text>
+<text x="332" y="369" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">setTheme()  ·  save()</text>
+<rect x="70" y="404" width="230" height="100" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<text x="82" y="426" font-size="14" font-weight="bold" fill="#0f172a" text-anchor="start">DecorationsModel</text>
+<text x="82" y="445" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">decorationmodel.cpp</text>
+<text x="82" y="461" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">KPluginMetaData::findPlugins(</text>
+<text x="82" y="477" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">"org.kde.kdecoration3")</text>
+<text x="82" y="493" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">+ DecorationThemeProvider</text>
+<rect x="320" y="404" width="230" height="100" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<text x="332" y="426" font-size="14" font-weight="bold" fill="#0f172a" text-anchor="start">KWinDecorationSettings</text>
+<text x="332" y="445" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">wygenerowane z</text>
+<text x="332" y="461" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">kwindecorationsettings.kcfg</text>
+<text x="332" y="477" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">(KConfigSkeleton): library,</text>
+<text x="332" y="493" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">theme, BorderSize, Buttons…</text>
+<rect x="70" y="520" width="480" height="74" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<text x="82" y="542" font-size="14" font-weight="bold" fill="#0f172a" text-anchor="start">Podgląd: declarative-plugin</text>
+<text x="82" y="561" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">PreviewBridge, PreviewClient, PreviewItem: atrapa okna</text>
+<text x="82" y="577" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">rysowana przez prawdziwą wtyczkę, bez KWina</text>
+<rect x="70" y="610" width="480" height="104" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="82" y="632" font-size="14" font-weight="bold" fill="#0f172a" text-anchor="start">Wtyczka dekoracji w podglądzie (ta sama .so co w KWinie)</text>
+<text x="82" y="651" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">org.kde.breeze.so  ·  org.kde.kwin.aurorae(.v2).so  ·  oxygen</text>
+<text x="82" y="667" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">implementuje KDecoration3::Decoration</text>
+<text x="82" y="683" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">izolacja: zepsuta wtyczka nie wywraca KWina</text>
+<rect x="50" y="750" width="520" height="78" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+<text x="62" y="770" font-size="12" font-weight="bold" fill="#475569" text-anchor="start">Biblioteki w procesie</text>
+<rect x="62" y="780" width="68" height="19" rx="4" fill="#ffffff" stroke="#475569" stroke-width="1.5"/>
+<text x="96.0" y="794" font-size="11.5" font-weight="bold" fill="#475569" text-anchor="middle">KCMUtils</text>
+<rect x="136" y="780" width="61" height="19" rx="4" fill="#ffffff" stroke="#475569" stroke-width="1.5"/>
+<text x="166.5" y="794" font-size="11.5" font-weight="bold" fill="#475569" text-anchor="middle">KConfig</text>
+<rect x="203" y="780" width="89" height="19" rx="4" fill="#ffffff" stroke="#475569" stroke-width="1.5"/>
+<text x="247.5" y="794" font-size="11.5" font-weight="bold" fill="#475569" text-anchor="middle">KCoreAddons</text>
+<rect x="298" y="780" width="96" height="19" rx="4" fill="#ffffff" stroke="#059669" stroke-width="1.5"/>
+<text x="346.0" y="794" font-size="11.5" font-weight="bold" fill="#059669" text-anchor="middle">KDecoration3</text>
+<rect x="400" y="780" width="61" height="19" rx="4" fill="#ffffff" stroke="#16a34a" stroke-width="1.5"/>
+<text x="430.5" y="794" font-size="11.5" font-weight="bold" fill="#16a34a" text-anchor="middle">QtQuick</text>
+<rect x="467" y="780" width="54" height="19" rx="4" fill="#ffffff" stroke="#16a34a" stroke-width="1.5"/>
+<text x="494.0" y="794" font-size="11.5" font-weight="bold" fill="#16a34a" text-anchor="middle">QtDBus</text>
+<path d="M300,342 L320,342" fill="none" stroke="#334155" stroke-width="2.2" marker-end="url(#a334155)"/>
+<circle cx="310" cy="322" r="12" fill="#0f172a"/>
+<text x="310" y="326.5" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">1</text>
+<path d="M435,388 L435,404" fill="none" stroke="#334155" stroke-width="2.2" marker-end="url(#a334155)"/>
+<path d="M185,504 L185,520" fill="none" stroke="#334155" stroke-width="2.2" marker-end="url(#a334155)"/>
+<path d="M650,300 h378 l22,22 v128 h-400 z" fill="#fff7ed" stroke="#ea580c" stroke-width="2"/>
+<path d="M1028,300 v22 h22" fill="none" stroke="#ea580c" stroke-width="2"/>
+<text x="662" y="322" font-size="14" font-weight="bold" fill="#9a3412" text-anchor="start">~/.config/kwinrc  (plik, KConfig INI)</text>
+<text x="662" y="342" font-size="12" font-weight="normal" fill="#431407" text-anchor="start" font-family="DejaVu Sans Mono, monospace">[org.kde.kdecoration2]</text>
+<text x="662" y="358" font-size="12" font-weight="normal" fill="#431407" text-anchor="start" font-family="DejaVu Sans Mono, monospace">library=org.kde.kwin.aurorae</text>
+<text x="662" y="374" font-size="12" font-weight="normal" fill="#431407" text-anchor="start" font-family="DejaVu Sans Mono, monospace">theme=__aurorae__svg__Se7enAero</text>
+<text x="662" y="390" font-size="12" font-weight="normal" fill="#431407" text-anchor="start" font-family="DejaVu Sans Mono, monospace">BorderSize=Normal</text>
+<text x="662" y="406" font-size="12" font-weight="normal" fill="#431407" text-anchor="start" font-family="DejaVu Sans Mono, monospace">ButtonsOnLeft=MS  ButtonsOnRight=HIAX</text>
+<text x="662" y="428" font-size="11" font-weight="normal" fill="#9a3412" text-anchor="start" font-style="italic">zapis atomowy (QSaveFile); nazwa grupy kdecoration2</text>
+<text x="662" y="442" font-size="11" font-weight="normal" fill="#9a3412" text-anchor="start" font-style="italic">została dla zgodności, choć API to już KDecoration3</text>
+<rect x="650" y="516" width="400" height="104" rx="52.0" fill="#eff6ff" stroke="#2563eb" stroke-width="2.5"/>
+<text x="850.0" y="542" font-size="14" font-weight="bold" fill="#1e3a8a" text-anchor="middle">D-Bus: magistrala sesji (dbus-daemon)</text>
+<text x="850.0" y="562" font-size="12" font-weight="normal" fill="#1e40af" text-anchor="middle" font-family="DejaVu Sans Mono, monospace">signal  /KWin  org.kde.KWin.reloadConfig</text>
+<text x="850.0" y="578" font-size="12" font-weight="normal" fill="#1e40af" text-anchor="middle">rozgłoszenie: bez adresata i bez odpowiedzi;</text>
+<text x="850.0" y="594" font-size="12" font-weight="normal" fill="#1e40af" text-anchor="middle">słucha też KCM (odświeża listę motywów)</text>
+<path d="M650,690 h378 l22,22 v118 h-400 z" fill="#fff7ed" stroke="#ea580c" stroke-width="2"/>
+<path d="M1028,690 v22 h22" fill="none" stroke="#ea580c" stroke-width="2"/>
+<text x="662" y="712" font-size="14" font-weight="bold" fill="#9a3412" text-anchor="start">Wtyczki i motywy na dysku</text>
+<text x="662" y="732" font-size="12" font-weight="normal" fill="#431407" text-anchor="start" font-family="DejaVu Sans Mono, monospace">qt6/plugins/org.kde.kdecoration3/</text>
+<text x="662" y="748" font-size="12" font-weight="normal" fill="#431407" text-anchor="start" font-family="DejaVu Sans Mono, monospace">  org.kde.breeze.so</text>
+<text x="662" y="764" font-size="12" font-weight="normal" fill="#431407" text-anchor="start" font-family="DejaVu Sans Mono, monospace">  org.kde.kwin.aurorae.so, .v2.so</text>
+<text x="662" y="780" font-size="12" font-weight="normal" fill="#431407" text-anchor="start" font-family="DejaVu Sans Mono, monospace">~/.local/share/aurorae/themes/&lt;motyw&gt;</text>
+<text x="662" y="796" font-size="12" font-weight="normal" fill="#431407" text-anchor="start" font-family="DejaVu Sans Mono, monospace">/usr/share/aurorae/themes/</text>
+<rect x="1110" y="90" width="660" height="760" rx="18" fill="#7c3aed" fill-opacity="0.06" stroke="#7c3aed" stroke-width="3"/>
+<rect x="1110" y="90" width="660" height="44" rx="18" fill="#7c3aed"/>
+<rect x="1110" y="116" width="660" height="18" fill="#7c3aed"/>
+<text x="1128" y="119" font-size="18" font-weight="bold" fill="#ffffff" text-anchor="start">Proces: kwin_wayland</text>
+<text x="1754" y="119" font-size="12" font-weight="normal" fill="#ffffff" text-anchor="end">kompozytor i menedżer okien</text>
+<rect x="1670.4" y="140" width="81.6" height="18" rx="9" fill="#7c3aed"/>
+<text x="1711.2" y="153" font-size="11" font-weight="bold" fill="#ffffff" text-anchor="middle">plasma/kwin</text>
+<rect x="1130" y="166" width="300" height="84" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<text x="1142" y="188" font-size="14" font-weight="bold" fill="#0f172a" text-anchor="start">DBusInterface</text>
+<text x="1142" y="207" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">src/dbusinterface.cpp</text>
+<text x="1142" y="223" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">obiekt /KWin, org.kde.KWin;</text>
+<text x="1142" y="239" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">connect(reloadConfig)</text>
+<rect x="1450" y="166" width="300" height="84" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<text x="1462" y="188" font-size="14" font-weight="bold" fill="#0f172a" text-anchor="start">Workspace</text>
+<text x="1462" y="207" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">src/workspace.cpp</text>
+<text x="1462" y="223" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">reconfigure(): zegar 200 ms</text>
+<text x="1462" y="239" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">slotReconfigure(): configChanged()</text>
+<rect x="1130" y="300" width="620" height="104" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<text x="1142" y="322" font-size="14" font-weight="bold" fill="#0f172a" text-anchor="start">DecorationBridge</text>
+<text x="1142" y="341" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">src/decorations/decorationbridge.cpp</text>
+<text x="1142" y="357" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">reconfigure(): readPlugin() / readTheme() z kwinApp()-&gt;config()</text>
+<text x="1142" y="373" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">initPlugin(): KPluginMetaData::findPluginById + KPluginFactory::loadFactory</text>
+<text x="1142" y="389" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">createDecoration(window): factory-&gt;create&lt;Decoration&gt;({bridge, theme})</text>
+<rect x="1130" y="444" width="300" height="100" rx="8" fill="#ffffff" stroke="#db2777" stroke-width="1.5"/>
+<text x="1142" y="466" font-size="14" font-weight="bold" fill="#0f172a" text-anchor="start">Wtyczka dekoracji (.so)</text>
+<text x="1142" y="485" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">Breeze (plasma/breeze) lub</text>
+<text x="1142" y="501" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">Aurorae (plasma/aurorae)</text>
+<text x="1142" y="517" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">KDecoration3::Decoration:</text>
+<text x="1142" y="533" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">ramki, przyciski, paint()</text>
+<rect x="1450" y="444" width="300" height="100" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<text x="1462" y="466" font-size="14" font-weight="bold" fill="#0f172a" text-anchor="start">XdgToplevelWindow</text>
+<text x="1462" y="485" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">src/xdgshellwindow.cpp</text>
+<text x="1462" y="501" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">invalidateDecoration():</text>
+<text x="1462" y="517" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">clearDecoration() +</text>
+<text x="1462" y="533" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">configureDecoration()</text>
+<rect x="1130" y="582" width="300" height="100" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<text x="1142" y="604" font-size="14" font-weight="bold" fill="#0f172a" text-anchor="start">DecorationRenderer</text>
+<text x="1142" y="623" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">src/scene/decorationitem.cpp</text>
+<text x="1142" y="639" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">decoration-&gt;paint(QPainter)</text>
+<text x="1142" y="655" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">do 4 obrazów ramki →</text>
+<text x="1142" y="671" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">tekstury OpenGL → klatka</text>
+<rect x="1450" y="582" width="300" height="100" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<text x="1462" y="604" font-size="14" font-weight="bold" fill="#0f172a" text-anchor="start">Serwer Wayland w KWinie</text>
+<text x="1462" y="623" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">xdg-shell: xdg_toplevel</text>
+<text x="1462" y="639" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">xdg-decoration: tryb Server</text>
+<text x="1462" y="655" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">configure / ack_configure</text>
+<text x="1462" y="671" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">synchronizacja z rozmiarem</text>
+<rect x="1130" y="750" width="300" height="78" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+<text x="1142" y="770" font-size="12" font-weight="bold" fill="#475569" text-anchor="start">Biblioteki w procesie</text>
+<rect x="1142" y="780" width="96" height="19" rx="4" fill="#ffffff" stroke="#059669" stroke-width="1.5"/>
+<text x="1190.0" y="794" font-size="11.5" font-weight="bold" fill="#059669" text-anchor="middle">KDecoration3</text>
+<rect x="1244" y="780" width="61" height="19" rx="4" fill="#ffffff" stroke="#475569" stroke-width="1.5"/>
+<text x="1274.5" y="794" font-size="11.5" font-weight="bold" fill="#475569" text-anchor="middle">KConfig</text>
+<rect x="1311" y="780" width="89" height="19" rx="4" fill="#ffffff" stroke="#475569" stroke-width="1.5"/>
+<text x="1355.5" y="794" font-size="11.5" font-weight="bold" fill="#475569" text-anchor="middle">KCoreAddons</text>
+<rect x="1142" y="804" width="54" height="19" rx="4" fill="#ffffff" stroke="#16a34a" stroke-width="1.5"/>
+<text x="1169.0" y="818" font-size="11.5" font-weight="bold" fill="#16a34a" text-anchor="middle">QtDBus</text>
+<rect x="1202" y="804" width="47" height="19" rx="4" fill="#ffffff" stroke="#16a34a" stroke-width="1.5"/>
+<text x="1225.5" y="818" font-size="11.5" font-weight="bold" fill="#16a34a" text-anchor="middle">QtGui</text>
+<path d="M1430,208 L1450,208" fill="none" stroke="#334155" stroke-width="2.2" marker-end="url(#a334155)"/>
+<circle cx="1440" cy="188" r="12" fill="#0f172a"/>
+<text x="1440" y="192.5" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">4</text>
+<path d="M1700,250 L1700,300" fill="none" stroke="#334155" stroke-width="2.2" marker-end="url(#a334155)"/>
+<text x="1690" y="280" font-size="12" font-weight="bold" fill="#334155" text-anchor="end">configChanged → reconfigure()</text>
+<circle cx="1724" cy="275" r="12" fill="#0f172a"/>
+<text x="1724" y="279.5" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">6</text>
+<path d="M1280,404 L1280,444" fill="none" stroke="#334155" stroke-width="2.2" marker-end="url(#a334155)"/>
+<text x="1288" y="428" font-size="12" font-weight="bold" fill="#334155" text-anchor="start">createDecoration</text>
+<path d="M1600,404 L1600,444" fill="none" stroke="#334155" stroke-width="2.2" marker-end="url(#a334155)"/>
+<text x="1608" y="418" font-size="12" font-weight="bold" fill="#334155" text-anchor="start">recreateDecorations →</text>
+<text x="1608" y="433" font-size="12" font-weight="bold" fill="#334155" text-anchor="start">invalidateDecoration()</text>
+<circle cx="1580" cy="424" r="12" fill="#0f172a"/>
+<text x="1580" y="428.5" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">7</text>
+<path d="M1450,494 L1430,494" fill="none" stroke="#334155" stroke-width="2.2" marker-end="url(#a334155)"/>
+<path d="M1600,544 L1600,582" fill="none" stroke="#334155" stroke-width="2.2" marker-end="url(#a334155)"/>
+<path d="M1280,544 L1280,582" fill="none" stroke="#334155" stroke-width="2.2" marker-end="url(#a334155)"/>
+<text x="1288" y="568" font-size="12" font-weight="bold" fill="#334155" text-anchor="start">paint()</text>
+<circle cx="1260" cy="563" r="12" fill="#0f172a"/>
+<text x="1260" y="567.5" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">10</text>
+<path d="M550,330 L650,330" fill="none" stroke="#ea580c" stroke-width="2.2" marker-end="url(#aea580c)"/>
+<circle cx="622" cy="314" r="12" fill="#0f172a"/>
+<text x="622" y="318.5" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">2</text>
+<path d="M550,372 L604,372 L604,560 L650,560" fill="none" stroke="#2563eb" stroke-width="2.2" marker-end="url(#a2563eb)"/>
+<circle cx="627" cy="544" r="12" fill="#0f172a"/>
+<text x="627" y="548.5" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">3</text>
+<path d="M1050,568 L1090,568 L1090,220 L1130,220" fill="none" stroke="#2563eb" stroke-width="2.2" marker-end="url(#a2563eb)"/>
+<path d="M850,300 L850,152 L1600,152 L1600,166" fill="none" stroke="#ea580c" stroke-width="2.2" marker-end="url(#aea580c)"/>
+<text x="862" y="145" font-size="12" font-weight="bold" fill="#ea580c" text-anchor="start">odczyt: reparseConfiguration()</text>
+<circle cx="1560" cy="152" r="12" fill="#0f172a"/>
+<text x="1560" y="156.5" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">5</text>
+<path d="M1130,390 L1078,390 L1078,760 L1050,760" fill="none" stroke="#7c3aed" stroke-width="2.2" stroke-dasharray="7 5" marker-end="url(#a7c3aed)"/>
+<text x="1086" y="748" font-size="12" font-weight="bold" fill="#7c3aed" text-anchor="start">dlopen</text>
+<path d="M550,662 L622,662 L622,740 L650,740" fill="none" stroke="#7c3aed" stroke-width="2.2" stroke-dasharray="7 5" marker-end="url(#a7c3aed)"/>
+<text x="560" y="655" font-size="12" font-weight="bold" fill="#7c3aed" text-anchor="start">dlopen</text>
+<path d="M1600,682 L1600,900" fill="none" stroke="#16a34a" stroke-width="2.2" marker-end="url(#a16a34a)" marker-start="url(#s16a34a)"/>
+<text x="1612" y="716" font-size="12" font-weight="bold" fill="#16a34a" text-anchor="start">gniazdo Wayland:</text>
+<text x="1612" y="731" font-size="12" font-weight="bold" fill="#16a34a" text-anchor="start">8 configure ↓</text>
+<text x="1612" y="746" font-size="12" font-weight="bold" fill="#16a34a" text-anchor="start">9 ack_configure ↑</text>
+<circle cx="1580" cy="724" r="12" fill="#0f172a"/>
+<text x="1580" y="728.5" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">8</text>
+<circle cx="1580" cy="760" r="12" fill="#0f172a"/>
+<text x="1580" y="764.5" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">9</text>
+<rect x="1450" y="900" width="320" height="140" rx="18" fill="#16a34a" fill-opacity="0.06" stroke="#16a34a" stroke-width="3"/>
+<rect x="1450" y="900" width="320" height="44" rx="18" fill="#16a34a"/>
+<rect x="1450" y="926" width="320" height="18" fill="#16a34a"/>
+<text x="1468" y="929" font-size="18" font-weight="bold" fill="#ffffff" text-anchor="start">Proces: aplikacja</text>
+<text x="1754" y="929" font-size="12" font-weight="normal" fill="#ffffff" text-anchor="end"></text>
+<text x="1468" y="962" font-size="12" font-weight="bold" fill="#14532d" text-anchor="start">dowolny klient Wayland (np. Dolphin)</text>
+<text x="1468" y="982" font-size="12" font-weight="normal" fill="#14532d" text-anchor="start">dostaje nowy rozmiar treści (inne ramki),</text>
+<text x="1468" y="998" font-size="12" font-weight="normal" fill="#14532d" text-anchor="start">odsyła ack_configure i rysuje się od nowa;</text>
+<text x="1468" y="1014" font-size="12" font-weight="normal" fill="#14532d" text-anchor="start">KWin podmienia ramkę w tej samej klatce</text>
+<rect x="30" y="880" width="720" height="330" rx="12" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+<text x="48" y="908" font-size="16" font-weight="bold" fill="#0f172a" text-anchor="start">Kolejność kroków</text>
+<circle cx="60" cy="935" r="12" fill="#0f172a"/>
+<text x="60" y="939.5" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">1</text>
+<text x="84" y="940" font-size="13" font-weight="normal" fill="#0f172a" text-anchor="start">Klik miniatury: kcm.theme = index → setTheme() zmienia pola tylko w pamięci</text>
+<circle cx="60" cy="961" r="12" fill="#0f172a"/>
+<text x="60" y="965.5" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">2</text>
+<text x="84" y="966" font-size="13" font-weight="normal" fill="#0f172a" text-anchor="start">„Zastosuj” (lub dwuklik) → save(): KConfig zapisuje ~/.config/kwinrc</text>
+<circle cx="60" cy="987" r="12" fill="#0f172a"/>
+<text x="60" y="991.5" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">3</text>
+<text x="84" y="992" font-size="13" font-weight="normal" fill="#0f172a" text-anchor="start">save() wysyła sygnał D-Bus /KWin org.kde.KWin.reloadConfig</text>
+<circle cx="60" cy="1013" r="12" fill="#0f172a"/>
+<text x="60" y="1017.5" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">4</text>
+<text x="84" y="1018" font-size="13" font-weight="normal" fill="#0f172a" text-anchor="start">DBusInterface → Workspace::slotReloadConfig() → zegar 200 ms (zbiera serię)</text>
+<circle cx="60" cy="1039" r="12" fill="#0f172a"/>
+<text x="60" y="1043.5" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">5</text>
+<text x="84" y="1044" font-size="13" font-weight="normal" fill="#0f172a" text-anchor="start">slotReconfigure(): reparseConfiguration() czyta kwinrc, options-&gt;updateSettings()</text>
+<circle cx="60" cy="1065" r="12" fill="#0f172a"/>
+<text x="60" y="1069.5" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">6</text>
+<text x="84" y="1070" font-size="13" font-weight="normal" fill="#0f172a" text-anchor="start">configChanged → DecorationBridge::reconfigure(): nowa wtyczka? → dlopen .so</text>
+<circle cx="60" cy="1091" r="12" fill="#0f172a"/>
+<text x="60" y="1095.5" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">7</text>
+<text x="84" y="1096" font-size="13" font-weight="normal" fill="#0f172a" text-anchor="start">recreateDecorations(): każde okno → invalidateDecoration() → createDecoration(theme)</text>
+<circle cx="60" cy="1117" r="12" fill="#0f172a"/>
+<text x="60" y="1121.5" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">8</text>
+<text x="84" y="1122" font-size="13" font-weight="normal" fill="#0f172a" text-anchor="start">Nowe ramki = nowy rozmiar treści → xdg_toplevel.configure do aplikacji</text>
+<circle cx="60" cy="1143" r="12" fill="#0f172a"/>
+<text x="60" y="1147.5" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">9</text>
+<text x="84" y="1148" font-size="13" font-weight="normal" fill="#0f172a" text-anchor="start">Aplikacja: ack_configure + nowa klatka; KWin stosuje nową dekorację</text>
+<circle cx="60" cy="1169" r="12" fill="#0f172a"/>
+<text x="60" y="1173.5" font-size="13" font-weight="bold" fill="#ffffff" text-anchor="middle">10</text>
+<text x="84" y="1174" font-size="13" font-weight="normal" fill="#0f172a" text-anchor="start">DecorationRenderer: paint() do obrazów ramki → tekstury → złożona klatka</text>
+<rect x="770" y="880" width="660" height="330" rx="12" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+<text x="788" y="908" font-size="16" font-weight="bold" fill="#0f172a" text-anchor="start">Legenda</text>
+<rect x="790" y="930" width="46" height="26" rx="8" fill="#7c3aed" fill-opacity="0.06" stroke="#7c3aed" stroke-width="3"/>
+<text x="846" y="948" font-size="13" font-weight="normal" fill="#0f172a" text-anchor="start">proces (osobna przestrzeń adresowa)</text>
+<rect x="790" y="966" width="46" height="26" rx="8" fill="#f5f3ff" stroke="#7c3aed" stroke-width="2"/>
+<text x="846" y="984" font-size="13" font-weight="normal" fill="#0f172a" text-anchor="start">moduł / wtyczka .so w procesie</text>
+<rect x="790" y="1002" width="46" height="26" rx="6" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<text x="846" y="1020" font-size="13" font-weight="normal" fill="#0f172a" text-anchor="start">klasa / plik źródłowy w repozytorium</text>
+<path d="M790,1038 h34 l12,12 v14 h-46 z" fill="#fff7ed" stroke="#ea580c" stroke-width="2"/>
+<text x="846" y="1056" font-size="13" font-weight="normal" fill="#0f172a" text-anchor="start">plik na dysku</text>
+<rect x="790" y="1074" width="46" height="26" rx="13" fill="#eff6ff" stroke="#2563eb" stroke-width="2.5"/>
+<text x="846" y="1092" font-size="13" font-weight="normal" fill="#0f172a" text-anchor="start">magistrala IPC (D-Bus)</text>
+<path d="M1110,940 L1160,940" fill="none" stroke="#334155" stroke-width="2.2" marker-end="url(#a334155)"/>
+<text x="1170" y="945" font-size="13" font-weight="normal" fill="#0f172a" text-anchor="start">wywołanie w procesie (C++/Qt)</text>
+<path d="M1110,970 L1160,970" fill="none" stroke="#ea580c" stroke-width="2.2" marker-end="url(#aea580c)"/>
+<text x="1170" y="975" font-size="13" font-weight="normal" fill="#0f172a" text-anchor="start">zapis / odczyt pliku</text>
+<path d="M1110,1000 L1160,1000" fill="none" stroke="#2563eb" stroke-width="2.2" marker-end="url(#a2563eb)"/>
+<text x="1170" y="1005" font-size="13" font-weight="normal" fill="#0f172a" text-anchor="start">D-Bus (sygnał)</text>
+<path d="M1110,1030 L1160,1030" fill="none" stroke="#16a34a" stroke-width="2.2" marker-end="url(#a16a34a)"/>
+<text x="1170" y="1035" font-size="13" font-weight="normal" fill="#0f172a" text-anchor="start">Wayland (gniazdo)</text>
+<path d="M1110,1060 L1160,1060" fill="none" stroke="#7c3aed" stroke-width="2.2" stroke-dasharray="7 5" marker-end="url(#a7c3aed)"/>
+<text x="1170" y="1065" font-size="13" font-weight="normal" fill="#0f172a" text-anchor="start">dlopen wtyczki (KPluginFactory)</text>
+<text x="1110" y="1096" font-size="13" font-weight="bold" fill="#0f172a" text-anchor="start">Repozytoria:</text>
+<rect x="1110" y="1108" width="81.6" height="18" rx="9" fill="#7c3aed"/>
+<text x="1150.8" y="1121" font-size="11" font-weight="bold" fill="#ffffff" text-anchor="middle">plasma/kwin</text>
+<rect x="1199.6" y="1108" width="147.6" height="18" rx="9" fill="#0284c7"/>
+<text x="1273.3999999999999" y="1121" font-size="11" font-weight="bold" fill="#ffffff" text-anchor="middle">plasma/systemsettings</text>
+<rect x="1110" y="1132" width="127.8" height="18" rx="9" fill="#059669"/>
+<text x="1173.9" y="1145" font-size="11" font-weight="bold" fill="#ffffff" text-anchor="middle">plasma/kdecoration</text>
+<rect x="1245.8" y="1132" width="94.8" height="18" rx="9" fill="#db2777"/>
+<text x="1293.2" y="1145" font-size="11" font-weight="bold" fill="#ffffff" text-anchor="middle">plasma/breeze</text>
+<rect x="1110" y="1156" width="101.39999999999999" height="18" rx="9" fill="#475569"/>
+<text x="1160.7" y="1169" font-size="11" font-weight="bold" fill="#ffffff" text-anchor="middle">KDE Frameworks</text>
+<rect x="1219.4" y="1156" width="22.2" height="18" rx="9" fill="#16a34a"/>
+<text x="1230.5" y="1169" font-size="11" font-weight="bold" fill="#ffffff" text-anchor="middle">Qt</text>
+<text x="788" y="1196" font-size="12" font-weight="normal" fill="#475569" text-anchor="start">Aurorae (plasma/aurorae) ma kolor jak Breeze: obie to wtyczki dekoracji ładowane przez KDecoration3.</text>
+</svg>
