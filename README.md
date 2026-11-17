@@ -2,7 +2,7 @@
 
 ## Overview
 
-Maia Shell is a lightweight, modular graphical shell for Linux, built with C++ and QML. It features a unique split architecture, inspired by web technologies, separating the backend from the frontend. With Maia Shell, you can seamlessly switch between different frontend designs, such as Windows XP-inspired or GNOME-like layouts, all connected to a single, robust backend.
+Maia Shell is a lightweight, modular graphical shell for Linux, built with C++ and QML. With Maia Shell, you can seamlessly switch between different frontend designs, such as Windows XP-inspired or GNOME-like layouts, all connected to a single, robust backend.
 
 ## 📱 Social Media
 
