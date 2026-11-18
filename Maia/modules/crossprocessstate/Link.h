@@ -11,6 +11,9 @@
 // without a host watches the socket's directory (inotify through QFileSystemWatcher) and connects
 // when a new host's socket appears. Changes made in one turn of the event loop leave as one write.
 //
+// A second process with host: true takes part while the first one hosts, and takes over when that
+// one is gone (its lock is free then, or stale).
+//
 // Values: what QDataStream writes of a QVariant (bool, numbers, strings, url, color, date, lists and
 // maps of these; JavaScript objects and arrays become maps and lists). Each value knows whether it
 // was ever changed: when a host comes (back), a changed value of a participant wins over the host's
@@ -144,6 +147,10 @@ private:
     QLockFile *m_lock = nullptr;
     QList<Peer *> m_peers;
     quint32 m_nextPeerId = 1;
+
+    // An object of this process asked to host: when the host it lost the race to is gone, this
+    // process takes over
+    bool m_wantsHost = false;
 
     // Participant
     QLocalSocket *m_socket = nullptr;

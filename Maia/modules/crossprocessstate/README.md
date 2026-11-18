@@ -71,8 +71,8 @@ Button { onClicked: shell.notificationCenterOpen = true }                   // a
 - **Never polling**: a participant without a host watches the socket's directory (inotify through
   `QFileSystemWatcher`) and connects when a new host's socket appears.
 - **The host** holds a `QLockFile` next to the socket: a second `host: true` takes part instead (a
-  warning); the lock of a crashed host is stale (its pid is gone), so a new host takes over its
-  socket at once.
+  warning) and takes over when the first one is gone; the lock of a crashed host is stale (its pid
+  is gone), so a new host takes over its socket at once.
 - **A host that comes (back)**: participants join with their values; a changed value wins over the
   host's declared default, so a restarted host gets the session's state back. Between two changed
   values the host wins.
@@ -93,7 +93,15 @@ standard input):
 - every value type in every process; a late participant gets the current state;
 - a participant before its host keeps its change and connects when the host appears (inotify);
 - a restarted host gets the state back; a crashed host (SIGKILL, socket and lock left) is replaced;
-- a second host takes part instead;
+- a second host takes part instead, and takes over when the host crashes; two hosts started at the
+  same moment are one host (5 rounds);
+- a killed participant does not disturb the others and comes back with the state;
+- changes made while there is no host reach the next one; a host restarted 5 times (clean and
+  crashed) ends in one state;
+- a broken process (a 2 GiB frame, a frame that is no message, another protocol version) is
+  disconnected, the host goes on;
+- a participant waiting for a host uses no processor time (measured from /proc: 0 ms in 2 s);
+- 10 participants see each event once;
 - 50 writes at once from two processes end the same everywhere;
 - events reach every other process once, also with a JavaScript object as the argument;
 - 10000 assignments in one turn are one message;

@@ -135,8 +135,11 @@ void Link::attach(CrossProcessState *object, const QString &category, const QVar
     for (const auto &[key, value] : std::as_const(known))
         object->applyValue(key, value);
 
-    if (host && !isHost())
-        becomeHost();
+    if (host) {
+        m_wantsHost = true;
+        if (!isHost())
+            becomeHost();
+    }
     if (!isHost()) {
         if (m_welcomed)
             join(category);
@@ -646,6 +649,9 @@ void Link::lostHost()
     for (const QString &category : categories)
         setSynced(category, false);
     if (isHost())
+        return;
+    // A would-be host takes over from the one that is gone (if it is really gone: its lock)
+    if (m_wantsHost && becomeHost())
         return;
     watchForHost();
     // A host that only closed this connection is still there: one try. A host that is gone left a

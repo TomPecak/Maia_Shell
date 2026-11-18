@@ -36,7 +36,7 @@ if(BUILD_TESTING)
     add_dependencies(crossprocessstate-peer MaiaCrossProcessStateplugin)
 
     add_executable(tst_crossprocessstate tests/tst_crossprocessstate.cpp)
-    target_link_libraries(tst_crossprocessstate PRIVATE Maia::CrossProcessState Qt6::Gui Qt6::Qml Qt6::Test)
+    target_link_libraries(tst_crossprocessstate PRIVATE Maia::CrossProcessState Qt6::Gui Qt6::Network Qt6::Qml Qt6::Test)
     target_compile_definitions(tst_crossprocessstate PRIVATE
         PEER_PROGRAM="$<TARGET_FILE:crossprocessstate-peer>" MAIA_QML_BUILD_DIR="${MAIA_QML_BUILD_DIR}")
     add_dependencies(tst_crossprocessstate crossprocessstate-peer)
