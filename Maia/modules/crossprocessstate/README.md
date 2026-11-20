@@ -48,6 +48,20 @@ Button { onClicked: shell.notificationCenterOpen = true }                   // a
    defaults end with the same value, but which one is not defined).
 4. `category` and `host` are set once, in the declaration.
 
+## Several objects in one process
+
+Any number of `CrossProcessState` objects may live in one process (a `ShellState` in every window,
+the delegates of a `Repeater`, a `Loader` that comes and goes): they share the process's one link.
+
+- Objects of one category see each other's changes at once, without the socket; an event emitted by
+  one reaches its siblings once, and every other process once.
+- An object made later (a `Loader` made active again) gets the current values, never its declared
+  default once there is a newer one.
+- A category is joined once per connection: fifty delegates are one exchange with the host; a new
+  object declaring keys the process did not know joins again for those.
+- Two objects with `host: true` in one process are one host (no warning). The process keeps hosting
+  when its host object is destroyed: it holds the session's state for the others until it ends.
+
 ## How it works
 
 ```
@@ -106,4 +120,7 @@ standard input):
 - events reach every other process once, also with a JavaScript object as the argument;
 - 10000 assignments in one turn are one message;
 - a change reaches another participant in about 1–5 ms (measured, 20 changes);
+- several objects in one process: fifty delegates (`Instantiator`) join once and all get a change;
+  two host objects are one host; a `Loader` made again gets the current value; the host goes on
+  without its object; two objects in a participant get a change once each;
 - in one process: objects share without a host, declarations found by reflection.

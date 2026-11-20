@@ -123,12 +123,15 @@ void Link::attach(CrossProcessState *object, const QString &category, const QVar
 {
     auto &values = m_values[category];
     QList<QPair<QString, QVariant>> known;
+    bool newKeys = false;
     for (auto it = declared.cbegin(); it != declared.cend(); ++it) {
         const auto found = values.constFind(it.key());
-        if (found == values.cend())
+        if (found == values.cend()) {
             values.insert(it.key(), {it.value(), false});
-        else
+            newKeys = true;
+        } else {
             known.append({it.key(), found->value});
+        }
     }
     m_objects[category].append(object);
     // What this process already knows (another object, the host) wins over the declaration
@@ -141,9 +144,11 @@ void Link::attach(CrossProcessState *object, const QString &category, const QVar
             becomeHost();
     }
     if (!isHost()) {
-        if (m_welcomed)
+        // Once per category and connection: another object of a joined category needs the host
+        // only for keys this process did not know (a Repeater of fifty delegates is one join)
+        if (m_welcomed && (newKeys || !m_joined.contains(category)))
             join(category);
-        else if (!m_socket)
+        else if (!m_welcomed && !m_socket)
             connectToHost();
     }
     object->setSynced(isSynced(category));
@@ -642,6 +647,7 @@ void Link::lostHost()
     m_welcomed = false;
     m_id = 0;
     m_pending.clear();
+    m_joined.clear();
     // What was not sent stays in m_values (changed) and goes with the next Join
     m_outgoing.clear();
     m_queuedSets.clear();
@@ -666,6 +672,8 @@ void Link::join(const QString &category)
         return;
     // Its queued changes first, in order
     flush();
+    m_joined.insert(category);
+    ++m_joinsSent;
     m_socket->write(encodeEntries(Kind::Join, category));
 }
 

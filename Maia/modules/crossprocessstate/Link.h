@@ -76,6 +76,9 @@ public:
     // A value the way it travels: JavaScript values as maps and lists; invalid when it cannot
     static QVariant wireValue(const QVariant &value);
 
+    // How many categories this participant joined (tests: one per category and connection)
+    int joinsSent() const { return m_joinsSent; }
+
 private:
     struct Entry {
         QVariant value;
@@ -159,6 +162,9 @@ private:
     quint32 m_id = 0;
     quint64 m_nextSeq = 1;
     QHash<QPair<QString, QString>, quint64> m_pending;
+    // Categories joined on this connection
+    QSet<QString> m_joined;
+    int m_joinsSent = 0;
     QFileSystemWatcher *m_watcher = nullptr;
     // The socket file of a host that did not answer: tried again only when it changes
     qint64 m_failedSocketTime = -1;

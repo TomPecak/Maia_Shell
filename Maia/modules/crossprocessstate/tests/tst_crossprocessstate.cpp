@@ -13,6 +13,7 @@
 #include <QJsonDocument>
 #include <QLocalSocket>
 #include <QProcess>
+#include <QRegularExpression>
 #include <QQmlComponent>
 #include <QQmlEngine>
 #include <QSignalSpy>
@@ -140,6 +141,10 @@ class TestCrossProcessState : public QObject
 private:
     std::unique_ptr<QTemporaryDir> m_dir;
     QString m_socket;
+    // The socket of this process's own link (Link::instance(), used by objects QML creates itself:
+    // Instantiator, Loader); each test uses its own category on it
+    QTemporaryDir m_processDir;
+    QString m_processSocket;
 
     std::unique_ptr<Peer> start(const QStringList &arguments = {})
     {
@@ -153,7 +158,29 @@ private:
 
     static bool waitSynced(const Peer &peer) { return QTest::qWaitFor([&] { return peer.synced(); }, kTimeout); }
 
+    // An object of `qml`, completed on `link`
+    static CrossProcessState *create(QQmlEngine &engine, const QByteArray &qml, Link *link)
+    {
+        QQmlComponent component(&engine);
+        component.setData("import Maia.CrossProcessState\n" + qml, QUrl());
+        auto *object = qobject_cast<CrossProcessState *>(component.beginCreate(engine.rootContext()));
+        if (!object) {
+            qWarning() << component.errorString();
+            return nullptr;
+        }
+        object->setLink(link);
+        component.completeCreate();
+        return object;
+    }
+
 private Q_SLOTS:
+    void initTestCase()
+    {
+        QVERIFY(m_processDir.isValid());
+        m_processSocket = m_processDir.filePath(QStringLiteral("p.sock"));
+        qputenv("MAIA_CROSS_PROCESS_STATE_SOCKET", m_processSocket.toUtf8());
+    }
+
     void init()
     {
         // A socket of its own for every test: no state is carried over
@@ -521,6 +548,140 @@ private Q_SLOTS:
         a->send(QStringLiteral("set text \"twins\""));
         QTRY_VERIFY_WITH_TIMEOUT(a->saw(QStringLiteral("twin text \"twins\"")), kTimeout);
         QVERIFY(!a->synced());
+    }
+
+    // --- Many objects in one process ---
+
+    void fiftyObjectsOfOneCategoryJoinOnce()
+    {
+        QQmlEngine engine;
+        engine.addImportPath(QStringLiteral(MAIA_QML_BUILD_DIR));
+        Link host(m_processSocket);
+        std::unique_ptr<CrossProcessState> hostObject(
+            create(engine, "CrossProcessState { category: \"Fifty\"; host: true; property int value: 0 }", &host));
+        QVERIFY(hostObject && host.isHost());
+
+        // Fifty objects QML makes itself: they use the process's own link, a participant
+        Link *own = Link::instance();
+        const int joinsBefore = own->joinsSent();
+        QQmlComponent component(&engine);
+        component.setData(R"(
+            import QtQml
+            import QtQml.Models
+            import Maia.CrossProcessState
+            Instantiator { model: 50; delegate: CrossProcessState { category: "Fifty"; property int value: 0 } })", QUrl());
+        std::unique_ptr<QObject> instantiator(component.create());
+        QVERIFY2(instantiator, qPrintable(component.errorString()));
+        QTRY_VERIFY_WITH_TIMEOUT(own->isSynced(QStringLiteral("Fifty")), kTimeout);
+        QCOMPARE(own->joinsSent() - joinsBefore, 1);
+
+        hostObject->setProperty("value", 5);
+        QTRY_VERIFY_WITH_TIMEOUT([&] {
+            for (int i = 0; i < 50; ++i) {
+                QObject *object = nullptr;
+                QMetaObject::invokeMethod(instantiator.get(), "objectAt", Q_RETURN_ARG(QObject *, object), Q_ARG(int, i));
+                if (!object || object->property("value").toInt() != 5)
+                    return false;
+            }
+            return true;
+        }(), kTimeout);
+        // A change in one of them: the host and the 49 others
+        QObject *tenth = nullptr;
+        QMetaObject::invokeMethod(instantiator.get(), "objectAt", Q_RETURN_ARG(QObject *, tenth), Q_ARG(int, 9));
+        tenth->setProperty("value", 6);
+        QTRY_COMPARE_WITH_TIMEOUT(hostObject->property("value").toInt(), 6, kTimeout);
+        QObject *last = nullptr;
+        QMetaObject::invokeMethod(instantiator.get(), "objectAt", Q_RETURN_ARG(QObject *, last), Q_ARG(int, 49));
+        QCOMPARE(last->property("value").toInt(), 6);
+    }
+
+    void twoHostObjectsInOneProcessAreOneHost()
+    {
+        QQmlEngine engine;
+        engine.addImportPath(QStringLiteral(MAIA_QML_BUILD_DIR));
+        Link link(m_socket);
+        // The second one is no second host: no warning
+        QTest::failOnWarning(QRegularExpression(QStringLiteral("takes part instead")));
+        std::unique_ptr<CrossProcessState> first(create(engine, "CrossProcessState { category: \"TwoHosts\"; host: true; property int value: 1 }", &link));
+        std::unique_ptr<CrossProcessState> second(create(engine, "CrossProcessState { category: \"TwoHosts\"; host: true; property int value: 1 }", &link));
+        QVERIFY(first && second && link.isHost());
+        QVERIFY(first->synced() && second->synced());
+        first->setProperty("value", 2);
+        QCOMPARE(second->property("value").toInt(), 2);
+        auto peer = start();
+        QVERIFY(peer && waitSynced(*peer));
+    }
+
+    void aRecreatedObjectGetsTheCurrentValue()
+    {
+        QQmlEngine engine;
+        engine.addImportPath(QStringLiteral(MAIA_QML_BUILD_DIR));
+        QQmlComponent component(&engine);
+        component.setData(R"(
+            import QtQuick
+            import Maia.CrossProcessState
+            Item {
+                property alias keeper: keeper
+                property alias loader: loader
+                CrossProcessState { id: keeper; category: "Recreated"; property string text: "first" }
+                Loader { id: loader; active: false
+                         sourceComponent: Component { CrossProcessState { category: "Recreated"; property string text: "first" } } }
+            })", QUrl());
+        std::unique_ptr<QObject> root(component.create());
+        QVERIFY2(root, qPrintable(component.errorString()));
+        QObject *keeper = root->property("keeper").value<QObject *>();
+        QObject *loader = root->property("loader").value<QObject *>();
+        keeper->setProperty("text", QStringLiteral("changed"));
+        loader->setProperty("active", true);
+        QCOMPARE(loader->property("item").value<QObject *>()->property("text").toString(), QStringLiteral("changed"));
+        // Gone and made again (a Loader, a delegate): never its declared value once there is a newer one
+        loader->setProperty("active", false);
+        keeper->setProperty("text", QStringLiteral("again"));
+        loader->setProperty("active", true);
+        QObject *item = loader->property("item").value<QObject *>();
+        QCOMPARE(item->property("text").toString(), QStringLiteral("again"));
+        item->setProperty("text", QStringLiteral("from the new one"));
+        QCOMPARE(keeper->property("text").toString(), QStringLiteral("from the new one"));
+    }
+
+    void theHostGoesOnWhenItsObjectIsGone()
+    {
+        QQmlEngine engine;
+        engine.addImportPath(QStringLiteral(MAIA_QML_BUILD_DIR));
+        Link link(m_socket);
+        std::unique_ptr<CrossProcessState> object(
+            create(engine, "CrossProcessState { category: \"Test\"; host: true; property string text: \"kept\" }", &link));
+        QVERIFY(object && link.isHost());
+        auto a = start();
+        QVERIFY(a && waitSynced(*a));
+        QTRY_VERIFY_WITH_TIMEOUT(a->saw(QStringLiteral("changed text \"kept\"")), kTimeout);
+        // The process still hosts: it keeps the session's state for the others
+        object.reset();
+        QVERIFY(link.isHost());
+        auto b = start();
+        QVERIFY(b && waitSynced(*b));
+        QVERIFY(b->saw(QStringLiteral("changed text \"kept\"")));
+        a->send(QStringLiteral("set text \"still hosted\""));
+        QTRY_VERIFY_WITH_TIMEOUT(b->saw(QStringLiteral("changed text \"still hosted\"")), kTimeout);
+    }
+
+    void twinsInAParticipantGetAChangeOnceEach()
+    {
+        auto host = start({QStringLiteral("--host")});
+        auto twins = start({QStringLiteral("--twin")});
+        QVERIFY(host && twins && waitSynced(*twins));
+        host->send(QStringLiteral("set text \"to both\""));
+        QTRY_VERIFY_WITH_TIMEOUT(twins->saw(QStringLiteral("changed text \"to both\"")) && twins->saw(QStringLiteral("twin text \"to both\"")), kTimeout);
+        QTest::qWait(200);
+        QCOMPARE(twins->count(QStringLiteral("changed text \"to both\"")), 1);
+        QCOMPARE(twins->count(QStringLiteral("twin text \"to both\"")), 1);
+        // One of them changes it: its twin at once, the host once
+        twins->send(QStringLiteral("set text \"from a twin\""));
+        QTRY_VERIFY_WITH_TIMEOUT(host->saw(QStringLiteral("changed text \"from a twin\"")), kTimeout);
+        QTRY_VERIFY_WITH_TIMEOUT(twins->saw(QStringLiteral("twin text \"from a twin\"")), kTimeout);
+        QTest::qWait(200);
+        QCOMPARE(host->count(QStringLiteral("changed text \"from a twin\"")), 1);
+        QCOMPARE(twins->count(QStringLiteral("twin text \"from a twin\"")), 1);
     }
 
     // --- In this process ---
