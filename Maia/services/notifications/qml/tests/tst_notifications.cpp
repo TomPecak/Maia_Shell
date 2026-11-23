@@ -7,6 +7,7 @@
 
 #include "AppNotificationsModel.h"
 #include "Job.h"
+#include "JobPopupsModel.h"
 #include "JobsModel.h"
 #include "Notification.h"
 #include "NotificationCenter.h"
@@ -847,6 +848,150 @@ private:
     }
 
 private Q_SLOTS:
+    void anUpdateOfAJobTellsOnlyWhatChanged()
+    {
+        clearJobs();
+        JobsModel jobs;
+        auto job = exportJob();
+        job->start();
+        QTRY_COMPARE(jobs.rowCount(), 1);
+        QTest::qWait(150);
+
+        QSignalSpy changed(&jobs, &QAbstractItemModel::dataChanged);
+        job->setProcessedBytes(500);
+        QTRY_VERIFY(!changed.isEmpty());
+        const QList<int> roles = changed.last().at(2).value<QList<int>>();
+        QVERIFY(roles.contains(JobsModel::ProcessedBytesRole));
+        QVERIFY(roles.contains(JobsModel::PercentRole));
+        QVERIFY(!roles.contains(JobsModel::TitleRole));
+        QVERIFY(!roles.contains(JobsModel::AppIconRole));
+        QVERIFY(!roles.contains(JobsModel::FieldsRole));
+        job->finish();
+    }
+
+    void onScreenTheOldestRunningJobAndTheRestCounted()
+    {
+        clearJobs();
+        JobPopupsModel live;
+        auto first = exportJob();
+        first->start();
+        QTRY_COMPARE(live.rowCount(), 1);
+        QTest::qWait(10);
+        auto second = exportJob();
+        second->setTitle(QStringLiteral("Second"));
+        second->start();
+        QTRY_COMPARE(live.waiting(), 1);
+        QCOMPARE(live.rowCount(), 1);
+        QCOMPARE(role(live, 0, JobsModel::TitleRole).toString(), QStringLiteral("Exporting"));
+
+        // With more room both are there, the older first
+        live.setMaximumCount(2);
+        QCOMPARE(live.rowCount(), 2);
+        QCOMPARE(live.waiting(), 0);
+        QCOMPARE(role(live, 1, JobsModel::TitleRole).toString(), QStringLiteral("Second"));
+        first->finish();
+        second->finish();
+    }
+
+    void aJobThatEndsStaysAMomentAndLeaves()
+    {
+        clearJobs();
+        JobsModel jobs;
+        JobPopupsModel live;
+        live.setEndedTime(350);
+        auto job = exportJob();
+        job->start();
+        QTRY_COMPARE(live.rowCount(), 1);
+        job->finish();
+        QTRY_COMPARE(role(live, 0, JobsModel::StateRole).toInt(), int(NotificationCenter::JobFinished));
+        QCOMPARE(live.rowCount(), 1);
+        QTRY_COMPARE_WITH_TIMEOUT(live.rowCount(), 0, 2000);
+        // Still in the list
+        QCOMPARE(jobs.rowCount(), 1);
+    }
+
+    void aJobThatFailsStaysLonger()
+    {
+        clearJobs();
+        JobPopupsModel live;
+        live.setEndedTime(50);
+        live.setFailedTime(600);
+        auto job = exportJob();
+        job->start();
+        QTRY_COMPARE(live.rowCount(), 1);
+        job->finish(QStringLiteral("The disk is full"));
+        QTRY_COMPARE(role(live, 0, JobsModel::StateRole).toInt(), int(NotificationCenter::JobFailed));
+        QTest::qWait(200);
+        QCOMPARE(live.rowCount(), 1);
+        QTRY_COMPARE_WITH_TIMEOUT(live.rowCount(), 0, 2000);
+    }
+
+    void whileHeldAnEndedJobWaits()
+    {
+        clearJobs();
+        JobPopupsModel live;
+        live.setEndedTime(150);
+        auto job = exportJob();
+        job->start();
+        QTRY_COMPARE(live.rowCount(), 1);
+        live.setPaused(true);
+        job->finish();
+        QTRY_COMPARE(role(live, 0, JobsModel::StateRole).toInt(), int(NotificationCenter::JobFinished));
+        QTest::qWait(400);
+        QCOMPARE(live.rowCount(), 1);
+        live.setPaused(false);
+        QTRY_COMPARE_WITH_TIMEOUT(live.rowCount(), 0, 1500);
+    }
+
+    void aHiddenJobGoesOnOffTheScreen()
+    {
+        clearJobs();
+        JobsModel jobs;
+        JobPopupsModel live;
+        auto job = exportJob();
+        job->start();
+        QTRY_COMPARE(live.rowCount(), 1);
+        QTRY_VERIFY(job->jobId() != 0);
+        live.hide(job->jobId());
+        QCOMPARE(live.rowCount(), 0);
+
+        // It does not come back with its progress, or when it ends
+        job->setProcessedBytes(700);
+        QTRY_COMPARE(role(jobs, 0, JobsModel::ProcessedBytesRole).toLongLong(), 700);
+        QCOMPARE(live.rowCount(), 0);
+        QCOMPARE(jobs.runningCount(), 1);
+        job->finish();
+        QTRY_COMPARE(jobs.runningCount(), 0);
+        QCOMPARE(live.rowCount(), 0);
+    }
+
+    void whileSuppressedNothingShowsAndWhatEndedStaysAway()
+    {
+        clearJobs();
+        JobsModel jobs;
+        JobPopupsModel live;
+        auto ending = exportJob();
+        auto going = exportJob();
+        going->setTitle(QStringLiteral("Going on"));
+        ending->start();
+        QTRY_COMPARE(live.rowCount(), 1);
+        QTest::qWait(10);
+        going->start();
+        QTRY_COMPARE(live.waiting(), 1);
+
+        live.setSuppressed(true);
+        QCOMPARE(live.rowCount(), 0);
+        QCOMPARE(live.waiting(), 0);
+        ending->finish();
+        QTRY_COMPARE(jobs.runningCount(), 1);
+        QCOMPARE(live.rowCount(), 0);
+
+        live.setSuppressed(false);
+        QCOMPARE(live.rowCount(), 1);
+        QCOMPARE(role(live, 0, JobsModel::TitleRole).toString(), QStringLiteral("Going on"));
+        going->finish();
+    }
+
     void aProgramsJobReachesTheShellWithItsProgress()
     {
         clearJobs();

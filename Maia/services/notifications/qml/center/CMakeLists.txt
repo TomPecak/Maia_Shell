@@ -1,5 +1,5 @@
 # QML module Maia.Notifications.Center: NotificationCenter (do not disturb, actions, replies),
-# NotificationsModel (the list), NotificationGroupsModel (the list by application) and NotificationPopupsModel (the popups now, with their clocks), over the
+# NotificationsModel (the list), NotificationGroupsModel (the list by application), JobPopupsModel (the jobs on screen now) and NotificationPopupsModel (the popups now, with their clocks), over the
 # NotificationCenter of the notification service. For shells.
 
 qt_add_library(MaiaNotificationsCenter SHARED)
@@ -17,6 +17,7 @@ qt_add_qml_module(MaiaNotificationsCenter
         NotificationGroupsModel.h NotificationGroupsModel.cpp
         NotificationPopupsModel.h NotificationPopupsModel.cpp
         JobsModel.h JobsModel.cpp
+        JobPopupsModel.h JobPopupsModel.cpp
 )
 
 target_include_directories(MaiaNotificationsCenter PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

@@ -208,7 +208,10 @@ that of Maia's programs through `Notifier.startJob` (QML: `Job`), and is a secon
 progress at most every 250 ms, finished and failed jobs kept until dismissed, canceled ones gone, a
 cancel without an answer ends the job after 2 s, a job whose application quits has failed; a
 Maia program's pause and cancel go to its JobListener, a D-Bus one's to its JobView). Shells
-get it as `JobsModel` and act with `NotificationCenter.cancelJob / suspendJob / dismissJob`; Lumen
+get it as `JobsModel` (the list) and `JobPopupsModel` (what is on screen now: the oldest running job,
+a moment more after it ends, `hide()`, `paused`, `suppressed`) and act with
+`NotificationCenter.cancelJob / suspendJob / dismissJob`. An update tells a view only the roles that
+changed. The Maia frontend shows a pill with a ring at the top of the screen; Lumen
 shows a card with the progress above the popups, keeps it a few seconds after the end ("Open
 folder"), lists the jobs in the notification center and turns a ring by the clock.
 

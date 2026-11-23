@@ -46,6 +46,11 @@ int JobsModel::rowOf(uint jobId) const
 
 QHash<int, QByteArray> JobsModel::roleNames() const
 {
+    return jobRoleNames();
+}
+
+QHash<int, QByteArray> JobsModel::jobRoleNames()
+{
     return {
         {JobIdRole, "jobId"},
         {AppNameRole, "appName"},
@@ -81,7 +86,11 @@ QVariant JobsModel::data(const QModelIndex &index, int role) const
 {
     if (!checkIndex(index, CheckIndexOption::IndexIsValid | CheckIndexOption::ParentIsInvalid))
         return {};
-    const JobData &j = m_items.at(index.row());
+    return jobData(m_items.at(index.row()), role);
+}
+
+QVariant JobsModel::jobData(const JobData &j, int role)
+{
     switch (role) {
     case JobIdRole:
         return j.id;
@@ -145,6 +154,43 @@ QVariant JobsModel::data(const QModelIndex &index, int role) const
     return {};
 }
 
+QList<int> JobsModel::changedRoles(const JobData &a, const JobData &b)
+{
+    QList<int> roles;
+    const auto compare = [&roles](bool same, int role) {
+        if (!same)
+            roles.append(role);
+    };
+    compare(a.id == b.id, JobIdRole);
+    compare(a.appName == b.appName, AppNameRole);
+    compare(a.desktopEntry == b.desktopEntry, DesktopEntryRole);
+    compare(a.appIcon == b.appIcon, AppIconRole);
+    compare(a.title == b.title, TitleRole);
+    compare(a.infoMessage == b.infoMessage, InfoMessageRole);
+    compare(a.state == b.state, StateRole);
+    compare(a.percent == b.percent, PercentRole);
+    compare(a.processedBytes == b.processedBytes, ProcessedBytesRole);
+    compare(a.totalBytes == b.totalBytes, TotalBytesRole);
+    compare(a.processedFiles == b.processedFiles, ProcessedFilesRole);
+    compare(a.totalFiles == b.totalFiles, TotalFilesRole);
+    compare(a.processedDirectories == b.processedDirectories, ProcessedDirectoriesRole);
+    compare(a.totalDirectories == b.totalDirectories, TotalDirectoriesRole);
+    compare(a.processedItems == b.processedItems, ProcessedItemsRole);
+    compare(a.totalItems == b.totalItems, TotalItemsRole);
+    compare(a.speed == b.speed, SpeedRole);
+    compare(a.elapsed == b.elapsed, ElapsedRole);
+    compare(a.fields == b.fields, FieldsRole);
+    compare(a.destination == b.destination, DestinationRole);
+    compare(a.errorCode == b.errorCode, ErrorCodeRole);
+    compare(a.errorText == b.errorText, ErrorTextRole);
+    compare(a.ownerGone == b.ownerGone, OwnerGoneRole);
+    compare(a.killable == b.killable, KillableRole);
+    compare(a.suspendable == b.suspendable, SuspendableRole);
+    compare(a.started == b.started, StartedRole);
+    compare(a.updated == b.updated, UpdatedRole);
+    return roles;
+}
+
 void JobsModel::setRunningOnly(bool runningOnly)
 {
     if (m_runningOnly == runningOnly)
@@ -189,9 +235,12 @@ void JobsModel::applyBatch(const QList<JobData> &changed, const QList<quint32> &
         if (row >= 0 && !accepts(job)) {
             removeRow(row);
         } else if (row >= 0) {
+            const QList<int> roles = changedRoles(m_items[row], job);
             m_items[row] = job;
-            const QModelIndex at = index(row);
-            Q_EMIT dataChanged(at, at);
+            if (!roles.isEmpty()) {
+                const QModelIndex at = index(row);
+                Q_EMIT dataChanged(at, at, roles);
+            }
         } else if (accepts(job)) {
             added.append(job);
         }

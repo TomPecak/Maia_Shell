@@ -80,6 +80,12 @@ public:
 
     Q_INVOKABLE int rowOf(uint jobId) const;
 
+    // Shared with JobPopupsModel: the roles of a job, and those that differ between two states of
+    // it. A view told only what changed does not read a title again four times a second
+    static QHash<int, QByteArray> jobRoleNames();
+    static QVariant jobData(const JobData &job, int role);
+    static QList<int> changedRoles(const JobData &before, const JobData &after);
+
 Q_SIGNALS:
     void countChanged();
     void runningOnlyChanged();
