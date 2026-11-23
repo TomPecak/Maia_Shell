@@ -120,6 +120,8 @@ import Maia.Notifications.Center
 
 ListView { model: NotificationPopupsModel { maximumCount: 3; paused: hover.hovered } … }   // the popups now
 ListView { model: NotificationsModel {} … }                                         // the center
+ListView { model: NotificationGroupsModel { id: groups; seenUntil: lastLook } … }   // or stacked by application
+Badge { count: groups.unseen }                                                      // what came since
 Button { onClicked: NotificationCenter.invokeAction(model.notificationId, "default", Window.window) }
 ToggleTile { checked: NotificationCenter.doNotDisturb; onToggled: NotificationCenter.doNotDisturb = checked }
 ```

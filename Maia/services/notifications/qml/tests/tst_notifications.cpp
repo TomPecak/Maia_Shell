@@ -10,6 +10,7 @@
 #include "JobsModel.h"
 #include "Notification.h"
 #include "NotificationCenter.h"
+#include "NotificationGroupsModel.h"
 #include "NotificationPopupsModel.h"
 #include "NotificationRoles.h"
 #include "NotificationSettings.h"
@@ -21,6 +22,7 @@
 #include <QImage>
 #include <QUrl>
 #include <QCryptographicHash>
+#include <QDateTime>
 #include <QElapsedTimer>
 #include <QProcess>
 #include <QSignalSpy>
@@ -97,6 +99,32 @@ private:
         return n;
     }
 
+    // A notification of an application that stays until it is closed
+    std::unique_ptr<Notification> sentBy(const QString &app, const QString &summary)
+    {
+        auto n = std::make_unique<Notification>();
+        n->setAppName(app);
+        n->setDesktopEntry(QStringLiteral("org.maia.") + app);
+        n->setSummary(summary);
+        n->setTimeout(0);
+        n->send();
+        return n;
+    }
+
+    QStringList summaries(const NotificationGroupsModel &groups)
+    {
+        QStringList out;
+        for (int row = 0; row < groups.rowCount(); ++row)
+            out.append(role(groups, row, NotificationRoles::SummaryRole).toString());
+        return out;
+    }
+
+    // Times are in ms: two notifications sent at once could tie
+    void pause()
+    {
+        QTest::qWait(5);
+    }
+
 private Q_SLOTS:
     void initTestCase()
     {
@@ -141,6 +169,132 @@ private Q_SLOTS:
                 center.dismiss(role(model, row, NotificationRoles::NotificationIdRole).toUInt());
             QTRY_COMPARE(center.count(), 0);
         }
+    }
+
+    void groupsShowTheNewestOfEachApplicationNewestFirst()
+    {
+        NotificationGroupsModel groups;
+        auto mail1 = sentBy(QStringLiteral("mail"), QStringLiteral("m1"));
+        QTRY_COMPARE(groups.total(), 1);
+        pause();
+        auto chat1 = sentBy(QStringLiteral("chat"), QStringLiteral("c1"));
+        QTRY_COMPARE(groups.total(), 2);
+        pause();
+        auto mail2 = sentBy(QStringLiteral("mail"), QStringLiteral("m2"));
+        QTRY_COMPARE(groups.total(), 3);
+
+        QCOMPARE(summaries(groups), QStringList({QStringLiteral("m2"), QStringLiteral("c1")}));
+        QCOMPARE(groups.data(groups.index(0), NotificationGroupsModel::GroupCountRole).toInt(), 2);
+        QCOMPARE(groups.data(groups.index(0), NotificationGroupsModel::GroupKeyRole).toString(), QStringLiteral("org.maia.mail"));
+        QVERIFY(groups.data(groups.index(0), NotificationGroupsModel::GroupHeadRole).toBool());
+        QCOMPARE(groups.data(groups.index(1), NotificationGroupsModel::GroupCountRole).toInt(), 1);
+    }
+
+    void expandingAGroupInsertsItsRowsAndNothingElseChanges()
+    {
+        NotificationGroupsModel groups;
+        auto mail1 = sentBy(QStringLiteral("mail"), QStringLiteral("m1"));
+        QTRY_COMPARE(groups.total(), 1);
+        pause();
+        auto mail2 = sentBy(QStringLiteral("mail"), QStringLiteral("m2"));
+        QTRY_COMPARE(groups.total(), 2);
+        pause();
+        auto chat = sentBy(QStringLiteral("chat"), QStringLiteral("c1"));
+        QTRY_COMPARE(groups.total(), 3);
+        QCOMPARE(summaries(groups), QStringList({QStringLiteral("c1"), QStringLiteral("m2")}));
+
+        QSignalSpy inserted(&groups, &QAbstractItemModel::rowsInserted);
+        QSignalSpy removed(&groups, &QAbstractItemModel::rowsRemoved);
+        QSignalSpy reset(&groups, &QAbstractItemModel::modelReset);
+        groups.setGroupExpanded(QStringLiteral("org.maia.mail"), true);
+        QCOMPARE(summaries(groups), QStringList({QStringLiteral("c1"), QStringLiteral("m2"), QStringLiteral("m1")}));
+        QCOMPARE(inserted.size(), 1);
+        QCOMPARE(inserted.first().at(1).toInt(), 2);
+        QCOMPARE(removed.size(), 0);
+        QVERIFY(groups.data(groups.index(1), NotificationGroupsModel::GroupExpandedRole).toBool());
+        QVERIFY(!groups.data(groups.index(2), NotificationGroupsModel::GroupHeadRole).toBool());
+
+        groups.toggleGroup(QStringLiteral("org.maia.mail"));
+        QCOMPARE(summaries(groups), QStringList({QStringLiteral("c1"), QStringLiteral("m2")}));
+        QCOMPARE(removed.size(), 1);
+        QCOMPARE(reset.size(), 0);
+    }
+
+    void aNewNotificationBringsItsGroupToTheTopInOnePiece()
+    {
+        NotificationGroupsModel groups;
+        auto mail1 = sentBy(QStringLiteral("mail"), QStringLiteral("m1"));
+        QTRY_COMPARE(groups.total(), 1);
+        pause();
+        auto mail2 = sentBy(QStringLiteral("mail"), QStringLiteral("m2"));
+        QTRY_COMPARE(groups.total(), 2);
+        pause();
+        auto chat = sentBy(QStringLiteral("chat"), QStringLiteral("c1"));
+        QTRY_COMPARE(groups.total(), 3);
+        groups.setGroupExpanded(QStringLiteral("org.maia.mail"), true);
+        pause();
+
+        QSignalSpy reset(&groups, &QAbstractItemModel::modelReset);
+        auto mail3 = sentBy(QStringLiteral("mail"), QStringLiteral("m3"));
+        QTRY_COMPARE(groups.total(), 4);
+        QCOMPARE(summaries(groups), QStringList({QStringLiteral("m3"), QStringLiteral("m2"), QStringLiteral("m1"), QStringLiteral("c1")}));
+        QVERIFY(groups.data(groups.index(0), NotificationGroupsModel::GroupHeadRole).toBool());
+        QVERIFY(!groups.data(groups.index(1), NotificationGroupsModel::GroupHeadRole).toBool());
+        QCOMPARE(groups.data(groups.index(2), NotificationGroupsModel::GroupCountRole).toInt(), 3);
+        QCOMPARE(reset.size(), 0);
+    }
+
+    void theNextOneBecomesTheHeadAndAGroupOfOneFolds()
+    {
+        NotificationCenter center;
+        NotificationGroupsModel groups;
+        auto mail1 = sentBy(QStringLiteral("mail"), QStringLiteral("m1"));
+        QTRY_COMPARE(groups.total(), 1);
+        pause();
+        auto mail2 = sentBy(QStringLiteral("mail"), QStringLiteral("m2"));
+        QTRY_COMPARE(groups.total(), 2);
+        groups.setGroupExpanded(QStringLiteral("org.maia.mail"), true);
+        QCOMPARE(groups.rowCount(), 2);
+
+        center.dismiss(mail2->notificationId());
+        QTRY_COMPARE(groups.total(), 1);
+        QCOMPARE(summaries(groups), QStringList({QStringLiteral("m1")}));
+        QVERIFY(groups.data(groups.index(0), NotificationGroupsModel::GroupHeadRole).toBool());
+        QVERIFY(!groups.data(groups.index(0), NotificationGroupsModel::GroupExpandedRole).toBool());
+        QCOMPARE(groups.data(groups.index(0), NotificationGroupsModel::GroupCountRole).toInt(), 1);
+    }
+
+    void dismissingAGroupLeavesTheOthers()
+    {
+        NotificationGroupsModel groups;
+        auto mail1 = sentBy(QStringLiteral("mail"), QStringLiteral("m1"));
+        auto mail2 = sentBy(QStringLiteral("mail"), QStringLiteral("m2"));
+        auto chat = sentBy(QStringLiteral("chat"), QStringLiteral("c1"));
+        QTRY_COMPARE(groups.total(), 3);
+        QTRY_VERIFY(mail2->notificationId() != 0);
+        groups.dismissGroup(QStringLiteral("org.maia.mail"));
+        QTRY_COMPARE(groups.total(), 1);
+        QCOMPARE(summaries(groups), QStringList({QStringLiteral("c1")}));
+    }
+
+    void unseenCountsWhatCameAfterTheLastLook()
+    {
+        NotificationGroupsModel groups;
+        QCOMPARE(groups.unseen(), 0);
+        auto mail1 = sentBy(QStringLiteral("mail"), QStringLiteral("m1"));
+        QTRY_COMPARE(groups.unseen(), 1);
+        auto chat = sentBy(QStringLiteral("chat"), QStringLiteral("c1"));
+        QTRY_COMPARE(groups.unseen(), 2);
+
+        QSignalSpy spy(&groups, &NotificationGroupsModel::unseenChanged);
+        QTest::qWait(5);
+        groups.setSeenUntil(double(QDateTime::currentMSecsSinceEpoch()));
+        QCOMPARE(groups.unseen(), 0);
+        QCOMPARE(spy.size(), 1);
+        QTest::qWait(5);
+
+        auto mail2 = sentBy(QStringLiteral("mail"), QStringLiteral("m2"));
+        QTRY_COMPARE(groups.unseen(), 1);
     }
 
     void aSentNotificationReachesTheListAndThePopups()
