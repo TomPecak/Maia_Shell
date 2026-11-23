@@ -12,7 +12,7 @@ import MaiaFrontend
 // of iPadOS), so the pointer's way from the button to them is short (Fitts's law). They lie on the
 // dimmed (and, where the compositor blurs, blurred) desktop one by one, grouped by meaning (common
 // region): the connections; the appearance; the sliders of brightness and volume; small toggles;
-// the battery and the settings. Opening, they grow out of the corner one after the other, the
+// the battery and the settings; Do Not Disturb. Opening, they grow out of the corner one after the other, the
 // nearest first, with a soft spring; closing, they go back the same way, faster.
 //
 // "Wi-Fi" in the connections module turns the modules into the network list (WifiModule.qml), in
@@ -53,6 +53,8 @@ Item {
     readonly property real unit: 80
     readonly property real gap: 14
     readonly property real gridSize: 4 * unit + 3 * gap
+    readonly property int rows: 5
+    readonly property real gridHeight: rows * unit + (rows - 1) * gap
     readonly property real dockGap: 12
     readonly property real screenMargin: 16
 
@@ -103,7 +105,7 @@ Item {
 
         width: center.gridSize
         // The larger of the two pages: neither jumps while they change places
-        height: Math.max(center.gridSize, wifiPage.height)
+        height: Math.max(center.gridHeight, wifiPage.height)
 
         x: center.dockEdge === Qt.LeftEdge ? center.dockStrip + center.dockGap
          : center.dockEdge === Qt.RightEdge ? center.width - center.dockStrip - center.dockGap - width
@@ -118,7 +120,7 @@ Item {
             id: grid
 
             width: center.gridSize
-            height: center.gridSize
+            height: center.gridHeight
             // With the dock at the bottom the modules gather above it, from the bottom up
             y: center.atBottom ? frame.height - height : 0
             visible: d.pageProgress < 1
@@ -242,6 +244,14 @@ Item {
                 checkable: false
                 onClicked: d.openSettings("maia-settings")
             }
+
+            DoNotDisturbTile {
+                x: d.cellX(0); y: d.cellY(4)
+                width: d.span(4); height: d.span(1)
+                appear: d.appear(0, 4, 4, 1)
+                transformOrigin: d.cornerOrigin
+                icon: center.controlCenter.icon("notifications-disabled-symbolic")
+            }
         }
 
         // The network list, in the corner of the modules
@@ -343,8 +353,8 @@ Item {
         // decides when it starts
         function appear(column, row, columns, rows) {
             const fromSide = center.atRight ? 4 - (column + columns) : column
-            const fromEdge = center.atBottom ? 4 - (row + rows) : row
-            const delay = (fromSide + fromEdge) / 6 * (1 - span1)
+            const fromEdge = center.atBottom ? center.rows - (row + rows) : row
+            const delay = (fromSide + fromEdge) / (center.rows + 2) * (1 - span1)
             const t = Math.max(0, Math.min(1, (progress - delay) / span1))
             return springOut(t)
         }

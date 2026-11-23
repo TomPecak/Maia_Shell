@@ -9,6 +9,8 @@ CrossProcessState {
 
     // The notification center is open: no banners meanwhile, what comes is seen there
     property bool notificationCenterOpen: false
+    // When the user last looked at the list (ms since 1970): what came later is unread
+    property real notificationsSeenAt: 0
 
     // Where the dock rests, or is snapping to after a release (Qt.TopEdge...), the strip it reserves
     // along that edge and its screen: what the layers above it keep clear of

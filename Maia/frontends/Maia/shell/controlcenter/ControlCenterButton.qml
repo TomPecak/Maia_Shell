@@ -8,11 +8,12 @@ import Maia.Backend as Maia
 import MaiaFrontend
 import ".."
 
-// The Control Center's place in the dock strip, at the other end of the strip than the power
-// button: the time and the state of Wi-Fi, the volume and the battery, read at a glance; a click
-// opens the Control Center, which unfolds from here (its modules gather in this corner of the
-// screen, as in the top right corner of iPadOS). Moves with the dock like the power button
-// (StripItem.qml).
+// The status of the session in the dock strip, at the other end of the strip than the power button:
+// the time and the state of Wi-Fi, the volume and the battery, read at a glance. One plate, two
+// targets, as the status bar of iPadOS: the time opens the notification center (with a badge of what
+// is unread), the icons open the Control Center. Both unfold from this corner of the screen. The
+// part under the pointer lights up, so the split can be seen before clicking. Moves with the dock
+// like the power button (StripItem.qml).
 //
 // Layouts (being tried out, chosen with a module of the Control Center): each has a variant along a
 // vertical strip (dock at the left or right, as narrow as the dock) and along a horizontal one.
@@ -25,19 +26,22 @@ StripItem {
     id: area
 
     property ControlCenterState controlCenter
-    // The Control Center is open (the button looks pressed meanwhile)
+    // The Control Center is open (its part looks pressed meanwhile)
     property bool checked: false
+    // The notification center is open (the same for the time)
+    property bool notificationsChecked: false
+    // Notifications not looked at yet
+    property int unreadCount: 0
     // One of the layouts above, by name
     property string layout: "grid"
 
+    // The icons
     signal clicked()
+    // The time
+    signal timeClicked()
 
     width: plate.width
     height: plate.height
-
-    Accessible.role: Accessible.Button
-    Accessible.name: qsTr("Control Center, %1").arg(d.hours + ":" + d.minutes)
-    Accessible.onPressAction: area.clicked()
 
     RectangularShadow {
         anchors.fill: plate
@@ -55,12 +59,10 @@ StripItem {
         width: area.vertical ? (area.layout === "column" ? 56 : 72) : content.width + 2 * 16
         height: area.vertical ? content.height + 2 * 12 : content.height + 2 * (area.layout === "column" ? 13 : 9)
         radius: area.vertical ? 18 : (area.layout === "column" ? height / 2 : 18)
-        color: mouseArea.pressed || area.checked ? Theme.platePressed
-             : mouseArea.containsMouse ? Theme.plateHover
-             : Theme.dock
+        color: Theme.dock
         border.width: 1
         border.color: Theme.hairline
-        scale: mouseArea.pressed ? 0.94 : mouseArea.containsMouse ? 1.04 : 1
+        scale: timePart.pressed || statusPart.pressed ? 0.96 : timePart.hovered || statusPart.hovered ? 1.02 : 1
 
         Behavior on width {
             NumberAnimation { duration: 240; easing.type: Easing.OutCubic }
@@ -73,6 +75,25 @@ StripItem {
         }
         Behavior on scale {
             ScaleAnimator { duration: 160; easing.type: Easing.OutCubic }
+        }
+
+        // The part under the pointer, or of what is open
+        Rectangle {
+            readonly property var part: timePart.lit ? timePart : statusPart.lit ? statusPart : null
+            readonly property bool held: part !== null && (part.pressed || part.checked)
+
+            anchors.fill: parent
+            anchors.leftMargin: part === statusPart && d.beside ? d.split : 3
+            anchors.rightMargin: part === timePart && d.beside ? plate.width - d.split : 3
+            anchors.topMargin: part === statusPart && !d.beside ? d.split : 3
+            anchors.bottomMargin: part === timePart && !d.beside ? plate.height - d.split : 3
+            radius: Math.max(4, plate.radius - 3)
+            visible: part !== null
+            color: held ? Theme.platePressed : Theme.plateHover
+
+            Behavior on color {
+                ColorAnimation { duration: 150; easing.type: Easing.OutQuad }
+            }
         }
 
         Loader {
@@ -98,16 +119,59 @@ StripItem {
         }
     }
 
-    MouseArea {
-        id: mouseArea
+    PlatePart {
+        id: timePart
 
-        anchors.fill: plate
-        hoverEnabled: true
+        x: plate.x
+        y: plate.y
+        width: d.beside ? d.split : plate.width
+        height: d.beside ? plate.height : d.split
+        checked: area.notificationsChecked
+        Accessible.name: area.unreadCount > 0
+                         ? qsTr("%1, notifications, %2 unread").arg(d.time).arg(area.unreadCount)
+                         : qsTr("%1, notifications").arg(d.time)
+        onClicked: area.timeClicked()
+    }
+
+    PlatePart {
+        id: statusPart
+
+        x: plate.x + (d.beside ? d.split : 0)
+        y: plate.y + (d.beside ? 0 : d.split)
+        width: d.beside ? plate.width - d.split : plate.width
+        height: d.beside ? plate.height : plate.height - d.split
+        checked: area.checked
+        Accessible.name: qsTr("Control Center")
         onClicked: area.clicked()
     }
 
     Maia.MaskArea {
         anchors.fill: plate
+    }
+
+    // What is unread, on the corner of the time. Takes no input of its own
+    Rectangle {
+        objectName: "unreadBadge"
+        x: plate.x - 6
+        y: plate.y - 6
+        width: Math.max(20, badgeText.implicitWidth + 10)
+        height: 20
+        radius: 10
+        visible: area.unreadCount > 0 && !area.notificationsChecked
+        color: Theme.red
+        border.width: 1
+        border.color: Qt.rgba(1, 1, 1, 0.5)
+
+        Text {
+            id: badgeText
+
+            anchors.centerIn: parent
+            text: area.unreadCount > 99 ? "99+" : area.unreadCount
+            color: "white"
+            font.pixelSize: 12
+            font.weight: Font.DemiBold
+            font.features: { "tnum": 1 }
+        }
     }
 
     // --- Layouts ---
@@ -139,7 +203,7 @@ StripItem {
             spacing: 10
 
             TimeText { anchors.verticalCenter: parent.verticalCenter; text: d.time; size: 15 }
-            Indicators { anchors.verticalCenter: parent.verticalCenter; columns: 3; spacing: 8 }
+            Indicators { anchors.verticalCenter: parent.verticalCenter; columns: 3; spacing: 8; besideTime: true }
         }
     }
 
@@ -187,7 +251,7 @@ StripItem {
             spacing: 12
 
             TimeText { anchors.verticalCenter: parent.verticalCenter; text: d.time; size: 17 }
-            Indicators { anchors.verticalCenter: parent.verticalCenter; columns: 2; spacing: 6; withBluetooth: true }
+            Indicators { anchors.verticalCenter: parent.verticalCenter; columns: 2; spacing: 6; withBluetooth: true; besideTime: true }
         }
     }
 
@@ -211,11 +275,34 @@ StripItem {
             spacing: 10
 
             AnalogClock { anchors.verticalCenter: parent.verticalCenter; width: 30; height: 30; time: d.now }
-            Indicators { anchors.verticalCenter: parent.verticalCenter; columns: 3; spacing: 8 }
+            Indicators { anchors.verticalCenter: parent.verticalCenter; columns: 3; spacing: 8; besideTime: true }
         }
     }
 
     // --- Parts ---
+
+    // One of the two targets of the plate
+    component PlatePart: Item {
+        id: part
+
+        property bool checked: false
+        readonly property bool pressed: partArea.pressed
+        readonly property bool hovered: partArea.containsMouse
+        readonly property bool lit: pressed || hovered || checked
+
+        signal clicked()
+
+        Accessible.role: Accessible.Button
+        Accessible.onPressAction: part.clicked()
+
+        MouseArea {
+            id: partArea
+
+            anchors.fill: parent
+            hoverEnabled: true
+            onClicked: part.clicked()
+        }
+    }
 
     component TimeText: Text {
         property real size: 15
@@ -231,6 +318,14 @@ StripItem {
         id: indicators
 
         property bool withBluetooth: false
+        // Beside the time (a row), or below it (a column)
+        property bool besideTime: false
+
+        Component.onCompleted: d.indicators_ = indicators
+        Component.onDestruction: {
+            if (d.indicators_ === indicators)
+                d.indicators_ = null
+        }
 
         Repeater {
             model: indicators.withBluetooth ? d.indicatorsWithBluetooth : d.indicators
@@ -249,6 +344,17 @@ StripItem {
 
     QtObject {
         id: d
+
+        // The icons of the layout shown now: where the plate divides between its two targets
+        property Item indicators_: null
+        readonly property bool beside: indicators_ !== null && indicators_.besideTime
+        // Half way through the gap between the time and the icons, from the plate's start
+        readonly property real split: {
+            if (indicators_ === null)
+                return (area.vertical ? plate.height : plate.width) / 2
+            const gap = indicators_.parent.spacing / 2
+            return beside ? content.x + indicators_.x - gap : content.y + indicators_.y - gap
+        }
 
         property date now: new Date()
         readonly property string hours: Qt.formatTime(now, "HH")

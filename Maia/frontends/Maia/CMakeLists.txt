@@ -27,6 +27,7 @@ qt_add_qml_module(MaiaFrontend
         QML_FILES shell/controlcenter/ControlCenter.qml
         QML_FILES shell/controlcenter/ControlCenterButton.qml
         QML_FILES shell/controlcenter/ControlCenterState.qml
+        QML_FILES shell/controlcenter/DoNotDisturbTile.qml
         QML_FILES shell/controlcenter/LayoutTile.qml
         QML_FILES shell/controlcenter/ModeGlyph.qml
         QML_FILES shell/controlcenter/ModulePlatter.qml
@@ -45,12 +46,15 @@ qt_add_qml_module(MaiaFrontend
         QML_FILES shell/library/AppLibraryItem.qml
         QML_FILES shell/library/SearchField.qml
         QML_FILES shell/notifications/ActionGlyphs.js
-        QML_FILES shell/notifications/BannerButton.qml
-        QML_FILES shell/notifications/BannerFiles.qml
+        QML_FILES shell/notifications/NotificationButton.qml
+        QML_FILES shell/notifications/NotificationFiles.qml
         QML_FILES shell/notifications/BannerPlacement.qml
-        QML_FILES shell/notifications/BannerReplyField.qml
+        QML_FILES shell/notifications/NotificationReplyField.qml
         QML_FILES shell/notifications/BannerWindow.qml
         QML_FILES shell/notifications/NotificationBanner.qml
+        QML_FILES shell/notifications/NotificationCard.qml
+        QML_FILES shell/notifications/NotificationCenterSheet.qml
+        QML_FILES shell/notifications/NotificationRow.qml
         QML_FILES shell/session/SessionActionButton.qml
         QML_FILES shell/session/SessionScreen.qml
         QML_FILES shell/status/PowerButton.qml
@@ -81,6 +85,6 @@ if(BUILD_TESTING)
             COMMAND "${MAIA_QMLTESTRUNNER}" -import "${maia_test_imports}" -import "${MAIA_QML_BUILD_DIR}"
                     -input "${CMAKE_CURRENT_SOURCE_DIR}/tests")
         set_tests_properties(maia-frontend-components PROPERTIES ENVIRONMENT
-            "QT_QPA_PLATFORM=offscreen;XDG_CONFIG_HOME=${CMAKE_CURRENT_BINARY_DIR}/test-config;MAIA_CROSS_PROCESS_STATE_SOCKET=/tmp/maia-frontend-components.sock")
+            "QT_QPA_PLATFORM=offscreen;XDG_CONFIG_HOME=${CMAKE_CURRENT_BINARY_DIR}/test-config;MAIA_CROSS_PROCESS_STATE_SOCKET=/tmp/maia-frontend-components.sock;MAIA_NOTIFICATIONS_CENTER_SOCKET=/nonexistent/center.sock")
     endif()
 endif()

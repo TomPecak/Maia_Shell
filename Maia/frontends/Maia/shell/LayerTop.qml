@@ -2,11 +2,13 @@ import QtQuick
 import org.kde.layershell 1.0 as LayerShell
 
 import Maia.Backend as Maia
+import Maia.Notifications.Center
 import MaiaFrontend
 
 import "controlcenter"
 import "dock"
 import "library"
+import "notifications"
 import "session"
 import "status"
 
@@ -94,7 +96,11 @@ Window{
         ShellState.dockScreen = screen ? screen.name : ""
     }
 
-    Component.onCompleted: publishDock()
+    Component.onCompleted: {
+        publishDock()
+        // This layer has just started: nothing of it is open, whatever the last one left behind
+        ShellState.notificationCenterOpen = false
+    }
     onScreenChanged: publishDock()
 
 
@@ -108,6 +114,7 @@ Window{
     // The keyboard only while the App Library is open: its search field takes the typing at once.
     // Otherwise the window never takes the keyboard from the applications.
     LayerShell.Window.keyboardInteractivity: dock.libraryOpen || root.sessionOpen || root.controlCenterOpen
+                                             || root.notificationCenterOpen
                                              ? LayerShell.Window.KeyboardInteractivityExclusive
                                              : LayerShell.Window.KeyboardInteractivityNone
 
@@ -115,29 +122,55 @@ Window{
     property bool sessionOpen: false
     // The Control Center is open
     property bool controlCenterOpen: false
+    // The notification center is open; the other layers know through ShellState (no banners meanwhile)
+    property bool notificationCenterOpen: false
 
-    // One overlay at a time: the App Library, the Control Center, the session screen. The one that
-    // opens closes the others; the window that had the keyboard before the first one gets it back
-    // when the last closes.
+    // One overlay at a time: the App Library, the Control Center, the notification center, the
+    // session screen. The one that opens closes the others; the window that had the keyboard before
+    // the first one gets it back when the last closes.
     onControlCenterOpenChanged: {
         if (!controlCenterOpen)
             return
-        if (!dock.libraryOpen && !sessionOpen)
+        if (!dock.libraryOpen && !sessionOpen && !notificationCenterOpen)
             dock.rememberFocus()
         dock.libraryOpen = false
         sessionOpen = false
+        notificationCenterOpen = false
+    }
+    onNotificationCenterOpenChanged: {
+        ShellState.notificationCenterOpen = notificationCenterOpen
+        // Seen when it opens, and what came while it was open when it closes
+        ShellState.notificationsSeenAt = Date.now()
+        if (!notificationCenterOpen)
+            return
+        if (!dock.libraryOpen && !sessionOpen && !controlCenterOpen)
+            dock.rememberFocus()
+        dock.libraryOpen = false
+        sessionOpen = false
+        controlCenterOpen = false
     }
     onSessionOpenChanged: {
-        if (sessionOpen)
+        if (sessionOpen) {
             controlCenterOpen = false
+            notificationCenterOpen = false
+        }
     }
     Connections {
         target: dock
 
         function onLibraryOpenChanged() {
-            if (dock.libraryOpen)
+            if (dock.libraryOpen) {
                 root.controlCenterOpen = false
+                root.notificationCenterOpen = false
+            }
         }
+    }
+
+    // The list of the notification center and what is unread, for the panel and the badge
+    NotificationGroupsModel {
+        id: notificationGroups
+
+        seenUntil: ShellState.notificationsSeenAt
     }
 
     // Wi-Fi, the volume and the rest of the Control Center, shared by its button and the modules
@@ -208,6 +241,8 @@ Window{
         controlCenter: controlCenterState
         edge: root.anchoredEdge
         checked: root.controlCenterOpen
+        notificationsChecked: root.notificationCenterOpen
+        unreadCount: notificationGroups.unseen
         layout: controlCenterState.buttonLayout
         // Right end of a horizontal strip, top end of a vertical one
         x: placedEdge === Qt.LeftEdge ? dock.edgeMargin + (dock.shortSize - width) / 2
@@ -218,6 +253,7 @@ Window{
          : endMargin
 
         onClicked: root.controlCenterOpen = !root.controlCenterOpen
+        onTimeClicked: root.notificationCenterOpen = !root.notificationCenterOpen
     }
 
     AppLibrary {
@@ -259,7 +295,25 @@ Window{
 
         onCloseRequested: root.controlCenterOpen = false
         onDismissed: {
-            if (!dock.libraryOpen && !root.sessionOpen)
+            if (!dock.libraryOpen && !root.sessionOpen && !root.notificationCenterOpen)
+                dock.returnFocus()
+        }
+    }
+
+    // Above the dock, like the Control Center, in the corner of the same button
+    NotificationCenterSheet {
+        id: notificationCenter
+
+        anchors.fill: parent
+        open: root.notificationCenterOpen
+        groups: notificationGroups
+        dockEdge: controlCenterButton.placedEdge
+        dockStrip: root.stripThickness
+
+        onCloseRequested: root.notificationCenterOpen = false
+        onOpenUrlRequested: url => controlCenterState.launch("xdg-open " + url.replace(/ /g, "%20"))
+        onDismissed: {
+            if (!dock.libraryOpen && !root.sessionOpen && !root.controlCenterOpen)
                 dock.returnFocus()
         }
     }

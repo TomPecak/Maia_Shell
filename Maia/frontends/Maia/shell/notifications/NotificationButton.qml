@@ -3,9 +3,9 @@ import org.kde.kirigami as Kirigami
 
 import MaiaFrontend
 
-// A button of a notification banner: a label, a glyph shipped with the frontend (mask) or an icon of
+// A button of a notification: a label, a glyph shipped with the frontend (mask) or an icon of
 // the theme. The target is at least 44 px high (touch); a round one may draw less than its target
-// (plateSize), so that it stays light on the banner.
+// (plateSize), so that it stays light on the card.
 Item {
     id: button
 
@@ -19,12 +19,15 @@ Item {
     property bool round: false
     property real plateSize: 28
     property bool prominent: false
+    // Between the label and the plate's sides
+    property real sidePadding: 16
+    property int fontSize: 14
     readonly property bool hovered: area.containsMouse
     readonly property bool pressed: area.pressed
 
     signal clicked()
 
-    implicitWidth: round ? 44 : label.implicitWidth + 32
+    implicitWidth: round ? 44 : label.implicitWidth + 2 * sidePadding
     implicitHeight: 44
 
     Accessible.role: Accessible.Button
@@ -78,7 +81,7 @@ Item {
             text: button.text
             elide: Text.ElideRight
             color: button.prominent ? "white" : Theme.label
-            font.pixelSize: 14
+            font.pixelSize: button.fontSize
             font.weight: Font.Medium
         }
     }

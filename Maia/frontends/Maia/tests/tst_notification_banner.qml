@@ -81,8 +81,8 @@ Item {
 
         function test_compactShowsTheText() {
             const banner = make()
-            compare(find(banner, "bannerTitle").text, "A new message")
-            verify(find(banner, "bannerMeta").text.startsWith("Mail · "))
+            compare(find(banner, "cardTitle").text, "A new message")
+            verify(find(banner, "cardMeta").text.startsWith("Mail · "))
             verify(!banner.expanded)
             verify(!banner.canExpand)
             verify(!find(banner, "expandButton").visible)

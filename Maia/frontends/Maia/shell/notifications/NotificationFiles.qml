@@ -7,14 +7,14 @@ import org.kde.kirigami.primitives as Primitives
 
 import MaiaFrontend
 
-// The files of a notification, in an expanded banner. One file with a preview is shown large;
+// The files of a notification, when it is expanded. One file with a preview is shown large;
 // otherwise one row per file, at most maximumRows. A tap opens a file, a drag hands it to another
 // application, the folder button opens where it is. A local file that is gone is shown, dim, and
 // does nothing.
 //
 // The data is the role "files" of Maia.Notifications.Center (read off the GUI thread); previews are
 // decoded asynchronously at their shown size. This component only shows them and says what was
-// asked: what opens a file is the banner's window.
+// asked: what opens a file is the window it is in.
 Column {
     id: files
 
@@ -22,7 +22,7 @@ Column {
     property var model: []
     property int maximumRows: 3
     readonly property bool large: model.length === 1 && model[0].preview.length > 0
-    // A file is being dragged out (the banner must not end meanwhile)
+    // A file is being dragged out (a banner must not end meanwhile)
     readonly property bool dragging: dragCount > 0
     property int dragCount: 0
 
@@ -63,7 +63,7 @@ Column {
 
         TapHandler {
             enabled: fileArea.active
-            // Takes the press, so the banner's own tap and swipe do not start as well
+            // Takes the press, so the notification's own tap and swipe do not start as well
             gesturePolicy: TapHandler.ReleaseWithinBounds
             onTapped: files.openRequested(fileArea.file.url)
         }
@@ -77,7 +77,7 @@ Column {
         }
     }
 
-    component FolderButton: BannerButton {
+    component FolderButton: NotificationButton {
         id: folderButton
 
         required property var file

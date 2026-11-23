@@ -2,7 +2,7 @@ import QtQuick
 
 import MaiaFrontend
 
-// The answer field of a notification banner: a pill with the text and a round send button. Enter
+// The answer field of a notification: a pill with the text and a round send button. Enter
 // sends, Escape gives up.
 Rectangle {
     id: field
@@ -62,7 +62,7 @@ Rectangle {
         }
     }
 
-    BannerButton {
+    NotificationButton {
         id: sendButton
 
         anchors.right: parent.right
