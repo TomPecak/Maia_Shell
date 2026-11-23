@@ -2,6 +2,8 @@
 
 #include "ServiceConnection.h"
 
+#include <QGuiApplication>
+
 namespace MaiaWindows {
 
 FullscreenState::FullscreenState(QObject *parent)
@@ -29,6 +31,24 @@ void FullscreenState::setScreen(QScreen *screen)
         m_screenGeometry = connect(screen, &QScreen::geometryChanged, this, &FullscreenState::update);
     Q_EMIT screenChanged();
     update();
+}
+
+void FullscreenState::setScreenObject(QObject *screen)
+{
+    if (auto *direct = qobject_cast<QScreen *>(screen)) {
+        setScreen(direct);
+        return;
+    }
+    QScreen *found = nullptr;
+    if (screen) {
+        const QString name = screen->property("name").toString();
+        const auto screens = QGuiApplication::screens();
+        for (QScreen *candidate : screens) {
+            if (candidate->name() == name)
+                found = candidate;
+        }
+    }
+    setScreen(found);
 }
 
 void FullscreenState::windowChanged(const WindowInfo &before, const WindowInfo &after)

@@ -26,8 +26,9 @@ class FullscreenState : public QObject
     Q_OBJECT
     QML_ELEMENT
 
-    // The screen that matters (where the shell shows something); null = any screen
-    Q_PROPERTY(QScreen *screen READ screen WRITE setScreen NOTIFY screenChanged)
+    // The screen that matters (where the shell shows something); null = any screen. An object,
+    // because what QML calls a window's screen is not a QScreen but its description (found by name)
+    Q_PROPERTY(QObject *screen READ screen WRITE setScreenObject NOTIFY screenChanged)
 
     Q_PROPERTY(bool active READ active NOTIFY changed)
     // The fullscreen window and its application, "" when none
@@ -42,6 +43,7 @@ public:
 
     QScreen *screen() const { return m_screen; }
     void setScreen(QScreen *screen);
+    void setScreenObject(QObject *screen);
 
     bool active() const { return !m_window.id.isEmpty(); }
     QString windowId() const { return m_window.id; }

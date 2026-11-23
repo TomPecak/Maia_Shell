@@ -141,6 +141,26 @@ private Q_SLOTS:
         QVERIFY(state.active());
     }
 
+    void aScreenAsQmlDescribesItIsFoundByName()
+    {
+        FakeSource source;
+        FullscreenState state(&source, nullptr);
+        QObject described;
+        described.setProperty("name", QGuiApplication::primaryScreen()->name());
+        state.setScreenObject(&described);
+        QCOMPARE(state.screen(), QGuiApplication::primaryScreen());
+
+        QObject unknown;
+        unknown.setProperty("name", QStringLiteral("no such screen"));
+        state.setScreenObject(&unknown);
+        QCOMPARE(state.screen(), nullptr);
+
+        state.setScreenObject(QGuiApplication::primaryScreen());
+        QCOMPARE(state.screen(), QGuiApplication::primaryScreen());
+        state.setScreenObject(nullptr);
+        QCOMPARE(state.screen(), nullptr);
+    }
+
     void otherChangesOfWindowsMakeNoNoise()
     {
         FakeSource source;
