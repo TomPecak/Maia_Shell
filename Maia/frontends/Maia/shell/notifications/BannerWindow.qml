@@ -25,18 +25,12 @@ import MaiaFrontend
 // buffers. Only the banner takes input (MaskArea). It never takes the keyboard by itself, only
 // when the user has opened a banner that can be answered.
 //
-// The window ignores the strip the dock reserves (exclusionZone -1), or the compositor would move it
-// at once when the dock changes edge. It stays put and the banner keeps clear of the dock itself
-// (BannerPlacement), moving together with the dock, on the render thread.
+// The window ignores the strip the dock reserves (exclusionZone -1); the banner keeps clear of the
+// dock itself and moves together with it (TopCenterPlace).
 Window {
     id: bannerWindow
 
     readonly property int bannerWidth: Math.min(420, Screen.width - 32)
-    // Room for the shadow around the banner
-    readonly property int shadowMargin: 32
-    // Room in the window for the banner to move out of the dock's way
-    readonly property int dockRoom: 120
-    readonly property int topMargin: 10
     // How long a banner is shown, at least, before a waiting one takes its place
     readonly property int minimumTime: 1500
 
@@ -55,8 +49,8 @@ Window {
             backend.runCommand("xdg-open " + url.replace(/ /g, "%20"))
     }
 
-    width: Math.min(Screen.width, bannerWidth + 2 * shadowMargin + dockRoom)
-    height: Math.min(Screen.height, 680 + dockRoom)
+    width: Math.min(Screen.width, bannerWidth + 2 * place.shadowMargin + place.dockRoom)
+    height: Math.min(Screen.height, 680 + place.dockRoom)
     color: "transparent"
     flags: Qt.FramelessWindowHint
     transientParent: null
@@ -89,17 +83,6 @@ Window {
         screen: bannerWindow.screen
     }
 
-    BannerPlacement {
-        id: placement
-
-        dockEdge: ShellState.dockEdge
-        dockStrip: ShellState.dockStrip
-        // A fullscreen window lies over the dock
-        dockVisible: !fullscreen.active
-                     && (ShellState.dockScreen.length === 0 || ShellState.dockScreen === bannerWindow.screen.name)
-        maximumShift: Math.max(0, (bannerWindow.width - bannerWindow.bannerWidth) / 2 - bannerWindow.shadowMargin)
-    }
-
     NotificationPopupsModel {
         id: popups
 
@@ -124,28 +107,14 @@ Window {
         onTriggered: bannerWindow.current.swipedAway()
     }
 
-    // Where the banner rests; follows the dock with the dock's own movement (Dock.qml). A banner that
-    // only now appears is simply there
-    Item {
+    // Where the banner rests; keeps clear of the dock and follows it
+    TopCenterPlace {
         id: place
 
-        readonly property bool follows: bannerWindow.presented && ShellState.synced
-
-        x: (bannerWindow.width - bannerWindow.bannerWidth) / 2 + placement.offsetX
-        y: bannerWindow.topMargin + placement.offsetY
-        width: bannerWindow.bannerWidth
-        height: bannerWindow.height - bannerWindow.topMargin
-
-        Behavior on x {
-            enabled: place.follows
-
-            XAnimator { duration: 450; easing.type: Easing.OutQuart }
-        }
-        Behavior on y {
-            enabled: place.follows
-
-            YAnimator { duration: 450; easing.type: Easing.OutQuart }
-        }
+        host: bannerWindow
+        contentWidth: bannerWindow.bannerWidth
+        presented: bannerWindow.presented
+        dockVisible: !fullscreen.active
 
         ListView {
             id: list

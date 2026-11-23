@@ -7,11 +7,12 @@ import org.kde.kirigami as Kirigami
 import Maia.Backend as Maia
 import MaiaFrontend
 import ".."
+import "../jobs"
 
 // The status of the session in the dock strip, at the other end of the strip than the power button:
 // the time and the state of Wi-Fi, the volume and the battery, read at a glance. One plate, two
 // targets, as the status bar of iPadOS: the time opens the notification center (with a badge of what
-// is unread), the icons open the Control Center. Both unfold from this corner of the screen. The
+// is unread and a ring while something is being copied), the icons open the Control Center. Both unfold from this corner of the screen. The
 // part under the pointer lights up, so the split can be seen before clicking. Moves with the dock
 // like the power button (StripItem.qml).
 //
@@ -32,6 +33,9 @@ StripItem {
     property bool notificationsChecked: false
     // Notifications not looked at yet
     property int unreadCount: 0
+    // Jobs in progress and how far they are together (0 .. 100, -1 unknown): a ring by the clock
+    property int jobsRunning: 0
+    property int jobsPercent: -1
     // One of the layouts above, by name
     property string layout: "grid"
 
@@ -127,9 +131,14 @@ StripItem {
         width: d.beside ? d.split : plate.width
         height: d.beside ? plate.height : d.split
         checked: area.notificationsChecked
-        Accessible.name: area.unreadCount > 0
-                         ? qsTr("%1, notifications, %2 unread").arg(d.time).arg(area.unreadCount)
-                         : qsTr("%1, notifications").arg(d.time)
+        Accessible.name: {
+            const parts = [d.time, qsTr("notifications")]
+            if (area.unreadCount > 0)
+                parts.push(qsTr("%1 unread").arg(area.unreadCount))
+            if (area.jobsRunning > 0)
+                parts.push(area.jobsPercent >= 0 ? qsTr("task at %1 %").arg(area.jobsPercent) : qsTr("task running"))
+            return parts.join(", ")
+        }
         onClicked: area.timeClicked()
     }
 
@@ -171,6 +180,28 @@ StripItem {
             font.pixelSize: 12
             font.weight: Font.DemiBold
             font.features: { "tnum": 1 }
+        }
+    }
+
+    // Something is being copied: on the other corner of the time than the badge. Takes no input
+    Rectangle {
+        objectName: "jobsRing"
+        x: plate.x - 6
+        y: plate.y + plate.height - height + 6
+        width: 24
+        height: 24
+        radius: 12
+        visible: area.jobsRunning > 0
+        color: Theme.card
+        border.width: 1
+        border.color: Theme.hairline
+
+        JobRing {
+            anchors.centerIn: parent
+            width: 18
+            height: 18
+            lineWidth: 2.5
+            percent: area.jobsPercent
         }
     }
 

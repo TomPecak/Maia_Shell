@@ -11,6 +11,9 @@ CrossProcessState {
     property bool notificationCenterOpen: false
     // When the user last looked at the list (ms since 1970): what came later is unread
     property real notificationsSeenAt: 0
+    // Something in the top layer has the screen (the Control Center, the App Library, the session
+    // screen, the notification center): what only informs stays out of its way
+    property bool modalOpen: false
 
     // Where the dock rests, or is snapping to after a release (Qt.TopEdge...), the strip it reserves
     // along that edge and its screen: what the layers above it keep clear of
@@ -20,4 +23,6 @@ CrossProcessState {
 
     // The light or dark mode was changed in one layer (Theme.setDark): the others follow
     signal darkModeSet(bool dark)
+    // Another layer asks to open the notification center
+    signal notificationCenterRequested()
 }

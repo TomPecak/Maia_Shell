@@ -9,8 +9,11 @@ import Maia.Notifications.Center
 
 import MaiaFrontend
 
+import "../jobs"
+
 // The notification center, opened by the time in the Control Center's button: every notification of
-// the session, by application, the newest first (a stack per application, as on iPadOS).
+// the session, by application, the newest first (a stack per application, as on iPadOS), and above
+// them "Activities": the jobs in progress and those that ended, until they are dismissed.
 //
 // A panel in the corner of that button, so the pointer's way to it is short (Fitts's law). It grows
 // out of the corner like the Control Center and, like it, makes the screen modal: a click outside,
@@ -27,6 +30,8 @@ Item {
     property bool open: false
     // A NotificationGroupsModel
     property var groups: null
+    // A JobsModel
+    property var jobs: null
     // Edge of the dock and the strip it reserves there, as in ControlCenter.qml
     property int dockEdge: Qt.TopEdge
     property real dockStrip: 0
@@ -43,6 +48,10 @@ Item {
     property date now: new Date()
     // The row with its "Clear" open: one at a time
     property NotificationRow openRow: null
+
+    readonly property int jobCount: jobs ? jobs.count : 0
+    readonly property int endedJobs: jobs ? jobs.count - jobs.runningCount : 0
+    readonly property int notificationCount: groups ? groups.total : 0
 
     readonly property int panelWidth: Math.min(440, width - 2 * screenMargin)
     readonly property real dockGap: 12
@@ -166,9 +175,9 @@ Item {
                 objectName: "clearAllButton"
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
-                visible: sheet.groups !== null && sheet.groups.total > 0
+                visible: sheet.notificationCount > 0 || sheet.endedJobs > 0
                 text: qsTr("Clear All")
-                onClicked: NotificationCenter.dismissAll()
+                onClicked: d.clearAll()
             }
         }
 
@@ -218,8 +227,71 @@ Item {
 
             // Scrolling leaves an open "Clear" behind
             onMovementStarted: d.closeOpenRow()
+            // The header grows upwards when a job starts: a list resting at its top stays there
+            onMovementEnded: d.restingAtTop = atYBeginning
+            onOriginYChanged: {
+                if (d.restingAtTop)
+                    contentY = originY
+            }
 
             ScrollIndicator.vertical: ScrollIndicator {
+            }
+
+            // Scrolls with the list. Its cards exist while it is closed too, so that it opens at
+            // once; unseen they do no work (JobCard.qml)
+            header: Column {
+                width: list.width
+                height: sheet.jobCount > 0 ? implicitHeight : 0
+                visible: sheet.jobCount > 0
+                spacing: 10
+
+                Text {
+                    objectName: "activitiesTitle"
+                    leftPadding: 6
+                    text: qsTr("Activities")
+                    color: Theme.label
+                    font.pixelSize: 17
+                    font.weight: Font.DemiBold
+                }
+
+                Repeater {
+                    model: sheet.jobs
+
+                    JobCard {
+                        id: jobDelegate
+
+                        required property var model
+
+                        objectName: "activityCard"
+                        width: list.width
+                        height: implicitHeight
+                        job: model
+
+                        onPauseRequested: paused => NotificationCenter.suspendJob(jobDelegate.model.jobId, paused)
+                        onCancelRequested: NotificationCenter.cancelJob(jobDelegate.model.jobId)
+                        onDismissed: NotificationCenter.dismissJob(jobDelegate.model.jobId)
+                        onOpenFolderRequested: url => {
+                            sheet.openUrlRequested(url)
+                            sheet.closeRequested()
+                        }
+                    }
+                }
+
+                Text {
+                    objectName: "notificationsTitle"
+                    leftPadding: 6
+                    visible: sheet.notificationCount > 0
+                    text: qsTr("Earlier")
+                    color: Theme.label
+                    font.pixelSize: 17
+                    font.weight: Font.DemiBold
+                }
+
+                // The gap to the first row
+                Item {
+                    width: 1
+                    height: 1
+                }
             }
 
             delegate: NotificationRow {
@@ -303,7 +375,7 @@ Item {
             objectName: "emptyState"
             anchors.centerIn: list
             spacing: 6
-            visible: sheet.groups === null || sheet.groups.total === 0
+            visible: sheet.notificationCount === 0 && sheet.jobCount === 0
 
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
@@ -350,12 +422,20 @@ Item {
             sheet.shown = false
             if (sheet.groups)
                 sheet.groups.collapseAll()
-            list.positionViewAtBeginning()
+            d.toTop()
         }
     }
 
     QtObject {
         id: d
+
+        // The user has not scrolled away from the top of the list
+        property bool restingAtTop: true
+
+        function toTop() {
+            restingAtTop = true
+            list.contentY = list.originY
+        }
 
         function show() {
             closeAnimation.stop()
@@ -363,6 +443,7 @@ Item {
                 scrim.opacity = 0
                 panel.opacity = 0
                 panel.scale = 0.94
+                toTop()
             }
             sheet.now = new Date()
             sheet.shown = true
@@ -370,6 +451,22 @@ Item {
             if (sheet.Window.window)
                 sheet.Window.window.requestActivate()
             keyHandler.forceActiveFocus()
+        }
+
+        // Every notification but critical ones, and the jobs that have ended
+        function clearAll() {
+            NotificationCenter.dismissAll()
+            const jobs = sheet.jobs
+            if (!jobs)
+                return
+            const ended = []
+            for (let row = 0; row < jobs.count; ++row) {
+                const at = jobs.index(row, 0)
+                if (jobs.data(at, JobsModel.StateRole) >= NotificationCenter.JobFinished)
+                    ended.push(jobs.data(at, JobsModel.JobIdRole))
+            }
+            for (const id of ended)
+                NotificationCenter.dismissJob(id)
         }
 
         function closeOpenRow() {

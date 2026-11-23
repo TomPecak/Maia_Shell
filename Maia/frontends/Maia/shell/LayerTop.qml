@@ -100,6 +100,7 @@ Window{
         publishDock()
         // This layer has just started: nothing of it is open, whatever the last one left behind
         ShellState.notificationCenterOpen = false
+        ShellState.modalOpen = modalOpen
     }
     onScreenChanged: publishDock()
 
@@ -124,6 +125,9 @@ Window{
     property bool controlCenterOpen: false
     // The notification center is open; the other layers know through ShellState (no banners meanwhile)
     property bool notificationCenterOpen: false
+    // Something here has the screen; the pill of a job stays out of its way
+    readonly property bool modalOpen: dock.libraryOpen || sessionOpen || controlCenterOpen || notificationCenterOpen
+    onModalOpenChanged: ShellState.modalOpen = modalOpen
 
     // One overlay at a time: the App Library, the Control Center, the notification center, the
     // session screen. The one that opens closes the others; the window that had the keyboard before
@@ -171,6 +175,20 @@ Window{
         id: notificationGroups
 
         seenUntil: ShellState.notificationsSeenAt
+    }
+
+    // The jobs: the "Activities" of the panel and the ring by the clock
+    JobsModel {
+        id: shellJobs
+    }
+
+    // "2 more" on the pill of a job, in the overlay layer
+    Connections {
+        target: ShellState
+
+        function onNotificationCenterRequested() {
+            root.notificationCenterOpen = true
+        }
     }
 
     // Wi-Fi, the volume and the rest of the Control Center, shared by its button and the modules
@@ -243,6 +261,8 @@ Window{
         checked: root.controlCenterOpen
         notificationsChecked: root.notificationCenterOpen
         unreadCount: notificationGroups.unseen
+        jobsRunning: shellJobs.runningCount
+        jobsPercent: shellJobs.percent
         layout: controlCenterState.buttonLayout
         // Right end of a horizontal strip, top end of a vertical one
         x: placedEdge === Qt.LeftEdge ? dock.edgeMargin + (dock.shortSize - width) / 2
@@ -307,6 +327,7 @@ Window{
         anchors.fill: parent
         open: root.notificationCenterOpen
         groups: notificationGroups
+        jobs: shellJobs
         dockEdge: controlCenterButton.placedEdge
         dockStrip: root.stripThickness
 

@@ -42,6 +42,12 @@ qt_add_qml_module(MaiaFrontend
         QML_FILES shell/dock/DockButton.qml
         QML_FILES shell/dock/DockSeparator.qml
         QML_FILES shell/dock/DockState.qml
+        QML_FILES shell/jobs/JobBar.qml
+        QML_FILES shell/jobs/JobCard.qml
+        QML_FILES shell/jobs/JobFormat.js
+        QML_FILES shell/jobs/JobPill.qml
+        QML_FILES shell/jobs/JobPillWindow.qml
+        QML_FILES shell/jobs/JobRing.qml
         QML_FILES shell/library/AppLibrary.qml
         QML_FILES shell/library/AppLibraryItem.qml
         QML_FILES shell/library/SearchField.qml
@@ -56,6 +62,7 @@ qt_add_qml_module(MaiaFrontend
         QML_FILES shell/notifications/NotificationCenterSheet.qml
         QML_FILES shell/notifications/NotificationRow.qml
         QML_FILES shell/notifications/SwipeRules.js
+        QML_FILES shell/notifications/TopCenterPlace.qml
         QML_FILES shell/session/SessionActionButton.qml
         QML_FILES shell/session/SessionScreen.qml
         QML_FILES shell/status/PowerButton.qml

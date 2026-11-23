@@ -128,7 +128,10 @@ fallback.
       status button (the icons open the Control Center), stacks by application
       (`NotificationGroupsModel`), swipe to clear, an unread badge, Do Not Disturb in the Control
       Center.
-- [ ] **Maia (tablet face), what is left:** job progress, dock badges, a swipe from the screen edge;
+- [x] **Maia (tablet face): job progress** (2026-11-23): a pill at the top like a Live Activity
+      (`JobPopupsModel`: ring, pause, cancel with a confirmation, "Done"), "Activities" in the
+      notification center, a ring by the clock.
+- [ ] **Maia (tablet face), what is left:** dock badges, a swipe from the screen edge;
       then the rest on the same services as Lumen (dock, control center already use `Maia.Windows`,
       `Maia.Network`, `Maia.Power`).
 - [ ] **Ubuntu 24.04, XPLuna, Experimental:** decide which stay. Those that stay move from the

@@ -1,5 +1,6 @@
 import QtQuick
 
+import "jobs"
 import "notifications"
 
 // The overlay layer of the shell, its own process: what has to be seen above everything, fullscreen
@@ -13,5 +14,11 @@ Window {
     title: "overlay"
 
     BannerWindow {
+        id: banners
+    }
+
+    // The job in progress; one thing at a time at the top, and a banner comes first
+    JobPillWindow {
+        covered: banners.visible
     }
 }

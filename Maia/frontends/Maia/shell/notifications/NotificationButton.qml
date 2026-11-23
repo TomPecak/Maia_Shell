@@ -19,6 +19,7 @@ Item {
     property bool round: false
     property real plateSize: 28
     property bool prominent: false
+    property color prominentColor: Theme.accent
     // Between the label and the plate's sides
     property real sidePadding: 16
     property int fontSize: 14
@@ -41,7 +42,7 @@ Item {
         width: button.round ? button.plateSize : parent.width
         height: button.round ? button.plateSize : 40
         radius: button.round ? width / 2 : 12
-        color: button.prominent ? (area.pressed ? Qt.darker(Theme.accent, 1.12) : Theme.accent)
+        color: button.prominent ? (area.pressed ? Qt.darker(button.prominentColor, 1.12) : button.prominentColor)
              : area.pressed ? Theme.secondaryFillHover
              : area.containsMouse ? Theme.fill
              : button.round ? "transparent" : Theme.secondaryFill
