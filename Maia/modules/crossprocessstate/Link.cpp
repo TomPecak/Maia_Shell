@@ -9,11 +9,18 @@
 #include <QJSValue>
 #include <QLocalServer>
 #include <QLocalSocket>
-#include <QLockFile>
 #include <QLoggingCategory>
+#include <QSocketNotifier>
+#include <QTimer>
 
+#include <fcntl.h>
+#include <sys/file.h>
 #include <sys/stat.h>
+#include <sys/syscall.h>
+#include <unistd.h>
 
+#include <cerrno>
+#include <memory>
 #include <utility>
 
 Q_LOGGING_CATEGORY(lcCrossProcessState, "maia.crossprocessstate")
@@ -51,14 +58,24 @@ Link::~Link()
 {
     if (s_instance == this)
         s_instance = nullptr;
+    // What was changed last still goes out (as far as the socket takes it without waiting)
+    flush();
+    if (m_socket)
+        m_socket->flush();
+    for (Peer *peer : std::as_const(m_peers))
+        peer->socket->flush();
+    stopWatchingHolder();
+    // In this order: its socket file goes while it still holds the lock (a successor's must never
+    // be removed), then the lock, and only then do the participants hear the end and elect
+    delete m_server;
+    m_server = nullptr;
+    releaseLock();
     for (Peer *peer : std::as_const(m_peers)) {
         peer->socket->disconnect(this);
+        delete peer->socket;
         delete peer;
     }
     m_peers.clear();
-    // The server's socket file goes with it; the lock is released by QLockFile
-    delete m_server;
-    delete m_lock;
 }
 
 Link *Link::instance()
@@ -119,7 +136,7 @@ QVariant Link::wireValue(const QVariant &value)
 
 // --- Objects ---
 
-void Link::attach(CrossProcessState *object, const QString &category, const QVariantHash &declared, bool host)
+void Link::attach(CrossProcessState *object, const QString &category, const QVariantHash &declared)
 {
     auto &values = m_values[category];
     QList<QPair<QString, QVariant>> known;
@@ -127,7 +144,7 @@ void Link::attach(CrossProcessState *object, const QString &category, const QVar
     for (auto it = declared.cbegin(); it != declared.cend(); ++it) {
         const auto found = values.constFind(it.key());
         if (found == values.cend()) {
-            values.insert(it.key(), {it.value(), false});
+            values.insert(it.key(), {it.value(), 0});
             newKeys = true;
         } else {
             known.append({it.key(), found->value});
@@ -138,18 +155,13 @@ void Link::attach(CrossProcessState *object, const QString &category, const QVar
     for (const auto &[key, value] : std::as_const(known))
         object->applyValue(key, value);
 
-    if (host) {
-        m_wantsHost = true;
-        if (!isHost())
-            becomeHost();
-    }
     if (!isHost()) {
         // Once per category and connection: another object of a joined category needs the host
         // only for keys this process did not know (a Repeater of fifty delegates is one join)
         if (m_welcomed && (newKeys || !m_joined.contains(category)))
             join(category);
-        else if (!m_welcomed && !m_socket)
-            connectToHost();
+        else if (!m_welcomed && !m_socket && !m_holderWatch)
+            findHost();
     }
     object->setSynced(isSynced(category));
 }
@@ -165,19 +177,20 @@ void Link::detach(CrossProcessState *object, const QString &category)
 void Link::changedLocally(CrossProcessState *object, const QString &category, const QString &key, const QVariant &value)
 {
     Entry &entry = m_values[category][key];
-    if (entry.value == value && entry.changed)
+    if (entry.value == value && entry.revision > 0)
         return;
     entry.value = value;
-    entry.changed = true;
-    applyToObjects(category, key, value, object);
+    const quint64 revision = ++entry.revision;
+    // Queued first: a handler that changes something else in turn is sent after this
     if (isHost()) {
-        queue({Kind::Changed, category, key, value, {}, 0, 0, 0});
+        queue({Kind::Changed, category, key, value, {}, 0, 0, 0, revision});
     } else if (m_welcomed) {
         const quint64 seq = m_nextSeq++;
         m_pending.insert({category, key}, seq);
-        queue({Kind::Set, category, key, value, {}, 0, seq, 0});
+        queue({Kind::Set, category, key, value, {}, 0, seq, 0, revision});
     }
-    // Without a host: kept here (changed), it goes to the host with the next Join
+    // Without a connection: kept here with its revision, it goes to the host with the next Join
+    applyToObjects(category, key, value, object);
 }
 
 void Link::emittedLocally(CrossProcessState *object, const QString &category, const QString &name, const QVariantList &args)
@@ -185,15 +198,10 @@ void Link::emittedLocally(CrossProcessState *object, const QString &category, co
     deliverEvent(category, name, args, object);
     // An event is a moment: without a host it reaches this process only
     if (isHost() || m_welcomed)
-        queue({Kind::Event, category, name, {}, args, 0, 0, 0});
+        queue({Kind::Event, category, name, {}, args, 0, 0, 0, 0});
 }
 
 // --- Both roles ---
-
-void Link::store(const QString &category, const QString &key, const QVariant &value, bool changed)
-{
-    m_values[category][key] = {value, changed};
-}
 
 void Link::applyToObjects(const QString &category, const QString &key, const QVariant &value, CrossProcessState *except)
 {
@@ -240,6 +248,7 @@ void Link::queue(Outgoing message)
             if (queued.kind == message.kind && queued.origin == message.origin) {
                 queued.value = message.value;
                 queued.seq = message.seq;
+                queued.revision = message.revision;
                 return;
             }
         }
@@ -294,10 +303,10 @@ QByteArray Link::encode(const Outgoing &message) const
     out << quint8(message.kind);
     switch (message.kind) {
     case Kind::Set:
-        out << message.category << message.key << message.value << message.seq;
+        out << message.category << message.key << message.value << message.seq << message.revision;
         break;
     case Kind::Changed:
-        out << message.category << message.key << message.value << message.origin << message.seq;
+        out << message.category << message.key << message.value << message.origin << message.seq << message.revision;
         break;
     case Kind::Event:
         out << message.category << message.key << message.args << message.origin;
@@ -314,12 +323,137 @@ QByteArray Link::encodeEntries(Kind kind, const QString &category) const
     const auto values = m_values.value(category);
     entries.reserve(values.size());
     for (auto it = values.cbegin(); it != values.cend(); ++it)
-        entries.append({it.key(), it->value, it->changed});
+        entries.append({it.key(), it->value, it->revision});
     QByteArray payload;
     QDataStream out(&payload, QIODevice::WriteOnly);
     out.setVersion(kStreamVersion);
     out << quint8(kind) << category << entries;
     return frame(payload);
+}
+
+// --- The election ---
+
+void Link::findHost()
+{
+    if (electHost())
+        return;
+    // Before looking at the socket: a host that appears from now on is an event
+    watchForHost();
+    if (m_socket)
+        return;
+    const qint64 identity = fileIdentity(m_path);
+    if (identity != -1 && identity != m_failedSocket)
+        QMetaObject::invokeMethod(this, &Link::connectToHost, Qt::QueuedConnection);
+}
+
+bool Link::electHost()
+{
+    if (isHost())
+        return true;
+    stopWatchingHolder();
+    int retry = 5;
+    for (int attempt = 0; attempt < 3; ++attempt) {
+        if (takeLock()) {
+            if (becomeHost())
+                return true;
+            releaseLock();
+            return false;
+        }
+        if (m_lockFd < 0)
+            return false; // no lock file (warned): it can still take part in a host that is there
+        const qint64 holder = lockHolder();
+        if (holder <= 0)
+            break;
+        const int pidfd = int(::syscall(SYS_pidfd_open, pid_t(holder), 0));
+        if (pidfd < 0) {
+            // A kernel before 5.3 has no pidfd: the one case that has to look again now and then
+            if (errno == ENOSYS) {
+                retry = 1000;
+                break;
+            }
+            continue; // it ended meanwhile: the lock is free, or has a new holder
+        }
+        // Looked at again now that its end cannot be missed
+        if (takeLock()) {
+            ::close(pidfd);
+            if (becomeHost())
+                return true;
+            releaseLock();
+            return false;
+        }
+        if (lockHolder() == holder) {
+            watchHolder(pidfd);
+            return false;
+        }
+        ::close(pidfd);
+    }
+    // The instant between a new holder taking the lock and writing its pid: the next moment knows
+    if (!m_retryQueued) {
+        m_retryQueued = true;
+        QTimer::singleShot(retry, this, [this] {
+            m_retryQueued = false;
+            if (!m_holderWatch)
+                findHost();
+        });
+    }
+    return false;
+}
+
+bool Link::takeLock()
+{
+    if (m_lockFd < 0) {
+        // CLOEXEC: the programs this process starts must not keep the lock alive
+        m_lockFd = ::open(QFile::encodeName(m_path + QStringLiteral(".lock")).constData(), O_RDWR | O_CREAT | O_CLOEXEC, 0600);
+        if (m_lockFd < 0) {
+            qCWarning(lcCrossProcessState) << "cannot open the lock of" << m_path << ":" << qt_error_string(errno);
+            return false;
+        }
+    }
+    if (::flock(m_lockFd, LOCK_EX | LOCK_NB) != 0)
+        return false;
+    // Who has it, for those who wait for its end
+    const QByteArray pid = QByteArray::number(qint64(::getpid()));
+    if (::ftruncate(m_lockFd, 0) != 0 || ::pwrite(m_lockFd, pid.constData(), size_t(pid.size()), 0) != pid.size())
+        qCWarning(lcCrossProcessState) << "cannot write to the lock of" << m_path;
+    return true;
+}
+
+void Link::releaseLock()
+{
+    if (m_lockFd >= 0) {
+        ::close(m_lockFd);
+        m_lockFd = -1;
+    }
+}
+
+qint64 Link::lockHolder() const
+{
+    char text[32];
+    const ssize_t size = ::pread(m_lockFd, text, sizeof text - 1, 0);
+    return size > 0 ? QByteArray(text, size).toLongLong() : 0;
+}
+
+void Link::watchHolder(int pidfd)
+{
+    m_holderFd = pidfd;
+    m_holderWatch = new QSocketNotifier(pidfd, QSocketNotifier::Read, this);
+    connect(m_holderWatch, &QSocketNotifier::activated, this, [this] {
+        stopWatchingHolder();
+        findHost();
+    });
+}
+
+void Link::stopWatchingHolder()
+{
+    if (m_holderWatch) {
+        m_holderWatch->setEnabled(false);
+        m_holderWatch->deleteLater();
+        m_holderWatch = nullptr;
+    }
+    if (m_holderFd >= 0) {
+        ::close(m_holderFd);
+        m_holderFd = -1;
+    }
 }
 
 // --- Host ---
@@ -328,13 +462,6 @@ bool Link::becomeHost()
 {
     if (m_server)
         return true;
-    auto lock = std::make_unique<QLockFile>(m_path + QStringLiteral(".lock"));
-    // Not by age: a lock is stale only when its process is gone (QLockFile checks the pid)
-    lock->setStaleLockTime(0);
-    if (!lock->tryLock(0)) {
-        qCWarning(lcCrossProcessState) << "another process hosts" << m_path << "- this one takes part instead";
-        return false;
-    }
     // A participant until now: its connection goes, its values stay (they are the session's)
     if (m_socket) {
         m_socket->disconnect(this);
@@ -342,8 +469,11 @@ bool Link::becomeHost()
         m_socket->deleteLater();
         m_socket = nullptr;
     }
+    m_reader = {};
     m_welcomed = false;
+    m_id = 0;
     m_pending.clear();
+    m_joined.clear();
     m_outgoing.clear();
     m_queuedSets.clear();
     // A socket file left by a host that crashed: ours now (the lock says nobody serves it)
@@ -356,7 +486,6 @@ bool Link::becomeHost()
         return false;
     }
     m_server = server.release();
-    m_lock = lock.release();
     const auto categories = m_objects.keys();
     for (const QString &category : categories)
         setSynced(category, true);
@@ -366,6 +495,8 @@ bool Link::becomeHost()
 void Link::acceptPeers()
 {
     while (QLocalSocket *socket = m_server->nextPendingConnection()) {
+        // Not a child of the server: at the end the server goes first (see ~Link)
+        socket->setParent(this);
         auto *peer = new Peer;
         peer->socket = socket;
         peer->id = m_nextPeerId++;
@@ -428,16 +559,15 @@ void Link::handlePeerMessage(Peer *peer, const QByteArray &payload)
         // What is queued goes first: the snapshot below already has it
         flush();
         peer->categories.insert(category);
-        auto &values = m_values[category];
         for (const Protocol::Entry &entry : std::as_const(entries)) {
+            auto &values = m_values[category];
             const auto found = values.constFind(entry.key);
-            // A changed value wins over a default: a restarted host gets the session's state back
-            const bool adopt = found == values.cend() || (!found->changed && entry.changed && found->value != entry.value);
-            if (!adopt)
+            // The newest value of each key: a new host collects the session's state
+            if (found != values.cend() && entry.revision <= found->revision)
                 continue;
-            values[entry.key] = {entry.value, entry.changed};
+            values[entry.key] = {entry.value, entry.revision};
+            queue({Kind::Changed, category, entry.key, entry.value, {}, peer->id, 0, peer->id, entry.revision});
             applyToObjects(category, entry.key, entry.value);
-            queue({Kind::Changed, category, entry.key, entry.value, {}, peer->id, 0, peer->id});
         }
         peer->socket->write(encodeEntries(Kind::Snapshot, category));
         return;
@@ -445,15 +575,17 @@ void Link::handlePeerMessage(Peer *peer, const QByteArray &payload)
     case Kind::Set: {
         QString category, key;
         QVariant value;
-        quint64 seq = 0;
-        in >> category >> key >> value >> seq;
+        quint64 seq = 0, revision = 0;
+        in >> category >> key >> value >> seq >> revision;
         if (in.status() != QDataStream::Ok)
             break;
         peer->categories.insert(category);
-        store(category, key, value, true);
-        applyToObjects(category, key, value);
+        Entry &entry = m_values[category][key];
+        entry.value = value;
+        entry.revision = qMax(entry.revision + 1, revision);
         // To everyone in the category, the sender included (it waits for its own back)
-        queue({Kind::Changed, category, key, value, {}, peer->id, seq, 0});
+        queue({Kind::Changed, category, key, value, {}, peer->id, seq, 0, entry.revision});
+        applyToObjects(category, key, value);
         return;
     }
     case Kind::Event: {
@@ -464,7 +596,7 @@ void Link::handlePeerMessage(Peer *peer, const QByteArray &payload)
         if (in.status() != QDataStream::Ok)
             break;
         deliverEvent(category, name, args);
-        queue({Kind::Event, category, name, {}, args, peer->id, 0, peer->id});
+        queue({Kind::Event, category, name, {}, args, peer->id, 0, peer->id, 0});
         return;
     }
     default:
@@ -490,10 +622,10 @@ void Link::connectToHost()
 {
     if (m_socket || isHost())
         return;
-    if (!QFileInfo::exists(m_path)) {
-        watchForHost();
+    // Known before the attempt: a socket that replaces this one meanwhile is a new one to try
+    m_triedSocket = fileIdentity(m_path);
+    if (m_triedSocket == -1)
         return;
-    }
     m_socket = new QLocalSocket(this);
     connect(m_socket, &QLocalSocket::connected, this, &Link::onConnected);
     connect(m_socket, &QLocalSocket::readyRead, this, &Link::readHost);
@@ -505,20 +637,19 @@ void Link::connectToHost()
 
 void Link::watchForHost()
 {
-    if (!m_watcher) {
-        m_watcher = new QFileSystemWatcher(this);
-        // inotify: a new host's socket appearing is an event, nothing is polled
-        m_watcher->addPath(QFileInfo(m_path).absolutePath());
-        connect(m_watcher, &QFileSystemWatcher::directoryChanged, this, [this] {
-            if (m_socket || isHost())
-                return;
-            const qint64 identity = fileIdentity(m_path);
-            // No socket, or the same one that did not answer: nothing to try
-            if (identity == -1 || identity == m_failedSocketTime)
-                return;
+    if (m_watcher)
+        return;
+    m_watcher = new QFileSystemWatcher(this);
+    // inotify: a new host's socket appearing is an event, nothing is polled
+    m_watcher->addPath(QFileInfo(m_path).absolutePath());
+    connect(m_watcher, &QFileSystemWatcher::directoryChanged, this, [this] {
+        if (m_socket || isHost())
+            return;
+        const qint64 identity = fileIdentity(m_path);
+        // No socket, or the same one that did not answer: nothing to try
+        if (identity != -1 && identity != m_failedSocket)
             connectToHost();
-        });
-    }
+    });
 }
 
 void Link::onConnected()
@@ -566,7 +697,7 @@ void Link::handleHostMessage(const QByteArray &payload)
         }
         m_welcomed = true;
         m_id = id;
-        m_failedSocketTime = -1;
+        m_failedSocket = -1;
         const auto categories = m_objects.keys();
         for (const QString &category : categories)
             join(category);
@@ -584,7 +715,7 @@ void Link::handleHostMessage(const QByteArray &payload)
                 continue;
             Entry &current = m_values[category][entry.key];
             const bool differs = current.value != entry.value;
-            current = {entry.value, entry.changed};
+            current = {entry.value, entry.revision};
             if (differs)
                 applyToObjects(category, entry.key, entry.value);
         }
@@ -595,13 +726,15 @@ void Link::handleHostMessage(const QByteArray &payload)
         QString category, key;
         QVariant value;
         quint32 origin = 0;
-        quint64 seq = 0;
-        in >> category >> key >> value >> origin >> seq;
+        quint64 seq = 0, revision = 0;
+        in >> category >> key >> value >> origin >> seq >> revision;
         if (in.status() != QDataStream::Ok)
             break;
         const QPair<QString, QString> pendingKey{category, key};
         if (origin == m_id && seq != 0) {
             // Its own change, back in the host's order: the host has it
+            Entry &own = m_values[category][key];
+            own.revision = qMax(own.revision, revision);
             if (m_pending.value(pendingKey) == seq)
                 m_pending.remove(pendingKey);
             return;
@@ -610,7 +743,7 @@ void Link::handleHostMessage(const QByteArray &payload)
             return;
         Entry &current = m_values[category][key];
         const bool differs = current.value != value;
-        current = {value, true};
+        current = {value, revision};
         if (differs)
             applyToObjects(category, key, value);
         return;
@@ -636,9 +769,8 @@ void Link::lostHost()
 {
     if (!m_socket)
         return;
-    const bool wasWelcomed = m_welcomed;
     if (!m_welcomed)
-        m_failedSocketTime = fileIdentity(m_path);
+        m_failedSocket = m_triedSocket;
     m_socket->disconnect(this);
     m_socket->abort();
     m_socket->deleteLater();
@@ -648,22 +780,14 @@ void Link::lostHost()
     m_id = 0;
     m_pending.clear();
     m_joined.clear();
-    // What was not sent stays in m_values (changed) and goes with the next Join
+    // What was not sent stays in m_values with its revision and goes with the next Join
     m_outgoing.clear();
     m_queuedSets.clear();
     const auto categories = m_synced;
     for (const QString &category : categories)
         setSynced(category, false);
-    if (isHost())
-        return;
-    // A would-be host takes over from the one that is gone (if it is really gone: its lock)
-    if (m_wantsHost && becomeHost())
-        return;
-    watchForHost();
-    // A host that only closed this connection is still there: one try. A host that is gone left a
-    // socket that does not answer: the try fails and the watcher waits for a new one
-    if (wasWelcomed)
-        QMetaObject::invokeMethod(this, &Link::connectToHost, Qt::QueuedConnection);
+    // Takes over, or waits for whoever does (or for the holder of the lock to end)
+    findHost();
 }
 
 void Link::join(const QString &category)

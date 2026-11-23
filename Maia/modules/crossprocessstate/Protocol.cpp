@@ -41,12 +41,12 @@ std::optional<QByteArray> FrameReader::next(bool *broken)
 
 QDataStream &operator<<(QDataStream &out, const Entry &entry)
 {
-    return out << entry.key << entry.value << entry.changed;
+    return out << entry.key << entry.value << entry.revision;
 }
 
 QDataStream &operator>>(QDataStream &in, Entry &entry)
 {
-    return in >> entry.key >> entry.value >> entry.changed;
+    return in >> entry.key >> entry.value >> entry.revision;
 }
 
 } // namespace MaiaCrossProcessState::Protocol

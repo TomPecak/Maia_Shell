@@ -1,10 +1,13 @@
 // A process taking part in a CrossProcessState, for tests: loads one (or with --twin two) in QML and
 // reports what it sees on its standard output, one line each:
-//   ready | synced true|false | changed <property> <json> | event ping <json args> | twin text <json>
+//   ready | synced true|false | role host|participant | changed <property> <json> |
+//   event ping <json args> | twin text <json> | derived <text>
 // Driven through its standard input (read on a socket notifier, the event loop never waits):
-//   set <property> <json> | fire <number> <word> | note <json> | burst <count> | quit
+//   set <property> <json> | fire <number> <word> | note <json> | burst <count> | role | quit
 //
-//   crossprocessstate-peer [--host] [--twin]      (the socket: $MAIA_CROSS_PROCESS_STATE_SOCKET)
+//   crossprocessstate-peer [--twin | --singleton]  (the socket: $MAIA_CROSS_PROCESS_STATE_SOCKET)
+
+#include "Link.h"
 
 #include <QGuiApplication>
 #include <QQmlComponent>
@@ -43,7 +46,6 @@ Item {
         id: shared
         objectName: "shared"
         category: "Test"
-        host: HOST
 
         property bool flag: false
         property int count: 0
@@ -73,6 +75,30 @@ Item {
 }
 )";
 
+// The way a frontend uses it: a singleton from a module, nothing else
+const char *kSingleton = R"(
+import QtQuick
+import CrossProcessStateTest
+
+Item {
+    function assign(name, json) { TestState[name] = JSON.parse(json) }
+    function fire(number, word) { TestState.ping(number) }
+
+    // An ordinary binding to it
+    property string seen: TestState.shout
+    onSeenChanged: out.say("derived " + seen)
+
+    Connections {
+        target: TestState
+        function onSyncedChanged() { out.say("synced " + TestState.synced) }
+        function onTextChanged() { out.say("changed text " + JSON.stringify(TestState.text)) }
+        function onPing(number) { out.say("event ping " + JSON.stringify([number])) }
+    }
+
+    Component.onCompleted: out.say("synced " + TestState.synced)
+}
+)";
+
 const char *kTwin = R"(
     CrossProcessState {
         category: "Test"
@@ -87,16 +113,16 @@ int main(int argc, char **argv)
 {
     QGuiApplication app(argc, argv);
     const QStringList args = app.arguments();
-    const bool host = args.contains(QStringLiteral("--host"));
     const bool twin = args.contains(QStringLiteral("--twin"));
+    const bool singleton = args.contains(QStringLiteral("--singleton"));
 
     QQmlEngine engine;
     engine.addImportPath(QStringLiteral(MAIA_QML_BUILD_DIR));
+    engine.addImportPath(QStringLiteral(TEST_IMPORTS));
     Reporter reporter;
     engine.rootContext()->setContextProperty(QStringLiteral("out"), &reporter);
 
-    QString qml = QString::fromUtf8(kQml);
-    qml.replace(QStringLiteral("HOST"), host ? QStringLiteral("true") : QStringLiteral("false"));
+    QString qml = QString::fromUtf8(singleton ? kSingleton : kQml);
     qml.replace(QStringLiteral("TWIN"), twin ? QString::fromUtf8(kTwin) : QString());
     QQmlComponent component(&engine);
     component.setData(qml.toUtf8(), QUrl());
@@ -106,8 +132,8 @@ int main(int argc, char **argv)
         return 1;
     }
     reporter.say(QStringLiteral("ready"));
-    QObject *shared = root->findChild<QObject *>(QStringLiteral("shared"));
-    reporter.say(QStringLiteral("synced ") + (shared && shared->property("synced").toBool() ? QStringLiteral("true") : QStringLiteral("false")));
+    if (QObject *shared = root->findChild<QObject *>(QStringLiteral("shared")))
+        reporter.say(QStringLiteral("synced ") + (shared->property("synced").toBool() ? QStringLiteral("true") : QStringLiteral("false")));
 
     QSocketNotifier input(STDIN_FILENO, QSocketNotifier::Read);
     QByteArray pending;
@@ -134,6 +160,8 @@ int main(int argc, char **argv)
                 QMetaObject::invokeMethod(root, "note", Q_ARG(QVariant, line.section(QLatin1Char(' '), 1)));
             } else if (command == QLatin1String("burst")) {
                 QMetaObject::invokeMethod(root, "burst", Q_ARG(QVariant, line.section(QLatin1Char(' '), 1, 1).toInt()));
+            } else if (command == QLatin1String("role")) {
+                reporter.say(MaiaCrossProcessState::Link::instance()->isHost() ? QStringLiteral("role host") : QStringLiteral("role participant"));
             } else if (command == QLatin1String("quit")) {
                 app.quit();
             }

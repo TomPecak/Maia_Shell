@@ -10,11 +10,13 @@
 //   participant → host                      host → participant
 //   Hello    version                        Welcome   version, the participant's id
 //   Join     category, entries              Snapshot  category, entries (all the host knows)
-//   Set      category, key, value, seq      Changed   category, key, value, origin id, seq
+//   Set      category, key, value, seq,     Changed   category, key, value, origin id, seq,
+//            revision                                 revision
 //   Event    category, name, args           Event     category, name, args
 //
-// An entry is key, value and whether it was ever changed (false: still the declared default). A
-// participant's Set comes back to it as Changed with its own id and seq: that is how it knows the
+// An entry is key, value and revision (0: still the declared default, then one more with every
+// change): when a new host collects the state, the newest value of each key wins. A participant's
+// Set comes back to it as Changed with its own id and seq: that is how it knows the
 // host has it (see Link, "pending writes").
 
 #include <QByteArray>
@@ -27,7 +29,7 @@
 
 namespace MaiaCrossProcessState::Protocol {
 
-constexpr quint32 kVersion = 1;
+constexpr quint32 kVersion = 2;
 // A frame larger than this is a broken or hostile peer: the connection is closed
 constexpr quint32 kMaxFrame = 4 * 1024 * 1024;
 
@@ -44,7 +46,7 @@ enum class Kind : quint8 {
 struct Entry {
     QString key;
     QVariant value;
-    bool changed = false;
+    quint64 revision = 0;
 };
 
 // The payload with its length in front

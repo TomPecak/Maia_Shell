@@ -1,0 +1,2 @@
+module CrossProcessStateTest
+singleton TestState 1.0 TestState.qml

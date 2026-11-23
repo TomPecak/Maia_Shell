@@ -70,16 +70,9 @@ void CrossProcessState::setCategory(const QString &category)
     Q_EMIT categoryChanged();
 }
 
-void CrossProcessState::setHost(bool host)
+void CrossProcessState::setLink(Link *link)
 {
-    if (host == m_host)
-        return;
-    if (m_complete) {
-        qCWarning(lcCrossProcessState) << "host of a CrossProcessState is set once, before it is complete";
-        return;
-    }
-    m_host = host;
-    Q_EMIT hostChanged();
+    m_link = link;
 }
 
 void CrossProcessState::componentComplete()
@@ -125,7 +118,7 @@ void CrossProcessState::componentComplete()
         if (relay->watch())
             m_relays.push_back(std::move(relay));
     }
-    m_link->attach(this, m_category, declared, m_host);
+    m_link->attach(this, m_category, declared);
 }
 
 void CrossProcessState::onSignal(int signalIndex, void **args)

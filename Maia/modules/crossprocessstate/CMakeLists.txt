@@ -1,8 +1,8 @@
 # QML module Maia.CrossProcessState: properties and signals shared by the processes of a session
-# (the layers of a shell are separate processes), declared in QML like Settings {}. One process
-# hosts the state (host: true), the others take part; a Unix socket between them, never blocking,
-# never polling. No service behind it: the library is the whole of it. See CrossProcessState.h and
-# Link.h.
+# (the layers of a shell are separate processes), declared in QML like Settings {}. The first
+# process hosts the state, another takes over when it is gone; a Unix socket between them, never
+# blocking, never polling. No service behind it: the library is the whole of it. See
+# CrossProcessState.h and Link.h.
 
 include(MaiaQmlModule)
 
@@ -31,8 +31,9 @@ if(BUILD_TESTING)
     # through its standard input; the test starts hosts and participants and reads what they see
     find_package(Qt6 ${REQUIRED_QT_VERSION} REQUIRED COMPONENTS Gui Test)
     add_executable(crossprocessstate-peer tests/peer.cpp)
-    target_link_libraries(crossprocessstate-peer PRIVATE Qt6::Gui Qt6::Qml)
-    target_compile_definitions(crossprocessstate-peer PRIVATE MAIA_QML_BUILD_DIR="${MAIA_QML_BUILD_DIR}")
+    target_link_libraries(crossprocessstate-peer PRIVATE Maia::CrossProcessState Qt6::Gui Qt6::Qml)
+    target_compile_definitions(crossprocessstate-peer PRIVATE MAIA_QML_BUILD_DIR="${MAIA_QML_BUILD_DIR}"
+        TEST_IMPORTS="${CMAKE_CURRENT_SOURCE_DIR}/tests/imports")
     add_dependencies(crossprocessstate-peer MaiaCrossProcessStateplugin)
 
     add_executable(tst_crossprocessstate tests/tst_crossprocessstate.cpp)

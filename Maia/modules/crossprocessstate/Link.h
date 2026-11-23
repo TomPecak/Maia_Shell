@@ -1,24 +1,25 @@
 #pragma once
 
 // Link: the one connection of a process to the shared state of its session, used by every
-// CrossProcessState object of the process. It is either
-//   - the host (a CrossProcessState object with host: true is in this process): it serves a
-//     QLocalServer and keeps the authoritative values, or
-//   - a participant: a QLocalSocket to the host.
+// CrossProcessState object of the process. Nobody chooses its role:
+//   - the first process hosts: it serves a QLocalServer and keeps the authoritative values;
+//   - the others take part through a QLocalSocket;
+//   - when the host is gone (a crash included), one of them takes over, with the state.
 // Objects of one category in one process see each other's changes at once, without the socket.
 //
-// Never blocking, never polling: sockets are asynchronous, nothing waits for bytes. A participant
-// without a host watches the socket's directory (inotify through QFileSystemWatcher) and connects
-// when a new host's socket appears. Changes made in one turn of the event loop leave as one write.
+// The election is the kernel's: the host holds flock() on "<socket>.lock", which is released when
+// its process ends, however it ends. A process that did not get the lock watches the holder's exit
+// (a pidfd) and tries again then: the end of the connection alone is not enough, a dying process
+// may close its sockets before its lock.
 //
-// A second process with host: true takes part while the first one hosts, and takes over when that
-// one is gone (its lock is free then, or stale).
+// Never blocking, never polling: sockets are asynchronous, nothing waits for bytes, a waiting
+// process sleeps on a pidfd and on inotify (the host's socket appearing). Changes made in one turn
+// of the event loop leave as one write.
 //
 // Values: what QDataStream writes of a QVariant (bool, numbers, strings, url, color, date, lists and
-// maps of these; JavaScript objects and arrays become maps and lists). Each value knows whether it
-// was ever changed: when a host comes (back), a changed value of a participant wins over the host's
-// declared default, so a restarted host gets the session's state back; between two changed values
-// the host wins.
+// maps of these; JavaScript objects and arrays become maps and lists). Each value has a revision:
+// when a new host collects the state, the newest value of each key wins, so a change made while
+// the host was going away is not lost; between equal revisions the host wins.
 //
 // Pending writes: a participant's change goes to the host and comes back to everyone, the
 // participant included, in the host's order. Until its own change is back, a participant ignores
@@ -26,7 +27,7 @@
 // none of them flickers through the other's value.
 //
 // Socket: $MAIA_CROSS_PROCESS_STATE_SOCKET, or
-//         $XDG_RUNTIME_DIR/maia/cross-process-state-$WAYLAND_DISPLAY.sock (+ ".lock", the host's lock)
+//         $XDG_RUNTIME_DIR/maia/cross-process-state-$WAYLAND_DISPLAY.sock (+ ".lock")
 
 #include "Protocol.h"
 
@@ -40,7 +41,7 @@
 class QFileSystemWatcher;
 class QLocalServer;
 class QLocalSocket;
-class QLockFile;
+class QSocketNotifier;
 
 namespace MaiaCrossProcessState {
 
@@ -66,7 +67,7 @@ public:
 
     // An object is complete: its declared properties (with their values) and signals. The object
     // gets the values this process already knows of its keys.
-    void attach(CrossProcessState *object, const QString &category, const QVariantHash &declared, bool host);
+    void attach(CrossProcessState *object, const QString &category, const QVariantHash &declared);
     void detach(CrossProcessState *object, const QString &category);
 
     // From an object: one of its properties changed, one of its signals was emitted
@@ -82,7 +83,8 @@ public:
 private:
     struct Entry {
         QVariant value;
-        bool changed = false;
+        // 0: the declared default; one more with every change
+        quint64 revision = 0;
     };
 
     // A participant, as the host sees it
@@ -105,10 +107,10 @@ private:
         quint64 seq = 0;
         // Host: a peer that does not get it (the sender of an event)
         quint32 except = 0;
+        quint64 revision = 0;
     };
 
     // --- Both roles ---
-    void store(const QString &category, const QString &key, const QVariant &value, bool changed);
     void applyToObjects(const QString &category, const QString &key, const QVariant &value, CrossProcessState *except = nullptr);
     void deliverEvent(const QString &category, const QString &name, const QVariantList &args, CrossProcessState *except = nullptr);
     void setSynced(const QString &category, bool synced);
@@ -117,6 +119,17 @@ private:
     void flush();
     QByteArray encode(const Outgoing &message) const;
     QByteArray encodeEntries(Protocol::Kind kind, const QString &category) const;
+
+    // --- The election ---
+    // Hosts if nobody does, else finds the host and waits for it
+    void findHost();
+    // True when this process hosts now; otherwise it watches the process that does
+    bool electHost();
+    bool takeLock();
+    void releaseLock();
+    qint64 lockHolder() const;
+    void watchHolder(int pidfd);
+    void stopWatchingHolder();
 
     // --- Host ---
     bool becomeHost();
@@ -147,13 +160,14 @@ private:
 
     // Host
     QLocalServer *m_server = nullptr;
-    QLockFile *m_lock = nullptr;
     QList<Peer *> m_peers;
     quint32 m_nextPeerId = 1;
 
-    // An object of this process asked to host: when the host it lost the race to is gone, this
-    // process takes over
-    bool m_wantsHost = false;
+    // The election: the lock file (held by the host), the holder's exit while another process hosts
+    int m_lockFd = -1;
+    int m_holderFd = -1;
+    QSocketNotifier *m_holderWatch = nullptr;
+    bool m_retryQueued = false;
 
     // Participant
     QLocalSocket *m_socket = nullptr;
@@ -166,8 +180,9 @@ private:
     QSet<QString> m_joined;
     int m_joinsSent = 0;
     QFileSystemWatcher *m_watcher = nullptr;
-    // The socket file of a host that did not answer: tried again only when it changes
-    qint64 m_failedSocketTime = -1;
+    // The socket file being tried, and the one that did not answer: tried again only when it changes
+    qint64 m_triedSocket = -1;
+    qint64 m_failedSocket = -1;
 };
 
 } // namespace MaiaCrossProcessState

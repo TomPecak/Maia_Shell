@@ -1,35 +1,40 @@
 #pragma once
 
 // CrossProcessState: properties and signals shared by the processes of a session (the layers of a
-// shell are separate processes), declared in QML like Settings {}:
+// shell are separate processes). Declare them once, use them anywhere:
 //
+//   // ShellState.qml (in the qmldir: singleton ShellState 1.0 ShellState.qml)
+//   pragma Singleton
 //   import Maia.CrossProcessState
 //
 //   CrossProcessState {
 //       category: "MaiaShell"                        // same category, same values
-//       host: true                                   // in one process only: it keeps the state
 //       property bool notificationCenterOpen: false
-//       property string dockEdge: "top"
+//       property bool controlCenterOpen: false
+//       readonly property bool anyOpen: notificationCenterOpen || controlCenterOpen   // derived
 //       signal notificationTapped(int notificationId)
 //   }
+//
+//   // In any file of any process
+//   Sheet { open: ShellState.notificationCenterOpen }
+//   Button { onClicked: ShellState.notificationCenterOpen = true }
+//
+// That is all: no server to start, no roles. The first process hosts the state, another one takes
+// over when it is gone (Link.h).
 //
 // The declared properties are ordinary QML properties: bindings to them, on…Changed handlers and
 // Behaviors work; a change in any process reaches the others at once, as if assigned there. A
 // declared signal emitted in one process is emitted in the others too (an event: a process that
-// comes later does not get it). Found by reflection (QMetaObject) when the object is complete; the
-// properties of CrossProcessState itself are not shared.
+// comes later does not get it). Found by reflection (QMetaObject) when the object is complete. A
+// readonly property is not shared: it is derived, in each process, from the shared ones.
 //
-// Rules, as for Settings {}: the shared properties are values, not bindings (a change from another
-// process replaces a binding); objects and lists change as a whole (shell.list = [...], never
-// shell.list.push()), or nobody hears it.
-//
-// host: the process that keeps the state for the others, chosen by the frontend (its longest-living
-// process). Participants that start earlier use their declared values (synced: false) and get the
-// host's when it comes; when a host comes back, changed values of the participants win over its
-// declared defaults. A second host takes part instead (a warning). See Link.h.
+// Rules: a shared property holds a value, not a binding (a change from another process replaces a
+// binding; for a derived value use readonly); objects and lists change as a whole
+// (state.list = [...], never state.list.push()), or nobody hears it.
 
 #include <QHash>
 #include <QObject>
+#include <QPointer>
 #include <QQmlParserStatus>
 #include <QVariant>
 #include <QtQml/qqmlregistration.h>
@@ -51,9 +56,8 @@ class CrossProcessState : public QObject, public QQmlParserStatus
     // What is shared: objects of the same category (in any process) share their properties of the
     // same name. Set once, before the object is complete
     Q_PROPERTY(QString category READ category WRITE setCategory NOTIFY categoryChanged)
-    // This process keeps the state for the others (set once, before the object is complete)
-    Q_PROPERTY(bool host READ host WRITE setHost NOTIFY hostChanged)
-    // The values are those of the session (the host has been reached, or this is the host)
+    // The values are those of the session. False only for a moment: at the start of a process that
+    // is not the first, and while another process takes over from a host that is gone
     Q_PROPERTY(bool synced READ synced NOTIFY syncedChanged)
 
 public:
@@ -62,8 +66,6 @@ public:
 
     QString category() const { return m_category; }
     void setCategory(const QString &category);
-    bool host() const { return m_host; }
-    void setHost(bool host);
     bool synced() const { return m_synced; }
 
     void classBegin() override {}
@@ -71,11 +73,10 @@ public:
 
     // The link of this object (the process's own by default; tests may give another before the
     // object is complete)
-    void setLink(Link *link) { m_link = link; }
+    void setLink(Link *link);
 
 Q_SIGNALS:
     void categoryChanged();
-    void hostChanged();
     void syncedChanged();
 
 private:
@@ -90,9 +91,8 @@ private:
     // From a relay: one of the watched signals was emitted
     void onSignal(int signalIndex, void **args);
 
-    Link *m_link = nullptr;
+    QPointer<Link> m_link;
     QString m_category;
-    bool m_host = false;
     bool m_synced = false;
     bool m_complete = false;
     // While a value or an event from elsewhere is applied: not sent back

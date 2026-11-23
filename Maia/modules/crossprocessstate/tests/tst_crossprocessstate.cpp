@@ -13,7 +13,6 @@
 #include <QJsonDocument>
 #include <QLocalSocket>
 #include <QProcess>
-#include <QRegularExpression>
 #include <QQmlComponent>
 #include <QQmlEngine>
 #include <QSignalSpy>
@@ -21,8 +20,10 @@
 #include <QTest>
 #include <QUrl>
 
+#include <algorithm>
 #include <memory>
 #include <signal.h>
+#include <vector>
 #include <unistd.h>
 
 using namespace MaiaCrossProcessState;
@@ -91,6 +92,14 @@ public:
         return int(std::count_if(m_lines.cbegin(), m_lines.cend(), [&prefix](const QString &l) { return l.startsWith(prefix); }));
     }
     bool synced() const { return last(QStringLiteral("synced ")) == QLatin1String("synced true"); }
+    // Asks the process what it is now: "role host" or "role participant"
+    QString role()
+    {
+        m_lines.removeIf([](const QString &l) { return l.startsWith(QLatin1String("role ")); });
+        send(QStringLiteral("role"));
+        QTest::qWaitFor([this] { return count(QStringLiteral("role ")) > 0 || !running(); }, kTimeout);
+        return last(QStringLiteral("role "));
+    }
     // Waits for a line, woken by the process's output (no sleeping steps): for timing
     bool waitForLine(const QString &line, int timeout = kTimeout)
     {
@@ -158,6 +167,29 @@ private:
 
     static bool waitSynced(const Peer &peer) { return QTest::qWaitFor([&] { return peer.synced(); }, kTimeout); }
 
+    // How many of the running processes host now
+    static int hosts(const std::vector<Peer *> &peers)
+    {
+        int count = 0;
+        for (Peer *peer : peers) {
+            if (peer->running() && peer->role() == QLatin1String("role host"))
+                ++count;
+        }
+        return count;
+    }
+
+    // Everyone settled after a change of host: exactly one hosts, all the others are synced
+    static bool settled(const std::vector<Peer *> &peers)
+    {
+        return QTest::qWaitFor([&] {
+            for (Peer *peer : peers) {
+                if (peer->running() && !peer->synced())
+                    return false;
+            }
+            return hosts(peers) == 1;
+        }, kTimeout);
+    }
+
     // An object of `qml`, completed on `link`
     static CrossProcessState *create(QQmlEngine &engine, const QByteArray &qml, Link *link)
     {
@@ -191,12 +223,16 @@ private Q_SLOTS:
 
     void valuesOfEveryTypeReachEveryProcess()
     {
-        auto host = start({QStringLiteral("--host")});
+        auto host = start();
         auto a = start();
         auto b = start();
         QVERIFY(host && a && b);
         QVERIFY(host->synced());
         QVERIFY(waitSynced(*a) && waitSynced(*b));
+        // Nobody chose: the first one hosts
+        QCOMPARE(host->role(), QStringLiteral("role host"));
+        QCOMPARE(a->role(), QStringLiteral("role participant"));
+        QCOMPARE(b->role(), QStringLiteral("role participant"));
 
         const QList<QPair<QString, QString>> values = {
             {QStringLiteral("flag"), QStringLiteral("true")},
@@ -222,7 +258,7 @@ private Q_SLOTS:
 
     void aLateParticipantGetsTheCurrentState()
     {
-        auto host = start({QStringLiteral("--host")});
+        auto host = start();
         auto a = start();
         QVERIFY(host && a && waitSynced(*a));
         a->send(QStringLiteral("set text \"now\""));
@@ -232,79 +268,71 @@ private Q_SLOTS:
         QVERIFY(late->saw(QStringLiteral("changed text \"now\"")));
     }
 
-    void aParticipantBeforeItsHostKeepsItsChange()
+    void aSingleProcessNeedsNothingElse()
     {
-        auto a = start();
-        QVERIFY(a);
-        QVERIFY(!a->synced());
-        // Without a host: its own value only
-        a->send(QStringLiteral("set text \"early\""));
-        QTRY_VERIFY_WITH_TIMEOUT(a->saw(QStringLiteral("changed text \"early\"")), kTimeout);
-        QElapsedTimer timer;
-        timer.start();
-        auto host = start({QStringLiteral("--host")});
-        QVERIFY(host);
-        // The host's socket appears: the participant connects (inotify, no polling)
-        QVERIFY(waitSynced(*a));
-        qInfo() << "a waiting participant connected" << timer.elapsed() << "ms after the host was started";
-        // A changed value wins over the host's declared default
-        QTRY_VERIFY_WITH_TIMEOUT(host->saw(QStringLiteral("changed text \"early\"")), kTimeout);
+        auto alone = start();
+        QVERIFY(alone);
+        QVERIFY(alone->synced());
+        QCOMPARE(alone->role(), QStringLiteral("role host"));
+        alone->send(QStringLiteral("set text \"alone\""));
+        QTRY_VERIFY_WITH_TIMEOUT(alone->saw(QStringLiteral("changed text \"alone\"")), kTimeout);
     }
 
-    void aRestartedHostGetsTheStateBack()
+    void aHostThatEndsIsReplacedWithTheState()
     {
-        auto host = start({QStringLiteral("--host")});
+        auto host = start();
         auto a = start();
         auto b = start();
         QVERIFY(host && a && b && waitSynced(*a) && waitSynced(*b));
         a->send(QStringLiteral("set text \"kept\""));
         b->send(QStringLiteral("set count 42"));
         QTRY_VERIFY_WITH_TIMEOUT(host->saw(QStringLiteral("changed text \"kept\"")) && host->saw(QStringLiteral("changed count 42")), kTimeout);
+        QTRY_VERIFY_WITH_TIMEOUT(a->saw(QStringLiteral("changed count 42")) && b->saw(QStringLiteral("changed text \"kept\"")), kTimeout);
 
         host->quit();
-        QTRY_VERIFY_WITH_TIMEOUT(!a->synced() && !b->synced(), kTimeout);
-        auto again = start({QStringLiteral("--host")});
-        QVERIFY(again);
-        QVERIFY(waitSynced(*a) && waitSynced(*b));
-        QTRY_VERIFY_WITH_TIMEOUT(again->saw(QStringLiteral("changed text \"kept\"")), kTimeout);
-        QTRY_VERIFY_WITH_TIMEOUT(again->saw(QStringLiteral("changed count 42")), kTimeout);
-        // And it goes on as before
-        again->send(QStringLiteral("set flag true"));
+        QVERIFY(settled({a.get(), b.get()}));
+        auto late = start();
+        QVERIFY(late && waitSynced(*late));
+        QTRY_VERIFY_WITH_TIMEOUT(late->saw(QStringLiteral("changed text \"kept\"")) && late->saw(QStringLiteral("changed count 42")), kTimeout);
+        late->send(QStringLiteral("set flag true"));
         QTRY_VERIFY_WITH_TIMEOUT(a->saw(QStringLiteral("changed flag true")) && b->saw(QStringLiteral("changed flag true")), kTimeout);
     }
 
     void aCrashedHostIsReplaced()
     {
-        auto host = start({QStringLiteral("--host")});
+        auto host = start();
         auto a = start();
-        QVERIFY(host && a && waitSynced(*a));
+        auto b = start();
+        QVERIFY(host && a && b && waitSynced(*a) && waitSynced(*b));
         a->send(QStringLiteral("set text \"before the crash\""));
-        QTRY_VERIFY_WITH_TIMEOUT(host->saw(QStringLiteral("changed text \"before the crash\"")), kTimeout);
-        // No clean end: its socket and its lock stay behind
+        QTRY_VERIFY_WITH_TIMEOUT(b->saw(QStringLiteral("changed text \"before the crash\"")), kTimeout);
+        // No clean end: its socket file stays behind
         host->crash();
-        QVERIFY(QFile::exists(m_socket));
-        QTRY_VERIFY_WITH_TIMEOUT(!a->synced(), kTimeout);
-        auto again = start({QStringLiteral("--host")});
-        QVERIFY(again);
-        QVERIFY(again->synced());
-        QVERIFY(waitSynced(*a));
-        QTRY_VERIFY_WITH_TIMEOUT(again->saw(QStringLiteral("changed text \"before the crash\"")), kTimeout);
+        QVERIFY(settled({a.get(), b.get()}));
+        auto late = start();
+        QVERIFY(late && waitSynced(*late));
+        QTRY_VERIFY_WITH_TIMEOUT(late->saw(QStringLiteral("changed text \"before the crash\"")), kTimeout);
     }
 
-    void aSecondHostTakesPartInstead()
+    void aProcessFindsTheFilesOfACrashedHost()
     {
-        auto host = start({QStringLiteral("--host")});
-        auto second = start({QStringLiteral("--host")});
-        QVERIFY(host && second);
-        QVERIFY(waitSynced(*second));
-        QTRY_VERIFY_WITH_TIMEOUT(second->errors().contains(QLatin1String("takes part instead")), kTimeout);
-        second->send(QStringLiteral("set text \"one state\""));
-        QTRY_VERIFY_WITH_TIMEOUT(host->saw(QStringLiteral("changed text \"one state\"")), kTimeout);
+        auto host = start();
+        QVERIFY(host);
+        host->crash();
+        QVERIFY(QFile::exists(m_socket));
+        QVERIFY(QFile::exists(m_socket + QStringLiteral(".lock")));
+        // Nobody serves them: the next process simply hosts
+        auto next = start();
+        QVERIFY(next);
+        QVERIFY(next->synced());
+        QCOMPARE(next->role(), QStringLiteral("role host"));
+        auto other = start();
+        QVERIFY(other && waitSynced(*other));
     }
 
     void writesAtOnceEndTheSameEverywhere()
     {
-        auto host = start({QStringLiteral("--host")});
+        auto host = start();
         auto a = start();
         auto b = start();
         QVERIFY(host && a && b && waitSynced(*a) && waitSynced(*b));
@@ -322,7 +350,7 @@ private Q_SLOTS:
 
     void anEventReachesEveryOtherProcessOnce()
     {
-        auto host = start({QStringLiteral("--host")});
+        auto host = start();
         auto a = start();
         auto b = start();
         QVERIFY(host && a && b && waitSynced(*a) && waitSynced(*b));
@@ -342,7 +370,7 @@ private Q_SLOTS:
 
     void aBurstOfChangesIsOneMessage()
     {
-        auto host = start({QStringLiteral("--host")});
+        auto host = start();
         auto a = start();
         auto b = start();
         QVERIFY(host && a && b && waitSynced(*a) && waitSynced(*b));
@@ -356,7 +384,7 @@ private Q_SLOTS:
 
     void aChangeArrivesQuickly()
     {
-        auto host = start({QStringLiteral("--host")});
+        auto host = start();
         auto a = start();
         auto b = start();
         QVERIFY(host && a && b && waitSynced(*a) && waitSynced(*b));
@@ -377,7 +405,7 @@ private Q_SLOTS:
 
     void aKilledParticipantDoesNotDisturbTheOthers()
     {
-        auto host = start({QStringLiteral("--host")});
+        auto host = start();
         auto a = start();
         auto b = start();
         QVERIFY(host && a && b && waitSynced(*a) && waitSynced(*b));
@@ -390,86 +418,87 @@ private Q_SLOTS:
         QVERIFY(again->saw(QStringLiteral("changed text \"after a's crash\"")));
     }
 
-    void twoHostsStartingAtOnceAreOneHost()
+    void processesStartingAtOnceElectOneHost()
     {
         for (int round = 0; round < 5; ++round) {
             init();
-            // No wait between them: both race for the lock
-            auto first = std::make_unique<Peer>(m_socket, QStringList{QStringLiteral("--host")});
-            auto second = std::make_unique<Peer>(m_socket, QStringList{QStringLiteral("--host")});
-            QVERIFY(first->started() && second->started());
-            QVERIFY(waitSynced(*first) && waitSynced(*second));
-            const int warned = int(first->errors().contains(QLatin1String("takes part instead")))
-                + int(second->errors().contains(QLatin1String("takes part instead")));
-            QTRY_COMPARE_WITH_TIMEOUT(int(first->errors().contains(QLatin1String("takes part instead")))
-                                          + int(second->errors().contains(QLatin1String("takes part instead"))),
-                                      1, kTimeout);
-            Q_UNUSED(warned)
-            first->send(QStringLiteral("set count %1").arg(round + 1));
-            QTRY_VERIFY_WITH_TIMEOUT(second->saw(QStringLiteral("changed count %1").arg(round + 1)), kTimeout);
+            // No wait between them: all race for the lock
+            std::vector<std::unique_ptr<Peer>> peers;
+            std::vector<Peer *> all;
+            for (int i = 0; i < 6; ++i) {
+                peers.push_back(std::make_unique<Peer>(m_socket, QStringList{}));
+                all.push_back(peers.back().get());
+            }
+            for (Peer *peer : all)
+                QVERIFY(peer->started());
+            QVERIFY(QTest::qWaitFor([&] { return std::all_of(all.begin(), all.end(), [](Peer *p) { return p->saw(QStringLiteral("ready")); }); }, kTimeout));
+            QVERIFY(settled(all));
+            all[round]->send(QStringLiteral("set count %1").arg(round + 1));
+            for (Peer *peer : all)
+                QTRY_VERIFY_WITH_TIMEOUT(peer->saw(QStringLiteral("changed count %1").arg(round + 1)), kTimeout);
         }
     }
 
-    void aWouldBeHostTakesOverWhenTheHostDies()
+    void aChangeMadeAsTheHostDiesIsNotLost()
     {
-        auto host = start({QStringLiteral("--host")});
-        auto spare = start({QStringLiteral("--host")});
-        auto a = start();
-        QVERIFY(host && spare && a && waitSynced(*spare) && waitSynced(*a));
-        a->send(QStringLiteral("set text \"survives\""));
-        QTRY_VERIFY_WITH_TIMEOUT(spare->saw(QStringLiteral("changed text \"survives\"")), kTimeout);
-        host->crash();
-        // The spare hosts now (synced stays true there, or comes back at once); a reconnects to it
-        QTRY_VERIFY_WITH_TIMEOUT(spare->synced(), kTimeout);
-        QVERIFY(waitSynced(*a));
-        a->send(QStringLiteral("set count 99"));
-        QTRY_VERIFY_WITH_TIMEOUT(spare->saw(QStringLiteral("changed count 99")), kTimeout);
-        auto late = start();
-        QVERIFY(late && waitSynced(*late));
-        QVERIFY(late->saw(QStringLiteral("changed text \"survives\"")));
-        QVERIFY(late->saw(QStringLiteral("changed count 99")));
+        for (int round = 0; round < 5; ++round) {
+            init();
+            auto host = start();
+            auto a = start();
+            auto b = start();
+            QVERIFY(host && a && b && waitSynced(*a) && waitSynced(*b));
+            // Everyone has an older changed value: the next host must not bring it back
+            b->send(QStringLiteral("set text \"old\""));
+            QTRY_VERIFY_WITH_TIMEOUT(a->saw(QStringLiteral("changed text \"old\"")) && host->saw(QStringLiteral("changed text \"old\"")), kTimeout);
+            a->send(QStringLiteral("set text \"new\""));
+            host->crash();
+            QVERIFY(settled({a.get(), b.get()}));
+            QTRY_COMPARE_WITH_TIMEOUT(b->last(QStringLiteral("changed text ")), QStringLiteral("changed text \"new\""), kTimeout);
+            QCOMPARE(a->last(QStringLiteral("changed text ")), QStringLiteral("changed text \"new\""));
+        }
     }
 
-    void changesWithoutAHostAreNotLost()
+    void aChangeRightBeforeTheEndOfAProcessArrives()
     {
-        auto host = start({QStringLiteral("--host")});
+        auto host = start();
         auto a = start();
-        auto b = start();
-        QVERIFY(host && a && b && waitSynced(*a) && waitSynced(*b));
-        host->crash();
-        QTRY_VERIFY_WITH_TIMEOUT(!a->synced() && !b->synced(), kTimeout);
-        a->send(QStringLiteral("set text \"while nobody hosted\""));
-        QTRY_VERIFY_WITH_TIMEOUT(a->saw(QStringLiteral("changed text \"while nobody hosted\"")), kTimeout);
-        auto again = start({QStringLiteral("--host")});
-        QVERIFY(again && waitSynced(*a) && waitSynced(*b));
-        QTRY_VERIFY_WITH_TIMEOUT(again->saw(QStringLiteral("changed text \"while nobody hosted\"")), kTimeout);
-        QTRY_VERIFY_WITH_TIMEOUT(b->saw(QStringLiteral("changed text \"while nobody hosted\"")), kTimeout);
+        QVERIFY(host && a && waitSynced(*a));
+        a->send(QStringLiteral("set text \"last words\"\nquit"));
+        QTRY_VERIFY_WITH_TIMEOUT(host->saw(QStringLiteral("changed text \"last words\"")), kTimeout);
     }
 
-    void aFlappingHostEndsInOneState()
+    void hostsDyingOneAfterAnotherLeaveOneState()
     {
-        auto a = start();
-        auto b = start();
-        QVERIFY(a && b);
-        for (int i = 0; i < 5; ++i) {
-            auto host = start({QStringLiteral("--host")});
-            QVERIFY(host && waitSynced(*a) && waitSynced(*b));
-            a->send(QStringLiteral("set count %1").arg(i + 1));
-            QTRY_VERIFY_WITH_TIMEOUT(b->saw(QStringLiteral("changed count %1").arg(i + 1)), kTimeout);
+        std::vector<std::unique_ptr<Peer>> peers;
+        std::vector<Peer *> alive;
+        for (int i = 0; i < 6; ++i) {
+            peers.push_back(start());
+            QVERIFY(peers.back());
+            alive.push_back(peers.back().get());
+        }
+        QVERIFY(settled(alive));
+        // Whoever hosts dies, clean and crashed in turn, until two are left
+        for (int i = 0; i < 4; ++i) {
+            const auto host = std::find_if(alive.begin(), alive.end(), [](Peer *p) { return p->role() == QLatin1String("role host"); });
+            QVERIFY(host != alive.end());
+            Peer *dying = *host;
+            alive.erase(host);
+            alive.front()->send(QStringLiteral("set count %1").arg(i + 1));
+            QTRY_VERIFY_WITH_TIMEOUT(dying->saw(QStringLiteral("changed count %1").arg(i + 1)), kTimeout);
             if (i % 2)
-                host->crash();
+                dying->crash();
             else
-                host->quit();
-            QTRY_VERIFY_WITH_TIMEOUT(!a->synced() && !b->synced(), kTimeout);
+                dying->quit();
+            QVERIFY(settled(alive));
+            alive.back()->send(QStringLiteral("set text \"round %1\"").arg(i));
+            for (Peer *peer : alive)
+                QTRY_VERIFY_WITH_TIMEOUT(peer->saw(QStringLiteral("changed text \"round %1\"").arg(i)), kTimeout);
         }
-        auto last = start({QStringLiteral("--host")});
-        QVERIFY(last && waitSynced(*a) && waitSynced(*b));
-        QTRY_VERIFY_WITH_TIMEOUT(last->saw(QStringLiteral("changed count 5")), kTimeout);
     }
 
     void manyParticipantsSeeEachEventOnce()
     {
-        auto host = start({QStringLiteral("--host")});
+        auto host = start();
         QVERIFY(host);
         std::vector<std::unique_ptr<Peer>> peers;
         for (int i = 0; i < 10; ++i) {
@@ -493,7 +522,7 @@ private Q_SLOTS:
 
     void aBrokenProcessCannotHurtTheHost()
     {
-        auto host = start({QStringLiteral("--host")});
+        auto host = start();
         auto a = start();
         QVERIFY(host && a && waitSynced(*a));
         const auto rogue = [this](const QByteArray &bytes) {
@@ -521,33 +550,55 @@ private Q_SLOTS:
         QTRY_VERIFY_WITH_TIMEOUT(host->saw(QStringLiteral("changed text \"still fine\"")), kTimeout);
     }
 
-    void aWaitingParticipantUsesNoProcessorTime()
+    void anIdleProcessUsesNoProcessorTime()
     {
-        // A host that crashed: its socket file stays, nobody answers it
-        auto host = start({QStringLiteral("--host")});
-        QVERIFY(host);
-        host->crash();
-        QVERIFY(QFile::exists(m_socket));
+        auto host = start();
         auto a = start();
-        QVERIFY(a);
+        QVERIFY(host && a && waitSynced(*a));
         QTest::qWait(300);
+        const qint64 hostBefore = host->cpuTicks();
         const qint64 before = a->cpuTicks();
-        QVERIFY(before >= 0);
+        QVERIFY(before >= 0 && hostBefore >= 0);
         QTest::qWait(2000);
         const qint64 used = a->cpuTicks() - before;
-        qInfo() << "a participant waiting for a host used" << used * 1000 / ::sysconf(_SC_CLK_TCK) << "ms of processor time in 2 s";
+        const qint64 hostUsed = host->cpuTicks() - hostBefore;
+        qInfo() << "in 2 s idle: the participant used" << used * 1000 / ::sysconf(_SC_CLK_TCK) << "ms, the host"
+                << hostUsed * 1000 / ::sysconf(_SC_CLK_TCK) << "ms of processor time";
         // Nothing polls: at most scheduler noise
-        QVERIFY2(used <= 2, qPrintable(QString::number(used)));
-        QVERIFY(!a->synced());
+        QVERIFY2(used <= 2 && hostUsed <= 2, qPrintable(QStringLiteral("%1 %2").arg(used).arg(hostUsed)));
     }
 
-    void objectsOfOneProcessShareWithoutAHost()
+    void aSingletonIsAllAFrontendNeeds()
+    {
+        auto a = start({QStringLiteral("--singleton")});
+        auto b = start({QStringLiteral("--singleton")});
+        QVERIFY(a && b && waitSynced(*a) && waitSynced(*b));
+        // A write by name in one process; in the other a binding to a derived property follows
+        a->send(QStringLiteral("set text \"shared\""));
+        QTRY_VERIFY_WITH_TIMEOUT(b->saw(QStringLiteral("changed text \"shared\"")), kTimeout);
+        QTRY_VERIFY_WITH_TIMEOUT(b->saw(QStringLiteral("derived SHARED")), kTimeout);
+        QVERIFY(a->saw(QStringLiteral("derived SHARED")));
+        // A signal, once each
+        b->send(QStringLiteral("fire 5 x"));
+        const QString event = QStringLiteral("event ping [5]");
+        QTRY_VERIFY_WITH_TIMEOUT(a->saw(event), kTimeout);
+        QTest::qWait(100);
+        QCOMPARE(a->count(event), 1);
+        QCOMPARE(b->count(event), 1);
+        // The host goes: the singleton in the other process goes on with the state
+        a->crash();
+        QTRY_VERIFY_WITH_TIMEOUT(b->role() == QLatin1String("role host"), kTimeout);
+        auto c = start({QStringLiteral("--singleton")});
+        QVERIFY(c && waitSynced(*c));
+        QTRY_VERIFY_WITH_TIMEOUT(c->saw(QStringLiteral("derived SHARED")), kTimeout);
+    }
+
+    void objectsOfOneProcessShareAtOnce()
     {
         auto a = start({QStringLiteral("--twin")});
         QVERIFY(a);
         a->send(QStringLiteral("set text \"twins\""));
         QTRY_VERIFY_WITH_TIMEOUT(a->saw(QStringLiteral("twin text \"twins\"")), kTimeout);
-        QVERIFY(!a->synced());
     }
 
     // --- Many objects in one process ---
@@ -556,60 +607,29 @@ private Q_SLOTS:
     {
         QQmlEngine engine;
         engine.addImportPath(QStringLiteral(MAIA_QML_BUILD_DIR));
-        Link host(m_processSocket);
-        std::unique_ptr<CrossProcessState> hostObject(
-            create(engine, "CrossProcessState { category: \"Fifty\"; host: true; property int value: 0 }", &host));
+        // Two links on one socket stand for two processes
+        Link host(m_socket);
+        Link participant(m_socket);
+        const QByteArray qml = "CrossProcessState { category: \"Fifty\"; property int value: 0 }";
+        std::unique_ptr<CrossProcessState> hostObject(create(engine, qml, &host));
         QVERIFY(hostObject && host.isHost());
-
-        // Fifty objects QML makes itself: they use the process's own link, a participant
-        Link *own = Link::instance();
-        const int joinsBefore = own->joinsSent();
-        QQmlComponent component(&engine);
-        component.setData(R"(
-            import QtQml
-            import QtQml.Models
-            import Maia.CrossProcessState
-            Instantiator { model: 50; delegate: CrossProcessState { category: "Fifty"; property int value: 0 } })", QUrl());
-        std::unique_ptr<QObject> instantiator(component.create());
-        QVERIFY2(instantiator, qPrintable(component.errorString()));
-        QTRY_VERIFY_WITH_TIMEOUT(own->isSynced(QStringLiteral("Fifty")), kTimeout);
-        QCOMPARE(own->joinsSent() - joinsBefore, 1);
+        std::vector<std::unique_ptr<CrossProcessState>> objects;
+        for (int i = 0; i < 50; ++i) {
+            objects.emplace_back(create(engine, qml, &participant));
+            QVERIFY(objects.back());
+        }
+        QVERIFY(!participant.isHost());
+        QTRY_VERIFY_WITH_TIMEOUT(participant.isSynced(QStringLiteral("Fifty")), kTimeout);
+        QCOMPARE(participant.joinsSent(), 1);
 
         hostObject->setProperty("value", 5);
-        QTRY_VERIFY_WITH_TIMEOUT([&] {
-            for (int i = 0; i < 50; ++i) {
-                QObject *object = nullptr;
-                QMetaObject::invokeMethod(instantiator.get(), "objectAt", Q_RETURN_ARG(QObject *, object), Q_ARG(int, i));
-                if (!object || object->property("value").toInt() != 5)
-                    return false;
-            }
-            return true;
-        }(), kTimeout);
+        QTRY_VERIFY_WITH_TIMEOUT(std::all_of(objects.begin(), objects.end(), [](const auto &o) { return o->property("value").toInt() == 5; }), kTimeout);
         // A change in one of them: the host and the 49 others
-        QObject *tenth = nullptr;
-        QMetaObject::invokeMethod(instantiator.get(), "objectAt", Q_RETURN_ARG(QObject *, tenth), Q_ARG(int, 9));
-        tenth->setProperty("value", 6);
+        objects[9]->setProperty("value", 6);
+        QCOMPARE(objects[49]->property("value").toInt(), 6);
         QTRY_COMPARE_WITH_TIMEOUT(hostObject->property("value").toInt(), 6, kTimeout);
-        QObject *last = nullptr;
-        QMetaObject::invokeMethod(instantiator.get(), "objectAt", Q_RETURN_ARG(QObject *, last), Q_ARG(int, 49));
-        QCOMPARE(last->property("value").toInt(), 6);
-    }
-
-    void twoHostObjectsInOneProcessAreOneHost()
-    {
-        QQmlEngine engine;
-        engine.addImportPath(QStringLiteral(MAIA_QML_BUILD_DIR));
-        Link link(m_socket);
-        // The second one is no second host: no warning
-        QTest::failOnWarning(QRegularExpression(QStringLiteral("takes part instead")));
-        std::unique_ptr<CrossProcessState> first(create(engine, "CrossProcessState { category: \"TwoHosts\"; host: true; property int value: 1 }", &link));
-        std::unique_ptr<CrossProcessState> second(create(engine, "CrossProcessState { category: \"TwoHosts\"; host: true; property int value: 1 }", &link));
-        QVERIFY(first && second && link.isHost());
-        QVERIFY(first->synced() && second->synced());
-        first->setProperty("value", 2);
-        QCOMPARE(second->property("value").toInt(), 2);
-        auto peer = start();
-        QVERIFY(peer && waitSynced(*peer));
+        objects.clear();
+        hostObject.reset();
     }
 
     void aRecreatedObjectGetsTheCurrentValue()
@@ -650,7 +670,7 @@ private Q_SLOTS:
         engine.addImportPath(QStringLiteral(MAIA_QML_BUILD_DIR));
         Link link(m_socket);
         std::unique_ptr<CrossProcessState> object(
-            create(engine, "CrossProcessState { category: \"Test\"; host: true; property string text: \"kept\" }", &link));
+            create(engine, "CrossProcessState { category: \"Test\"; property string text: \"kept\" }", &link));
         QVERIFY(object && link.isHost());
         auto a = start();
         QVERIFY(a && waitSynced(*a));
@@ -667,7 +687,7 @@ private Q_SLOTS:
 
     void twinsInAParticipantGetAChangeOnceEach()
     {
-        auto host = start({QStringLiteral("--host")});
+        auto host = start();
         auto twins = start({QStringLiteral("--twin")});
         QVERIFY(host && twins && waitSynced(*twins));
         host->send(QStringLiteral("set text \"to both\""));
@@ -722,7 +742,7 @@ private Q_SLOTS:
         QCOMPARE(two->property("value").toInt(), 5);
         QVERIFY(QMetaObject::invokeMethod(root, "sayHello"));
         QCOMPARE(Link::wireValue(two->property("heard")).toMap().value(QStringLiteral("k")).toInt(), 3);
-        QVERIFY(!one->property("synced").toBool());
+        QVERIFY(one->property("synced").toBool());
     }
 
     void wireValuesAreWhatTravels()
