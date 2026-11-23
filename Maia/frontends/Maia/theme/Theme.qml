@@ -3,26 +3,39 @@ pragma Singleton
 import QtQuick
 import QtCore
 
+import MaiaFrontend
+
 // Colors of the Maia frontend: the semantic colors of iPadOS 18 (UIKit: label, fills, grouped
 // backgrounds, separator, system colors) in a light and a dark variant. Opaque surfaces only, no
 // blur: a layer-shell surface cannot see the windows below it.
 //
 // The mode is kept between sessions (the [MaiaAppearance] group of ~/.config/maia/<version>/maia.conf).
-// Each layer of the frontend is its own process with its own copy of this singleton: a change made
-// in one layer reaches the others only at their next start (TODO.md, item 7).
+// Each layer of the frontend is its own process with its own copy of this singleton: the layer where
+// the mode is changed saves it and tells the others (ShellState), which follow at once.
 QtObject {
     id: theme
 
-    readonly property bool dark: settings.dark
+    readonly property bool dark: currentDark
+    property bool currentDark: settings.dark
 
     function setDark(value) {
+        currentDark = value
         settings.dark = value
+        ShellState.darkModeSet(value)
     }
 
     property Settings settings: Settings {
         category: "MaiaAppearance"
 
         property bool dark: false
+    }
+
+    property Connections otherLayers: Connections {
+        target: ShellState
+
+        function onDarkModeSet(value) {
+            theme.currentDark = value
+        }
     }
 
     // --- Text ---

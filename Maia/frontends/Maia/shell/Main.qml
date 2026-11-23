@@ -69,6 +69,18 @@ Window{
         }
     }
 
+    // Above everything, fullscreen windows included (notification banners). The process has no
+    // window of its own to show: LayerOverlay.qml shows its surfaces only while they have something
+    MProxyWindow{
+        id: overlayLayer
+        source: "LayerOverlay.qml"
+
+        proxyVisible: false
+        width: 100
+        height: 100
+        swapInterval: 1
+    }
+
     AvailableFonts{
         anchors.right: root.right
         anchors.bottom: root.bottom

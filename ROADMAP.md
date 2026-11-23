@@ -121,9 +121,12 @@ fallback.
 
 ## 5. Other shells
 
-- [ ] **Maia (tablet face):** notifications, the notification center and job progress (it has
-      none); then the rest on the same services as Lumen (dock, control center already use
-      `Maia.Windows`, `Maia.Network`, `Maia.Power`).
+- [x] **Maia (tablet face): notification banners** (2026-11-23): a new overlay layer process, one
+      banner at the top (tap, swipe up, pull down, actions, answer, files, sound, quiet over
+      fullscreen). The layers share state through `Maia.CrossProcessState` (`ShellState`).
+- [ ] **Maia (tablet face), what is left:** the notification center (a sheet from the clock, do not
+      disturb in the Control Center), job progress, dock badges; then the rest on the same services
+      as Lumen (dock, control center already use `Maia.Windows`, `Maia.Network`, `Maia.Power`).
 - [ ] **Ubuntu 24.04, XPLuna, Experimental:** decide which stay. Those that stay move from the
       X11-era classes (`X11WindowManagerService`, `MWindowManagerX11`) to the services; the others go
       to an archive or stay as examples.

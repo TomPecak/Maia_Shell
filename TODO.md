@@ -317,8 +317,8 @@ Light/dark and the accent are kept by each frontend in the shared `maia.conf` (Q
   frontend can switch the look;
 - Maia Settings looks like Lumen by reading Lumen's private keys (`LumenFrontend/accentIndex`),
   a detail of one frontend;
-- QSettings caches per process: a change in the shell reaches Maia Settings, the layers of the Maia
-  frontend and other processes only at their next start;
+- QSettings caches per process: a change in the shell reaches Maia Settings and other processes
+  only at their next start (the layers of the Maia frontend tell each other, through `ShellState`);
 - ordinary applications never learn it: Firefox, GTK and libadwaita apps ask the desktop portal
   (`org.freedesktop.appearance`: `color-scheme`, `accent-color`), Qt/KDE apps read `kdeglobals`.
 

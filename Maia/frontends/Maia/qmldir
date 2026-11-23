@@ -1,3 +1,4 @@
 module MaiaFrontend
 
 singleton Theme 1.0 theme/Theme.qml
+singleton ShellState 1.0 shell/ShellState.qml
