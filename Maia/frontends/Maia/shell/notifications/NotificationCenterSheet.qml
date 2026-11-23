@@ -41,6 +41,8 @@ Item {
     // Shown from opening until the closing animation has finished
     property bool shown: false
     property date now: new Date()
+    // The row with its "Clear" open: one at a time
+    property NotificationRow openRow: null
 
     readonly property int panelWidth: Math.min(440, width - 2 * screenMargin)
     readonly property real dockGap: 12
@@ -52,7 +54,13 @@ Item {
 
     onOpenChanged: open ? d.show() : d.hide()
 
-    Keys.onEscapePressed: sheet.closeRequested()
+    // Escape closes what was opened last: an open "Clear", then the panel
+    Keys.onEscapePressed: {
+        if (sheet.openRow)
+            sheet.openRow.closeReveal()
+        else
+            sheet.closeRequested()
+    }
 
     // Takes the keyboard while it is open
     Item {
@@ -126,6 +134,7 @@ Item {
         MouseArea {
             anchors.fill: parent
             acceptedButtons: Qt.AllButtons
+            onPressed: d.closeOpenRow()
             onWheel: function (wheel) { wheel.accepted = true }
         }
 
@@ -207,6 +216,9 @@ Item {
             flickableDirection: Flickable.VerticalFlick
             model: sheet.groups
 
+            // Scrolling leaves an open "Clear" behind
+            onMovementStarted: d.closeOpenRow()
+
             ScrollIndicator.vertical: ScrollIndicator {
             }
 
@@ -215,6 +227,18 @@ Item {
 
                 width: list.width
                 now: sheet.now
+                anotherRevealed: sheet.openRow !== null && sheet.openRow !== rowDelegate
+
+                onAttentionTaken: {
+                    if (sheet.openRow !== rowDelegate)
+                        d.closeOpenRow()
+                }
+                onRevealedChanged: {
+                    if (revealed)
+                        sheet.openRow = rowDelegate
+                    else if (sheet.openRow === rowDelegate)
+                        sheet.openRow = null
+                }
 
                 onGroupToggled: key => sheet.groups.toggleGroup(key)
                 onGroupCleared: key => sheet.groups.dismissGroup(key)
@@ -348,7 +372,13 @@ Item {
             keyHandler.forceActiveFocus()
         }
 
+        function closeOpenRow() {
+            if (sheet.openRow)
+                sheet.openRow.closeReveal()
+        }
+
         function hide() {
+            closeOpenRow()
             openAnimation.stop()
             closeAnimation.restart()
             sheet.dismissed()

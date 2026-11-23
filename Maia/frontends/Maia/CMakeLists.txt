@@ -55,6 +55,7 @@ qt_add_qml_module(MaiaFrontend
         QML_FILES shell/notifications/NotificationCard.qml
         QML_FILES shell/notifications/NotificationCenterSheet.qml
         QML_FILES shell/notifications/NotificationRow.qml
+        QML_FILES shell/notifications/SwipeRules.js
         QML_FILES shell/session/SessionActionButton.qml
         QML_FILES shell/session/SessionScreen.qml
         QML_FILES shell/status/PowerButton.qml

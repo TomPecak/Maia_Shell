@@ -52,6 +52,8 @@ Rectangle {
     property var now: null
     // Create the expanded part ahead (a banner); a list of many creates it when it is asked for
     property bool createExtrasAhead: true
+    // Its cross may show (not while a holder shows another way to delete it)
+    property bool closable: true
 
     readonly property bool critical: urgency === 2
     // A critical one shows at once what can be done about it
@@ -321,7 +323,7 @@ Rectangle {
 
         NotificationButton {
             objectName: "closeButton"
-            visible: hover.hovered || card.expanded || card.critical
+            visible: card.closable && (hover.hovered || card.expanded || card.critical)
             round: true
             glyph: Qt.resolvedUrl("../../assets/icons/window-close-symbolic.svg")
             text: qsTr("Dismiss notification")

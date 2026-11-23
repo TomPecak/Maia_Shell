@@ -65,15 +65,23 @@ Item {
             return findChild(row, "rowCard").parent
         }
 
+        // From the right of the card, so that a long swipe left stays inside the window
         function swipe(row, distance) {
             const y = mover(row).y + 40
-            mousePress(row, 200, y)
-            for (let i = 1; i <= 8; ++i) {
-                mouseMove(row, 200 + distance * i / 8, y)
+            const from = distance < 0 ? 400 : 60
+            mousePress(row, from, y)
+            for (let i = 1; i <= 10; ++i) {
+                mouseMove(row, from + distance * i / 10, y)
                 wait(16)
             }
             wait(120)
-            mouseRelease(row, 200 + distance, y)
+            mouseRelease(row, from + distance, y)
+        }
+
+        function reveal(row) {
+            swipe(row, -150)
+            tryVerify(() => row.revealed)
+            tryCompare(mover(row), "x", -112)
         }
 
         function test_aSingleOneIsNotAStack() {
@@ -116,43 +124,122 @@ Item {
             tryVerify(() => findChild(row, "action:a") !== null)
         }
 
-        function test_aSwipeClearsOne() {
+        function test_aSwipeOnlyOpensClear() {
             const row = make()
             const dismissed = spy(row, "dismissed")
-            swipe(row, 220)
+            reveal(row)
+            wait(300)
+            compare(dismissed.count, 0)
+            verify(findChild(row, "clearSwipeButton").visible)
+            compare(findChild(row, "clearSwipeLabel").text, "Clear")
+        }
+
+        function test_noCrossNextToClear() {
+            const row = make({ urgency: 2 })
+            verify(findChild(row, "closeButton").visible)
+            reveal(row)
+            mouseMove(row, 60, mover(row).y + 40)
+            wait(40)
+            verify(!findChild(row, "closeButton").visible)
+            row.closeReveal()
+            tryCompare(mover(row), "x", 0)
+            verify(findChild(row, "closeButton").visible)
+        }
+
+        function test_aTapOnClearDeletes() {
+            const row = make()
+            const dismissed = spy(row, "dismissed")
+            reveal(row)
+            mouseClick(findChild(row, "clearSwipeButton"))
+            tryCompare(dismissed, "count", 1)
+            verify(!row.revealed)
+        }
+
+        function test_aTapOnTheCardOnlyClosesIt() {
+            const row = make({ hasDefaultAction: true })
+            const invoked = spy(row, "defaultInvoked")
+            const dismissed = spy(row, "dismissed")
+            reveal(row)
+            mouseClick(row, 60, mover(row).y + 40)
+            verify(!row.revealed)
+            tryCompare(mover(row), "x", 0)
+            compare(invoked.count, 0)
+            compare(dismissed.count, 0)
+        }
+
+        function test_swipingBackCloses() {
+            const row = make()
+            reveal(row)
+            mousePress(row, 200, 40)
+            for (let x = 210; x <= 330; x += 12) {
+                mouseMove(row, x, 40)
+                wait(16)
+            }
+            wait(120)
+            mouseRelease(row, 330, 40)
+            verify(!row.revealed)
+            tryCompare(mover(row), "x", 0)
+        }
+
+        function test_aLongSwipeDeletes() {
+            const row = make()
+            const dismissed = spy(row, "dismissed")
+            swipe(row, -340)
             tryCompare(dismissed, "count", 1)
         }
 
-        function test_aSwipeTheOtherWayToo() {
-            const row = make()
-            const dismissed = spy(row, "dismissed")
-            swipe(row, -180)
-            tryCompare(dismissed, "count", 1)
-        }
-
-        function test_aSwipeOnAStackClearsTheGroup() {
+        function test_aLongSwipeOnAStackClearsTheGroup() {
             const row = make({ groupCount: 3 })
             const cleared = spy(row, "groupCleared")
             const dismissed = spy(row, "dismissed")
-            swipe(row, 220)
+            swipe(row, -340)
             tryCompare(cleared, "count", 1)
             compare(cleared.signalArguments[0][0], "org.mail")
             compare(dismissed.count, 0)
         }
 
-        function test_aShortSwipeComesBack() {
+        function test_aStackSaysClearAll() {
+            const row = make({ groupCount: 3 })
+            reveal(row)
+            compare(findChild(row, "clearSwipeLabel").text, "Clear All")
+            verify(mover(row).x === -112)
+            verify(findChild(row, "clearSwipeLabel").opacity > 0)
+        }
+
+        function test_toTheRightNothingIsDeleted() {
             const row = make()
             const dismissed = spy(row, "dismissed")
-            swipe(row, 40)
-            tryVerify(() => mover(row).x === 0)
+            swipe(row, 300)
+            verify(!row.revealed)
+            tryCompare(mover(row), "x", 0)
+            wait(250)
             compare(dismissed.count, 0)
         }
 
         function test_aClearedRowThatStaysComesBack() {
             const row = make()
-            swipe(row, 240)
+            swipe(row, -340)
             tryVerify(() => Math.abs(mover(row).x) > 400)
             tryVerify(() => mover(row).x === 0, 2500)
+            verify(!row.revealed)
+        }
+
+        function test_whileAnotherIsOpenATapOnlyClosesThat() {
+            const row = make({ hasDefaultAction: true })
+            row.anotherRevealed = true
+            const invoked = spy(row, "defaultInvoked")
+            const taken = spy(row, "attentionTaken")
+            mouseClick(row, 150, 30)
+            compare(taken.count, 1)
+            compare(invoked.count, 0)
+        }
+
+        function test_closeRevealFromOutside() {
+            const row = make()
+            reveal(row)
+            row.closeReveal()
+            verify(!row.revealed)
+            tryCompare(mover(row), "x", 0)
         }
 
         function test_anUnfoldedGroupHasAHeader() {
