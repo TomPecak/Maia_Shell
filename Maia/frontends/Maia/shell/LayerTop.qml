@@ -2,6 +2,7 @@ import QtQuick
 import org.kde.layershell 1.0 as LayerShell
 
 import Maia.Backend as Maia
+import MaiaFrontend
 
 import "controlcenter"
 import "dock"
@@ -78,10 +79,23 @@ Window{
         target: dock
 
         function onDraggingChanged() {
-            if (!dock.dragging)
+            if (!dock.dragging) {
+                root.publishDock()
                 settleTimer.restart()
+            }
         }
     }
+
+    // Tells the other layers where the dock goes at the moment of the release, not when it has
+    // arrived: what keeps clear of it (the banners) moves together with it
+    function publishDock() {
+        ShellState.dockEdge = dock.edge
+        ShellState.dockStrip = stripThickness
+        ShellState.dockScreen = screen ? screen.name : ""
+    }
+
+    Component.onCompleted: publishDock()
+    onScreenChanged: publishDock()
 
 
     // Na Waylandzie pozycji okna nie ustawia się przez x/y (kompozytor je ignoruje),

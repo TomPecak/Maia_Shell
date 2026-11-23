@@ -47,6 +47,7 @@ qt_add_qml_module(MaiaFrontend
         QML_FILES shell/notifications/ActionGlyphs.js
         QML_FILES shell/notifications/BannerButton.qml
         QML_FILES shell/notifications/BannerFiles.qml
+        QML_FILES shell/notifications/BannerPlacement.qml
         QML_FILES shell/notifications/BannerReplyField.qml
         QML_FILES shell/notifications/BannerWindow.qml
         QML_FILES shell/notifications/NotificationBanner.qml
