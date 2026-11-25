@@ -4,6 +4,10 @@ The notification server of a Maia session. It keeps the session's notifications,
 and whichever shell shows them: a shell that restarts, or is switched for another, finds the list as
 it was. A shell only draws.
 
+The whole picture (what reaches it, its modules, its sockets, who uses it, the API):
+[docs/maia-notifications-service.svg](docs/maia-notifications-service.svg); its place in the session:
+`doc/diagrams/maia-project-map.svg`.
+
 ```
 applications ──D-Bus: org.freedesktop.Notifications──┐  (+ KDE: inline reply, Inhibit)
                                                       ├──► hub: the list, the rules ──Cap'n Proto──► shells

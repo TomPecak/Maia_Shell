@@ -3,8 +3,8 @@
 
     python3 <path>/service_diagrams.py              (from any directory)
 
-writes maia-windows-service.svg, maia-network-service.svg and maia-appearance-service.svg
-into the current directory (the repository keeps them in Maia/services/<service>/docs/). Every diagram has the same layout, so one explains the others:
+writes maia-windows-service.svg, maia-network-service.svg, maia-appearance-service.svg and
+maia-notifications-service.svg into the current directory (the repository keeps them in Maia/services/<service>/docs/). Every diagram has the same layout, so one explains the others:
 
     left: what the service uses        middle: the service process      right: the Maia side
     (system processes, buses, files)   (its modules, the contract)      (the QML module, its users)
@@ -650,7 +650,207 @@ def appearance():
     finish(s, y, api, repo, "maia-appearance-service.svg")
 
 
+# ---------------------------------------------------------------------------------------------
+# maia-notifications-service
+# ---------------------------------------------------------------------------------------------
+
+def notifications():
+    s = Svg(W)
+    header(s, "maia-notifications-service: the notifications and the jobs of a session",
+           "One list for the whole session, whoever sends and whichever shell shows: org.freedesktop.Notifications and KDE's job views "
+           "on D-Bus, Cap'n Proto for Maia. Repository: Maia/services/notifications/")
+    y0 = TOP + 50
+
+    # --- Left: what reaches the service from the system side, and its files ---
+    apps = Rect(LX, y0, LW, 0)
+    (notifying, tracking), b = stack(s, LX + 14, y0 + 52, LW - 28, [
+        ("Programs that notify", "system", "KNotification, libnotify, notify-send, portal", [
+            "Notify, CloseNotification; get ActionInvoked,",
+            "NotificationReplied, NotificationClosed back;",
+            "Inhibit while presenting"]),
+        ("Job trackers of KIO", "system", "KDynamicJobTracker (Dolphin, Ark)", [
+            "ask org.kde.kuiserver, then report copies to",
+            "org.kde.JobViewServerV2: update, terminate"]),
+    ])
+    apps.h = frame_height(y0, b)
+    s.process(apps, "Programs of the session", "any application (session D-Bus)", PROCESS_SYSTEM)
+    y = apps.bottom + 26
+    entries = s.file(LX, y, LW, "Desktop entries", ["names and icons of the senders; which apps declare",
+                                                    "notifications (X-GNOME-UsesNotifications, .notifyrc)"],
+                     ["$XDG_DATA_DIRS/applications/*.desktop"])
+    # In the order of the modules that use them, so that their lines do not cross
+    y = entries.bottom + 22
+    images = s.file(LX, y, LW, "Images", ["pixels a sender gave (image-data) as small PNGs;",
+                                         "tmpfs, emptied when the service starts"],
+                    ["$XDG_RUNTIME_DIR/maia/notifications/"])
+    y = images.bottom + 22
+    rules = s.file(LX, y, LW, "maia-notifications-service.json", [
+        "do not disturb, the lock screen, every application on or off"],
+        ["$MAIA_CONFIG_DIR/maia-notifications-service.json"])
+
+    # --- Middle: the service ---
+    svc = Rect(MX, y0, MW, 0)
+    (dbus, djobs, desktop, image, markup, settings), a_b = stack(s, AX, y0 + 72, AW, [
+        ("dbus.rs", "rust", "service/src/dbus.rs", [
+            "org.freedesktop.Notifications with KDE's",
+            "extensions: inline reply, inhibitions, x-kde-urls,",
+            "action icons; signals back to the senders"]),
+        ("dbus_jobs.rs", "rust", "service/src/dbus_jobs.rs", [
+            "org.kde.JobViewServer (V1, V2), JobView V3,",
+            "org.kde.kuiserver (requiresJobTracker: false)"]),
+        ("desktop.rs", "rust", "service/src/desktop.rs", [
+            "who a sender is: its desktop entry, name, icon"]),
+        ("image.rs", "rust", "service/src/image.rs", [
+            "image paths, URLs, icon names; pixels scaled",
+            "down and written on a blocking thread"]),
+        ("markup.rs", "rust", "service/src/markup.rs", [
+            "the body made safe: b, i, u, a, br, entities"]),
+        ("settings.rs", "rust", "service/src/settings.rs", [
+            "the user's rules, written atomically"]),
+    ])
+    (hub, model, jobs, rpc, main), b_b = stack(s, BX, y0 + 72, BW, [
+        ("hub.rs", "rust", "service/src/hub.rs", [
+            "the shared state: batches to the shells (at most",
+            "one per frame), events to each sender"]),
+        ("model.rs", "rust", "service/src/model.rs", [
+            "the list: ids, replacing, limits, expiry,",
+            "do not disturb, applications switched off"]),
+        ("jobs.rs, throttle.rs", "rust", "service/src/jobs.rs, throttle.rs", [
+            "shown after 0.5 s, progress at most every",
+            "250 ms; ended kept until dismissed"]),
+        ("rpc.rs", "rust", "service/src/rpc.rs", [
+            "Notifier, NotificationCenter and",
+            "NotificationSettings, one socket each"]),
+        ("main.rs", "rust", "service/src/main.rs", [
+            "one thread (tokio current_thread); sockets",
+            ".../maia/notifications[-center|-settings]-",
+            "$WAYLAND_DISPLAY.sock"]),
+    ])
+    svc.h = frame_height(y0, a_b, b_b)
+    s.process(svc, "maia-notifications-service", "Maia service (Rust)", PROCESS_MAIA,
+              "Maia/services/notifications/service/   ->   <prefix>/libexec/maia-notifications-service")
+    contract = s.card(MX, svc.bottom + 20, MW, "notifications.capnp", "contract", [
+        "three roles, three sockets: a sender sees only its own notifications and jobs (Notifier), a shell sees",
+        "all of them (NotificationCenter), Maia Settings the rules (NotificationSettings)"],
+        "Maia/services/notifications/contract/notifications.capnp")
+
+    # --- Right: the Maia side ---
+    sender = Rect(RX, y0, RW, 0)
+    (nconn, ntypes), sb1 = stack(s, RX + 14, y0 + 58, RW - 28, [
+        ("NotifierConnection", "cpp", "qml/notifications/NotifierConnection.h", [
+            "the Notifier client; sends again after a restart"]),
+        ("Notification, Job, Notifications", "qml", "qml/notifications/", [
+            "send, update, close; actions, a reply, files;",
+            "a job's progress, pause and cancel"]),
+    ])
+    sender.h = frame_height(y0, sb1)
+    s.library(sender, "Maia.Notifications", "QML module (C++), for programs",
+              "qml/notifications/  ->  <qml dir>/Maia/Notifications")
+    cy = sender.bottom + 24
+    center = Rect(RX, cy, RW, 0)
+    (cconn, cobj, cmodels), sb2 = stack(s, RX + 14, cy + 58, RW - 28, [
+        ("CenterConnection", "cpp", "qml/center/CenterConnection.h", [
+            "one per process: the list read in the KJ thread,",
+            "applied in the GUI thread a batch at a time"]),
+        ("NotificationCenter", "qml", "qml/center/NotificationCenter.h", [
+            "actions and replies with an activation token,",
+            "dismiss, do not disturb, cancel / pause a job"]),
+        ("The models", "qml", "qml/center/*Model.h", [
+            "NotificationsModel, NotificationGroupsModel,",
+            "NotificationPopupsModel, JobsModel, JobPopupsModel"]),
+    ])
+    center.h = frame_height(cy, sb2)
+    s.library(center, "Maia.Notifications.Center", "QML module (C++), for shells",
+              "qml/center/  ->  <qml dir>/Maia/Notifications/Center")
+    cy = center.bottom + 24
+    sett = Rect(RX, cy, RW, 0)
+    (sconn,), sb3 = stack(s, RX + 14, cy + 58, RW - 28, [
+        ("NotificationSettings, AppNotificationsModel", "qml", "qml/settings/", [
+            "do not disturb, the lock screen, apps on or off"]),
+    ])
+    sett.h = frame_height(cy, sb3)
+    s.library(sett, "Maia.Notifications.Settings", "QML module (C++), for Maia Settings",
+              "qml/settings/  ->  <qml dir>/Maia/Notifications/Settings")
+    cy = sett.bottom + 30
+    users = Rect(RX, cy, RW, 0)
+    (lumen, maia, msettings, power), ub = stack(s, RX + 14, cy + 52, RW - 28, [
+        ("Lumen", "shell", "frontends/Lumen/shell/windows/", [
+            "popups in the corner, the center by the calendar"]),
+        ("Maia", "shell", "frontends/Maia/shell/notifications/, jobs/", [
+            "banners and the pill of a job (LayerOverlay),",
+            "the center with Activities (LayerTop)"]),
+        ("Maia Settings", "shell", "apps/settings/pages/notifications/", [
+            "the Notifications page"]),
+        ("maia-power-service", "rust", "Maia/services/power/service/src/notify.rs", [
+            "its battery warnings, through Notifier"]),
+    ])
+    users.h = frame_height(cy, ub)
+    s.process(users, "Who uses it", "shells, Maia's apps and services", PROCESS_CLIENT)
+
+    # --- Connections ---
+    s.link(notifying, dbus, "dbus", LANE_L[0], both=True, label="D-Bus")
+    s.link(tracking, djobs, "dbus", LANE_L[1], both=True, label="D-Bus")
+    s.link(desktop, entries, "file", LANE_L[2], label="reads")
+    s.link(image, images, "file", LANE_L[3], label="writes")
+    s.link(settings, rules, "file", LANE_L[4], label="reads, writes")
+    s.link(hub, dbus, "call", LANE_M[0])
+    s.link(hub, djobs, "call", LANE_M[1], a_dy=12)
+    s.down(hub, model, "call")
+    s.down(model, jobs, "call")
+    s.down(jobs, rpc, "call")
+    # One socket per role: the lines leave rpc.rs apart and reach their clients side by side
+    s.link(rpc, nconn, "capnp", LANE_R[0], both=True, a_dy=-18)
+    s.link(rpc, cconn, "capnp", LANE_R[1], both=True, a_dy=-4)
+    s.link(rpc, sconn, "capnp", LANE_R[2], both=True, a_dy=10)
+    s.link(rpc, power, "capnp", LANE_R[3], both=True, a_dy=22)
+    s.arrow([(sett.mid_x(), sett.bottom), (sett.mid_x(), users.y)], "import",
+            label="import: each where it is needed", label_at=(sett.mid_x() + 8, sett.bottom + 20))
+
+    y = max(contract.bottom, images.bottom, users.bottom)
+    api = [
+        [("Notifier", "Maia's programs", [
+            ("notify(request, listener) -> handle", "update(), close()"),
+            ("startJob(job, listener) -> handle", "update, finish, canceled"),
+          ]),
+         ("NotifierListener, JobListener", "the sender's", [
+            ("actionInvoked(key, token), replied(text, token)", ""),
+            ("closed(reason)", ""),
+            ("cancelRequested, suspendRequested, resumeRequested", ""),
+          ])],
+        [("NotificationCenter", "shells", [
+            ("watch(listener) -> subscription", "the list, then changes"),
+            ("invokeAction(id, key, token)", "the app may raise its window"),
+            ("reply(id, text, token)", ""),
+            ("dismiss(id), dismissAll(), expire(id)", ""),
+            ("setDoNotDisturb(enabled, until)", ""),
+            ("cancelJob, suspendJob, dismissJob", ""),
+          ])],
+        [("CenterListener", "the shell's", [
+            ("snapshot(snapshot)", "first"),
+            ("changes(changed, removed)", "a batch per frame"),
+            ("doNotDisturbChanged, jobsChanged", ""),
+            ("shellSettingsChanged", "the lock screen"),
+          ]),
+         ("NotificationSettings", "Maia Settings", [
+            ("watch(listener)", "the whole rules"),
+            ("setDoNotDisturb, setLockScreenNotifications", ""),
+            ("setAppEnabled(key, enabled)", ""),
+          ])],
+    ]
+    repo = [
+        ("Maia/services/notifications/contract/", "the contract: notifications.capnp"),
+        ("Maia/services/notifications/service/", "the service, Rust crate maia-notifications-service (src/lib.rs: map)"),
+        ("Maia/services/notifications/qml/", "common/, notifications/, center/, settings/: the three QML modules"),
+        ("Maia/services/notifications/qml/tests/", "tst_notifications, tst_jobs: against the real service"),
+        ("Maia/services/notifications/tools/", "fake-job.py: a pretend copy, as Dolphin reports it"),
+        ("Maia/modules/sounds/", "Maia.Sounds: the sound of a popup (libcanberra)"),
+        ("Maia/DeployFiles/etc/maia/session.toml", "starts the service first in every session"),
+    ]
+    finish(s, y, api, repo, "maia-notifications-service.svg")
+
+
 if __name__ == "__main__":
     windows()
     network()
     appearance()
+    notifications()
