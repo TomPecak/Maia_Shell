@@ -2,6 +2,7 @@ import QtQuick
 import QtCore
 
 import Maia.Network as Network
+import Maia.Notifications.Center
 import Maia.Power
 import MaiaFrontend
 
@@ -9,7 +10,8 @@ import MaiaFrontend
 // panel read the same state.
 //
 // Real: Wi-Fi (the Maia network service, Maia.Network), the battery and the brightness (the Maia
-// power service, Maia.Power), the volume (the audio backend of Maia), the light / dark mode (Theme).
+// power service, Maia.Power), the volume (the audio backend of Maia), the light / dark mode (Theme),
+// Do Not Disturb (the notification service, Maia.Notifications.Center).
 // Mock-ups (no backend in Maia yet; they change only what is shown, like Lumen's quick settings):
 // Bluetooth, airplane mode, night light. Each is one property below, to be replaced by its backend.
 QtObject {
@@ -104,6 +106,14 @@ QtObject {
         const level = Math.max(0, Math.min(100, Math.round(percentage / 10) * 10))
         return icon("battery-" + ("00" + level).slice(-3) + (charging ? "-charging" : "") + "-symbolic")
     }
+
+    // --- Do Not Disturb ---
+
+    // Quiet now, by the user's choice or because an application asked (a presentation). Shown with
+    // the other states: once it is on, nothing else says why no notification comes
+    readonly property bool quiet: NotificationCenter.doNotDisturbActive
+    // The same glyph as the tile that turns it on and off
+    readonly property string quietIcon: quiet ? icon("notifications-disabled-symbolic") : ""
 
     // --- Mock-ups ---
 

@@ -40,6 +40,23 @@ Item {
             verify(full.endsWith("s left") || full.endsWith("min left"), full)
         }
 
+        function test_whatTheJobCountsTheMostTellingFirst() {
+            compare(JobFormat.progress(job({ totalItems: 10, processedItems: 3 })), "3 of 10 items")
+            compare(JobFormat.progress(job({ totalDirectories: 4, processedDirectories: 1 })), "1 of 4 folders")
+            // Files before items, items before folders; one of anything says nothing
+            compare(JobFormat.progress(job({ totalFiles: 5, processedFiles: 2, totalItems: 10 })), "2 of 5 files")
+            compare(JobFormat.progress(job({ totalItems: 10, processedItems: 3, totalDirectories: 4 })), "3 of 10 items")
+            compare(JobFormat.progress(job({ totalItems: 1, totalDirectories: 1 })), "")
+            compare(JobFormat.progress(job({ state: 1, totalItems: 10, processedItems: 3 })), "3 of 10 items · Paused")
+        }
+
+        function test_aJobWithoutTheseValuesIsFine() {
+            const old = { title: "", appName: "", state: 0, percent: -1, processedBytes: 0, totalBytes: 0,
+                          processedFiles: 0, totalFiles: 0, speed: 0, errorText: "", ownerGone: false }
+            compare(JobFormat.progress(old), "")
+            compare(JobFormat.ended(Object.assign({}, old, { state: 2 })), "Done")
+        }
+
         function test_pausedHasNoSpeed() {
             const text = JobFormat.progress(job({ state: 1, processedBytes: 5, totalBytes: 10, speed: 1000 }))
             verify(text.endsWith("Paused"), text)
@@ -49,6 +66,8 @@ Item {
         function test_howItEnded() {
             compare(JobFormat.ended(job({ state: 2 })), "Done")
             compare(JobFormat.ended(job({ state: 2, totalFiles: 3 })), "Done, 3 files")
+            compare(JobFormat.ended(job({ state: 2, totalItems: 12 })), "Done, 12 items")
+            compare(JobFormat.ended(job({ state: 2, totalDirectories: 2 })), "Done, 2 folders")
             compare(JobFormat.ended(job({ state: 3, errorText: "The disk is full" })), "The disk is full")
             compare(JobFormat.ended(job({ state: 3 })), "It did not succeed.")
             compare(JobFormat.ended(job({ state: 3, ownerGone: true })), "Dolphin closed before it was done.")

@@ -10,7 +10,7 @@ import ".."
 import "../jobs"
 
 // The status of the session in the dock strip, at the other end of the strip than the power button:
-// the time and the state of Wi-Fi, the volume and the battery, read at a glance. One plate, two
+// the time and the state of Do Not Disturb, Wi-Fi, the volume and the battery, read at a glance. One plate, two
 // targets, as the status bar of iPadOS: the time opens the notification center (with a badge of what
 // is unread and a ring while something is being copied), the icons open the Control Center. Both unfold from this corner of the screen. The
 // part under the pointer lights up, so the split can be seen before clicking. Moves with the dock
@@ -150,7 +150,8 @@ StripItem {
         width: d.beside ? plate.width - d.split : plate.width
         height: d.beside ? plate.height : plate.height - d.split
         checked: area.checked
-        Accessible.name: qsTr("Control Center")
+        Accessible.name: area.controlCenter && area.controlCenter.quiet ? qsTr("Control Center, Do Not Disturb on")
+                                                                        : qsTr("Control Center")
         onClicked: area.clicked()
     }
 
@@ -392,15 +393,17 @@ StripItem {
         readonly property string minutes: Qt.formatTime(now, "mm")
         readonly property string time: hours + ":" + minutes
 
-        // Without a battery (a desktop computer) its icon is "" and left out
+        // Without a battery (a desktop computer) its icon is "" and left out; Do Not Disturb comes
+        // first, next to the time, while it is on
         readonly property var indicators: area.controlCenter
-                                          ? [area.controlCenter.wifiIcon, area.controlCenter.volumeIcon,
-                                             area.controlCenter.batteryIcon].filter(icon => icon !== "")
+                                          ? [area.controlCenter.quietIcon, area.controlCenter.wifiIcon,
+                                             area.controlCenter.volumeIcon, area.controlCenter.batteryIcon]
+                                            .filter(icon => icon !== "")
                                           : []
         readonly property var indicatorsWithBluetooth: area.controlCenter
-                                                       ? [area.controlCenter.wifiIcon, area.controlCenter.bluetoothIcon,
-                                                          area.controlCenter.volumeIcon, area.controlCenter.batteryIcon]
-                                                         .filter(icon => icon !== "")
+                                                       ? [area.controlCenter.quietIcon, area.controlCenter.wifiIcon,
+                                                          area.controlCenter.bluetoothIcon, area.controlCenter.volumeIcon,
+                                                          area.controlCenter.batteryIcon].filter(icon => icon !== "")
                                                        : []
     }
 

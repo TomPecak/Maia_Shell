@@ -6,7 +6,8 @@
 // What a card shows for a row that is already gone (the model removes it before the card)
 const emptyJob = Object.freeze({
     jobId: 0, appName: "", desktopEntry: "", appIcon: "", title: "", infoMessage: "", state: 2, percent: -1,
-    processedBytes: 0, totalBytes: 0, processedFiles: 0, totalFiles: 0, speed: 0, destination: "",
+    processedBytes: 0, totalBytes: 0, processedFiles: 0, totalFiles: 0, processedDirectories: 0,
+    totalDirectories: 0, processedItems: 0, totalItems: 0, speed: 0, destination: "",
     errorText: "", ownerGone: false, killable: false, suspendable: false
 })
 
@@ -30,13 +31,26 @@ function title(job) {
     return job.title.length > 0 ? job.title : qsTr("Working")
 }
 
+// What the job counts, the most telling first: "%1 of %2" in bytes, else files, items (an archive,
+// a deletion), folders; "" when it counts nothing of more than one
+function amount(job) {
+    if (job.totalBytes > 0)
+        return qsTr("%1 of %2").arg(size(job.processedBytes)).arg(size(job.totalBytes))
+    if (job.totalFiles > 1)
+        return qsTr("%1 of %2 files").arg(job.processedFiles).arg(job.totalFiles)
+    if ((job.totalItems ?? 0) > 1)
+        return qsTr("%1 of %2 items").arg(job.processedItems).arg(job.totalItems)
+    if ((job.totalDirectories ?? 0) > 1)
+        return qsTr("%1 of %2 folders").arg(job.processedDirectories).arg(job.totalDirectories)
+    return ""
+}
+
 // "400 MB of 1 GB · 25 MB/s · 20 s left", or what is known of it
 function progress(job) {
     const parts = []
-    if (job.totalBytes > 0)
-        parts.push(qsTr("%1 of %2").arg(size(job.processedBytes)).arg(size(job.totalBytes)))
-    else if (job.totalFiles > 1)
-        parts.push(qsTr("%1 of %2 files").arg(job.processedFiles).arg(job.totalFiles))
+    const counted = amount(job)
+    if (counted.length > 0)
+        parts.push(counted)
     if (job.state === 1) {
         parts.push(qsTr("Paused"))
     } else if (job.speed > 0) {
@@ -56,7 +70,13 @@ function ended(job) {
     }
     if (job.totalBytes > 0)
         return qsTr("Done, %1").arg(size(job.totalBytes))
-    return job.totalFiles > 1 ? qsTr("Done, %1 files").arg(job.totalFiles) : qsTr("Done")
+    if (job.totalFiles > 1)
+        return qsTr("Done, %1 files").arg(job.totalFiles)
+    if ((job.totalItems ?? 0) > 1)
+        return qsTr("Done, %1 items").arg(job.totalItems)
+    if ((job.totalDirectories ?? 0) > 1)
+        return qsTr("Done, %1 folders").arg(job.totalDirectories)
+    return qsTr("Done")
 }
 
 // What the pill says after the title: the share, or how it ended
