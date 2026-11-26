@@ -89,10 +89,11 @@ contracts (see "Principles" below).
       frontend keeps its own in the shared `maia.conf` (`[LumenFrontend]`, `[MaiaAppearance]`),
       Maia Settings reads Lumen's private keys, a change reaches other processes only at their next
       start, and ordinary apps (Firefox, GTK, Qt) never see it. The service owns the choice and
-      **remembers light or dark for each frontend on its own** (as it does the window decoration):
-      the active frontend's choice is in force, `Maia.Appearance` gives it to every shell and app
-      live, and the desktop portal (`org.freedesktop.appearance`) and KDE's colours give it to the
-      other apps; switching the frontend switches to its own mode.
+      **remembers the whole look for each frontend on its own**: light or dark, the accent, the
+      window decoration (that one already), so that switching never spoils a frontend the user has
+      set up. The active frontend's look is in force, `Maia.Appearance` gives it to every shell and
+      app live, and the desktop portal (`org.freedesktop.appearance`) and KDE's colours give it to
+      the other apps; switching the frontend switches to its own look.
 - [ ] **Favourite apps shared by every shell** over a contract (today `FavoriteAppsService` on
       D-Bus in the shell process).
 - [ ] **Mock-ups in Lumen's quick settings:** airplane mode (NetworkManager and rfkill), night light

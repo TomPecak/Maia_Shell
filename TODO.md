@@ -325,6 +325,11 @@ Light/dark and the accent are kept by each frontend in the shared `maia.conf` (Q
 
 ### Fix
 
+- **The look of a frontend is its own** (decided with the user, 2026-11-26): what the user sets up
+  for one frontend (the scheme, the accent, the window decoration) is remembered for that frontend
+  and never changed by switching to another. The parts belong together, with the frontend's own
+  design and its wallpaper: an accent chosen for Lumen's wallpaper and decoration may look wrong in
+  Maia, so switching must not carry it over.
 - `maia-appearance-service` owns the choice and keeps it in `maia-appearance-service.json`:
   - the colour scheme: light, dark (later: by the time of day), **remembered for each frontend on
     its own** (decided with the user, 2026-11-26): Lumen can be light while Maia is dark, and each
@@ -333,7 +338,7 @@ Light/dark and the accent are kept by each frontend in the shared `maia.conf` (Q
     the default it declares;
   - the scheme in force is that of the active frontend: when the frontend is switched, the service
     applies the new one's scheme, and so do the other applications (below);
-  - the accent: per frontend like the scheme, or one for all (still to decide), as a **name** from a shared set (as GNOME does: blue, teal, green, yellow, orange,
+  - the accent, **also for each frontend on its own**, as a **name** from a shared set (as GNOME does: blue, teal, green, yellow, orange,
     red, pink, purple, slate), not a colour value: the name is data, each frontend maps it to its
     own tones for light and dark (Lumen's palettes keep their contrast rules); the portal gets an
     RGB value of the service's reference tones.
@@ -353,9 +358,10 @@ Light/dark and the accent are kept by each frontend in the shared `maia.conf` (Q
 
 ### Done when
 
-Switching dark mode in a frontend changes at once: that frontend (all layers of the Maia frontend),
-an open Maia Settings window, and a GTK app (e.g. a GNOME app) and a Qt app that follow the system
-scheme. Lumen set light and Maia set dark: switching between them switches the look each time, and
-after a new session each frontend starts as it was left. Tests for the contract and for the stored file, as for the
+Switching dark mode or the accent in a frontend changes at once: that frontend (all layers of the
+Maia frontend), an open Maia Settings window, and a GTK app (e.g. a GNOME app) and a Qt app that
+follow the system scheme. Lumen set light with a green accent and Maia dark with a pink one:
+switching between them switches the whole look each time (scheme, accent, decoration), and after a
+new session each frontend starts as it was left. Tests for the contract and for the stored file, as for the
 decorations.
 
