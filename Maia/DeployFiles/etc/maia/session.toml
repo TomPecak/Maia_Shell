@@ -68,6 +68,15 @@ kind = "maia-service"
 command = ["${MAIA_NOTIFICATIONS_SERVICE:-${MAIA_PREFIX}/libexec/maia-notifications-service}"]
 restart = "always"
 
+# The system tray (org.kde.StatusNotifierWatcher and its host), as early: applications show their
+# icons as soon as they start (Qt hides an icon while no host is there), and the ones that started
+# before register again when the watcher appears
+[[process]]
+name = "maia-tray-service"
+kind = "maia-service"
+command = ["${MAIA_TRAY_SERVICE:-${MAIA_PREFIX}/libexec/maia-tray-service}"]
+restart = "always"
+
 # Before the KDE services: powerdevil registers its shortcuts when it starts. KWin has kglobalacceld
 # built in; elsewhere nobody starts it (on Kubuntu two units claim its D-Bus name, so D-Bus
 # activation fails). Without XDG_SESSION_TYPE (with "wayland" it ends at once, expecting KWin) and
@@ -93,6 +102,7 @@ restart = "on-failure"
 #   plasma-polkit-agent  the administrator's password dialogs (Discover, power off with other users)
 #   plasma-powerdevil    power management: sleep, brightness, battery
 #   plasma-kaccess       accessibility (sticky keys, …)
+#   plasma-xembedsniproxy  old X11 tray icons for the tray service (below)
 # They are stopped at the end, so that none stays in the user's service manager, attached to a
 # display that is gone. Never plasma-kglobalaccel.service: KWin has kglobalacceld built in.
 [[process]]
@@ -121,6 +131,15 @@ name = "plasma-kaccess"
 kind = "kde-service"
 unit = "plasma-kaccess.service"
 autostart = "kaccess"
+test_mode = false
+
+# Old X11 tray icons (XEmbed: Wine, old GTK2 and Java programs) as items of the tray service. An
+# X11 client: Xwayland runs for it all the time.
+[[process]]
+name = "plasma-xembedsniproxy"
+kind = "kde-service"
+unit = "plasma-xembedsniproxy.service"
+autostart = "xembedsniproxy"
 test_mode = false
 
 # Maia's services, before the shell so that the dock has the windows at once

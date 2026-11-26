@@ -39,6 +39,8 @@
 #   MAIA_POWER_BACKEND                    - fake (domyślnie): symulowany laptop; system: bateria, jasność
 #                                           i profile tego komputera
 #   MAIA_APPEARANCE_SERVICE               - program usługi wyglądu (domyślnie szukany obok Mai)
+#   MAIA_TRAY_SERVICE                     - program usługi zasobnika systemowego (domyślnie szukany obok
+#                                           Mai); watcher na magistrali D-Bus tej sesji
 #   MAIA_APPEARANCE_BACKEND               - kwin (domyślnie): kwinrc z XDG_CONFIG_HOME tej sesji; fake: w pamięci
 
 ENV_FILE="${XDG_RUNTIME_DIR:-/tmp}/maia-nested-wayland.env"
@@ -94,7 +96,7 @@ if [ ! -x "${MAIA_SESSION_SERVICE}" ]; then
     echo "[ERROR] Nie znaleziono maia-session-service obok ${BIN_DIR} (MAIA_SESSION_SERVICE wskazuje go jawnie)" >&2
     exit 1
 fi
-for service in windows network appearance power notifications; do
+for service in windows network appearance power notifications tray; do
     variable="MAIA_$(echo "${service}" | tr '[:lower:]' '[:upper:]')_SERVICE"
     if [ -z "${!variable}" ]; then
         found="$(find_program "maia-${service}-service")"

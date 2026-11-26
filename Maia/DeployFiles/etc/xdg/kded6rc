@@ -6,3 +6,9 @@
 # answer the same request in turn, and KWallet is off. Plasma does not read this file.
 [Module-networkmanagement]
 autoload=false
+
+# The statusnotifierwatcher module is Plasma's watcher of tray icons (org.kde.StatusNotifierWatcher).
+# In a Maia session the tray service (maia-tray-service) is the watcher; with kded's module first,
+# the service would only be a host of it.
+[Module-statusnotifierwatcher]
+autoload=false

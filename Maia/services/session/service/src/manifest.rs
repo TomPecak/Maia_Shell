@@ -263,6 +263,12 @@ mod tests {
         assert!(shell.give_up.is_some());
         let appearance = manifest.processes.iter().find(|p| p.name == "maia-appearance-service").unwrap();
         assert!(appearance.runs_under("kwin") && !appearance.runs_under("wayfire"));
+        // The tray's watcher before the applications and the shell; X11 icons through KDE's unit
+        let position = |name: &str| manifest.processes.iter().position(|p| p.name == name).unwrap();
+        assert!(position("maia-tray-service") < position("plasma-xembedsniproxy"));
+        assert!(position("maia-tray-service") < position("appMaiaServer"));
+        let proxy = &manifest.processes[position("plasma-xembedsniproxy")];
+        assert!(proxy.is_unit() && !proxy.test_mode);
         let kwallet = manifest.processes.iter().find(|p| p.name == "plasma-kwallet-pam").unwrap();
         assert!(kwallet.is_unit() && !kwallet.test_mode);
         // Only in the nested session; its shell code keeps its own $variables
