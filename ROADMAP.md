@@ -25,6 +25,7 @@ contracts (see "Principles" below).
 | Network | `maia-network-service` + `Maia.Network`: Wi-Fi in Lumen's quick settings and the Wi-Fi page of Maia Settings (passwords, hidden networks, hotspot, sharing by QR code, details) |
 | Power | `maia-power-service` + `Maia.Power`: batteries (also of a mouse or headphones), brightness, keyboard backlight, power modes, battery warnings; Power page in Maia Settings |
 | Notifications | `maia-notifications-service` + `Maia.Notifications`, `.Center`, `.Settings`: popups, the notification center, do not disturb, sounds, quiet over fullscreen apps, progress of copies in Dolphin and of Maia's apps; Notifications page in Maia Settings |
+| System tray | `maia-tray-service` + `Maia.Tray`: the icons of applications (StatusNotifierItem, XEmbed through `xembedsniproxy`) with their menus, by the clock in the Maia frontend and in Lumen's taskbar |
 | Appearance | `maia-appearance-service` + `Maia.Appearance`: window decorations per frontend |
 | Maia Settings | Wi-Fi, Power, Notifications (English only for now) |
 | Shells | Lumen (desktop, the reference), Maia (tablet face), older: Ubuntu 24.04, XPLuna, Experimental |
@@ -44,9 +45,10 @@ contracts (see "Principles" below).
 
 ## 2. Everyday things that do not work yet
 
-- [ ] **System tray** (TODO 4). Tray icons of Discord, Steam, Nextcloud and others do not appear;
-      some apps cannot be brought back once hidden. StatusNotifierWatcher/Host with menus
-      (DBusMenu), XEmbed icons through `xembedsniproxy`.
+- [x] **System tray** (TODO 4, 2026-11-26). `maia-tray-service` is the watcher and the host
+      (menus over DBusMenu, XEmbed icons through `xembedsniproxy`); the Maia frontend has a plate
+      by the clock, Lumen the tray of its taskbar. Left: hiding and pinning icons in Maia Settings
+      (the items' keys are ready).
 - [ ] **Autostart of the user's applications** (`~/.config/autostart`, `/etc/xdg/autostart`):
       nothing starts them today (Nextcloud, chat apps). The session service starts them after the
       shell, honouring `Hidden`, `OnlyShowIn`/`NotShowIn`, `X-GNOME-Autostart-enabled`, and skipping
@@ -120,6 +122,8 @@ fallback.
 - [ ] Default Apps (with `maia-apps-service`)
 - [ ] Mouse & Touchpad, Keyboard (layouts, shortcuts)
 - [ ] Users, Date & Time, Region & Language, About
+- [ ] Tray icons: hide or always show each application's icon (`maia-tray-service` keeps the
+      choice by the items' keys)
 - [ ] Translations of Maia's own texts (English only until then)
 
 ## 5. Other shells

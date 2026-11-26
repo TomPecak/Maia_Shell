@@ -4,7 +4,7 @@
     python3 <path>/service_diagrams.py              (from any directory)
 
 writes maia-windows-service.svg, maia-network-service.svg, maia-appearance-service.svg,
-maia-notifications-service.svg and maia-tray-service.svg (a proposal) into the current directory (the repository keeps them in Maia/services/<service>/docs/). Every diagram has the same layout, so one explains the others:
+maia-notifications-service.svg and maia-tray-service.svg into the current directory (the repository keeps them in Maia/services/<service>/docs/). Every diagram has the same layout, so one explains the others:
 
     left: what the service uses        middle: the service process      right: the Maia side
     (system processes, buses, files)   (its modules, the contract)      (the QML module, its users)
@@ -850,14 +850,14 @@ def notifications():
 
 
 # ---------------------------------------------------------------------------------------------
-# maia-tray-service (a proposal: not built yet)
+# maia-tray-service
 # ---------------------------------------------------------------------------------------------
 
 def tray():
     s = Svg(W)
-    header(s, "maia-tray-service (proposal): the system tray of a Maia session",
+    header(s, "maia-tray-service: the system tray of a Maia session",
            "The session's one StatusNotifierWatcher and its one host: it keeps the tray icons of every program and gives them "
-           "to whichever frontend shows them. Not built yet: TODO.md item 4. Repository: Maia/services/tray/")
+           "to whichever frontend shows them (TODO.md item 4, built 2026-11-26). Repository: Maia/services/tray/")
     y0 = TOP + 50
 
     # --- Left: the programs with tray icons, the bridge, KDE's own watcher, the files ---
@@ -892,9 +892,9 @@ def tray():
         ["<prefix>/etc/maia/session.toml"])
     y = toml.bottom + 20
     icons = s.file(LX, y, LW, "Icons given as pixels", [
-        "IconPixmap, attention and menu icons as small PNGs;",
+        "PNGs of at most 64 px named by their content, shared;",
         "shells get file URLs; tmpfs, emptied at the start"],
-        ["$XDG_RUNTIME_DIR/maia/tray/"])
+        ["$XDG_RUNTIME_DIR/maia/tray-$WAYLAND_DISPLAY/"])
     y = icons.bottom + 20
     entries = s.file(LX, y, LW, "Desktop entries", ["the application of an item (its pid, its Id):",
                                                     "a name and an icon for lists and settings"],
@@ -906,38 +906,38 @@ def tray():
         ("watcher.rs", "rust", "service/src/watcher.rs", [
             "owns org.kde.StatusNotifierWatcher;",
             "RegisterStatusNotifierItem (a name or a",
-            "path), the properties, the signals;",
-            "drops items whose name vanished"]),
-        ("items.rs", "rust", "service/src/items.rs", [
-            "reads an item (GetAll), then only what",
-            "its New… signals say; bursts coalesced;",
+            "path), the properties, the signals; drops",
+            "items whose name vanished; else a host of it"]),
+        ("sni.rs", "rust", "service/src/sni.rs", [
+            "a task per item: GetAll after its signals,",
+            "at most every 100 ms, with a time limit;",
             "Activate, Scroll, the activation token"]),
-        ("menus.rs", "rust", "service/src/menus.rs", [
+        ("menu.rs", "rust", "service/src/menu.rs", [
             "a dbusmenu client: the tree when a shell",
             "opens a menu (AboutToShow, GetLayout),",
             "its changes while open; Event(clicked)"]),
-        ("images.rs", "rust", "service/src/images.rs", [
+        ("image.rs", "rust", "service/src/image.rs", [
             "ARGB32 pixmaps -> PNG on a blocking thread,",
-            "the best size only; an icon name stays a name"]),
+            "one file per image, kept while it is used"]),
         ("desktop.rs", "rust", "service/src/desktop.rs", [
             "which application an item belongs to"]),
     ])
     (host, hub, rpc, main), b_b = stack(s, BX, y0 + 72, BW, [
-        ("host.rs", "rust", "service/src/host.rs", [
-            "registers org.kde.StatusNotifierHost-<pid>:",
+        ("the host", "rust", "service/src/watcher.rs", [
+            "takes org.kde.StatusNotifierHost-<pid>:",
             "a host exists from the session's start, so",
             "programs keep their icons; no shell needed"]),
         ("hub.rs", "rust", "service/src/hub.rs", [
             "the items of the session, one list for every",
             "shell; batches (at most one per frame)"]),
         ("rpc.rs", "rust", "service/src/rpc.rs", [
-            "TrayService and its listeners (tray.capnp)"]),
+            "TrayHost, Menu and their listeners"]),
         ("main.rs", "rust", "service/src/main.rs", [
             "one thread (tokio current_thread), zbus;",
             "socket .../maia/tray-$WAYLAND_DISPLAY.sock"]),
     ])
     svc.h = frame_height(y0, a_b, b_b)
-    s.process(svc, "maia-tray-service", "Maia service (Rust) · proposal", PROCESS_MAIA,
+    s.process(svc, "maia-tray-service", "Maia service (Rust)", PROCESS_MAIA,
               "Maia/services/tray/service/   ->   <prefix>/libexec/maia-tray-service")
     contract = s.card(MX, svc.bottom + 20, MW, "tray.capnp", "contract", [
         "an item as a value: id, application, title, category, status, icon (a theme name or a file URL, with its",
@@ -955,14 +955,14 @@ def tray():
             "one per process: the list read in the KJ thread,",
             "applied in the GUI thread a batch at a time"]),
         ("TrayItemsModel", "qml", "qml/TrayItemsModel.h", [
-            "the items, the order kept; filters: status",
-            "(passive ones apart), category, attention"]),
+            "by category and age; all, shown or passive;",
+            "maximumCount takes attention first"]),
         ("Tray (singleton)", "qml", "qml/Tray.h", [
             "activate(id, window), secondaryActivate, scroll;",
             "an activation token for the window clicked"]),
-        ("TrayMenuModel", "qml", "qml/TrayMenuModel.h", [
-            "an item's menu while it is open: labels, icons,",
-            "checks, separators, submenus; trigger(id)"]),
+        ("TrayMenu", "qml", "qml/TrayMenu.h", [
+            "an item's menu while active: each level a model",
+            "updated by entry id; trigger(id, window)"]),
     ])
     lib.h = frame_height(y0, lb)
     s.library(lib, "Maia.Tray", "QML module (C++): data, no look", "Maia/services/tray/qml/  ->  <qml dir>/Maia/Tray")
@@ -970,13 +970,13 @@ def tray():
     users = Rect(RX, cy, RW, 0)
     (lumen, maia, settings), ub = stack(s, RX + 14, cy + 52, RW - 28, [
         ("Lumen", "shell", "frontends/Lumen/shell/windows/", [
-            "the tray of the taskbar, an overflow for the",
-            "passive icons, the menus in Lumen's look"]),
-        ("Maia", "shell", "frontends/Maia/shell/", [
-            "where: still to decide (by the clock, or a",
-            "module of the Control Center, or both)"]),
+            "the taskbar's icons, \"^\" for the passive",
+            "ones, the menus in Lumen's look"]),
+        ("Maia", "shell", "frontends/Maia/shell/tray/", [
+            "a plate by the clock: 4 places, attention",
+            "first, \"+N\" for a panel; Maia's menus"]),
         ("Maia Settings (later)", "shell", "apps/settings/pages/", [
-            "which icons are always shown or hidden"]),
+            "hide or pin icons, by the items' keys"]),
     ])
     users.h = frame_height(cy, ub)
     s.process(users, "Who shows it", "each frontend draws the same items its own way", PROCESS_CLIENT)
@@ -1000,29 +1000,29 @@ def tray():
 
     y = max(rules.bottom, entries.bottom, users.bottom)
     api = [
-        [("TrayService", "shells", [
+        [("TrayHost", "shells", [
             ("watch(listener) -> subscription", "the items, then changes"),
             ("activate(id, x, y, token)", "the main action"),
             ("secondaryActivate(id, x, y, token)", ""),
             ("scroll(id, delta, orientation)", ""),
             ("contextMenu(id, x, y)", "an item without a menu"),
-            ("menu(id, listener) -> menu", "while a shell shows it"),
+            ("openMenu(id, listener) -> menu", "while a shell shows it"),
           ])],
         [("TrayListener", "the shell's", [
             ("snapshot(items)", "first"),
             ("changes(changed, removed)", "a batch per frame"),
           ]),
          ("Menu", "while open", [
-            ("aboutToShow(menuItemId)", "a submenu opens"),
-            ("trigger(menuItemId, token)", "clicked"),
-            ("close()", "or drop the handle"),
+            ("aboutToShow(entryId)", "a submenu opens"),
+            ("submenuClosed(entryId)", ""),
+            ("activate(entryId, token)", "clicked; drop = closed"),
           ])],
         [("MenuListener", "the shell's", [
-            ("layout(revision, tree)", "the whole menu"),
-            ("changed(items)", "labels, checks, enabled"),
+            ("layout(entries)", "the whole menu, again"),
+            ("closed()", "its item went away"),
           ]),
          ("Item", "a value", [
-            ("id · desktopEntry · appName · title", ""),
+            ("id · key · desktopEntry · appName · title", ""),
             ("category · status", "passive, active, attention"),
             ("icon · overlay · attention · tooltip", "name or URL"),
             ("itemIsMenu · hasMenu", ""),

@@ -146,31 +146,12 @@ number stays so that references to items 4 to 7 keep their meaning.
 
 ---
 
-## 4. System tray: no StatusNotifierItem host in the Maia session
+## 4. System tray: done
 
-Area: a new service or part of the notification service; the frontends' panels.
-
-### What happens
-
-Applications put their tray icons on the StatusNotifierItem protocol (D-Bus): they register with
-`org.kde.StatusNotifierWatcher`, and the panel (the host) shows them. In Plasma, plasmashell is the
-watcher and the host. In the Maia session the name has no owner (checked 2026-10-28): tray icons
-(Discord, Steam, Nextcloud, network applets) do not appear, and some applications fall back to a
-normal window or quit to the background without a way back. Old X11 tray icons (XEmbed) need a
-bridge as well (`xembedsniproxy` from Plasma).
-
-### Fix
-
-- A service that owns `org.kde.StatusNotifierWatcher`, tracks the registered items and their
-  properties (icon name or pixmap, tooltip, status, menu via `com.canonical.dbusmenu`), and serves
-  them to the frontends over Cap'n Proto; activation, scrolling and menu actions go back through it.
-- A QML model of the tray items for the frontends.
-- Start `xembedsniproxy` in the session script for XEmbed icons.
-
-### Done when
-
-Icons of an application with an SNI tray icon and of an XEmbed one appear in Lumen's tray, react to
-clicks, show their menus, and disappear when the application quits.
+Done 2026-11-26: `Maia/services/tray/` (maia-tray-service, the watcher and host; `Maia.Tray`), the
+plate by the clock in the Maia frontend and the tray of Lumen's taskbar; `xembedsniproxy` starts with
+the session for XEmbed icons. What is left (hiding and pinning icons in Maia Settings) is in
+`ROADMAP.md`. The number stays so that references to items 5 to 7 keep their meaning.
 
 ---
 
