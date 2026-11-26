@@ -15,6 +15,9 @@
 // - Icons: *IconSource is what to give an Image or Kirigami.Icon: the theme's icon when the theme
 //   has it, otherwise the item's image (pixels, a file of the application's own directory).
 //   currentIconSource is the icon to show now (the attention icon while it needs attention).
+//   *IsMask: that source is an image of one grey on transparency (a "template", as Claude's or
+//   Electron's tray icons often are): draw it in the shell's colour of text, as a symbolic icon
+//   (Kirigami.Icon { isMask: true; color: … }), so a black icon does not vanish in dark mode.
 //
 // Updates tell only the roles that changed, once per batch of the service.
 
@@ -68,6 +71,8 @@ public:
         DesktopEntryRole,
         AppNameRole,
         AppIconRole,
+        IconIsMaskRole,
+        CurrentIconIsMaskRole,
     };
     Q_ENUM(Role)
 
@@ -91,6 +96,8 @@ public:
     static QList<ItemData> select(const QList<ItemData> &items, Filter filter, int maximumCount, int *hidden = nullptr);
     // The source to give an Image or Kirigami.Icon for an icon
     static QString iconSource(const IconData &icon);
+    // Whether the source of `icon` is its image and that image is a mask
+    static bool iconIsMask(const IconData &icon);
 
 Q_SIGNALS:
     void countChanged();

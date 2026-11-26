@@ -16,9 +16,9 @@ Item {
     ListModel {
         id: trayItems
 
-        ListElement { itemId: 1; currentIconSource: "internet-chat"; overlayIconSource: ""; needsAttention: false; hasMenu: true; itemIsMenu: false; title: "Chat"; appName: "Chat" }
-        ListElement { itemId: 2; currentIconSource: "steam"; overlayIconSource: ""; needsAttention: true; hasMenu: true; itemIsMenu: false; title: "Steam"; appName: "Steam" }
-        ListElement { itemId: 3; currentIconSource: "audio"; overlayIconSource: ""; needsAttention: false; hasMenu: false; itemIsMenu: false; title: "Music"; appName: "" }
+        ListElement { itemId: 1; currentIconSource: "internet-chat"; currentIconIsMask: true; overlayIconSource: ""; needsAttention: false; hasMenu: true; itemIsMenu: false; title: "Chat"; appName: "Chat" }
+        ListElement { itemId: 2; currentIconSource: "steam"; currentIconIsMask: false; overlayIconSource: ""; needsAttention: true; hasMenu: true; itemIsMenu: false; title: "Steam"; appName: "Steam" }
+        ListElement { itemId: 3; currentIconSource: "audio"; currentIconIsMask: false; overlayIconSource: ""; needsAttention: false; hasMenu: false; itemIsMenu: false; title: "Music"; appName: "" }
     }
 
     // Where the tray's plate would be

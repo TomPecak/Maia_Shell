@@ -123,6 +123,7 @@ StripItem {
 
                     required property int itemId
                     required property string currentIconSource
+                    required property bool currentIconIsMask
                     required property string overlayIconSource
                     required property bool needsAttention
                     required property bool hasMenu
@@ -139,6 +140,7 @@ StripItem {
                         objectName: "trayIcon"
                         anchors.fill: parent
                         source: slot.currentIconSource
+                        isMask: slot.currentIconIsMask
                         overlaySource: slot.overlayIconSource
                         needsAttention: slot.needsAttention
                         hasMenu: slot.hasMenu

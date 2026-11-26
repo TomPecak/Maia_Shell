@@ -52,6 +52,8 @@ public:
         SubmenuRole,
         // The first entry of a group: at the start, or after a separator
         GroupStartRole,
+        // The icon is an image of one grey: drawn in the shell's colour of text
+        IconIsMaskRole,
     };
     Q_ENUM(Role)
 

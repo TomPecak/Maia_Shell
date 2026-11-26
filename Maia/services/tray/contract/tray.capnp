@@ -76,6 +76,9 @@ struct Icon {
   url @1 :Text;           # file:// URL of the same icon as an image (the application's pixels, or the
                           # file of its own icon directory), "" none. With both: the theme's icon
                           # when the theme has it, otherwise the image
+  mask @2 :Bool;          # the image is one grey on transparency (a "template", as macOS has them,
+                          # made for a light or a dark panel): the shell draws its shape in its own
+                          # colour of text. Only images given as pixels are looked at
 }
 
 struct ToolTip {

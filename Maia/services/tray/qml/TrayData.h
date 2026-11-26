@@ -16,6 +16,8 @@ enum class ItemCategory { ApplicationStatus = 0, Communications = 1, SystemServi
 struct IconData {
     QString name;
     QString url;
+    // The image is one grey on transparency: drawn in the shell's colour of text
+    bool mask = false;
 
     bool isEmpty() const { return name.isEmpty() && url.isEmpty(); }
     bool operator==(const IconData &) const = default;

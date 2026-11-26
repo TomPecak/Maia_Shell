@@ -96,6 +96,27 @@ fn pixels_become_small_png_files() {
         let decoder = png::Decoder::new(std::io::BufReader::new(std::fs::File::open(&file).unwrap()));
         let reader = decoder.read_info().unwrap();
         assert_eq!((reader.info().width, reader.info().height), (64, 64));
+        // Red: a picture, drawn as it is
+        assert!(!item.icon_mask);
+    });
+}
+
+#[test]
+fn a_black_template_icon_is_a_mask_for_the_shells() {
+    let bus = Bus::start();
+    local(async {
+        let service = Service::start(&bus).await;
+        let shell = Shell::connect(&service.hub).await;
+        // As Claude's or an Electron application's: black pixels, the shape in the transparency
+        let black = |side: i32| (side, side, [255u8, 0, 0, 0, 0, 0, 0, 0].repeat((side * side / 2) as usize));
+        let state = ItemState { icon_name: String::new(), icon_pixmap: vec![black(64)], ..ItemState::default() };
+        let app = App::start(&bus, state, "/StatusNotifierItem", true).await;
+        shell.wait("the item", |s| s.items.len() == 1).await;
+        assert!(shell.single().1.icon_mask);
+        // A new icon in colour is no mask any more
+        app.set(|s| s.icon_pixmap = vec![red(64)]);
+        app.new_icon().await;
+        shell.wait("the colour", |s| s.items.values().all(|i| !i.icon_mask)).await;
     });
 }
 

@@ -18,7 +18,7 @@ QString toQString(capnp::Text::Reader text)
 
 IconData readIcon(C::Icon::Reader i)
 {
-    return {toQString(i.getName()), toQString(i.getUrl())};
+    return {toQString(i.getName()), toQString(i.getUrl()), i.getMask()};
 }
 
 ItemData readItem(C::Item::Reader i)

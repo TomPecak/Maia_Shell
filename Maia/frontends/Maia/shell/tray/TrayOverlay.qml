@@ -128,6 +128,7 @@ Item {
 
                     required property int itemId
                     required property string currentIconSource
+                    required property bool currentIconIsMask
                     required property string overlayIconSource
                     required property bool needsAttention
                     required property bool hasMenu
@@ -148,6 +149,7 @@ Item {
                         height: 48
                         iconSize: 32
                         source: cell.currentIconSource
+                        isMask: cell.currentIconIsMask
                         overlaySource: cell.overlayIconSource
                         needsAttention: cell.needsAttention
                         hasMenu: cell.hasMenu
@@ -274,6 +276,7 @@ Item {
                 required property string label
                 required property bool enabled
                 required property string iconSource
+                required property bool iconIsMask
                 required property int toggle
                 required property bool checked
                 required property bool submenu
@@ -298,6 +301,7 @@ Item {
                     text: entry.label
                     enabled: entry.enabled
                     iconSource: entry.iconSource
+                    iconIsMask: entry.iconIsMask
                     hasSubmenu: entry.submenu
                     checkColumn: level.model && level.model.hasToggles
                     checked: entry.toggle !== 0 && entry.checked

@@ -49,6 +49,11 @@ X11 icons ──XEmbed──► xembedsniproxy (KDE) ──► an item like any 
   `$XDG_RUNTIME_DIR/maia/tray-<display>/` (memory, private). A file is named by its content: an
   animation's frames and a menu opened again are written once, a new image is a new URL, and a
   file is removed 10 s after its last use.
+- **Templates take the shell's colour.** An image of one grey on transparency (Claude's and many
+  Electron applications' icons: black, made for a light panel) is marked a mask (`Icon.mask`,
+  `currentIconIsMask` in `TrayItemsModel`, `iconIsMask` in menus); the shells draw its shape in
+  their colour of text, so it stays readable in dark mode. A picture in colour, or a shape of one
+  colour that is no grey (a red dot), is drawn as it is.
 - **Menus only while open.** `openMenu` reads the application's menu (`AboutToShow`, `GetLayout`)
   and sends the whole tree, again after every change (at most one a frame); the shell's `Menu`
   keeps it open, dropping it tells the application "closed". `TrayMenu` updates its levels by entry

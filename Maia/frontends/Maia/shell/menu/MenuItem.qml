@@ -12,6 +12,8 @@ T.AbstractButton {
     property string iconName
     // An application's icon instead (a theme name or an image URL: a tray menu's entries)
     property string iconSource
+    // That icon is one grey on transparency: drawn in the label's colour
+    property bool iconIsMask: false
     property bool hasSubmenu: false
     property bool header: false
     // Reserves a column on the left for the check mark (choice lists)
@@ -100,6 +102,8 @@ T.AbstractButton {
             height: 18
             visible: item.iconSource !== "" && !item.hasSubmenu && !item.header
             source: item.iconSource
+            isMask: item.iconIsMask
+            color: item.labelColor
             opacity: item.enabled ? 1 : 0.4
         }
     }

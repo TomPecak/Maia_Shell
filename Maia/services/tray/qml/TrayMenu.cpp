@@ -48,6 +48,8 @@ QVariant TrayMenuEntriesModel::data(const QModelIndex &index, int role) const
         return entry.shortcut;
     case SubmenuRole:
         return entry.submenu;
+    case IconIsMaskRole:
+        return TrayItemsModel::iconIsMask(entry.icon);
     case GroupStartRole:
         return index.row() == 0 || m_rows.at(index.row() - 1).separator;
     }
@@ -67,6 +69,7 @@ QHash<int, QByteArray> TrayMenuEntriesModel::roleNames() const
         {ShortcutRole, "shortcut"},
         {SubmenuRole, "submenu"},
         {GroupStartRole, "groupStart"},
+        {IconIsMaskRole, "iconIsMask"},
     };
 }
 
@@ -80,7 +83,7 @@ QList<int> TrayMenuEntriesModel::changedRoles(const MenuEntryData &a, const Menu
     if (a.enabled != b.enabled)
         roles.append(EnabledRole);
     if (a.icon != b.icon)
-        roles.append(IconSourceRole);
+        roles.append({IconSourceRole, IconIsMaskRole});
     if (a.toggle != b.toggle)
         roles.append(ToggleRole);
     if (a.checked != b.checked)

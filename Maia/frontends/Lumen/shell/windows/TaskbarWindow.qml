@@ -190,6 +190,7 @@ Window {
 
                 required property int itemId
                 required property string currentIconSource
+                required property bool currentIconIsMask
                 required property string overlayIconSource
                 required property bool needsAttention
                 required property bool hasMenu
@@ -207,6 +208,7 @@ Window {
 
                     anchors.fill: parent
                     source: trayItem.currentIconSource
+                    isMask: trayItem.currentIconIsMask
                     overlaySource: trayItem.overlayIconSource
                     needsAttention: trayItem.needsAttention
                     hasMenu: trayItem.hasMenu

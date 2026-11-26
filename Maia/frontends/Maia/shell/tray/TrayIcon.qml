@@ -17,6 +17,8 @@ Item {
     id: icon
 
     property string source
+    // The image is one grey on transparency (a template): drawn in the label's colour
+    property bool isMask: false
     property string overlaySource
     property bool needsAttention: false
     property bool hasMenu: false
@@ -75,11 +77,14 @@ Item {
     Kirigami.Icon {
         id: image
 
+        objectName: "trayIconImage"
         anchors.centerIn: parent
         width: icon.iconSize
         height: icon.iconSize
         source: icon.source
         fallback: "application-x-executable"
+        isMask: icon.isMask
+        color: Theme.label
         scale: icon.pressed ? 0.9 : 1
 
         Behavior on scale {

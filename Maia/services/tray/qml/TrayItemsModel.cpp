@@ -29,11 +29,16 @@ bool passes(const ItemData &item, TrayItemsModel::Filter filter)
     return true;
 }
 
-QString currentSource(const ItemData &item)
+const IconData &currentIcon(const ItemData &item)
 {
     if (item.status == ItemStatus::NeedsAttention && !item.attentionIcon.isEmpty())
-        return TrayItemsModel::iconSource(item.attentionIcon);
-    return TrayItemsModel::iconSource(item.icon);
+        return item.attentionIcon;
+    return item.icon;
+}
+
+QString currentSource(const ItemData &item)
+{
+    return TrayItemsModel::iconSource(currentIcon(item));
 }
 
 } // namespace
@@ -52,6 +57,11 @@ QString TrayItemsModel::iconSource(const IconData &icon)
     if (!icon.name.isEmpty() && (icon.url.isEmpty() || QIcon::hasThemeIcon(icon.name)))
         return icon.name;
     return icon.url;
+}
+
+bool TrayItemsModel::iconIsMask(const IconData &icon)
+{
+    return icon.mask && !icon.url.isEmpty() && iconSource(icon) == icon.url;
 }
 
 QList<ItemData> TrayItemsModel::select(const QList<ItemData> &items, Filter filter, int maximumCount, int *hidden)
@@ -134,6 +144,10 @@ QVariant TrayItemsModel::data(const QModelIndex &index, int role) const
         return item.appName;
     case AppIconRole:
         return item.appIcon;
+    case IconIsMaskRole:
+        return iconIsMask(item.icon);
+    case CurrentIconIsMaskRole:
+        return iconIsMask(currentIcon(item));
     }
     return {};
 }
@@ -161,6 +175,8 @@ QHash<int, QByteArray> TrayItemsModel::roleNames() const
         {DesktopEntryRole, "desktopEntry"},
         {AppNameRole, "appName"},
         {AppIconRole, "appIcon"},
+        {IconIsMaskRole, "iconIsMask"},
+        {CurrentIconIsMaskRole, "currentIconIsMask"},
     };
 }
 
@@ -187,10 +203,11 @@ QList<int> TrayItemsModel::changedRoles(const ItemData &a, const ItemData &b)
     check(a.title != b.title, {TitleRole, Qt::DisplayRole});
     check(a.status != b.status, {StatusRole, NeedsAttentionRole});
     check(a.category != b.category, {CategoryRole});
-    check(a.icon != b.icon, {IconNameRole, IconUrlRole, IconSourceRole});
+    check(a.icon != b.icon, {IconNameRole, IconUrlRole, IconSourceRole, IconIsMaskRole});
     check(a.attentionIcon != b.attentionIcon, {AttentionIconSourceRole});
     check(a.overlayIcon != b.overlayIcon, {OverlayIconSourceRole});
     check(currentSource(a) != currentSource(b), {CurrentIconSourceRole});
+    check(iconIsMask(currentIcon(a)) != iconIsMask(currentIcon(b)), {CurrentIconIsMaskRole});
     check(a.toolTipTitle != b.toolTipTitle, {ToolTipTitleRole});
     check(a.toolTipText != b.toolTipText, {ToolTipTextRole});
     check(a.toolTipIcon != b.toolTipIcon, {ToolTipIconSourceRole});

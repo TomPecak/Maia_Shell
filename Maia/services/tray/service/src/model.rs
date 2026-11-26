@@ -62,6 +62,8 @@ impl Category {
 pub struct Icon {
     pub name: String,
     pub url: String,
+    /// The image is one grey on transparency: the shell draws it in its colour of text
+    pub mask: bool,
 }
 
 impl Icon {

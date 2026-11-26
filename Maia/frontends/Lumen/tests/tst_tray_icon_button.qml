@@ -75,6 +75,13 @@ Item {
             compare(activated.count, 1)
         }
 
+        function test_aTemplateIsDrawnInTheTextsColour() {
+            const button = make({ isMask: true })
+            const image = findChild(button, "trayIconImage")
+            verify(image.isMask)
+            compare(image.color, Theme.textPrimary)
+        }
+
         function test_attention() {
             const button = make()
             const dot = findChild(button, "attentionDot")

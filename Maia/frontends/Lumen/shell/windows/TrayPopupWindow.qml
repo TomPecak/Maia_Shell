@@ -114,6 +114,7 @@ Window {
 
                     required property int itemId
                     required property string currentIconSource
+                    required property bool currentIconIsMask
                     required property string overlayIconSource
                     required property bool needsAttention
                     required property bool hasMenu
@@ -132,6 +133,7 @@ Window {
                         anchors.fill: parent
                         iconSize: 20
                         source: hiddenItem.currentIconSource
+                        isMask: hiddenItem.currentIconIsMask
                         overlaySource: hiddenItem.overlayIconSource
                         needsAttention: hiddenItem.needsAttention
                         hasMenu: hiddenItem.hasMenu
@@ -250,6 +252,7 @@ Window {
                 required property string label
                 required property bool enabled
                 required property string iconSource
+                required property bool iconIsMask
                 required property int toggle
                 required property bool checked
                 required property string shortcut
@@ -273,6 +276,7 @@ Window {
                     iconName: entry.toggle !== 0 && entry.checked ? "checkmark-symbolic" : ""
                     iconColor: Theme.accent
                     iconSource: entry.toggle !== 0 ? "" : entry.iconSource
+                    iconIsMask: entry.iconIsMask
                     highlighted: d.levels.length > level.depth && d.levels[level.depth].entryId === entry.entryId
                     Accessible.checkable: entry.toggle !== 0
                     Accessible.checked: entry.checked

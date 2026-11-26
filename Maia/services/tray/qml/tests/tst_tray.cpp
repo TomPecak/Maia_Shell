@@ -313,9 +313,17 @@ void TestTray::pixelsBecomeFiles()
     QVERIFY(QFileInfo::exists(QUrl(url).toLocalFile()));
     QVERIFY(QUrl(url).toLocalFile().startsWith(m_dir.path() + QStringLiteral("/maia/tray-tst-tray/")));
 
-    // A new colour is a new file
+    // A new colour is a new file; a picture in colour is drawn as it is
     app.send(QStringLiteral("pixmap 0088ff"));
     QTRY_VERIFY_WITH_TIMEOUT(model.index(0).data(TrayItemsModel::IconSourceRole).toString() != url, 5000);
+    QVERIFY(!model.index(0).data(TrayItemsModel::CurrentIconIsMaskRole).toBool());
+
+    // Black on transparency (Claude, Electron): a mask, the shell's colour of text draws it
+    QSignalSpy changes(&model, &QAbstractItemModel::dataChanged);
+    app.send(QStringLiteral("pixmap 000000"));
+    QTRY_VERIFY_WITH_TIMEOUT(model.index(0).data(TrayItemsModel::CurrentIconIsMaskRole).toBool(), 5000);
+    QVERIFY(model.index(0).data(TrayItemsModel::IconIsMaskRole).toBool());
+    QVERIFY(changes.last().at(2).value<QList<int>>().contains(TrayItemsModel::CurrentIconIsMaskRole));
 }
 
 void TestTray::itemsGoWithTheirApplication()

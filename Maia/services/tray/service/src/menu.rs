@@ -224,9 +224,10 @@ async fn resolve(store: &ImageStoreRef, raw: Vec<RawEntry>, images: &mut Vec<Ima
                     icon.name = parent.icon_name.clone();
                 }
                 if icon.is_empty() && !parent.icon_data.is_empty() {
-                    if let Some((url, image)) = ImageStore::png(store, parent.icon_data.clone()).await {
-                        icon.url = url;
-                        images.push(image);
+                    if let Some(written) = ImageStore::png(store, parent.icon_data.clone()).await {
+                        icon.url = written.url;
+                        icon.mask = written.mask;
+                        images.push(written.image);
                     }
                 }
                 let entry = Entry {

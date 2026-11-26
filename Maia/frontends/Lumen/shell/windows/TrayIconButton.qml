@@ -14,6 +14,8 @@ SubtleButton {
     id: button
 
     property string source
+    // The image is one grey on transparency (a template): drawn in the text's colour
+    property bool isMask: false
     property string overlaySource
     property bool needsAttention: false
     property bool hasMenu: false
@@ -44,11 +46,14 @@ SubtleButton {
         Kirigami.Icon {
             id: image
 
+            objectName: "trayIconImage"
             anchors.centerIn: parent
             width: button.iconSize
             height: button.iconSize
             source: button.source
             fallback: "application-x-executable"
+            isMask: button.isMask
+            color: Theme.textPrimary
             scale: button.pressed ? 0.82 : 1.0
 
             Behavior on scale { ScaleAnimator { duration: Theme.durationFast; easing.type: Theme.easingEnter } }

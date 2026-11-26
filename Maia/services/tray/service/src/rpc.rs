@@ -18,6 +18,7 @@ use crate::tray_capnp::{self as t, subscription, tray_host};
 fn write_icon(mut b: t::icon::Builder, icon: &Icon) {
     b.set_name(&icon.name);
     b.set_url(&icon.url);
+    b.set_mask(icon.mask);
 }
 
 pub fn write_item(mut b: t::item::Builder, item: &Item) {

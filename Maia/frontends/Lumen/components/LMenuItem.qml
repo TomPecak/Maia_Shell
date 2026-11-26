@@ -12,6 +12,8 @@ T.AbstractButton {
     property string iconName
     // An application's icon instead (a theme name or an image URL: a tray menu's entries)
     property string iconSource
+    // That icon is one grey on transparency: drawn in the text's colour
+    property bool iconIsMask: false
     property color iconColor: Theme.textPrimary
     property bool hasSubmenu: false
     // Keyboard shortcut shown on the right, e.g. "Ctrl+C"
@@ -60,6 +62,8 @@ T.AbstractButton {
             height: 16
             visible: item.iconSource !== ""
             source: item.iconSource
+            isMask: item.iconIsMask
+            color: item.enabled ? Theme.textPrimary : Theme.textTertiary
             opacity: item.enabled ? 1 : 0.4
         }
 

@@ -11,7 +11,10 @@
 //!   menu opened again) is written once and keeps its URL, a changed image gets a new URL, so a
 //!   shell never shows a stale cached image;
 //! - files are shared and counted (`ImageRef`): one no longer used is removed some seconds later
-//!   (an animation that comes back to a frame finds it still there).
+//!   (an animation that comes back to a frame finds it still there);
+//! - an image of one colour on transparency is a mask (`is_mask`): a "template" as macOS has them,
+//!   made for a light panel or a dark one. The shells draw it in their own colour of text, so a
+//!   black icon does not vanish in dark mode.
 //!
 //! Scaling and PNG run on tokio's blocking threads, never in the event loop.
 
@@ -134,6 +137,53 @@ pub fn encode_png(width: u32, height: u32, rgba: &[u8]) -> Result<Vec<u8>, Strin
     Ok(bytes)
 }
 
+/// The alpha from which a pixel counts as part of the shape, and how far colours may differ and
+/// still be one (anti-aliasing, rounding)
+const MASK_VISIBLE_ALPHA: u8 = 64;
+const MASK_TOLERANCE: i32 = 24;
+
+/// Whether an RGBA image is a mask: every visible pixel of the same grey (black, white, or between),
+/// only the transparency drawing the shape. A shape of one other colour (a red dot) keeps its colour.
+pub fn is_mask(rgba: &[u8]) -> bool {
+    let mut first: Option<[i32; 3]> = None;
+    let mut visible = 0;
+    for pixel in rgba.chunks_exact(4) {
+        if pixel[3] < MASK_VISIBLE_ALPHA {
+            continue;
+        }
+        let colour = [pixel[0] as i32, pixel[1] as i32, pixel[2] as i32];
+        let (min, max) = (colour.iter().min().unwrap(), colour.iter().max().unwrap());
+        if max - min > MASK_TOLERANCE {
+            return false;
+        }
+        match first {
+            None => first = Some(colour),
+            Some(f) if f.iter().zip(colour).any(|(a, b)| (a - b).abs() > MASK_TOLERANCE) => return false,
+            Some(_) => {}
+        }
+        visible += 1;
+    }
+    visible >= 4
+}
+
+/// A PNG as RGBA, 8 bits a channel (a menu entry's icon-data); None when it cannot be read
+pub fn png_rgba(bytes: &[u8]) -> Option<Vec<u8>> {
+    let mut decoder = png::Decoder::new(std::io::Cursor::new(bytes));
+    decoder.set_transformations(png::Transformations::EXPAND | png::Transformations::STRIP_16);
+    let mut reader = decoder.read_info().ok()?;
+    let mut buffer = vec![0; reader.output_buffer_size()?];
+    let info = reader.next_frame(&mut buffer).ok()?;
+    let data = &buffer[..info.buffer_size()];
+    let rgba = match info.color_type {
+        png::ColorType::Rgba => data.to_vec(),
+        png::ColorType::Rgb => data.chunks_exact(3).flat_map(|p| [p[0], p[1], p[2], 255]).collect(),
+        png::ColorType::GrayscaleAlpha => data.chunks_exact(2).flat_map(|p| [p[0], p[0], p[0], p[1]]).collect(),
+        png::ColorType::Grayscale => data.iter().flat_map(|&g| [g, g, g, 255]).collect(),
+        png::ColorType::Indexed => return None,
+    };
+    Some(rgba)
+}
+
 /// Whether bytes are a PNG of a sensible size (a menu entry's icon-data)
 pub fn is_png(bytes: &[u8]) -> bool {
     bytes.len() <= MAX_PNG_BYTES && bytes.starts_with(b"\x89PNG\r\n\x1a\n")
@@ -235,6 +285,7 @@ pub fn find_in_theme_path(dir: &Path, name: &str) -> Option<PathBuf> {
 
 struct Stored {
     url: String,
+    mask: bool,
     file: PathBuf,
     refs: usize,
     unused_since: Option<Instant>,
@@ -270,6 +321,14 @@ impl Drop for ImageRef {
     }
 }
 
+/// A written image: its URL, a use of it, and whether it is a mask
+#[derive(Debug)]
+pub struct Written {
+    pub url: String,
+    pub image: ImageRef,
+    pub mask: bool,
+}
+
 /// An icon for the shells, with the images it uses
 #[derive(Debug, Default)]
 pub struct ResolvedIcon {
@@ -296,25 +355,28 @@ impl ImageStore {
     }
 
     /// Takes a use of an image that is already written
-    fn acquire_existing(store: &ImageStoreRef, hash: u64) -> Option<(String, ImageRef)> {
+    fn acquire_existing(store: &ImageStoreRef, hash: u64) -> Option<Written> {
         let mut this = store.borrow_mut();
         let stored = this.files.get_mut(&hash)?;
         stored.refs += 1;
         stored.unused_since = None;
-        Some((stored.url.clone(), ImageRef { store: Rc::downgrade(store), hash }))
+        Some(Written { url: stored.url.clone(), image: ImageRef { store: Rc::downgrade(store), hash }, mask: stored.mask })
     }
 
-    /// The image of `hash`, written by `encode` (on a blocking thread) when it is new
+    /// The image of `hash`, written by `encode` (on a blocking thread: the PNG and whether it is a
+    /// mask) when it is new
     async fn acquire(
         store: &ImageStoreRef,
         hash: u64,
-        encode: impl FnOnce() -> Result<Vec<u8>, String> + Send + 'static,
-    ) -> Option<(String, ImageRef)> {
+        encode: impl FnOnce() -> Result<(Vec<u8>, bool), String> + Send + 'static,
+    ) -> Option<Written> {
         if let Some(found) = ImageStore::acquire_existing(store, hash) {
             return Some(found);
         }
         let dir = store.borrow().dir.clone()?;
-        let written = tokio::task::spawn_blocking(move || encode().and_then(|png| write_file(&dir, hash, &png)))
+        let written = tokio::task::spawn_blocking(move || {
+            encode().and_then(|(png, mask)| write_file(&dir, hash, &png).map(|file| (file, mask)))
+        })
             .await
             .unwrap_or_else(|error| Err(error.to_string()));
         // Written meanwhile by another use: the same content under the same name
@@ -322,10 +384,10 @@ impl ImageStore {
             return Some(found);
         }
         match written {
-            Ok(file) => {
+            Ok((file, mask)) => {
                 let url = url_from_path(&file.to_string_lossy());
-                store.borrow_mut().files.insert(hash, Stored { url: url.clone(), file, refs: 1, unused_since: None });
-                Some((url, ImageRef { store: Rc::downgrade(store), hash }))
+                store.borrow_mut().files.insert(hash, Stored { url: url.clone(), mask, file, refs: 1, unused_since: None });
+                Some(Written { url, image: ImageRef { store: Rc::downgrade(store), hash }, mask })
             }
             Err(error) => {
                 eprintln!("maia-tray-service: an icon image: {error}");
@@ -335,23 +397,27 @@ impl ImageStore {
     }
 
     /// The best of an icon's pixmaps as a PNG of at most ICON_SIDE
-    pub async fn pixmap(store: &ImageStoreRef, pixmaps: &[Pixmap]) -> Option<(String, ImageRef)> {
+    pub async fn pixmap(store: &ImageStoreRef, pixmaps: &[Pixmap]) -> Option<Written> {
         let pixmap = best_pixmap(pixmaps, ICON_SIDE)?.clone();
         let hash = hash_of(0, pixmap.width, pixmap.height, &pixmap.data);
         ImageStore::acquire(store, hash, move || {
             let (width, height, rgba) = to_rgba(&pixmap, ICON_SIDE);
-            encode_png(width, height, &rgba)
+            Ok((encode_png(width, height, &rgba)?, is_mask(&rgba)))
         })
         .await
     }
 
     /// PNG bytes as they are (a menu entry's icon-data)
-    pub async fn png(store: &ImageStoreRef, bytes: Vec<u8>) -> Option<(String, ImageRef)> {
+    pub async fn png(store: &ImageStoreRef, bytes: Vec<u8>) -> Option<Written> {
         if !is_png(&bytes) {
             return None;
         }
         let hash = hash_of(1, 0, 0, &bytes);
-        ImageStore::acquire(store, hash, move || Ok(bytes)).await
+        ImageStore::acquire(store, hash, move || {
+            let mask = png_rgba(&bytes).is_some_and(|rgba| is_mask(&rgba));
+            Ok((bytes, mask))
+        })
+        .await
     }
 
     /// The URL of icon `name` in an application's icon directory, "" none (looked up once)
@@ -393,9 +459,10 @@ impl ImageStore {
             resolved.icon.url = ImageStore::theme_file(store, theme_path, &raw.name).await;
         }
         if resolved.icon.url.is_empty() && !raw.pixmaps.is_empty() {
-            if let Some((url, image)) = ImageStore::pixmap(store, &raw.pixmaps).await {
-                resolved.icon.url = url;
-                resolved.image = Some(image);
+            if let Some(written) = ImageStore::pixmap(store, &raw.pixmaps).await {
+                resolved.icon.url = written.url;
+                resolved.icon.mask = written.mask;
+                resolved.image = Some(written.image);
             }
         }
         resolved
@@ -469,6 +536,29 @@ mod tests {
     }
 
     #[test]
+    fn templates_are_masks_and_colours_are_not() {
+        let rgba = |pixels: &[[u8; 4]]| pixels.concat();
+        // Black on transparency, with soft edges whose colour wanders a little
+        assert!(is_mask(&rgba(&[[0, 0, 0, 255], [0, 0, 0, 255], [3, 3, 3, 120], [10, 10, 10, 70], [0, 0, 0, 0], [200, 0, 0, 10]])));
+        // White, or a grey
+        assert!(is_mask(&rgba(&[[255; 4], [255; 4], [250, 250, 250, 255], [255, 255, 255, 90]])));
+        assert!(is_mask(&rgba(&[[128, 128, 128, 255]; 4])));
+        // One colour that is no grey (a red dot), two greys, a picture
+        assert!(!is_mask(&rgba(&[[220, 30, 30, 255]; 4])));
+        assert!(!is_mask(&rgba(&[[0, 0, 0, 255], [0, 0, 0, 255], [255, 255, 255, 255], [255, 255, 255, 255]])));
+        assert!(!is_mask(&rgba(&[[0, 0, 0, 255], [0, 0, 0, 255], [0, 0, 0, 255], [0, 120, 255, 255]])));
+        // Nothing visible is no mask
+        assert!(!is_mask(&rgba(&[[0, 0, 0, 0]; 8])));
+    }
+
+    #[test]
+    fn png_bytes_are_read_back() {
+        let png = encode_png(1, 2, &[1, 2, 3, 4, 5, 6, 7, 8]).unwrap();
+        assert_eq!(png_rgba(&png).unwrap(), [1, 2, 3, 4, 5, 6, 7, 8]);
+        assert!(png_rgba(b"nope").is_none());
+    }
+
+    #[test]
     fn paths_become_urls() {
         assert_eq!(url_from_path("/tmp/a b#1.png"), "file:///tmp/a%20b%231.png");
         assert_eq!(url_from_path("file:///x.png"), "file:///x.png");
@@ -534,8 +624,8 @@ mod tests {
         local(async {
             let store = ImageStore::new(Some(dir.clone()));
             let pixels = vec![argb(128, [255, 1, 2, 3])];
-            let (url1, ref1) = ImageStore::pixmap(&store, &pixels).await.unwrap();
-            let (url2, ref2) = ImageStore::pixmap(&store, &pixels).await.unwrap();
+            let Written { url: url1, image: ref1, .. } = ImageStore::pixmap(&store, &pixels).await.unwrap();
+            let Written { url: url2, image: ref2, .. } = ImageStore::pixmap(&store, &pixels).await.unwrap();
             assert_eq!(url1, url2);
             assert_eq!(store.borrow().file_count(), 1);
             let file = PathBuf::from(url1.strip_prefix("file://").unwrap());
@@ -543,7 +633,7 @@ mod tests {
             let reader = decoder.read_info().unwrap();
             assert_eq!((reader.info().width, reader.info().height), (64, 64));
 
-            let (other, _ref3) = ImageStore::pixmap(&store, &[argb(8, [255, 9, 9, 9])]).await.unwrap();
+            let Written { url: other, image: _ref3, .. } = ImageStore::pixmap(&store, &[argb(8, [255, 9, 9, 9])]).await.unwrap();
             assert_ne!(other, url1);
 
             drop(ref1);
@@ -552,7 +642,7 @@ mod tests {
             drop(ref2);
             tokio::time::sleep(KEEP_UNUSED / 2).await;
             // Used again before it was removed: the same file
-            let (url3, ref4) = ImageStore::pixmap(&store, &pixels).await.unwrap();
+            let Written { url: url3, image: ref4, .. } = ImageStore::pixmap(&store, &pixels).await.unwrap();
             assert_eq!(url3, url1);
             drop(ref4);
             tokio::time::sleep(KEEP_UNUSED + Duration::from_secs(1)).await;
@@ -568,13 +658,24 @@ mod tests {
         local(async {
             let store = ImageStore::new(Some(dir.clone()));
             let named = ImageStore::resolve(&store, &RawIcon { name: "kmail".into(), pixmaps: vec![] }, "").await;
-            assert_eq!(named.icon, Icon { name: "kmail".into(), url: String::new() });
+            assert_eq!(named.icon, Icon { name: "kmail".into(), ..Icon::default() });
             let path = ImageStore::resolve(&store, &RawIcon { name: "/tmp/x.png".into(), pixmaps: vec![] }, "").await;
-            assert_eq!(path.icon, Icon { name: String::new(), url: "file:///tmp/x.png".into() });
+            assert_eq!(path.icon, Icon { url: "file:///tmp/x.png".into(), ..Icon::default() });
             let both = ImageStore::resolve(&store, &RawIcon { name: "app".into(), pixmaps: vec![argb(4, [255; 4])] }, "").await;
             assert_eq!(both.icon.name, "app");
             assert!(both.icon.url.starts_with("file://") && both.image.is_some());
             assert!(ImageStore::png(&store, b"not a png".to_vec()).await.is_none());
+
+            // A black template: a mask, also when the same pixels come again; colour stays colour
+            let black = ImageStore::resolve(&store, &RawIcon { name: String::new(), pixmaps: vec![argb(16, [255, 0, 0, 0])] }, "").await;
+            assert!(black.icon.mask);
+            let again = ImageStore::resolve(&store, &RawIcon { name: String::new(), pixmaps: vec![argb(16, [255, 0, 0, 0])] }, "").await;
+            assert!(again.icon.mask);
+            let orange = ImageStore::resolve(&store, &RawIcon { name: String::new(), pixmaps: vec![argb(16, [255, 255, 136, 0])] }, "").await;
+            assert!(!orange.icon.mask);
+            // A menu entry's PNG
+            let png = encode_png(3, 2, &[[255, 255, 255, 255], [255, 255, 255, 0], [250, 250, 250, 200], [255; 4], [255; 4], [255; 4]].concat()).unwrap();
+            assert!(ImageStore::png(&store, png).await.unwrap().mask);
         });
         std::fs::remove_dir_all(&dir).unwrap();
     }

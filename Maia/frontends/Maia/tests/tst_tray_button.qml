@@ -13,7 +13,7 @@ Item {
     height: 500
 
     function item(id, extra) {
-        const i = { itemId: id, currentIconSource: "internet-chat", overlayIconSource: "", needsAttention: false,
+        const i = { itemId: id, currentIconSource: "internet-chat", currentIconIsMask: false, overlayIconSource: "", needsAttention: false,
                     hasMenu: true, itemIsMenu: false, title: "Item " + id, appName: "App " + id }
         for (const key in extra)
             i[key] = extra[key]
@@ -166,6 +166,16 @@ Item {
             tryCompare(dot, "opacity", 0)
             trayItems.setProperty(0, "needsAttention", true)
             tryCompare(dot, "opacity", 1)
+        }
+
+        function test_aTemplateIsDrawnInTheLabelsColour() {
+            const button = make(1, 1)
+            waitForRendering(button)
+            const image = findChild(icons(button)[0], "trayIconImage")
+            verify(!image.isMask)
+            trayItems.setProperty(0, "currentIconIsMask", true)
+            verify(image.isMask)
+            compare(image.color, Theme.label)
         }
 
         function test_plusNOpensThePanel() {
