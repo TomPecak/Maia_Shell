@@ -79,6 +79,7 @@ add_subdirectory(Maia/services/appearance)
 add_subdirectory(Maia/services/session)
 add_subdirectory(Maia/services/notifications)
 add_subdirectory(Maia/services/power)
+add_subdirectory(Maia/services/tray)
 add_subdirectory(Maia/modules/sounds)
 add_subdirectory(Maia/modules/crossprocessstate)
 
