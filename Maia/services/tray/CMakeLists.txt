@@ -13,4 +13,4 @@ maia_add_cargo_executable(maia-tray-service
     DEPENDS ${capnp_depends}
 )
 
-# add_subdirectory(qml)
+add_subdirectory(qml)

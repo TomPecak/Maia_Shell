@@ -75,12 +75,7 @@ impl Apps {
         if let Some(entry) = self.entries.get(&process.flatpak_id) {
             return Some(entry);
         }
-        // A program that runs many applications says nothing about which
-        let program = match process.program.as_str() {
-            "python3" | "python" | "java" | "electron" | "node" | "wine" | "wine64" | "wine-preloader" | "wine64-preloader"
-            | "xembedsniproxy" | "bash" | "sh" | "perl" | "mono" => "",
-            program => program,
-        };
+        let program = if is_runtime(&process.program) { "" } else { process.program.as_str() };
         let item_id = if item_id.starts_with("chrome_status_icon_") { "" } else { item_id };
         for candidate in [item_id, program] {
             if candidate.is_empty() {
@@ -96,6 +91,18 @@ impl Apps {
         }
         None
     }
+}
+
+/// A program that runs many applications says nothing about which: an interpreter ("python3.14"),
+/// a runtime ("electron28", "wine64-preloader"), or the bridge of X11 icons
+pub fn is_runtime(program: &str) -> bool {
+    let name = program.trim_end_matches(|c: char| c.is_ascii_digit() || c == '.' || c == '-');
+    let name = name.strip_suffix("-preloader").unwrap_or(name).trim_end_matches(|c: char| c.is_ascii_digit());
+    matches!(
+        name,
+        "python" | "java" | "electron" | "node" | "nodejs" | "wine" | "perl" | "ruby" | "mono" | "bash" | "sh" | "dash" | "lua"
+            | "gjs" | "xembedsniproxy" | "xdg-dbus-proxy" | "bwrap"
+    )
 }
 
 /// The data directories, as the session sets them
@@ -336,6 +343,16 @@ mod tests {
         assert_eq!(id("chrome_status_icon_1", &process("electron")), "");
         // "desktop" of org.telegram.desktop names nothing
         assert_eq!(id("desktop", &process("")), "");
+    }
+
+    #[test]
+    fn runtimes_name_no_application() {
+        for program in ["python3.14", "python3", "electron28", "wine64-preloader", "wine", "node", "xembedsniproxy", "java"] {
+            assert!(is_runtime(program), "{program}");
+        }
+        for program in ["telegram-desktop", "steam", "signal-desktop", "nm-applet", "kdeconnectd"] {
+            assert!(!is_runtime(program), "{program}");
+        }
     }
 
     #[test]
