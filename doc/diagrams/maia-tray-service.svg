@@ -1,0 +1,363 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1900" height="1565" viewBox="0 0 1900 1565">
+<defs><marker id="end-call" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker><marker id="end-capnp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7c3aed"/></marker><marker id="end-dbus" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2563eb"/></marker><marker id="end-wayland" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#16a34a"/></marker><marker id="end-file" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#ea580c"/></marker><marker id="end-spawn" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#64748b"/></marker><marker id="end-import" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#0284c7"/></marker></defs>
+<rect width="1900" height="1565" fill="#ffffff"/>
+<text x="30.0" y="44.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="24" font-weight="bold" fill="#0f172a" text-anchor="start">maia-tray-service (proposal): the system tray of a Maia session</text>
+<text x="30.0" y="70.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="14" font-weight="normal" fill="#475569" text-anchor="start">The session's one StatusNotifierWatcher and its one host: it keeps the tray icons of every program and gives them to whichever frontend shows them. Not built yet: TODO.md item 4. Repository: Maia/services/tray/</text>
+<text x="30.0" y="100.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="17" font-weight="bold" fill="#0f172a" text-anchor="start">What the service uses</text>
+<text x="30.0" y="119.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#475569" text-anchor="start">system processes, buses and files</text>
+<line x1="30" y1="128" x2="500" y2="128" stroke="#cbd5e1" stroke-width="1.5"/>
+<text x="600.0" y="100.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="17" font-weight="bold" fill="#0f172a" text-anchor="start">The service</text>
+<text x="600.0" y="119.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#475569" text-anchor="start">one process per session, one thread (tokio); nothing blocks</text>
+<line x1="600" y1="128" x2="1290" y2="128" stroke="#cbd5e1" stroke-width="1.5"/>
+<text x="1390.0" y="100.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="17" font-weight="bold" fill="#0f172a" text-anchor="start">The Maia side</text>
+<text x="1390.0" y="119.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#475569" text-anchor="start">the QML module and the processes that load it</text>
+<line x1="1390" y1="128" x2="1870" y2="128" stroke="#cbd5e1" stroke-width="1.5"/>
+<rect x="44" y="202" width="442" height="129" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<rect x="44" y="202" width="5" height="129" rx="2" fill="#0f766e"/>
+<text x="58.0" y="223.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13.5" font-weight="bold" fill="#0f172a" text-anchor="start">The item: org.kde.StatusNotifierItem</text>
+<rect x="368.8" y="209" width="109.2" height="17" rx="8.5" fill="#0f766e"/>
+<text x="423.4" y="221.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">system component</text>
+<text x="58.0" y="240.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="10.5" font-weight="normal" fill="#64748b" text-anchor="start">/StatusNotifierItem on its own bus name</text>
+<text x="58.0" y="256.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">properties: Id, Title, Category, Status,</text>
+<text x="58.0" y="271.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">IconName / IconPixmap, Overlay…, Attention…,</text>
+<text x="58.0" y="286.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">ToolTip, ItemIsMenu, Menu, IconThemePath</text>
+<text x="58.0" y="301.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">Activate, SecondaryActivate, Scroll,</text>
+<text x="58.0" y="316.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">ProvideXdgActivationToken; New… signals</text>
+<rect x="44" y="345" width="442" height="84" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<rect x="44" y="345" width="5" height="84" rx="2" fill="#0f766e"/>
+<text x="58.0" y="366.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13.5" font-weight="bold" fill="#0f172a" text-anchor="start">The menu: com.canonical.dbusmenu</text>
+<rect x="368.8" y="352" width="109.2" height="17" rx="8.5" fill="#0f766e"/>
+<text x="423.4" y="364.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">system component</text>
+<text x="58.0" y="383.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="10.5" font-weight="normal" fill="#64748b" text-anchor="start">the path in the item's Menu property</text>
+<text x="58.0" y="399.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">GetLayout, AboutToShow, Event(id, clicked)</text>
+<text x="58.0" y="414.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">LayoutUpdated, ItemsPropertiesUpdated</text>
+<rect x="30" y="150" width="470" height="295" rx="16" fill="#0284c7" fill-opacity="0.05" stroke="#0284c7" stroke-width="3"/>
+<path d="M30,190 v-24 a16,16 0 0 1 16,-16 h438 a16,16 0 0 1 16,16 v24 z" fill="#0284c7"/>
+<text x="46.0" y="176.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="16" font-weight="bold" fill="#ffffff" text-anchor="start">Programs with tray icons</text>
+<text x="486.0" y="176.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#ffffff" text-anchor="end">session D-Bus</text>
+<rect x="30" y="469" width="470" height="98" rx="16" fill="#64748b" fill-opacity="0.05" stroke="#64748b" stroke-width="3"/>
+<path d="M30,509 v-24 a16,16 0 0 1 16,-16 h438 a16,16 0 0 1 16,16 v24 z" fill="#64748b"/>
+<text x="46.0" y="495.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="16" font-weight="bold" fill="#ffffff" text-anchor="start">xembedsniproxy</text>
+<text x="486.0" y="495.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#ffffff" text-anchor="end">Plasma's bridge, started by the session</text>
+<text x="46.0" y="531.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">turns the X11 tray icons (XEmbed: Wine, Java) into items</text>
+<text x="46.0" y="548.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">of their own, registered like any other</text>
+<path d="M30,587 h452 l18,18 v65 h-470 z" fill="#fff7ed" stroke="#ea580c" stroke-width="1.8"/>
+<path d="M482,587 v18 h18" fill="none" stroke="#ea580c" stroke-width="1.8"/>
+<text x="42.0" y="607.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13" font-weight="bold" fill="#9a3412" text-anchor="start">kded6rc (Maia's defaults)</text>
+<text x="42.0" y="624.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="10.5" font-weight="normal" fill="#7c2d12" text-anchor="start">&lt;prefix&gt;/etc/xdg/kded6rc</text>
+<text x="42.0" y="639.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#431407" text-anchor="start">[Module-statusnotifierwatcher] autoload=false:</text>
+<text x="42.0" y="654.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#431407" text-anchor="start">kded6 must not take the watcher's name</text>
+<path d="M30,690 h452 l18,18 v65 h-470 z" fill="#fff7ed" stroke="#ea580c" stroke-width="1.8"/>
+<path d="M482,690 v18 h18" fill="none" stroke="#ea580c" stroke-width="1.8"/>
+<text x="42.0" y="710.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13" font-weight="bold" fill="#9a3412" text-anchor="start">session.toml</text>
+<text x="42.0" y="727.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="10.5" font-weight="normal" fill="#7c2d12" text-anchor="start">&lt;prefix&gt;/etc/maia/session.toml</text>
+<text x="42.0" y="742.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#431407" text-anchor="start">the service right after the notifications, before</text>
+<text x="42.0" y="757.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#431407" text-anchor="start">the shell and autostart; xembedsniproxy after it</text>
+<path d="M30,793 h452 l18,18 v65 h-470 z" fill="#fff7ed" stroke="#ea580c" stroke-width="1.8"/>
+<path d="M482,793 v18 h18" fill="none" stroke="#ea580c" stroke-width="1.8"/>
+<text x="42.0" y="813.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13" font-weight="bold" fill="#9a3412" text-anchor="start">Icons given as pixels</text>
+<text x="42.0" y="830.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="10.5" font-weight="normal" fill="#7c2d12" text-anchor="start">$XDG_RUNTIME_DIR/maia/tray/</text>
+<text x="42.0" y="845.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#431407" text-anchor="start">IconPixmap, attention and menu icons as small PNGs;</text>
+<text x="42.0" y="860.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#431407" text-anchor="start">shells get file URLs; tmpfs, emptied at the start</text>
+<path d="M30,896 h452 l18,18 v65 h-470 z" fill="#fff7ed" stroke="#ea580c" stroke-width="1.8"/>
+<path d="M482,896 v18 h18" fill="none" stroke="#ea580c" stroke-width="1.8"/>
+<text x="42.0" y="916.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13" font-weight="bold" fill="#9a3412" text-anchor="start">Desktop entries</text>
+<text x="42.0" y="933.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="10.5" font-weight="normal" fill="#7c2d12" text-anchor="start">$XDG_DATA_DIRS/applications/*.desktop</text>
+<text x="42.0" y="948.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#431407" text-anchor="start">the application of an item (its pid, its Id):</text>
+<text x="42.0" y="963.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#431407" text-anchor="start">a name and an icon for lists and settings</text>
+<rect x="618" y="222" width="300" height="114" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<rect x="618" y="222" width="5" height="114" rx="2" fill="#c2410c"/>
+<text x="632.0" y="243.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13.5" font-weight="bold" fill="#0f172a" text-anchor="start">watcher.rs</text>
+<rect x="831.8" y="229" width="78.2" height="17" rx="8.5" fill="#c2410c"/>
+<text x="870.9" y="241.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">Rust module</text>
+<text x="632.0" y="260.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="10.5" font-weight="normal" fill="#64748b" text-anchor="start">service/src/watcher.rs</text>
+<text x="632.0" y="276.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">owns org.kde.StatusNotifierWatcher;</text>
+<text x="632.0" y="291.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">RegisterStatusNotifierItem (a name or a</text>
+<text x="632.0" y="306.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">path), the properties, the signals;</text>
+<text x="632.0" y="321.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">drops items whose name vanished</text>
+<rect x="618" y="350" width="300" height="99" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<rect x="618" y="350" width="5" height="99" rx="2" fill="#c2410c"/>
+<text x="632.0" y="371.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13.5" font-weight="bold" fill="#0f172a" text-anchor="start">items.rs</text>
+<rect x="831.8" y="357" width="78.2" height="17" rx="8.5" fill="#c2410c"/>
+<text x="870.9" y="369.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">Rust module</text>
+<text x="632.0" y="388.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="10.5" font-weight="normal" fill="#64748b" text-anchor="start">service/src/items.rs</text>
+<text x="632.0" y="404.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">reads an item (GetAll), then only what</text>
+<text x="632.0" y="419.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">its New… signals say; bursts coalesced;</text>
+<text x="632.0" y="434.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">Activate, Scroll, the activation token</text>
+<rect x="618" y="463" width="300" height="99" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<rect x="618" y="463" width="5" height="99" rx="2" fill="#c2410c"/>
+<text x="632.0" y="484.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13.5" font-weight="bold" fill="#0f172a" text-anchor="start">menus.rs</text>
+<rect x="831.8" y="470" width="78.2" height="17" rx="8.5" fill="#c2410c"/>
+<text x="870.9" y="482.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">Rust module</text>
+<text x="632.0" y="501.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="10.5" font-weight="normal" fill="#64748b" text-anchor="start">service/src/menus.rs</text>
+<text x="632.0" y="517.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">a dbusmenu client: the tree when a shell</text>
+<text x="632.0" y="532.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">opens a menu (AboutToShow, GetLayout),</text>
+<text x="632.0" y="547.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">its changes while open; Event(clicked)</text>
+<rect x="618" y="576" width="300" height="84" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<rect x="618" y="576" width="5" height="84" rx="2" fill="#c2410c"/>
+<text x="632.0" y="597.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13.5" font-weight="bold" fill="#0f172a" text-anchor="start">images.rs</text>
+<rect x="831.8" y="583" width="78.2" height="17" rx="8.5" fill="#c2410c"/>
+<text x="870.9" y="595.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">Rust module</text>
+<text x="632.0" y="614.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="10.5" font-weight="normal" fill="#64748b" text-anchor="start">service/src/images.rs</text>
+<text x="632.0" y="630.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">ARGB32 pixmaps -&gt; PNG on a blocking thread,</text>
+<text x="632.0" y="645.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">the best size only; an icon name stays a name</text>
+<rect x="618" y="674" width="300" height="69" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<rect x="618" y="674" width="5" height="69" rx="2" fill="#c2410c"/>
+<text x="632.0" y="695.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13.5" font-weight="bold" fill="#0f172a" text-anchor="start">desktop.rs</text>
+<rect x="831.8" y="681" width="78.2" height="17" rx="8.5" fill="#c2410c"/>
+<text x="870.9" y="693.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">Rust module</text>
+<text x="632.0" y="712.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="10.5" font-weight="normal" fill="#64748b" text-anchor="start">service/src/desktop.rs</text>
+<text x="632.0" y="728.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">which application an item belongs to</text>
+<rect x="972" y="222" width="300" height="99" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<rect x="972" y="222" width="5" height="99" rx="2" fill="#c2410c"/>
+<text x="986.0" y="243.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13.5" font-weight="bold" fill="#0f172a" text-anchor="start">host.rs</text>
+<rect x="1185.8" y="229" width="78.2" height="17" rx="8.5" fill="#c2410c"/>
+<text x="1224.9" y="241.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">Rust module</text>
+<text x="986.0" y="260.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="10.5" font-weight="normal" fill="#64748b" text-anchor="start">service/src/host.rs</text>
+<text x="986.0" y="276.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">registers org.kde.StatusNotifierHost-&lt;pid&gt;:</text>
+<text x="986.0" y="291.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">a host exists from the session's start, so</text>
+<text x="986.0" y="306.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">programs keep their icons; no shell needed</text>
+<rect x="972" y="335" width="300" height="84" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<rect x="972" y="335" width="5" height="84" rx="2" fill="#c2410c"/>
+<text x="986.0" y="356.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13.5" font-weight="bold" fill="#0f172a" text-anchor="start">hub.rs</text>
+<rect x="1185.8" y="342" width="78.2" height="17" rx="8.5" fill="#c2410c"/>
+<text x="1224.9" y="354.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">Rust module</text>
+<text x="986.0" y="373.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="10.5" font-weight="normal" fill="#64748b" text-anchor="start">service/src/hub.rs</text>
+<text x="986.0" y="389.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">the items of the session, one list for every</text>
+<text x="986.0" y="404.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">shell; batches (at most one per frame)</text>
+<rect x="972" y="433" width="300" height="69" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<rect x="972" y="433" width="5" height="69" rx="2" fill="#c2410c"/>
+<text x="986.0" y="454.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13.5" font-weight="bold" fill="#0f172a" text-anchor="start">rpc.rs</text>
+<rect x="1185.8" y="440" width="78.2" height="17" rx="8.5" fill="#c2410c"/>
+<text x="1224.9" y="452.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">Rust module</text>
+<text x="986.0" y="471.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="10.5" font-weight="normal" fill="#64748b" text-anchor="start">service/src/rpc.rs</text>
+<text x="986.0" y="487.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">TrayService and its listeners (tray.capnp)</text>
+<rect x="972" y="516" width="300" height="84" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<rect x="972" y="516" width="5" height="84" rx="2" fill="#c2410c"/>
+<text x="986.0" y="537.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13.5" font-weight="bold" fill="#0f172a" text-anchor="start">main.rs</text>
+<rect x="1185.8" y="523" width="78.2" height="17" rx="8.5" fill="#c2410c"/>
+<text x="1224.9" y="535.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">Rust module</text>
+<text x="986.0" y="554.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="10.5" font-weight="normal" fill="#64748b" text-anchor="start">service/src/main.rs</text>
+<text x="986.0" y="570.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">one thread (tokio current_thread), zbus;</text>
+<text x="986.0" y="585.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">socket .../maia/tray-$WAYLAND_DISPLAY.sock</text>
+<rect x="600" y="150" width="690" height="609" rx="16" fill="#7c3aed" fill-opacity="0.05" stroke="#7c3aed" stroke-width="3"/>
+<path d="M600,190 v-24 a16,16 0 0 1 16,-16 h658 a16,16 0 0 1 16,16 v24 z" fill="#7c3aed"/>
+<text x="616.0" y="176.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="16" font-weight="bold" fill="#ffffff" text-anchor="start">maia-tray-service</text>
+<text x="1276.0" y="176.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#ffffff" text-anchor="end">Maia service (Rust) · proposal</text>
+<text x="616.0" y="208.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11" font-weight="normal" fill="#334155" text-anchor="start">Maia/services/tray/service/   -&gt;   &lt;prefix&gt;/libexec/maia-tray-service</text>
+<rect x="600" y="779" width="690" height="84" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<rect x="600" y="779" width="5" height="84" rx="2" fill="#7c3aed"/>
+<text x="614.0" y="800.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13.5" font-weight="bold" fill="#0f172a" text-anchor="start">tray.capnp</text>
+<rect x="1160.4" y="786" width="121.6" height="17" rx="8.5" fill="#7c3aed"/>
+<text x="1221.2" y="798.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">Cap'n Proto schema</text>
+<text x="614.0" y="817.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="10.5" font-weight="normal" fill="#64748b" text-anchor="start">Maia/services/tray/contract/tray.capnp</text>
+<text x="614.0" y="833.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">an item as a value: id, application, title, category, status, icon (a theme name or a file URL, with its</text>
+<text x="614.0" y="848.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">theme path), overlay, attention, tooltip, ItemIsMenu, has a menu; menus only while a shell has one open</text>
+<rect x="600" y="877" width="690" height="84" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<rect x="600" y="877" width="5" height="84" rx="2" fill="#9a3412"/>
+<text x="614.0" y="898.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13.5" font-weight="bold" fill="#0f172a" text-anchor="start">What it must get right</text>
+<rect x="1234.8" y="884" width="47.2" height="17" rx="8.5" fill="#9a3412"/>
+<text x="1258.4" y="896.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">config</text>
+<text x="614.0" y="915.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="10.5" font-weight="normal" fill="#64748b" text-anchor="start">TODO.md item 4</text>
+<text x="614.0" y="931.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">starts before the programs that autostart (they look for a host once); a restart takes the items back from</text>
+<text x="614.0" y="946.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">the bus (names org.kde.StatusNotifierItem-*) and the programs that re-register; never polls, never blocks</text>
+<rect x="1404" y="208" width="452" height="84" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<rect x="1404" y="208" width="5" height="84" rx="2" fill="#1d4ed8"/>
+<text x="1418.0" y="229.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13.5" font-weight="bold" fill="#0f172a" text-anchor="start">TrayConnection</text>
+<rect x="1782.2" y="215" width="65.8" height="17" rx="8.5" fill="#1d4ed8"/>
+<text x="1815.1" y="227.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">C++ class</text>
+<text x="1418.0" y="246.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="10.5" font-weight="normal" fill="#64748b" text-anchor="start">qml/TrayConnection.h</text>
+<text x="1418.0" y="262.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">one per process: the list read in the KJ thread,</text>
+<text x="1418.0" y="277.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">applied in the GUI thread a batch at a time</text>
+<rect x="1404" y="306" width="452" height="84" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<rect x="1404" y="306" width="5" height="84" rx="2" fill="#047857"/>
+<text x="1418.0" y="327.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13.5" font-weight="bold" fill="#0f172a" text-anchor="start">TrayItemsModel</text>
+<rect x="1788.4" y="313" width="59.6" height="17" rx="8.5" fill="#047857"/>
+<text x="1818.2" y="325.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">QML type</text>
+<text x="1418.0" y="344.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="10.5" font-weight="normal" fill="#64748b" text-anchor="start">qml/TrayItemsModel.h</text>
+<text x="1418.0" y="360.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">the items, the order kept; filters: status</text>
+<text x="1418.0" y="375.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">(passive ones apart), category, attention</text>
+<rect x="1404" y="404" width="452" height="84" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<rect x="1404" y="404" width="5" height="84" rx="2" fill="#047857"/>
+<text x="1418.0" y="425.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13.5" font-weight="bold" fill="#0f172a" text-anchor="start">Tray (singleton)</text>
+<rect x="1788.4" y="411" width="59.6" height="17" rx="8.5" fill="#047857"/>
+<text x="1818.2" y="423.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">QML type</text>
+<text x="1418.0" y="442.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="10.5" font-weight="normal" fill="#64748b" text-anchor="start">qml/Tray.h</text>
+<text x="1418.0" y="458.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">activate(id, window), secondaryActivate, scroll;</text>
+<text x="1418.0" y="473.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">an activation token for the window clicked</text>
+<rect x="1404" y="502" width="452" height="84" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<rect x="1404" y="502" width="5" height="84" rx="2" fill="#047857"/>
+<text x="1418.0" y="523.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13.5" font-weight="bold" fill="#0f172a" text-anchor="start">TrayMenuModel</text>
+<rect x="1788.4" y="509" width="59.6" height="17" rx="8.5" fill="#047857"/>
+<text x="1818.2" y="521.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">QML type</text>
+<text x="1418.0" y="540.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="10.5" font-weight="normal" fill="#64748b" text-anchor="start">qml/TrayMenuModel.h</text>
+<text x="1418.0" y="556.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">an item's menu while it is open: labels, icons,</text>
+<text x="1418.0" y="571.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">checks, separators, submenus; trigger(id)</text>
+<rect x="1390" y="150" width="480" height="452" rx="14" fill="#047857" fill-opacity="0.05" stroke="#047857" stroke-width="2.2" stroke-dasharray="9 5"/>
+<text x="1406.0" y="175.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="15" font-weight="bold" fill="#047857" text-anchor="start">Maia.Tray</text>
+<text x="1856.0" y="175.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#047857" text-anchor="end">QML module (C++): data, no look</text>
+<text x="1406.0" y="194.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11" font-weight="normal" fill="#334155" text-anchor="start">Maia/services/tray/qml/  -&gt;  &lt;qml dir&gt;/Maia/Tray</text>
+<rect x="1404" y="694" width="452" height="84" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<rect x="1404" y="694" width="5" height="84" rx="2" fill="#0369a1"/>
+<text x="1418.0" y="715.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13.5" font-weight="bold" fill="#0f172a" text-anchor="start">Lumen</text>
+<rect x="1751.2" y="701" width="96.8" height="17" rx="8.5" fill="#0369a1"/>
+<text x="1799.6" y="713.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">QML shell part</text>
+<text x="1418.0" y="732.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="10.5" font-weight="normal" fill="#64748b" text-anchor="start">frontends/Lumen/shell/windows/</text>
+<text x="1418.0" y="748.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">the tray of the taskbar, an overflow for the</text>
+<text x="1418.0" y="763.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">passive icons, the menus in Lumen's look</text>
+<rect x="1404" y="792" width="452" height="84" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<rect x="1404" y="792" width="5" height="84" rx="2" fill="#0369a1"/>
+<text x="1418.0" y="813.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13.5" font-weight="bold" fill="#0f172a" text-anchor="start">Maia</text>
+<rect x="1751.2" y="799" width="96.8" height="17" rx="8.5" fill="#0369a1"/>
+<text x="1799.6" y="811.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">QML shell part</text>
+<text x="1418.0" y="830.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="10.5" font-weight="normal" fill="#64748b" text-anchor="start">frontends/Maia/shell/</text>
+<text x="1418.0" y="846.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">where: still to decide (by the clock, or a</text>
+<text x="1418.0" y="861.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">module of the Control Center, or both)</text>
+<rect x="1404" y="890" width="452" height="69" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<rect x="1404" y="890" width="5" height="69" rx="2" fill="#0369a1"/>
+<text x="1418.0" y="911.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="13.5" font-weight="bold" fill="#0f172a" text-anchor="start">Maia Settings (later)</text>
+<rect x="1751.2" y="897" width="96.8" height="17" rx="8.5" fill="#0369a1"/>
+<text x="1799.6" y="909.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">QML shell part</text>
+<text x="1418.0" y="928.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="10.5" font-weight="normal" fill="#64748b" text-anchor="start">apps/settings/pages/</text>
+<text x="1418.0" y="944.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#334155" text-anchor="start">which icons are always shown or hidden</text>
+<rect x="1390" y="642" width="480" height="333" rx="16" fill="#0284c7" fill-opacity="0.05" stroke="#0284c7" stroke-width="3"/>
+<path d="M1390,682 v-24 a16,16 0 0 1 16,-16 h448 a16,16 0 0 1 16,16 v24 z" fill="#0284c7"/>
+<text x="1406.0" y="668.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="16" font-weight="bold" fill="#ffffff" text-anchor="start">Who shows it</text>
+<text x="1856.0" y="668.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11.5" font-weight="normal" fill="#ffffff" text-anchor="end">each frontend draws the same items its own way</text>
+<path d="M486.0,236.5 L548.0,236.5 L548.0,279.0 L618.0,279.0" fill="none" stroke="#2563eb" stroke-width="2.2" marker-end="url(#end-dbus)" marker-start="url(#end-dbus)" stroke-linejoin="round"/>
+<rect x="489.0" y="220.5" width="56.4" height="13" rx="3" fill="#ffffff" fill-opacity="0.92"/>
+<text x="492.0" y="230.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11" font-weight="bold" fill="#2563eb" text-anchor="start">register</text>
+<path d="M486.0,276.5 L530.0,276.5 L530.0,399.5 L618.0,399.5" fill="none" stroke="#2563eb" stroke-width="2.2" marker-end="url(#end-dbus)" marker-start="url(#end-dbus)" stroke-linejoin="round"/>
+<rect x="489.0" y="260.5" width="119.4" height="13" rx="3" fill="#ffffff" fill-opacity="0.92"/>
+<text x="492.0" y="270.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11" font-weight="bold" fill="#2563eb" text-anchor="start">properties, clicks</text>
+<path d="M486.0,387.0 L512.0,387.0 L512.0,512.5 L618.0,512.5" fill="none" stroke="#2563eb" stroke-width="2.2" marker-end="url(#end-dbus)" marker-start="url(#end-dbus)" stroke-linejoin="round"/>
+<rect x="489.0" y="371.0" width="56.4" height="13" rx="3" fill="#ffffff" fill-opacity="0.92"/>
+<text x="492.0" y="381.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11" font-weight="bold" fill="#2563eb" text-anchor="start">the menu</text>
+<path d="M618.0,618.0 L566.0,618.0 L566.0,834.5 L500.0,834.5" fill="none" stroke="#ea580c" stroke-width="2.2" marker-end="url(#end-file)" stroke-linejoin="round"/>
+<rect x="571.2" y="602.0" width="43.8" height="13" rx="3" fill="#ffffff" fill-opacity="0.92"/>
+<text x="612.0" y="612.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11" font-weight="bold" fill="#ea580c" text-anchor="end">writes</text>
+<path d="M618.0,708.5 L584.0,708.5 L584.0,937.5 L500.0,937.5" fill="none" stroke="#ea580c" stroke-width="2.2" marker-end="url(#end-file)" stroke-linejoin="round"/>
+<rect x="577.5" y="692.5" width="37.5" height="13" rx="3" fill="#ffffff" fill-opacity="0.92"/>
+<text x="612.0" y="702.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11" font-weight="bold" fill="#ea580c" text-anchor="end">reads</text>
+<path d="M972.0,271.5 L929.0,271.5 L929.0,279.0 L918.0,279.0" fill="none" stroke="#334155" stroke-width="2.2" marker-end="url(#end-call)" stroke-linejoin="round"/>
+<path d="M972.0,377.0 L939.0,377.0 L939.0,399.5 L918.0,399.5" fill="none" stroke="#334155" stroke-width="2.2" marker-end="url(#end-call)" stroke-linejoin="round"/>
+<path d="M972.0,389.0 L949.0,389.0 L949.0,512.5 L918.0,512.5" fill="none" stroke="#334155" stroke-width="2.2" marker-end="url(#end-call)" stroke-linejoin="round"/>
+<path d="M1122.0,321.0 L1122.0,335.0" fill="none" stroke="#334155" stroke-width="2.2" marker-end="url(#end-call)" stroke-linejoin="round"/>
+<path d="M1122.0,419.0 L1122.0,433.0" fill="none" stroke="#334155" stroke-width="2.2" marker-end="url(#end-call)" stroke-linejoin="round"/>
+<path d="M1272.0,467.5 L1322.0,467.5 L1322.0,250.0 L1404.0,250.0" fill="none" stroke="#7c3aed" stroke-width="2.2" marker-end="url(#end-capnp)" marker-start="url(#end-capnp)" stroke-linejoin="round"/>
+<rect x="1275.0" y="451.5" width="75.3" height="13" rx="3" fill="#ffffff" fill-opacity="0.92"/>
+<text x="1278.0" y="461.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11" font-weight="bold" fill="#7c3aed" text-anchor="start">Cap'n Proto</text>
+<rect x="1275.0" y="464.5" width="43.8" height="13" rx="3" fill="#ffffff" fill-opacity="0.92"/>
+<text x="1278.0" y="474.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11" font-weight="bold" fill="#7c3aed" text-anchor="start">socket</text>
+<path d="M1630.0,292.0 L1630.0,306.0" fill="none" stroke="#334155" stroke-width="2.2" marker-end="url(#end-call)" stroke-linejoin="round"/>
+<path d="M1630.0,602.0 L1630.0,642.0" fill="none" stroke="#0284c7" stroke-width="2.2" stroke-dasharray="7 5" marker-end="url(#end-import)" stroke-linejoin="round"/>
+<rect x="1635.0" y="616.0" width="106.8" height="13" rx="3" fill="#ffffff" fill-opacity="0.92"/>
+<text x="1638.0" y="626.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11" font-weight="bold" fill="#0284c7" text-anchor="start">import Maia.Tray</text>
+<rect x="30" y="1019" width="1240" height="212" rx="12" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+<text x="48.0" y="1047.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="17" font-weight="bold" fill="#0f172a" text-anchor="start">API: the functions the service offers (Cap'n Proto contract)</text>
+<text x="50.0" y="1077.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="14" font-weight="bold" fill="#5b21b6" text-anchor="start">TrayService</text>
+<text x="150.2" y="1077.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11" font-weight="normal" fill="#64748b" text-anchor="start" font-style="italic">shells</text>
+<text x="58.0" y="1095.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11" font-weight="normal" fill="#0f172a" text-anchor="start">watch(listener) -&gt; subscription</text>
+<text x="277.7" y="1095.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11" font-weight="normal" fill="#475569" text-anchor="start">the items, then changes</text>
+<text x="58.0" y="1111.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11" font-weight="normal" fill="#0f172a" text-anchor="start">activate(id, x, y, token)</text>
+<text x="237.5" y="1111.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11" font-weight="normal" fill="#475569" text-anchor="start">the main action</text>
+<text x="58.0" y="1127.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11" font-weight="normal" fill="#0f172a" text-anchor="start">secondaryActivate(id, x, y, token)</text>
+<text x="58.0" y="1143.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11" font-weight="normal" fill="#0f172a" text-anchor="start">scroll(id, delta, orientation)</text>
+<text x="58.0" y="1159.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11" font-weight="normal" fill="#0f172a" text-anchor="start">contextMenu(id, x, y)</text>
+<text x="210.7" y="1159.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11" font-weight="normal" fill="#475569" text-anchor="start">an item without a menu</text>
+<text x="58.0" y="1175.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11" font-weight="normal" fill="#0f172a" text-anchor="start">menu(id, listener) -&gt; menu</text>
+<text x="244.2" y="1175.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11" font-weight="normal" fill="#475569" text-anchor="start">while a shell shows it</text>
+<text x="463.3" y="1077.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="14" font-weight="bold" fill="#5b21b6" text-anchor="start">TrayListener</text>
+<text x="571.7" y="1077.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11" font-weight="normal" fill="#64748b" text-anchor="start" font-style="italic">the shell's</text>
+<text x="471.3" y="1095.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11" font-weight="normal" fill="#0f172a" text-anchor="start">snapshot(items)</text>
+<text x="583.8" y="1095.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11" font-weight="normal" fill="#475569" text-anchor="start">first</text>
+<text x="471.3" y="1111.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11" font-weight="normal" fill="#0f172a" text-anchor="start">changes(changed, removed)</text>
+<text x="650.8" y="1111.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11" font-weight="normal" fill="#475569" text-anchor="start">a batch per frame</text>
+<text x="463.3" y="1137.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="14" font-weight="bold" fill="#5b21b6" text-anchor="start">Menu</text>
+<text x="506.1" y="1137.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11" font-weight="normal" fill="#64748b" text-anchor="start" font-style="italic">while open</text>
+<text x="471.3" y="1155.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11" font-weight="normal" fill="#0f172a" text-anchor="start">aboutToShow(menuItemId)</text>
+<text x="637.4" y="1155.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11" font-weight="normal" fill="#475569" text-anchor="start">a submenu opens</text>
+<text x="471.3" y="1171.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11" font-weight="normal" fill="#0f172a" text-anchor="start">trigger(menuItemId, token)</text>
+<text x="657.5" y="1171.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11" font-weight="normal" fill="#475569" text-anchor="start">clicked</text>
+<text x="471.3" y="1187.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11" font-weight="normal" fill="#0f172a" text-anchor="start">close()</text>
+<text x="530.2" y="1187.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11" font-weight="normal" fill="#475569" text-anchor="start">or drop the handle</text>
+<text x="876.7" y="1077.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="14" font-weight="bold" fill="#5b21b6" text-anchor="start">MenuListener</text>
+<text x="985.1" y="1077.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11" font-weight="normal" fill="#64748b" text-anchor="start" font-style="italic">the shell's</text>
+<text x="884.7" y="1095.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11" font-weight="normal" fill="#0f172a" text-anchor="start">layout(revision, tree)</text>
+<text x="1044.1" y="1095.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11" font-weight="normal" fill="#475569" text-anchor="start">the whole menu</text>
+<text x="884.7" y="1111.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11" font-weight="normal" fill="#0f172a" text-anchor="start">changed(items)</text>
+<text x="990.5" y="1111.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11" font-weight="normal" fill="#475569" text-anchor="start">labels, checks, enabled</text>
+<text x="876.7" y="1137.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="14" font-weight="bold" fill="#5b21b6" text-anchor="start">Item</text>
+<text x="919.5" y="1137.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11" font-weight="normal" fill="#64748b" text-anchor="start" font-style="italic">a value</text>
+<text x="884.7" y="1155.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11" font-weight="normal" fill="#0f172a" text-anchor="start">id · desktopEntry · appName · title</text>
+<text x="884.7" y="1171.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11" font-weight="normal" fill="#0f172a" text-anchor="start">category · status</text>
+<text x="1010.6" y="1171.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11" font-weight="normal" fill="#475569" text-anchor="start">passive, active, attention</text>
+<text x="884.7" y="1187.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11" font-weight="normal" fill="#0f172a" text-anchor="start">icon · overlay · attention · tooltip</text>
+<text x="1137.9" y="1187.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="11" font-weight="normal" fill="#475569" text-anchor="start">name or URL</text>
+<text x="884.7" y="1203.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11" font-weight="normal" fill="#0f172a" text-anchor="start">itemIsMenu · hasMenu</text>
+<rect x="30" y="1251" width="1240" height="210" rx="12" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+<text x="48.0" y="1279.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="17" font-weight="bold" fill="#0f172a" text-anchor="start">Where the code is (repository)</text>
+<text x="50.0" y="1307.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11.5" font-weight="normal" fill="#0f172a" text-anchor="start">Maia/services/tray/contract/</text>
+<text x="610.0" y="1307.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">the contract: tray.capnp</text>
+<text x="50.0" y="1329.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11.5" font-weight="normal" fill="#0f172a" text-anchor="start">Maia/services/tray/service/</text>
+<text x="610.0" y="1329.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">the service, Rust crate maia-tray-service (zbus for D-Bus)</text>
+<text x="50.0" y="1351.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11.5" font-weight="normal" fill="#0f172a" text-anchor="start">Maia/services/tray/qml/</text>
+<text x="610.0" y="1351.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">Maia.Tray, the QML module (tests against a fake item, as for notifications)</text>
+<text x="50.0" y="1373.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11.5" font-weight="normal" fill="#0f172a" text-anchor="start">Maia/services/tray/tools/</text>
+<text x="610.0" y="1373.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">fake-tray-item.py: an icon with a menu, for tests and by hand</text>
+<text x="50.0" y="1395.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11.5" font-weight="normal" fill="#0f172a" text-anchor="start">Maia/DeployFiles/etc/maia/session.toml</text>
+<text x="610.0" y="1395.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">starts the service early, and xembedsniproxy</text>
+<text x="50.0" y="1417.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11.5" font-weight="normal" fill="#0f172a" text-anchor="start">Maia/DeployFiles/etc/xdg/kded6rc</text>
+<text x="610.0" y="1417.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">kded6's watcher module off in the Maia session</text>
+<text x="50.0" y="1439.0" font-family="DejaVu Sans Mono, Liberation Mono, monospace" font-size="11.5" font-weight="normal" fill="#0f172a" text-anchor="start">doc/diagrams/linux-system-tray.svg</text>
+<text x="610.0" y="1439.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#334155" text-anchor="start">how the protocols work</text>
+<rect x="1300" y="1019" width="570" height="516" rx="12" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+<text x="1318.0" y="1047.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="17" font-weight="bold" fill="#0f172a" text-anchor="start">Legend</text>
+<rect x="1320" y="1067" width="42" height="22" rx="7" fill="#7c3aed" fill-opacity="0.05" stroke="#7c3aed" stroke-width="3"/>
+<text x="1374.0" y="1083.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#0f172a" text-anchor="start">a process (its own address space)</text>
+<rect x="1320" y="1097" width="42" height="22" rx="7" fill="#047857" fill-opacity="0.05" stroke="#047857" stroke-width="2" stroke-dasharray="6 4"/>
+<text x="1374.0" y="1113.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#0f172a" text-anchor="start">library loaded into other processes (QML module)</text>
+<rect x="1320" y="1127" width="42" height="22" rx="5" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<rect x="1320" y="1127" width="5" height="22" rx="2" fill="#c2410c"/>
+<text x="1374.0" y="1143.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#0f172a" text-anchor="start">module or class; the tag says which</text>
+<path d="M1320,1157 h30 l12,12 v10 h-42 z" fill="#fff7ed" stroke="#ea580c" stroke-width="1.8"/>
+<text x="1374.0" y="1173.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#0f172a" text-anchor="start">file or directory on disk</text>
+<rect x="1320" y="1187" width="42" height="22" rx="11" fill="#2563eb" fill-opacity="0.08" stroke="#2563eb" stroke-width="2"/>
+<text x="1374.0" y="1203.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#0f172a" text-anchor="start">bus or socket</text>
+<rect x="1320" y="1220" width="42" height="14" rx="4" fill="#7c3aed"/>
+<text x="1374.0" y="1232.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#0f172a" text-anchor="start">Maia service</text>
+<rect x="1320" y="1242" width="42" height="14" rx="4" fill="#0f766e"/>
+<text x="1374.0" y="1254.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#0f172a" text-anchor="start">system process</text>
+<rect x="1320" y="1264" width="42" height="14" rx="4" fill="#0284c7"/>
+<text x="1374.0" y="1276.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#0f172a" text-anchor="start">Maia shell or app (client)</text>
+<rect x="1320" y="1286" width="42" height="14" rx="4" fill="#64748b"/>
+<text x="1374.0" y="1298.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#0f172a" text-anchor="start">child process</text>
+<rect x="1320.0" y="1311" width="78.2" height="17" rx="8.5" fill="#c2410c"/>
+<text x="1359.1" y="1323.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">Rust module</text>
+<rect x="1406.2" y="1311" width="65.8" height="17" rx="8.5" fill="#1d4ed8"/>
+<text x="1439.1" y="1323.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">C++ class</text>
+<rect x="1480.0" y="1311" width="59.6" height="17" rx="8.5" fill="#047857"/>
+<text x="1509.8" y="1323.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">QML type</text>
+<rect x="1547.6" y="1311" width="121.6" height="17" rx="8.5" fill="#7c3aed"/>
+<text x="1608.4" y="1323.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">Cap'n Proto schema</text>
+<rect x="1320.0" y="1335" width="109.2" height="17" rx="8.5" fill="#0f766e"/>
+<text x="1374.6" y="1347.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">system component</text>
+<rect x="1437.2" y="1335" width="47.2" height="17" rx="8.5" fill="#9a3412"/>
+<text x="1460.8" y="1347.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">config</text>
+<rect x="1492.4" y="1335" width="96.8" height="17" rx="8.5" fill="#0369a1"/>
+<text x="1540.8" y="1347.5" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">QML shell part</text>
+<path d="M1320.0,1375.0 L1362.0,1375.0" fill="none" stroke="#334155" stroke-width="2.2" marker-end="url(#end-call)" stroke-linejoin="round"/>
+<text x="1374.0" y="1379.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#0f172a" text-anchor="start">call inside a process</text>
+<path d="M1320.0,1397.0 L1362.0,1397.0" fill="none" stroke="#7c3aed" stroke-width="2.2" marker-end="url(#end-capnp)" stroke-linejoin="round"/>
+<text x="1374.0" y="1401.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#0f172a" text-anchor="start">Cap'n Proto RPC (Unix socket)</text>
+<path d="M1320.0,1419.0 L1362.0,1419.0" fill="none" stroke="#2563eb" stroke-width="2.2" marker-end="url(#end-dbus)" stroke-linejoin="round"/>
+<text x="1374.0" y="1423.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#0f172a" text-anchor="start">D-Bus</text>
+<path d="M1320.0,1441.0 L1362.0,1441.0" fill="none" stroke="#16a34a" stroke-width="2.2" marker-end="url(#end-wayland)" stroke-linejoin="round"/>
+<text x="1374.0" y="1445.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#0f172a" text-anchor="start">Wayland protocol</text>
+<path d="M1320.0,1463.0 L1362.0,1463.0" fill="none" stroke="#ea580c" stroke-width="2.2" marker-end="url(#end-file)" stroke-linejoin="round"/>
+<text x="1374.0" y="1467.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#0f172a" text-anchor="start">reads / writes a file</text>
+<path d="M1320.0,1485.0 L1362.0,1485.0" fill="none" stroke="#64748b" stroke-width="2.2" stroke-dasharray="7 5" marker-end="url(#end-spawn)" stroke-linejoin="round"/>
+<text x="1374.0" y="1489.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#0f172a" text-anchor="start">starts a process</text>
+<path d="M1320.0,1507.0 L1362.0,1507.0" fill="none" stroke="#0284c7" stroke-width="2.2" stroke-dasharray="7 5" marker-end="url(#end-import)" stroke-linejoin="round"/>
+<text x="1374.0" y="1511.0" font-family="Noto Sans, DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="normal" fill="#0f172a" text-anchor="start">QML import (module loaded into the process)</text>
+</svg>

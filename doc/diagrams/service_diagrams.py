@@ -3,8 +3,8 @@
 
     python3 <path>/service_diagrams.py              (from any directory)
 
-writes maia-windows-service.svg, maia-network-service.svg, maia-appearance-service.svg and
-maia-notifications-service.svg into the current directory (the repository keeps them in Maia/services/<service>/docs/). Every diagram has the same layout, so one explains the others:
+writes maia-windows-service.svg, maia-network-service.svg, maia-appearance-service.svg,
+maia-notifications-service.svg and maia-tray-service.svg (a proposal) into the current directory (the repository keeps them in Maia/services/<service>/docs/). Every diagram has the same layout, so one explains the others:
 
     left: what the service uses        middle: the service process      right: the Maia side
     (system processes, buses, files)   (its modules, the contract)      (the QML module, its users)
@@ -849,8 +849,200 @@ def notifications():
     finish(s, y, api, repo, "maia-notifications-service.svg")
 
 
+# ---------------------------------------------------------------------------------------------
+# maia-tray-service (a proposal: not built yet)
+# ---------------------------------------------------------------------------------------------
+
+def tray():
+    s = Svg(W)
+    header(s, "maia-tray-service (proposal): the system tray of a Maia session",
+           "The session's one StatusNotifierWatcher and its one host: it keeps the tray icons of every program and gives them "
+           "to whichever frontend shows them. Not built yet: TODO.md item 4. Repository: Maia/services/tray/")
+    y0 = TOP + 50
+
+    # --- Left: the programs with tray icons, the bridge, KDE's own watcher, the files ---
+    apps = Rect(LX, y0, LW, 0)
+    (sni, dbusmenu), b = stack(s, LX + 14, y0 + 52, LW - 28, [
+        ("The item: org.kde.StatusNotifierItem", "system", "/StatusNotifierItem on its own bus name", [
+            "properties: Id, Title, Category, Status,",
+            "IconName / IconPixmap, Overlay…, Attention…,",
+            "ToolTip, ItemIsMenu, Menu, IconThemePath",
+            "Activate, SecondaryActivate, Scroll,",
+            "ProvideXdgActivationToken; New… signals"]),
+        ("The menu: com.canonical.dbusmenu", "system", "the path in the item's Menu property", [
+            "GetLayout, AboutToShow, Event(id, clicked)",
+            "LayoutUpdated, ItemsPropertiesUpdated"]),
+    ])
+    apps.h = frame_height(y0, b)
+    s.process(apps, "Programs with tray icons", "session D-Bus", PROCESS_CLIENT)
+    y = apps.bottom + 24
+    proxy = Rect(LX, y, LW, 98)
+    s.process(proxy, "xembedsniproxy", "Plasma's bridge, started by the session", PROCESS_CHILD)
+    s.text(LX + 16, y + 62, "turns the X11 tray icons (XEmbed: Wine, Java) into items", size=12, fill="#334155")
+    s.text(LX + 16, y + 79, "of their own, registered like any other", size=12, fill="#334155")
+    y = proxy.bottom + 20
+    kded = s.file(LX, y, LW, "kded6rc (Maia's defaults)", [
+        "[Module-statusnotifierwatcher] autoload=false:",
+        "kded6 must not take the watcher's name"],
+        ["<prefix>/etc/xdg/kded6rc"])
+    y = kded.bottom + 20
+    toml = s.file(LX, y, LW, "session.toml", [
+        "the service right after the notifications, before",
+        "the shell and autostart; xembedsniproxy after it"],
+        ["<prefix>/etc/maia/session.toml"])
+    y = toml.bottom + 20
+    icons = s.file(LX, y, LW, "Icons given as pixels", [
+        "IconPixmap, attention and menu icons as small PNGs;",
+        "shells get file URLs; tmpfs, emptied at the start"],
+        ["$XDG_RUNTIME_DIR/maia/tray/"])
+    y = icons.bottom + 20
+    entries = s.file(LX, y, LW, "Desktop entries", ["the application of an item (its pid, its Id):",
+                                                    "a name and an icon for lists and settings"],
+                     ["$XDG_DATA_DIRS/applications/*.desktop"])
+
+    # --- Middle: the service ---
+    svc = Rect(MX, y0, MW, 0)
+    (watcher, items, menus, images, desktop), a_b = stack(s, AX, y0 + 72, AW, [
+        ("watcher.rs", "rust", "service/src/watcher.rs", [
+            "owns org.kde.StatusNotifierWatcher;",
+            "RegisterStatusNotifierItem (a name or a",
+            "path), the properties, the signals;",
+            "drops items whose name vanished"]),
+        ("items.rs", "rust", "service/src/items.rs", [
+            "reads an item (GetAll), then only what",
+            "its New… signals say; bursts coalesced;",
+            "Activate, Scroll, the activation token"]),
+        ("menus.rs", "rust", "service/src/menus.rs", [
+            "a dbusmenu client: the tree when a shell",
+            "opens a menu (AboutToShow, GetLayout),",
+            "its changes while open; Event(clicked)"]),
+        ("images.rs", "rust", "service/src/images.rs", [
+            "ARGB32 pixmaps -> PNG on a blocking thread,",
+            "the best size only; an icon name stays a name"]),
+        ("desktop.rs", "rust", "service/src/desktop.rs", [
+            "which application an item belongs to"]),
+    ])
+    (host, hub, rpc, main), b_b = stack(s, BX, y0 + 72, BW, [
+        ("host.rs", "rust", "service/src/host.rs", [
+            "registers org.kde.StatusNotifierHost-<pid>:",
+            "a host exists from the session's start, so",
+            "programs keep their icons; no shell needed"]),
+        ("hub.rs", "rust", "service/src/hub.rs", [
+            "the items of the session, one list for every",
+            "shell; batches (at most one per frame)"]),
+        ("rpc.rs", "rust", "service/src/rpc.rs", [
+            "TrayService and its listeners (tray.capnp)"]),
+        ("main.rs", "rust", "service/src/main.rs", [
+            "one thread (tokio current_thread), zbus;",
+            "socket .../maia/tray-$WAYLAND_DISPLAY.sock"]),
+    ])
+    svc.h = frame_height(y0, a_b, b_b)
+    s.process(svc, "maia-tray-service", "Maia service (Rust) · proposal", PROCESS_MAIA,
+              "Maia/services/tray/service/   ->   <prefix>/libexec/maia-tray-service")
+    contract = s.card(MX, svc.bottom + 20, MW, "tray.capnp", "contract", [
+        "an item as a value: id, application, title, category, status, icon (a theme name or a file URL, with its",
+        "theme path), overlay, attention, tooltip, ItemIsMenu, has a menu; menus only while a shell has one open"],
+        "Maia/services/tray/contract/tray.capnp")
+    rules = s.card(MX, contract.bottom + 14, MW, "What it must get right", "config", [
+        "starts before the programs that autostart (they look for a host once); a restart takes the items back from",
+        "the bus (names org.kde.StatusNotifierItem-*) and the programs that re-register; never polls, never blocks"],
+        "TODO.md item 4")
+
+    # --- Right: the Maia side ---
+    lib = Rect(RX, y0, RW, 0)
+    (conn, model, trayobj, menu), lb = stack(s, RX + 14, y0 + 58, RW - 28, [
+        ("TrayConnection", "cpp", "qml/TrayConnection.h", [
+            "one per process: the list read in the KJ thread,",
+            "applied in the GUI thread a batch at a time"]),
+        ("TrayItemsModel", "qml", "qml/TrayItemsModel.h", [
+            "the items, the order kept; filters: status",
+            "(passive ones apart), category, attention"]),
+        ("Tray (singleton)", "qml", "qml/Tray.h", [
+            "activate(id, window), secondaryActivate, scroll;",
+            "an activation token for the window clicked"]),
+        ("TrayMenuModel", "qml", "qml/TrayMenuModel.h", [
+            "an item's menu while it is open: labels, icons,",
+            "checks, separators, submenus; trigger(id)"]),
+    ])
+    lib.h = frame_height(y0, lb)
+    s.library(lib, "Maia.Tray", "QML module (C++): data, no look", "Maia/services/tray/qml/  ->  <qml dir>/Maia/Tray")
+    cy = lib.bottom + 40
+    users = Rect(RX, cy, RW, 0)
+    (lumen, maia, settings), ub = stack(s, RX + 14, cy + 52, RW - 28, [
+        ("Lumen", "shell", "frontends/Lumen/shell/windows/", [
+            "the tray of the taskbar, an overflow for the",
+            "passive icons, the menus in Lumen's look"]),
+        ("Maia", "shell", "frontends/Maia/shell/", [
+            "where: still to decide (by the clock, or a",
+            "module of the Control Center, or both)"]),
+        ("Maia Settings (later)", "shell", "apps/settings/pages/", [
+            "which icons are always shown or hidden"]),
+    ])
+    users.h = frame_height(cy, ub)
+    s.process(users, "Who shows it", "each frontend draws the same items its own way", PROCESS_CLIENT)
+
+    # --- Connections ---
+    # The lanes in this order, so that no two lines cross
+    s.link(sni, watcher, "dbus", LANE_L[2], both=True, a_dy=-30, label="register")
+    s.link(sni, items, "dbus", LANE_L[1], both=True, a_dy=10, label="properties, clicks")
+    s.link(dbusmenu, menus, "dbus", LANE_L[0], both=True, label="the menu")
+    s.link(images, icons, "file", LANE_L[3], label="writes")
+    s.link(desktop, entries, "file", LANE_L[4], label="reads")
+    s.link(host, watcher, "call", LANE_M[0])
+    s.link(hub, items, "call", LANE_M[1])
+    s.link(hub, menus, "call", LANE_M[2], a_dy=12)
+    s.down(host, hub, "call")
+    s.down(hub, rpc, "call")
+    s.link(rpc, conn, "capnp", LANE_R[1], both=True, label="Cap'n Proto\nsocket")
+    s.down(conn, model, "call")
+    s.arrow([(lib.mid_x(), lib.bottom), (lib.mid_x(), users.y)], "import", label="import Maia.Tray",
+            label_at=(lib.mid_x() + 8, lib.bottom + 24))
+
+    y = max(rules.bottom, entries.bottom, users.bottom)
+    api = [
+        [("TrayService", "shells", [
+            ("watch(listener) -> subscription", "the items, then changes"),
+            ("activate(id, x, y, token)", "the main action"),
+            ("secondaryActivate(id, x, y, token)", ""),
+            ("scroll(id, delta, orientation)", ""),
+            ("contextMenu(id, x, y)", "an item without a menu"),
+            ("menu(id, listener) -> menu", "while a shell shows it"),
+          ])],
+        [("TrayListener", "the shell's", [
+            ("snapshot(items)", "first"),
+            ("changes(changed, removed)", "a batch per frame"),
+          ]),
+         ("Menu", "while open", [
+            ("aboutToShow(menuItemId)", "a submenu opens"),
+            ("trigger(menuItemId, token)", "clicked"),
+            ("close()", "or drop the handle"),
+          ])],
+        [("MenuListener", "the shell's", [
+            ("layout(revision, tree)", "the whole menu"),
+            ("changed(items)", "labels, checks, enabled"),
+          ]),
+         ("Item", "a value", [
+            ("id · desktopEntry · appName · title", ""),
+            ("category · status", "passive, active, attention"),
+            ("icon · overlay · attention · tooltip", "name or URL"),
+            ("itemIsMenu · hasMenu", ""),
+          ])],
+    ]
+    repo = [
+        ("Maia/services/tray/contract/", "the contract: tray.capnp"),
+        ("Maia/services/tray/service/", "the service, Rust crate maia-tray-service (zbus for D-Bus)"),
+        ("Maia/services/tray/qml/", "Maia.Tray, the QML module (tests against a fake item, as for notifications)"),
+        ("Maia/services/tray/tools/", "fake-tray-item.py: an icon with a menu, for tests and by hand"),
+        ("Maia/DeployFiles/etc/maia/session.toml", "starts the service early, and xembedsniproxy"),
+        ("Maia/DeployFiles/etc/xdg/kded6rc", "kded6's watcher module off in the Maia session"),
+        ("doc/diagrams/linux-system-tray.svg", "how the protocols work"),
+    ]
+    finish(s, y, api, repo, "maia-tray-service.svg")
+
+
 if __name__ == "__main__":
     windows()
     network()
     appearance()
     notifications()
+    tray()
