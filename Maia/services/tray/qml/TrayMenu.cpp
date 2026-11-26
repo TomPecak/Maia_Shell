@@ -128,6 +128,11 @@ void TrayMenuEntriesModel::update(const MenuEntries &target)
     }
     if (countBefore != int(m_rows.size()))
         Q_EMIT countChanged();
+    const bool toggles = std::any_of(m_rows.cbegin(), m_rows.cend(), [](const MenuEntryData &entry) { return entry.toggle != 0; });
+    if (toggles != m_hasToggles) {
+        m_hasToggles = toggles;
+        Q_EMIT hasTogglesChanged();
+    }
 }
 
 // --- The menu ---

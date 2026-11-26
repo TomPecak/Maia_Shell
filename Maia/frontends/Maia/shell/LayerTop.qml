@@ -3,6 +3,7 @@ import org.kde.layershell 1.0 as LayerShell
 
 import Maia.Backend as Maia
 import Maia.Notifications.Center
+import Maia.Tray
 import MaiaFrontend
 
 import "controlcenter"
@@ -11,6 +12,7 @@ import "library"
 import "notifications"
 import "session"
 import "status"
+import "tray"
 
 Window{
     id: root
@@ -115,7 +117,7 @@ Window{
     // The keyboard only while the App Library is open: its search field takes the typing at once.
     // Otherwise the window never takes the keyboard from the applications.
     LayerShell.Window.keyboardInteractivity: dock.libraryOpen || root.sessionOpen || root.controlCenterOpen
-                                             || root.notificationCenterOpen
+                                             || root.notificationCenterOpen || root.trayOpen
                                              ? LayerShell.Window.KeyboardInteractivityExclusive
                                              : LayerShell.Window.KeyboardInteractivityNone
 
@@ -125,8 +127,13 @@ Window{
     property bool controlCenterOpen: false
     // The notification center is open; the other layers know through ShellState (no banners meanwhile)
     property bool notificationCenterOpen: false
+    // The tray's panel ("+N") or the menu of one of its items is open
+    property bool trayPanelOpen: false
+    property int trayMenuItemId: 0
+    property Item trayMenuAnchor: null
+    readonly property bool trayOpen: trayPanelOpen || trayMenuItemId !== 0
     // Something here has the screen; the pill of a job stays out of its way
-    readonly property bool modalOpen: dock.libraryOpen || sessionOpen || controlCenterOpen || notificationCenterOpen
+    readonly property bool modalOpen: dock.libraryOpen || sessionOpen || controlCenterOpen || notificationCenterOpen || trayOpen
     onModalOpenChanged: ShellState.modalOpen = modalOpen
 
     // One overlay at a time: the App Library, the Control Center, the notification center, the
@@ -135,11 +142,12 @@ Window{
     onControlCenterOpenChanged: {
         if (!controlCenterOpen)
             return
-        if (!dock.libraryOpen && !sessionOpen && !notificationCenterOpen)
+        if (!dock.libraryOpen && !sessionOpen && !notificationCenterOpen && !trayOpen)
             dock.rememberFocus()
         dock.libraryOpen = false
         sessionOpen = false
         notificationCenterOpen = false
+        closeTray()
     }
     onNotificationCenterOpenChanged: {
         ShellState.notificationCenterOpen = notificationCenterOpen
@@ -147,17 +155,51 @@ Window{
         ShellState.notificationsSeenAt = Date.now()
         if (!notificationCenterOpen)
             return
-        if (!dock.libraryOpen && !sessionOpen && !controlCenterOpen)
+        if (!dock.libraryOpen && !sessionOpen && !controlCenterOpen && !trayOpen)
             dock.rememberFocus()
         dock.libraryOpen = false
         sessionOpen = false
         controlCenterOpen = false
+        closeTray()
     }
     onSessionOpenChanged: {
         if (sessionOpen) {
             controlCenterOpen = false
             notificationCenterOpen = false
+            closeTray()
         }
+    }
+    onTrayOpenChanged: {
+        if (!trayOpen)
+            return
+        if (!dock.libraryOpen && !sessionOpen && !controlCenterOpen && !notificationCenterOpen)
+            dock.rememberFocus()
+        dock.libraryOpen = false
+        sessionOpen = false
+        controlCenterOpen = false
+        notificationCenterOpen = false
+    }
+
+    function closeTray() {
+        trayMenuItemId = 0
+        trayPanelOpen = false
+    }
+
+    // The menu of a tray item; the same item again closes it
+    function openTrayMenu(itemId, icon) {
+        if (trayMenuItemId === itemId) {
+            trayMenuItemId = 0
+            return
+        }
+        trayMenuItemId = 0
+        trayMenuAnchor = icon
+        trayMenuItemId = itemId
+    }
+
+    // A primary click on a tray item: what is open closes, the application decides the rest
+    function activateTrayItem(itemId) {
+        closeTray()
+        Tray.activate(itemId, 0, 0, root)
     }
     Connections {
         target: dock
@@ -166,6 +208,7 @@ Window{
             if (dock.libraryOpen) {
                 root.controlCenterOpen = false
                 root.notificationCenterOpen = false
+                root.closeTray()
             }
         }
     }
@@ -189,6 +232,18 @@ Window{
         function onNotificationCenterRequested() {
             root.notificationCenterOpen = true
         }
+    }
+
+    // The tray: what fits on its plate (those that need attention first), and every item for its panel
+    TrayItemsModel {
+        id: trayShown
+
+        filter: TrayItemsModel.Shown
+        maximumCount: trayButton.capacity
+    }
+
+    TrayItemsModel {
+        id: trayAll
     }
 
     // Wi-Fi, the volume and the rest of the Control Center, shared by its button and the modules
@@ -276,6 +331,39 @@ Window{
         onTimeClicked: root.notificationCenterOpen = !root.notificationCenterOpen
     }
 
+    // The system tray, a plate of its own next to the clock's: below it along a vertical strip, to
+    // its left along a horizontal one, with the clock's width or height. Moves with the dock like it.
+    TrayButton {
+        id: trayButton
+
+        items: trayShown
+        totalCount: Tray.count
+        edge: root.anchoredEdge
+        crossSize: vertical ? controlCenterButton.width : controlCenterButton.height
+        checked: root.trayPanelOpen
+        menuItemId: root.trayMenuItemId
+        x: vertical ? controlCenterButton.x + (controlCenterButton.width - width) / 2 : controlCenterButton.x - 10 - width
+        y: vertical ? controlCenterButton.y + controlCenterButton.height + 10 : controlCenterButton.y + (controlCenterButton.height - height) / 2
+
+        onActivated: itemId => root.activateTrayItem(itemId)
+        onSecondaryActivated: itemId => Tray.secondaryActivate(itemId, 0, 0, root)
+        onMenuRequested: (itemId, icon) => root.openTrayMenu(itemId, icon)
+        onContextMenuRequested: itemId => Tray.contextMenu(itemId, 0, 0)
+        onScrolled: (itemId, delta, horizontal) => Tray.scroll(itemId, delta, horizontal)
+        onMoreClicked: {
+            root.trayMenuItemId = 0
+            root.trayPanelOpen = !root.trayPanelOpen
+        }
+    }
+
+    Maia.MaskArea {
+        x: trayButton.x
+        y: trayButton.y
+        width: trayButton.width
+        height: trayButton.height
+        visible: trayButton.wanted
+    }
+
     AppLibrary {
         id: library
 
@@ -337,6 +425,40 @@ Window{
             if (!dock.libraryOpen && !root.sessionOpen && !root.controlCenterOpen)
                 dock.returnFocus()
         }
+    }
+
+    // Above the dock: the tray's panel and the menus of its items, beside the strip next to the plate
+    TrayOverlay {
+        id: trayOverlay
+
+        anchors.fill: parent
+        allItems: trayAll
+        panelOpen: root.trayPanelOpen
+        menuItemId: root.trayMenuItemId
+        menuAnchor: root.trayMenuAnchor
+        plate: trayButton
+        dockEdge: trayButton.placedEdge
+        dockStrip: root.stripThickness
+
+        onCloseRequested: root.closeTray()
+        onMenuCloseRequested: root.trayMenuItemId = 0
+        onActivated: itemId => root.activateTrayItem(itemId)
+        onSecondaryActivated: itemId => Tray.secondaryActivate(itemId, 0, 0, root)
+        onMenuRequested: (itemId, icon) => root.openTrayMenu(itemId, icon)
+        onContextMenuRequested: itemId => {
+            root.closeTray()
+            Tray.contextMenu(itemId, 0, 0)
+        }
+        onScrolled: (itemId, delta, horizontal) => Tray.scroll(itemId, delta, horizontal)
+        onDismissed: {
+            if (!dock.libraryOpen && !root.sessionOpen && !root.controlCenterOpen && !root.notificationCenterOpen)
+                dock.returnFocus()
+        }
+    }
+
+    Maia.MaskArea {
+        anchors.fill: parent
+        visible: trayOverlay.open
     }
 
     // Above everything, the dock included: the session concerns the whole computer

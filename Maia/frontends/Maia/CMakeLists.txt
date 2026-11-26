@@ -71,6 +71,9 @@ qt_add_qml_module(MaiaFrontend
         QML_FILES shell/menu/MenuItem.qml
         QML_FILES shell/menu/MenuPanel.qml
         QML_FILES shell/menu/MenuSeparator.qml
+        QML_FILES shell/tray/TrayButton.qml
+        QML_FILES shell/tray/TrayIcon.qml
+        QML_FILES shell/tray/TrayOverlay.qml
 )
 
 
@@ -93,6 +96,6 @@ if(BUILD_TESTING)
             COMMAND "${MAIA_QMLTESTRUNNER}" -import "${maia_test_imports}" -import "${MAIA_QML_BUILD_DIR}"
                     -input "${CMAKE_CURRENT_SOURCE_DIR}/tests")
         set_tests_properties(maia-frontend-components PROPERTIES ENVIRONMENT
-            "QT_QPA_PLATFORM=offscreen;XDG_CONFIG_HOME=${CMAKE_CURRENT_BINARY_DIR}/test-config;MAIA_CROSS_PROCESS_STATE_SOCKET=/tmp/maia-frontend-components.sock;MAIA_NOTIFICATIONS_CENTER_SOCKET=/nonexistent/center.sock")
+            "QT_QPA_PLATFORM=offscreen;XDG_CONFIG_HOME=${CMAKE_CURRENT_BINARY_DIR}/test-config;MAIA_CROSS_PROCESS_STATE_SOCKET=/tmp/maia-frontend-components.sock;MAIA_NOTIFICATIONS_CENTER_SOCKET=/nonexistent/center.sock;MAIA_TRAY_SOCKET=/nonexistent/tray.sock")
     endif()
 endif()

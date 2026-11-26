@@ -33,6 +33,8 @@ class TrayMenuEntriesModel : public QAbstractListModel
     QML_UNCREATABLE("Given by TrayMenu.entries and TrayMenu.submenu()")
 
     Q_PROPERTY(int count READ rowCount NOTIFY countChanged)
+    // Some entry has a check mark or a radio button: a shell keeps a column for them
+    Q_PROPERTY(bool hasToggles READ hasToggles NOTIFY hasTogglesChanged)
 
 public:
     enum Toggle { NoToggle = 0, Checkmark = 1, Radio = 2 };
@@ -57,16 +59,20 @@ public:
     QVariant data(const QModelIndex &index, int role) const override;
     QHash<int, QByteArray> roleNames() const override;
 
+    bool hasToggles() const { return m_hasToggles; }
+
     // To these entries, by their ids
     void update(const MenuEntries &target);
 
 Q_SIGNALS:
     void countChanged();
+    void hasTogglesChanged();
 
 private:
     static QList<int> changedRoles(const MenuEntryData &before, const MenuEntryData &after);
 
     MenuEntries m_rows;
+    bool m_hasToggles = false;
 };
 
 class TrayMenu : public QObject

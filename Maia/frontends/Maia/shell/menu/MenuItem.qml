@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls.impl
 import QtQuick.Templates as T
+import org.kde.kirigami as Kirigami
 
 // Row of MenuPanel in the style of iPadOS: the title on the left, the symbol on the right.
 // A row opening a submenu shows a chevron instead of the symbol; the header of a submenu
@@ -9,6 +10,8 @@ T.AbstractButton {
     id: item
 
     property string iconName
+    // An application's icon instead (a theme name or an image URL: a tray menu's entries)
+    property string iconSource
     property bool hasSubmenu: false
     property bool header: false
     // Reserves a column on the left for the check mark (choice lists)
@@ -60,7 +63,7 @@ T.AbstractButton {
         Text {
             anchors.left: parent.left
             anchors.leftMargin: item.checkColumn ? 16 + 10 : 0
-            anchors.right: symbol.left
+            anchors.right: appIcon.visible ? appIcon.left : symbol.left
             anchors.rightMargin: 12
             anchors.verticalCenter: parent.verticalCenter
             text: item.text
@@ -85,6 +88,19 @@ T.AbstractButton {
             sourceSize: Qt.size(width, height)
             source: symbolName.length > 0 ? Qt.resolvedUrl("../../assets/icons/" + symbolName + ".svg") : ""
             color: item.enabled ? item.labelColor : item.disabledColor
+            visible: !appIcon.visible
+        }
+
+        Kirigami.Icon {
+            id: appIcon
+
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+            width: 18
+            height: 18
+            visible: item.iconSource !== "" && !item.hasSubmenu && !item.header
+            source: item.iconSource
+            opacity: item.enabled ? 1 : 0.4
         }
     }
 }
