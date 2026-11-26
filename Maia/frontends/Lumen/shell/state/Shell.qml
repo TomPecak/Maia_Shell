@@ -18,11 +18,51 @@ QtObject {
 
     function toggleFlyout(name) {
         closeDesktopMenu()
+        closeTray()
         activeFlyout = activeFlyout === name ? "" : name
     }
 
     function closeFlyouts() {
         activeFlyout = ""
+        closeTray()
+    }
+
+    // --- System tray: the hidden icons and the menu of an item (TrayPopupWindow) ---
+
+    property bool trayOverflowOpen: false
+    // Where the overflow opens: the right end of the "^" button, in the coordinates of the screen
+    property point trayOverflowPosition: Qt.point(0, 0)
+    // The item whose menu is open (0: none), and where: the top left of its button on the screen
+    property int trayMenuItemId: 0
+    property point trayMenuPosition: Qt.point(0, 0)
+
+    // Emitted on every request, also for the item whose menu is already open (it closes)
+    signal trayMenuRequested()
+
+    function toggleTrayOverflow(x, y) {
+        const open = !trayOverflowOpen
+        activeFlyout = ""
+        closeDesktopMenu()
+        trayMenuItemId = 0
+        trayOverflowPosition = Qt.point(x, y)
+        trayOverflowOpen = open
+    }
+
+    function openTrayMenu(itemId, x, y) {
+        activeFlyout = ""
+        closeDesktopMenu()
+        const same = trayMenuItemId === itemId
+        trayMenuItemId = 0
+        if (same)
+            return
+        trayMenuPosition = Qt.point(x, y)
+        trayMenuItemId = itemId
+        trayMenuRequested()
+    }
+
+    function closeTray() {
+        trayOverflowOpen = false
+        trayMenuItemId = 0
     }
 
     // --- Desktop context menu ---
@@ -37,6 +77,7 @@ QtObject {
     // Opens the menu at the given position, closes the open flyout
     function openDesktopMenu(x, y) {
         closeFlyouts()
+        closeTray()
         desktopMenuPosition = Qt.point(x, y)
         desktopMenuOpen = true
         desktopMenuRequested()

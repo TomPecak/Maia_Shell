@@ -83,6 +83,7 @@ Window {
     QuickSettingsWindow {}
     WidgetsWindow {}
     DesktopMenuWindow {}
+    TrayPopupWindow {}
     TimerWindow {}
     NotificationPopupsWindow {}
 

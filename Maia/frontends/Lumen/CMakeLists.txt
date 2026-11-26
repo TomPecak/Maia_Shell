@@ -68,6 +68,8 @@ qt_add_qml_module(LumenFrontend
         shell/services/TimerSound.qml
         shell/windows/CalendarWindow.qml
         shell/windows/DesktopMenuWindow.qml
+        shell/windows/TrayIconButton.qml
+        shell/windows/TrayPopupWindow.qml
         shell/windows/QuickSettingsWindow.qml
         shell/windows/QuickSettingsWifiPage.qml
         shell/windows/StartMenuWindow.qml

@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Templates as T
+import org.kde.kirigami as Kirigami
 
 import LumenFrontend
 
@@ -9,6 +10,8 @@ T.AbstractButton {
     id: item
 
     property string iconName
+    // An application's icon instead (a theme name or an image URL: a tray menu's entries)
+    property string iconSource
     property color iconColor: Theme.textPrimary
     property bool hasSubmenu: false
     // Keyboard shortcut shown on the right, e.g. "Ctrl+C"
@@ -47,6 +50,17 @@ T.AbstractButton {
             iconName: item.iconName
             size: 16
             tint: item.enabled ? item.iconColor : Theme.textTertiary
+            visible: item.iconSource === ""
+        }
+
+        Kirigami.Icon {
+            anchors.left: parent.left
+            anchors.verticalCenter: parent.verticalCenter
+            width: 16
+            height: 16
+            visible: item.iconSource !== ""
+            source: item.iconSource
+            opacity: item.enabled ? 1 : 0.4
         }
 
         LText {

@@ -3,13 +3,15 @@ import QtQuick.Layouts
 import org.kde.layershell 1.0 as LayerShell
 import Maia.Windows as Windows
 import Maia.Notifications.Center
+import Maia.Tray
 
 import LumenFrontend
 
 // Taskbar: a layer-shell strip at the bottom edge which reserves its area, so maximized
 // windows and the flyouts are placed above it.
 // Left: widgets (weather), center: start, search and the open windows,
-// right: system tray (opens quick settings) and the clock (opens the calendar).
+// right: the system tray (the icons of applications, "^" for the ones they put away), network,
+// volume and battery (open quick settings) and the clock (opens the calendar).
 //
 // The windows come from the Maia window service (Maia.Windows, Maia/services/windows): its
 // TasksModel has the API of the Plasma task manager (org.kde.taskmanager), the service talks to
@@ -29,6 +31,9 @@ Window {
     LayerShell.Window.anchors: LayerShell.Window.AnchorBottom | LayerShell.Window.AnchorLeft | LayerShell.Window.AnchorRight
     LayerShell.Window.exclusionZone: Theme.taskbarHeight
     LayerShell.Window.keyboardInteractivity: LayerShell.Window.KeyboardInteractivityNone
+
+    // Where the taskbar begins on the screen (it is anchored to the bottom edge)
+    readonly property real screenTop: Screen.height - height
 
     Rectangle {
         anchors.fill: parent
@@ -150,13 +155,80 @@ Window {
         anchors.verticalCenter: parent.verticalCenter
         spacing: Theme.spacingXS
 
-        // Hidden tray icons (mock)
+        // The icons the applications put away (passive), in the overflow; "^" only when there are
         TaskbarButton {
+            id: overflowButton
+
             width: 32
+            visible: trayHidden.count > 0
             iconName: "go-up-symbolic"
             iconSize: 14
             tintIcon: true
+            active: Shell.trayOverflowOpen
             Accessible.name: qsTr("Show hidden icons")
+            onClicked: {
+                const at = mapToItem(null, width, 0)
+                Shell.toggleTrayOverflow(at.x, taskbar.screenTop + at.y)
+            }
+
+            TrayItemsModel {
+                id: trayHidden
+
+                filter: TrayItemsModel.Passive
+            }
+        }
+
+        // The icons the applications show (active, or needing attention), in the order of the tray
+        Repeater {
+            model: TrayItemsModel {
+                filter: TrayItemsModel.Shown
+            }
+
+            // An item around the button: the roles do not hide the button's own properties
+            delegate: Item {
+                id: trayItem
+
+                required property int itemId
+                required property string currentIconSource
+                required property string overlayIconSource
+                required property bool needsAttention
+                required property bool hasMenu
+                required property bool itemIsMenu
+                required property string title
+                required property string toolTipTitle
+                required property string toolTipText
+
+                anchors.verticalCenter: parent ? parent.verticalCenter : undefined
+                width: trayButton.implicitWidth
+                height: trayButton.implicitHeight
+
+                TrayIconButton {
+                    id: trayButton
+
+                    anchors.fill: parent
+                    source: trayItem.currentIconSource
+                    overlaySource: trayItem.overlayIconSource
+                    needsAttention: trayItem.needsAttention
+                    hasMenu: trayItem.hasMenu
+                    itemIsMenu: trayItem.itemIsMenu
+                    highlighted: Shell.trayMenuItemId === trayItem.itemId
+                    toolTip: [trayItem.toolTipTitle !== "" ? trayItem.toolTipTitle : trayItem.title, trayItem.toolTipText]
+                             .filter(t => t !== "").join("\n")
+                    Accessible.name: trayItem.title
+
+                    onActivated: {
+                        Shell.closeFlyouts()
+                        Tray.activate(trayItem.itemId, 0, 0, taskbar)
+                    }
+                    onSecondaryActivated: Tray.secondaryActivate(trayItem.itemId, 0, 0, taskbar)
+                    onMenuRequested: {
+                        const at = mapToItem(null, 0, 0)
+                        Shell.openTrayMenu(trayItem.itemId, at.x, taskbar.screenTop + at.y)
+                    }
+                    onContextMenuRequested: Tray.contextMenu(trayItem.itemId, 0, 0)
+                    onScrolled: (delta, horizontal) => Tray.scroll(trayItem.itemId, delta, horizontal)
+                }
+            }
         }
 
         // Network, volume and battery: opens quick settings
