@@ -50,6 +50,8 @@ public:
         CheckedRole,
         ShortcutRole,
         SubmenuRole,
+        // The first entry of a group: at the start, or after a separator
+        GroupStartRole,
     };
     Q_ENUM(Role)
 

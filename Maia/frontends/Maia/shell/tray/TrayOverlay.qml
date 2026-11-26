@@ -267,6 +267,8 @@ Item {
             delegate: Column {
                 id: entry
 
+                required property int index
+                required property bool groupStart
                 required property int entryId
                 required property bool separator
                 required property string label
@@ -281,6 +283,11 @@ Item {
                 MenuSeparator {
                     visible: entry.separator
                     group: true
+                }
+
+                // Between the rows of a group, as in the desktop's menu
+                MenuSeparator {
+                    visible: !entry.separator && !entry.groupStart
                 }
 
                 MenuItem {

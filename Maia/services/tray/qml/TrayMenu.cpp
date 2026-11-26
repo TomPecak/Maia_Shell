@@ -48,6 +48,8 @@ QVariant TrayMenuEntriesModel::data(const QModelIndex &index, int role) const
         return entry.shortcut;
     case SubmenuRole:
         return entry.submenu;
+    case GroupStartRole:
+        return index.row() == 0 || m_rows.at(index.row() - 1).separator;
     }
     return {};
 }
@@ -64,6 +66,7 @@ QHash<int, QByteArray> TrayMenuEntriesModel::roleNames() const
         {CheckedRole, "checked"},
         {ShortcutRole, "shortcut"},
         {SubmenuRole, "submenu"},
+        {GroupStartRole, "groupStart"},
     };
 }
 
@@ -126,6 +129,9 @@ void TrayMenuEntriesModel::update(const MenuEntries &target)
             Q_EMIT dataChanged(at, at, roles);
         }
     }
+    // Where groups start may have moved with any insertion or removal: one cheap notification
+    if (!m_rows.empty())
+        Q_EMIT dataChanged(index(0), index(int(m_rows.size()) - 1), {GroupStartRole});
     if (countBefore != int(m_rows.size()))
         Q_EMIT countChanged();
     const bool toggles = std::any_of(m_rows.cbegin(), m_rows.cend(), [](const MenuEntryData &entry) { return entry.toggle != 0; });

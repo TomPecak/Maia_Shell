@@ -37,6 +37,13 @@ Item {
     implicitWidth: 32
     implicitHeight: 32
 
+    // Monochrome icons of the theme (Breeze) take the label's colour of Maia's light or dark mode,
+    // as a panel of Plasma recolours them
+    Kirigami.Theme.inherit: false
+    Kirigami.Theme.colorSet: Kirigami.Theme.Window
+    Kirigami.Theme.textColor: Theme.label
+    Kirigami.Theme.backgroundColor: Theme.dock
+
     Accessible.role: Accessible.Button
     Accessible.name: name
     Accessible.onPressAction: icon.itemIsMenu && icon.hasMenu ? icon.menuRequested() : icon.activated()
