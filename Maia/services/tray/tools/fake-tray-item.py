@@ -8,18 +8,28 @@ org.kde.StatusNotifierItem with a com.canonical.dbusmenu menu, registered with t
 Commands on stdin change it, each followed by the item's signal:
 
     status Passive|Active|NeedsAttention    title <text>    icon <name>    pixmap <rrggbb>
-    tooltip <text>    menu <label>,<label>,…    quit
+    tooltip <text>    menu <entries>    quit
+
+The menu (--menu, the command menu): entries separated by "," — "-" a separator, "Label>A|B|C" a
+submenu, "[x]Label" / "[ ]Label" a check box, "(o)Label" / "( )Label" a radio button (one of the
+entries between two separators), "!Label" disabled. A click on a check box or radio button changes
+it, as an application would, and the menu changes (LayoutUpdated).
 
     fake-tray-item.py                                  # "Fake chat", an icon of the theme
     fake-tray-item.py --title Music --icon media-playback-start --status Passive
     fake-tray-item.py --pixmap ff8800 --attention-after 5
+    fake-tray-item.py --menu "Show,-,Status>(o)Online|( )Away|( )Busy,[x]Sounds,!Offline mode,-,Quit"
 """
 
 import argparse
 import os
 import sys
+import warnings
 
 from gi.repository import Gio, GLib
+
+# Gio's register_object with callbacks is the simplest way to serve an object from Python
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 ITEM_XML = """
 <node>
@@ -82,6 +92,32 @@ MENU_XML = """
 """
 
 
+def parse_menu(text):
+    """The entries of --menu, with ids in their order (depth first)"""
+    next_id = [1]
+
+    def entry(spec, children=()):
+        spec = spec.strip()
+        e = {"id": next_id[0], "separator": spec == "-", "label": "", "enabled": True,
+             "toggle": "", "checked": False, "children": []}
+        next_id[0] += 1
+        if spec.startswith("!"):
+            e["enabled"], spec = False, spec[1:]
+        for mark, toggle, checked in (("[x]", "checkmark", True), ("[ ]", "checkmark", False),
+                                      ("(o)", "radio", True), ("( )", "radio", False)):
+            if spec.startswith(mark):
+                e["toggle"], e["checked"], spec = toggle, checked, spec[len(mark):]
+        e["label"] = spec
+        e["children"] = [entry(c) for c in children]
+        return e
+
+    entries = []
+    for part in [p for p in text.split(",") if p.strip()] if text else []:
+        label, _, children = part.partition(">")
+        entries.append(entry(label, [c for c in children.split("|") if c.strip()] if children else ()))
+    return entries
+
+
 def say(line):
     print(line, flush=True)
 
@@ -102,7 +138,7 @@ class Item:
         self.pixmaps = [square(args.pixmap, 22), square(args.pixmap, 44)] if args.pixmap else []
         self.tooltip = args.tooltip
         self.item_is_menu = args.item_is_menu
-        self.labels = args.menu.split(",") if args.menu else []
+        self.entries = parse_menu(args.menu)
         self.revision = 1
 
     def properties(self):
@@ -122,7 +158,7 @@ class Item:
             "IconThemePath": GLib.Variant("s", ""),
             "ToolTip": GLib.Variant("(sa(iiay)ss)", ("", [], self.title, self.tooltip)),
             "ItemIsMenu": GLib.Variant("b", self.item_is_menu),
-            "Menu": GLib.Variant("o", "/MenuBar" if self.labels else "/NO_DBUSMENU"),
+            "Menu": GLib.Variant("o", "/MenuBar" if self.entries else "/NO_DBUSMENU"),
         }
 
     def get_property(self, connection, sender, path, interface, name):
@@ -142,12 +178,52 @@ class Item:
     # --- The menu ---
 
     def layout(self):
-        def entry(i, label):
-            if label == "-":
-                return GLib.Variant("(ia{sv}av)", (i, {"type": GLib.Variant("s", "separator")}, []))
-            return GLib.Variant("(ia{sv}av)", (i, {"label": GLib.Variant("s", label)}, []))
-        children = [entry(i + 1, label) for i, label in enumerate(self.labels)]
-        return (0, {"children-display": GLib.Variant("s", "submenu")}, children)
+        def node(entry):
+            props = {}
+            if entry["separator"]:
+                props["type"] = GLib.Variant("s", "separator")
+            else:
+                props["label"] = GLib.Variant("s", entry["label"])
+                if not entry["enabled"]:
+                    props["enabled"] = GLib.Variant("b", False)
+                if entry["toggle"]:
+                    props["toggle-type"] = GLib.Variant("s", entry["toggle"])
+                    props["toggle-state"] = GLib.Variant("i", 1 if entry["checked"] else 0)
+                if entry["children"]:
+                    props["children-display"] = GLib.Variant("s", "submenu")
+            return GLib.Variant("(ia{sv}av)", (entry["id"], props, [node(c) for c in entry["children"]]))
+        return (0, {"children-display": GLib.Variant("s", "submenu")}, [node(e) for e in self.entries])
+
+    def clicked(self, entry_id):
+        """A check box changes, a radio button takes its group"""
+        def find(entries):
+            for i, entry in enumerate(entries):
+                if entry["id"] == entry_id:
+                    return entries, i
+                found = find(entry["children"])
+                if found:
+                    return found
+            return None
+        found = find(self.entries)
+        if not found:
+            return
+        siblings, i = found
+        entry = siblings[i]
+        if entry["toggle"] == "checkmark":
+            entry["checked"] = not entry["checked"]
+        elif entry["toggle"] == "radio":
+            start = i
+            while start > 0 and not siblings[start - 1]["separator"]:
+                start -= 1
+            end = i
+            while end + 1 < len(siblings) and not siblings[end + 1]["separator"]:
+                end += 1
+            for other in siblings[start:end + 1]:
+                if other["toggle"] == "radio":
+                    other["checked"] = other is entry
+        else:
+            return
+        self.menu_changed()
 
     def menu_property(self, connection, sender, path, interface, name):
         return {"Version": GLib.Variant("u", 3), "TextDirection": GLib.Variant("s", "ltr"),
@@ -164,6 +240,8 @@ class Item:
         elif method == "Event":
             say(f"Event {values[0]} {values[1]}")
             invocation.return_value(None)
+            if values[1] == "clicked":
+                self.clicked(values[0])
         elif method == "GetGroupProperties":
             invocation.return_value(GLib.Variant("(a(ia{sv}))", ([],)))
         else:
@@ -196,7 +274,7 @@ class Item:
             self.tooltip = rest
             self.signal("NewToolTip")
         elif word == "menu":
-            self.labels = rest.split(",") if rest else []
+            self.entries = parse_menu(rest)
             self.menu_changed()
         elif word:
             say(f"unknown command {word}")
@@ -210,7 +288,7 @@ def main():
     parser.add_argument("--pixmap", default="", help="an icon as pixels instead: a colour rrggbb")
     parser.add_argument("--status", default="Active", choices=["Passive", "Active", "NeedsAttention"])
     parser.add_argument("--tooltip", default="2 new messages")
-    parser.add_argument("--menu", default="Show,-,Quit", help="labels of the menu, - a separator, '' none")
+    parser.add_argument("--menu", default="Show,-,Quit", help="the menu (see above), '' none")
     parser.add_argument("--item-is-menu", action="store_true", help="a click opens the menu")
     parser.add_argument("--attention-after", type=float, default=0, help="seconds until it needs attention")
     args = parser.parse_args()

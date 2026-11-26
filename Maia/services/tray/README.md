@@ -71,15 +71,14 @@ X11 icons ──XEmbed──► xembedsniproxy (KDE) ──► an item like any 
 
 ## Trying it
 
-In a nested session (`run_maia_nested_wayland.sh`, its own D-Bus bus), or in the Maia session:
+In the Maia session (or a nested one, `run_maia_nested_wayland.sh`, with its own D-Bus bus):
 
-```bash
-Maia/services/tray/tools/fake-tray-item.py --title Chat --status NeedsAttention
-Maia/services/tray/tools/fake-tray-item.py --pixmap ff8800 --menu "Show,-,Pause,Quit"
-```
-
-It prints what the tray does to it (`Activate 0 0`, `Event 2 clicked`) and takes commands on its
-standard input: `status Passive`, `title …`, `icon …`, `pixmap rrggbb`, `menu a,-,b`, `quit`.
+| Tool | What it is |
+|---|---|
+| `tools/tray-demo.sh [count]` | five pretend applications (active, needing attention, pixels, passive, a menu-only one), more with a count; each prints what the tray does to it; `tray-demo.sh send <name> <command>` changes one (`status Passive`, `title …`, `icon …`, `pixmap rrggbb`, `menu …`, `quit`); Ctrl+C ends them |
+| `tools/fake-tray-item.py` | one of them on its own; its menu syntax: `"Show,-,Status>(o)Online\|( )Away,[x]Sounds,!Disabled,Quit"` (submenus, check boxes, radio buttons, disabled entries) |
+| `tools/qt-tray-icon.py` | a real Qt application (`QSystemTrayIcon`, PyQt6): Qt's own registration and menu export; its window comes and goes with a click |
+| `tools/xembed-tray-icon.py` | an old X11 icon (GTK 3's `Gtk.StatusIcon` through Xwayland): reaches the tray only through `xembedsniproxy` |
 
 ## Tests
 
